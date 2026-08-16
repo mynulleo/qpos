@@ -1,0 +1,142 @@
+/*==================================================
+=            Variables (Design Tokens)             =
+==================================================*/
+$white: #ffffff;
+$light-gray: #f1f1f1;
+
+
+/*==================================================
+=            Top Message Dropdown Box               =
+==================================================*/
+.x_top_message_dropdown_box {
+
+    .top {
+        padding-bottom: 0 !important;
+    }
+
+    ul {
+        margin: 0;
+        padding: 0;
+
+        li {
+            padding-left: 0 !important;
+            margin-bottom: 0 !important;
+            list-style: none;
+
+            &::before {
+                display: none;
+            }
+
+            h4,
+            p {
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+
+/*==================================================
+=            Invoice Layout                         =
+==================================================*/
+.invoice-box {
+    background-color: $white;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+.invoice-title {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+
+/*==================================================
+=            Print Styles                           =
+==================================================*/
+@media print {
+
+    body {
+        background: none;
+    }
+
+    .invoice-box {
+        box-shadow: none;
+        padding: 0;
+    }
+
+
+    @page {
+        size: A4 auto;
+        margin: 10mm;
+    }
+
+}
+
+.table-report> :not(caption)>*>* {
+    border-bottom-width: 0px;
+}
+
+fieldset .table-report> :not(caption)>*>* {
+    padding: 0.2rem 0.3rem !important;
+}
+
+fieldset .table-squeeze> :not(caption)>*>* {
+    padding: 0.3rem 0.3rem !important;
+}
+
+.dashboard-card {
+
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .06);
+    transition: .3s;
+
+    height: 100%;
+}
+
+.dashboard-card:hover {
+
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .12);
+
+}
+
+.card-icon {
+
+    width: 60px;
+    height: 60px;
+
+    border-radius: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #fff;
+    font-size: 24px;
+
+    flex-shrink: 0;
+
+}
+
+.card-title {
+
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 6px;
+
+}
+
+.card-value {
+
+    font-size: 28px;
+    font-weight: 700;
+    color: #212529;
+
+}
