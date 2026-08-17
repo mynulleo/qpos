@@ -15,6 +15,7 @@ const model = "item";
 
 const tableColumns = [
   { field: "image", title: "Image", image: true, imgWidth: "30px", align: "center" },
+  { field: "barcode", title: "Barcode" },
   { field: "category_id", title: "Category", subfield: "category.title" },
   { field: "title", title: "Title" },
   { field: "unit_id", title: "Unit", subfield: "unit.title" },
@@ -24,6 +25,7 @@ const tableColumns = [
 ];
 
 const json_fields = {
+  "Barcode": "barcode",
   "Category Id": "category_id",
   "Title": "title",
   "Unit Id": "unit_id",

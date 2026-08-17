@@ -15,10 +15,10 @@
                                 <div class="login">
                                     <div class="logo text-center">
 
-                                        <!-- <h4 class="name">
+                                        <h4 class="name">
                                             <i class="fa fa-lock 5x"></i>
-                                        </h4> -->
-                                        <img src="/images/bunon-logo.png" alt="logo" style="max-width: 100%;" />
+                                        </h4>
+
                                     </div>
 
                                     <template v-if="reset.flag">

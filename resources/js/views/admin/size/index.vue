@@ -4,21 +4,25 @@
 
 <script>
 
-const model = "residence";
+const model = "size";
 
 const tableColumns = [
-  { field: "category", title: "Category", subfield: "category.title" },
-  { field: "package", title: "Package", subfield: "package.title" },
-  { field: "residence_name", title: "Residence Name" },
-  { field: "owner_name", title: "Owner Name" },
-  { field: "mobile", title: "Mobile" },
-  { field: "reg_date", title: "Reg Date" },
-  { field: "expired_date", title: "Expired Date" },
+  { field: "title", title: "Title" },
+  {
+    field: "sorting",
+    title: "Sorting",
+    sorting: true,
+    namespace: "Size",
+    auto: "",
+    align: "center",
+  },
   { field: "status", title: "Status", align: "center" },
 ];
 
 const json_fields = {
-  "Residence Name": "residence_name", "Owner Name": "owner_name", "Address": "address", "Mobile": "mobile", "Email": "email", "Package Id": "package_id", "Reg Date": "reg_date", "Expired Date": "expired_date", "Nid": "nid",
+  Title: "title",
+  Sorting: "sorting",
+  Status: "status",
 };
 
 export default {
@@ -48,14 +52,14 @@ export default {
 
   provide() {
     return {
-      validate: this.validation,
-      model: this.model,
-      fields_name: this.fields_name,
-      search_data: this.search_data,
-      table: this.table,
-      json_fields: this.json_fields,
-      search: this.search,
-      resetSearchData: this.resetSearchData,
+        validate: this.validation,
+        model: this.model,
+        fields_name: this.fields_name,
+        search_data: this.search_data,
+        table: this.table,
+        json_fields: this.json_fields,
+        search: this.search,
+        resetSearchData: this.resetSearchData,
     };
   },
 
@@ -65,11 +69,11 @@ export default {
     },
 
     resetSearchData() {
-      this.search_data.pagination = 10;
-      this.search_data.page = 1;
-      this.search_data.field_name = "";
-      this.search_data.value = "";
-      this.search_data.status = "";
+        this.search_data.pagination = 10;
+        this.search_data.page = 1;
+        this.search_data.field_name = "";
+        this.search_data.value = "";
+        this.search_data.status = "";
     },
   },
 

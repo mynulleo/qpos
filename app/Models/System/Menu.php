@@ -17,7 +17,6 @@ class Menu extends Model
 {
     use LogsActivity;
 
-    protected $connection = 'commondb';
     protected $table = 'menus';
     protected $guarded = ['id'];
     protected $logName = "Menu";

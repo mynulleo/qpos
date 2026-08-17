@@ -4,7 +4,7 @@
 
 <script>
 
-const model = "feature";
+const model = "size";
 
 export default {
   data() {

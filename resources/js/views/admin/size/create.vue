@@ -1,12 +1,15 @@
 <template>
   <create-form @onSubmit='submit'>
-    <Input v-model='data.icon' field='data.icon' title='Icon' :req='true' />
     <Input v-model='data.title' field='data.title' title='Title' :req='true' />
-    <Input v-model='data.description' field='data.description' title='Description' :req='false' col="12" />
-    <Input v-model="data.sorting" field="data.sorting" name="sorting" title="Sorting" type="number" col="2"
-      :req="true" />
-    <Switch v-model='data.status' field='data.status' title='status' on-label='Active' off-label='Deactive' :req='true'>
-    </Switch>
+    <Input v-model='data.sorting' field='data.sorting' title='Sorting' :req='true' type="number" />
+    <Switch
+        v-model='data.status'
+        field='data.status'
+        title='status'
+        on-label='Active'
+        off-label='Deactive'
+        :req='true'
+    ></Switch>
 
   </create-form>
 </template>
@@ -14,25 +17,23 @@
 <script>
 
 
-const model = 'feature';
+const model = 'size';
 
 export default {
-
+  
   data() {
     return {
       model: model,
       page_title: '',
-      data: {
-        sorting: 0
-      },
-
+      data: { status: 'active', sorting: 0 },
+      
     };
   },
 
   provide() {
     return {
       validate: this.validation,
-
+      
     };
   },
   methods: {
@@ -50,6 +51,8 @@ export default {
         }
 
         if (res) {
+          
+          
           if (this.data.id) {
             this.update(this.model, this.data, this.data.id);
           } else {
@@ -64,15 +67,19 @@ export default {
       this.page_title = this.headline(this.model) + ' Edit';
       this.get_data(`${this.model}/${this.$route.params.id}`);
     } else {
-      this.get_sorting("Feature");
       this.page_title = this.headline(this.model) + ' Create';
+      this.get_sorting(this.ucfirst(this.model));
     }
   },
 
   validators: {
-    'data.icon': function (value = null) { return Validator.value(value).required('Icon is required'); },
-    'data.title': function (value = null) { return Validator.value(value).required('Title is required'); },
-
+    'data.title': function (value = null) { return Validator.value(value).required('Title is required');},
+    'data.sorting': function (value = null) {
+      return Validator.value(value)
+        .digit()
+        .regex("^[0-9]*$")
+        .required("Sorting is required");
+    },
   },
 }
 

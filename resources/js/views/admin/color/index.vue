@@ -4,17 +4,25 @@
 
 <script>
 
-const model = "feature";
+const model = "color";
 
 const tableColumns = [
-  { field: "icon", title: "Icon", html: true },
   { field: "title", title: "Title" },
-  { field: "description", title: "Description" },
+  {
+    field: "sorting",
+    title: "Sorting",
+    sorting: true,
+    namespace: "Color",
+    auto: "",
+    align: "center",
+  },
   { field: "status", title: "Status", align: "center" },
 ];
 
 const json_fields = {
-  "Icon": "icon", "Title": "title", "Description": "description",
+  Title: "title",
+  Sorting: "sorting",
+  Status: "status",
 };
 
 export default {
@@ -44,14 +52,14 @@ export default {
 
   provide() {
     return {
-      validate: this.validation,
-      model: this.model,
-      fields_name: this.fields_name,
-      search_data: this.search_data,
-      table: this.table,
-      json_fields: this.json_fields,
-      search: this.search,
-      resetSearchData: this.resetSearchData,
+        validate: this.validation,
+        model: this.model,
+        fields_name: this.fields_name,
+        search_data: this.search_data,
+        table: this.table,
+        json_fields: this.json_fields,
+        search: this.search,
+        resetSearchData: this.resetSearchData,
     };
   },
 
@@ -61,11 +69,11 @@ export default {
     },
 
     resetSearchData() {
-      this.search_data.pagination = 10;
-      this.search_data.page = 1;
-      this.search_data.field_name = "";
-      this.search_data.value = "";
-      this.search_data.status = "";
+        this.search_data.pagination = 10;
+        this.search_data.page = 1;
+        this.search_data.field_name = "";
+        this.search_data.value = "";
+        this.search_data.status = "";
     },
   },
 

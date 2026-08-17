@@ -10,7 +10,6 @@ use App\Models\Base\BaseModel;
 
 class Permission extends BaseModel
 {
-    protected $connection = 'commondb';
     protected $table = 'permissions';
     protected $guarded = ['id'];
 

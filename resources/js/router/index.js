@@ -493,27 +493,6 @@ const routes = [
                 component: () => import("./../views/admin/theme/create"),
             },
 
-            // ------------------Service PORTION------------------
-            {
-                path: "/service",
-                name: "service.index",
-                component: () => import("./../views/admin/service/index"),
-            },
-            {
-                path: "/service/create",
-                name: "service.create",
-                component: () => import("./../views/admin/service/create"),
-            },
-            {
-                path: "/service/:id",
-                name: "service.show",
-                component: () => import("./../views/admin/service/view"),
-            },
-            {
-                path: "/service/:id/edit",
-                name: "service.edit",
-                component: () => import("./../views/admin/service/create"),
-            },
             // ------------------Invoice PORTION------------------
             {
                 path: "/invoice",
@@ -858,26 +837,16 @@ const routes = [
                 name: "item.edit",
                 component: () => import("./../views/admin/item/create"),
             },
-            // ------------------Issue PORTION------------------
+            // ------------------POS PORTION------------------
             {
-                path: "/issue",
-                name: "issue.index",
-                component: () => import("./../views/admin/issue/index"),
+                path: "/pos",
+                name: "pos.index",
+                component: () => import("./../views/admin/pos/index"),
             },
             {
-                path: "/issue/create",
-                name: "issue.create",
-                component: () => import("./../views/admin/issue/create"),
-            },
-            {
-                path: "/issue/:id",
-                name: "issue.show",
-                component: () => import("./../views/admin/issue/view"),
-            },
-            {
-                path: "/issue/:id/edit",
-                name: "issue.edit",
-                component: () => import("./../views/admin/issue/create"),
+                path: "/pos/return",
+                name: "pos.return",
+                component: () => import("./../views/admin/pos/return"),
             },
             // ------------------LoanInfo PORTION------------------
             {
@@ -1135,6 +1104,48 @@ const routes = [
                 name: "challan.edit",
                 component: () => import("./../views/admin/challan/create"),
             },
+            // ------------------Color PORTION------------------
+            {
+                path: "/color",
+                name: "color.index",
+                component: () => import("./../views/admin/color/index"),
+            },
+            {
+                path: "/color/create",
+                name: "color.create",
+                component: () => import("./../views/admin/color/create"),
+            },
+            {
+                path: "/color/:id",
+                name: "color.show",
+                component: () => import("./../views/admin/color/view"),
+            },
+            {
+                path: "/color/:id/edit",
+                name: "color.edit",
+                component: () => import("./../views/admin/color/create"),
+            },
+            // ------------------Size PORTION------------------
+            {
+                path: "/size",
+                name: "size.index",
+                component: () => import("./../views/admin/size/index"),
+            },
+            {
+                path: "/size/create",
+                name: "size.create",
+                component: () => import("./../views/admin/size/create"),
+            },
+            {
+                path: "/size/:id",
+                name: "size.show",
+                component: () => import("./../views/admin/size/view"),
+            },
+            {
+                path: "/size/:id/edit",
+                name: "size.edit",
+                component: () => import("./../views/admin/size/create"),
+            },
 
             // ------------------Report PORTION------------------
             {
@@ -1204,8 +1215,7 @@ const routes = [
             {
                 path: "/report/agentledger",
                 name: "report.agentledger",
-                component: () =>
-                    import("./../views/admin/report/agentledger"),
+                component: () => import("./../views/admin/report/agentledger"),
             },
             {
                 path: "/report/employeeledger",

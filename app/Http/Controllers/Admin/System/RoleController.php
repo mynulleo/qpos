@@ -150,7 +150,7 @@ class RoleController extends Controller
         $request->validate([
             'name' => [
                 'required',
-                Rule::unique('commondb.roles', 'name')->ignore($id),
+                Rule::unique('roles', 'name')->ignore($id),
             ],
             'status' => 'required',
         ]);

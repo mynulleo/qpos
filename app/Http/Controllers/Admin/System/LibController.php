@@ -7,7 +7,6 @@ use App\Models\Area;
 use App\Models\Unit;
 use App\Models\Branch;
 use App\Models\Account;
-use App\Models\Service;
 use App\Models\Category;
 use App\Models\District;
 use App\Models\Employee;
@@ -29,22 +28,25 @@ class LibController extends Controller
 
     private function setTenantDb()
     {
-        if (!Auth::check()) return;
+        $user = Auth::guard('admin')->user() ?? Auth::user();
+        if (!$user) return;
 
-        $user = Auth::user();
+        $orgId = $user->organization_id ?? null;
+        if (!$orgId) return;
+
         $residence = Organization::select('db_host', 'db_name', 'db_user', 'db_password')
-            ->where('id', $user->residence_id)
+            ->where('id', $orgId)
             ->first();
 
         if (!$residence || !$residence->db_name) return;
 
         Config::set('database.connections.tenant', [
             'driver' => 'mysql',
-            'host' => $residence->db_host ?? 'localhost',
+            'host' => !empty($residence->db_host) ? $residence->db_host : env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => $residence->db_name,
-            'username' => $residence->db_user,
-            'password' => $residence->db_password,
+            'username' => $residence->db_user ?? env('DB_USERNAME', 'root'),
+            'password' => $residence->db_password ?? env('DB_PASSWORD', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
@@ -68,7 +70,6 @@ class LibController extends Controller
             'app_env' => config("app.env"),
             'profile_menus' => $this->profileMenus(),
             'payment_status' => $this->getPaymentStatus(),
-            'services' => $this->getServices(),
             'modules' => $this->unitModuleNames(),
             'units' => $this->getUnits(),
             'districts' => $this->getDistricts(),
@@ -434,11 +435,6 @@ class LibController extends Controller
     public function getDistricts()
     {
         return District::where('status', 'active')->get(['id', 'district_name']);
-    }
-
-    public function getServices()
-    {
-        return Service::where('status', 'active')->get(['id', 'title']);
     }
 
     public function getcategories($modulename = null)

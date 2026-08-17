@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 
 class RolePermission extends BaseModel
 {
-    protected $connection = 'commondb';
     protected $table = 'role_permissions';
     protected $guarded = ['id'];
     public $timestamps = false;
@@ -39,7 +38,12 @@ class RolePermission extends BaseModel
     public static function permissionProcess($obj)
     {
         $routes = [];
-        $rolePermissions = $obj->get(Auth::guard('admin')->user()->role_id);
+        $user = Auth::guard('admin')->user() ?? Auth::user();
+        if (!$user || !isset($user->role_id)) {
+            return $routes;
+        }
+
+        $rolePermissions = $obj->get($user->role_id);
         if ($rolePermissions) {
             foreach ($rolePermissions->toArray() as $value) {
                 if (! empty($value['permission']['parent_id'])) {

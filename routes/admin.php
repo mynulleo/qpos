@@ -108,6 +108,15 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
     Route::get('getagentinfo/{id?}', [App\Http\Controllers\Admin\AgentController::class, 'getAgentInfo']);
     Route::get('getagents', [App\Http\Controllers\Admin\AgentController::class, 'getAgents']);
 
+    // POS Terminal API Endpoints
+    Route::get('pos/search-items', [App\Http\Controllers\Admin\PosController::class, 'searchItems']);
+    Route::get('pos/search-customer', [App\Http\Controllers\Admin\PosController::class, 'searchCustomer']);
+    Route::get('pos/validate-serial', [App\Http\Controllers\Admin\PosController::class, 'validateSerial']);
+    Route::post('pos/quick-customer', [App\Http\Controllers\Admin\PosController::class, 'quickCustomer']);
+    Route::post('pos/checkout', [App\Http\Controllers\Admin\PosController::class, 'checkout']);
+    Route::get('pos/search-invoices-return', [App\Http\Controllers\Admin\PosController::class, 'searchInvoicesForReturn']);
+    Route::post('pos/process-return', [App\Http\Controllers\Admin\PosController::class, 'processReturn']);
+
     // User Permission Based Routing...
     Route::middleware('auth.access')->group(function () {
         // Dashboard Route...
@@ -177,6 +186,7 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
         Route::resource('voucher', App\Http\Controllers\Admin\VoucherController::class);
         Route::resource('expense', App\Http\Controllers\Admin\ExpenseController::class);
         Route::resource('purchase', App\Http\Controllers\Admin\PurchaseController::class);
+        Route::get('generate-item-barcode', [App\Http\Controllers\Admin\ItemController::class, 'getGeneratedBarcode']);
         Route::resource('item', App\Http\Controllers\Admin\ItemController::class);
         Route::resource('issue', App\Http\Controllers\Admin\IssueController::class);
         Route::resource('loanInfo', App\Http\Controllers\Admin\LoanInfoController::class);
@@ -191,6 +201,12 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
         Route::resource('workorder', App\Http\Controllers\Admin\WorkorderController::class);
         Route::resource('currency', App\Http\Controllers\Admin\CurrencyController::class);
         Route::resource('challan', App\Http\Controllers\Admin\ChallanController::class);
+        Route::resource('color', App\Http\Controllers\Admin\ColorController::class);
+        Route::resource('size', App\Http\Controllers\Admin\SizeController::class);
+
+        // POS Terminal View Routes
+        Route::get('pos', [App\Http\Controllers\Admin\PosController::class, 'index'])->name('pos.index');
+        Route::get('pos/return', [App\Http\Controllers\Admin\PosController::class, 'returnIndex'])->name('pos.return');
         //Report
         Route::get('report/itemladger', [App\Http\Controllers\Admin\ReportController::class, 'itemladger'])->name('report.itemladger');
         Route::get('report/availablestock', [App\Http\Controllers\Admin\ReportController::class, 'availablestock'])->name('report.availablestock');
