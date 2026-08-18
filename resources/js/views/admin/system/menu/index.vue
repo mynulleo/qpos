@@ -1,5 +1,5 @@
 <template>
-    <index-page :show_status="false">
+    <index-page>
         <template v-slot:search-field>
             <v-select-container title="Select Parent Menu" field="search_data.role_id" col="4">
                 <v-select v-model="search_data.parent_id" label="menu_name" :reduce="(obj) => obj.id"
@@ -37,7 +37,7 @@ const tableColumns = [
     },
     { field: "params", title: "Params", align: "center" },
     { field: "is_show_dashboard", title: "Show Dashboard", align: "center" },
-
+    { field: "status", title: "Status", align: "center" },
 ];
 // Define excel column...
 const json_fields = {

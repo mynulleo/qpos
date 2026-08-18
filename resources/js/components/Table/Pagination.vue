@@ -1,7 +1,7 @@
 <template>
     <div
         class="base_pagination d-flex justify-content-between align-items-center"
-        v-if="table.meta && Object.keys(table.meta).length > 0"
+        v-if="table && table.meta && Object.keys(table.meta).length > 0"
     >
         <p class="number">
             {{ safeNumber(table.meta.from) }} -

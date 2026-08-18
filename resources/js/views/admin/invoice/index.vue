@@ -1,492 +1,650 @@
 <template>
-    <index-page :show_status="false" :defaultTable="false">
-        <template v-slot:search-field>
-            <v-select-container title="Select Client" field="search_data.client_id" col="3">
-                <v-select v-model="search_data.client_id" label="org_name" :reduce="(obj) => obj.id" :options="clients"
-                    placeholder="--Select Client--" :closeOnSelect="true"></v-select>
-            </v-select-container>
-            <v-select-container title="Select Account" field="search_data.account_id" col="3">
-                <v-select v-model="search_data.account_id" label="name" :reduce="(obj) => obj.id"
-                    :options="$root.global.allaccounts" placeholder="--Select Account--"
-                    :closeOnSelect="true"></v-select>
-            </v-select-container>
-            <date-picker id='searchfrominvoicedate' v-model='search_data.from_invoice_date'
-                field='search_data.from_invoice_date' title='From Invoice Date' placeholder='From Invoice Date' col='3'
-                :req='false'></date-picker>
-            <date-picker id='searchtoinvoicedate' v-model='search_data.to_invoice_date'
-                field='search_data.to_invoice_date' title='To Invoice Date' placeholder='To Invoice Date' col='3'
-                :req='false' :disablePastDates="search_data.from_invoice_date"></date-picker>
-            <SwitchBoolean v-model='search_data.is_closed' field='search_data.is_closed' title='Is Closed'
-                on-label='Yes' off-label='No' col="2">
-            </SwitchBoolean>
-        </template>
-        <template v-slot:table-list>
-            <!-- pagination and action btn -->
-            <div class="pagination_action d-none d-md-block">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="top_pagination d-flex gap-4 align-items-center">
-                            <div class="pagination">
-                                <p>
-                                    <span>{{ safeNumber(table.meta.from) }}</span> -
-                                    <span>{{ safeNumber(table.meta.to) }}</span> of
-                                    <span>{{ safeNumber(table.meta.total) }}</span>
-                                </p>
-                            </div>
-                            <div class="show_item d-flex align-items-center gap-3 ms-3">
-                                <h4 class="sh">Show</h4>
-                                <select class="form-select form-select-lg shadow-none" v-model="search_data.pagination"
-                                    @change="() => {
-                                        $root.tableSpinner = true;
-                                        updateQueryParams();
-                                    }">
-                                    <option value="10">10</option>
-                                    <option value="20" :disabled="isDisableShowOption(10)">20</option>
-                                    <option value="40" :disabled="isDisableShowOption(20)">40</option>
-                                    <option value="80" :disabled="isDisableShowOption(40)">80</option>
-                                    <option value="100" :disabled="isDisableShowOption(80)">100</option>
-                                    <option value="200" :disabled="isDisableShowOption(100)">200</option>
-                                    <option value="500" :disabled="isDisableShowOption(200)">500</option>
-                                    <option value="99999999">All</option>
-                                </select>
-                            </div>
-                            <div class="prev_next_btn">
+  <div class="container-fluid p-3">
+    <!-- Top Header Bar: Title, Search, Advance Filter Toggle & Actions -->
+    <div class="card border-0 shadow-sm mb-2">
+      <div class="card-body py-2 px-3">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <!-- Left: Page Title -->
+          <div class="d-flex align-items-center gap-2">
+            <h5 class="mb-0 fw-bold text-dark text-nowrap">
+              <i class="fas fa-file-invoice-dollar text-primary me-1"></i> Invoices (ইনভয়েস)
+            </h5>
+            <span class="badge bg-secondary font-monospace">{{ pagination.total }}</span>
+          </div>
 
-                                <button class="btns bg-transparent border-0" @click="goPrevAndNext(-1)"
-                                    :class="back_prev_page_class" data-bs-toggle="tooltip" data-bs-placement="top"
-                                    data-bs-title="Previous" v-x-tooltip>
-                                    <span class="" icon><i class="fas fa-angle-left"></i></span>
-                                </button>
-                                <button class="btns bg-transparent border-0" @click="goPrevAndNext(1)"
-                                    :class="go_next_page_class" data-bs-toggle="tooltip" data-bs-placement="top"
-                                    data-bs-title="Next" v-x-tooltip>
-                                    <span class="" icon><i class="fas fa-angle-right"></i></span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="d-flex gap-3 align-items-center justify-content-end">
-                            <div class="print_action text-end">
-                                <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top"
-                                    data-bs-title="Print" v-x-tooltip @click="print('printArea', model)">
-                                    <span class="icon"><i class="fa-solid fa-print"></i></span>
-                                </button>
-
-                                <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top"
-                                    data-bs-title="Excel" v-x-tooltip>
-                                    <span class="icon"><i class="fa-solid fa-file-excel"></i></span>
-                                </button>
-
-                                <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top"
-                                    data-bs-title="PDF" @click="generatePdf" v-x-tooltip>
-                                    <span class="icon"><i class="fa-solid fa-file-pdf"></i></span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          <!-- Center: Default Quick Search Bar -->
+          <div class="flex-grow-1 mx-md-3" style="max-width: 460px;">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search Invoice No, Customer Mobile, Name... (Press Enter)"
+                v-model="filter.keyword"
+                @keyup.enter="fetchInvoices(1)"
+              >
+              <button type="button" class="btn btn-sm px-3 theme_search_btn" @click="fetchInvoices(1)">
+                <i class="fas fa-search me-1"></i> Search
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" v-if="filter.keyword" @click="filter.keyword = ''; fetchInvoices(1)">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
-            <div id="printArea" class="table-responsive text-nowrap table-basic table_wrapper"
-                style="height: 100%; min-height: 100%; max-height: 100%;">
-                <table id="pdf-table" class="table">
-                    <thead style="">
-                        <tr class="tr_stick">
-                            <th class="sl" style="min-width: 70px;"><span class="heading"> SL </span></th>
-                            <th style=""><span class="heading">Invoice No </span></th>
-                            <th style=""><span class="heading">Invoice Date </span></th>
-                            <th style=""><span class="heading">Client</span></th>
-                            <th style=""><span class="heading">Amount</span></th>
-                            <th style=""><span class="heading">Discount </span></th>
-                            <th style=""><span class="heading">Total</span></th>
-                            <th style=""><span class="heading">Paid Amount</span></th>
-                            <th style=""><span class="heading">Is Closed</span></th>
-                            <th style="text-align: center;"><span class="heading">Status </span></th>
-                            <th class="action_th action-extra"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="td_track change_sorting change_sortingundefined update_item7" title=""
-                            v-for="(data, index) in table.datas" :key="index">
-                            <td>{{ table.meta.from + index }}</td>
-                            <td style="">{{ data.invoice_no }}</td>
-                            <td style="">{{ data.invoice_date }}</td>
-                            <td style="">
-                                <span v-if="data.client">
-                                    {{ data.client?.clientid }} - {{ data.client?.org_name }}
-                                </span>
-                            </td>
-                            <td style="">{{ data.original_amount }}</td>
-                            <td style="">{{ data.discount }}</td>
-                            <td style="">{{ data.amount }}</td>
-                            <td style="">{{ data.paid_amount }}</td>
-                            <td style="">{{ data.is_closed ? 'Yes' : 'No' }}</td>
-                            <td style="">{{ data.status }}</td>
+          </div>
 
-                            <td class="action_td action-extra">
-                                <div class="actions position-relative">
-                                    <div class="action_btn">
+          <!-- Right: Advance Filter Toggle & Action Buttons -->
+          <div class="d-flex align-items-center gap-2">
+            <!-- Advance Filter Toggle Button (Icon only, like help button, theme color #112C47) -->
+            <button
+              type="button"
+              class="advance_filter_btn position-relative"
+              @click="showAdvanced = !showAdvanced"
+              title="Advance Filter"
+            >
+              <i class="fas fa-sliders-h"></i>
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;" v-if="activeFilterCount > 0">
+                {{ activeFilterCount }}
+              </span>
+            </button>
 
-                                        <router-link v-if="$root.checkPermission('invoice.bill')"
-                                            :to="{ name: 'invoice.bill', params: { id: data.id } }"
-                                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Invoice"
-                                            v-x-tooltip="Invoice">
-                                            <span class="icon"><i class="fa fa-rectangle-list"></i></span>
-                                        </router-link>
-                                        <router-link v-if="$root.checkPermission('invoice.moneyreceipt')"
-                                            :to="{ name: 'invoice.moneyreceipt', params: { id: data.id } }"
-                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                            data-bs-title="Money Receipt" v-x-tooltip="MoneyReceipt"><span
-                                                class="icon"><i class="fa fa-money-bill"></i></span></router-link>
-                                        <router-link v-if="$root.checkPermission('invoice.show')"
-                                            :to="{ name: 'invoice.show', params: { id: data.id } }"
-                                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View"
-                                            v-x-tooltip="View"><span class="icon"><i
-                                                    class="fa fa-eye"></i></span></router-link>
-                                        <router-link
-                                            v-if="!hasPaymentDetails(data) && $root.checkPermission('invoice.edit')"
-                                            :to="{ name: 'invoice.edit', params: { id: data.id } }"
-                                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit"
-                                            v-x-tooltip="Edit"><span class="icon"><i
-                                                    class="fa fa-pencil"></i></span></router-link>
-                                        <a href="javascript:void(0)"
-                                            v-if="!hasPaymentDetails(data) && $root.checkPermission('invoice.destroy')"
-                                            @click="destroy(data, 'is_delete')" data-bs-toggle="tooltip"
-                                            data-bs-placement="top" data-bs-title="Delete" v-x-tooltip>
-                                            <span class="icon"> <i class="fa fa-trash"></i></span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+            <!-- Export & Print Dropdown / Buttons -->
+            <download-excel
+              v-if="invoices.length > 0"
+              class="btn btn-sm btn-outline-success cursor-pointer"
+              :data="exportData"
+              :fields="exportFields"
+              name="invoices.xls"
+              title="Export to Excel"
+            >
+              <i class="fas fa-file-excel"></i>
+            </download-excel>
 
-                    </tbody>
-                </table>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-dark"
+              @click="print('invoiceTablePrintArea', 'Invoice List')"
+              title="Print Table"
+            >
+              <i class="fas fa-print"></i>
+            </button>
 
-                <!-- Modal -->
-                <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title text-black" id="deleteModalLabel">
-                                    Are you sure want to
-                                    {{ is_delete ? "return back" : "delete" }} this?
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <h6 class="mb-3 text-black">
-                                    Please confirm your login password
-                                </h6>
-                                <div class="d-flex justify-content-center mb-3">
-                                    <input v-model="delete_password" type="password" placeholder="********"
-                                        class="form-control form-control-sm text-center border" />
-                                </div>
-                                <div class="d-flex justify-content-center">
-                                    <button @click="deleteConfirm()" type="button" class="theme_btn rounded-2 w-100"
-                                        :disabled="$root.submit">
-                                        <span v-if="$root.submit">
-                                            <i class="fa fa-spinner fa-spin"></i>
-                                            processing...
-                                        </span>
-                                        <template v-else>
-                                            <span v-if="is_delete">Return Back</span>
-                                            <span v-else> Confirm </span>
-                                        </template>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Modal -->
+            <router-link to="/pos/return" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 font-monospace" title="Sales Return">
+              <i class="fas fa-undo"></i> Return
+            </router-link>
+
+            <!-- New POS Sale Button (Theme Color #112C47) -->
+            <router-link to="/pos" class="btn-pos-sale shadow-sm" title="New POS Sale">
+              <span>
+                <i class="fas fa-cash-register"></i>
+              </span>
+              New Sale (POS)
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Collapsible Advance Filter Drawer Panel -->
+        <div v-show="showAdvanced" class="mt-2 pt-2 border-top advance-filter-panel transition-all">
+          <div class="row g-2 align-items-end">
+            <!-- Customer Filter -->
+            <div class="col-md-3 col-sm-6">
+              <label class="form-label small fw-bold text-muted mb-1">Customer (গ্রাহক)</label>
+              <select class="form-select form-select-sm" v-model="filter.client_id" @change="fetchInvoices(1)">
+                <option value="">-- All Customers --</option>
+                <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }} ({{ c.mobile }})</option>
+              </select>
             </div>
-        </template>
-    </index-page>
+
+            <!-- Payment Status Filter -->
+            <div class="col-md-2 col-sm-6">
+              <label class="form-label small fw-bold text-muted mb-1">Payment Status</label>
+              <select class="form-select form-select-sm" v-model="filter.payment_status" @change="fetchInvoices(1)">
+                <option value="">-- All Statuses --</option>
+                <option value="paid">Paid (পরিশোধিত)</option>
+                <option value="partial">Partial (আংশিক)</option>
+                <option value="due">Due (বকেয়া)</option>
+              </select>
+            </div>
+
+            <!-- From Date -->
+            <div class="col-md-2 col-sm-6">
+              <label class="form-label small fw-bold text-muted mb-1">From Date</label>
+              <input type="date" class="form-control form-control-sm" v-model="filter.from_invoice_date" @change="fetchInvoices(1)">
+            </div>
+
+            <!-- To Date -->
+            <div class="col-md-2 col-sm-6">
+              <label class="form-label small fw-bold text-muted mb-1">To Date</label>
+              <input type="date" class="form-control form-control-sm" v-model="filter.to_invoice_date" @change="fetchInvoices(1)">
+            </div>
+
+            <!-- Action Buttons in Filter -->
+            <div class="col-md-3 col-sm-12 d-flex gap-2">
+              <button type="button" class="btn btn-sm theme_search_btn flex-grow-1 fw-bold" @click="fetchInvoices(1)">
+                <i class="fas fa-filter me-1"></i> Apply Filter
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="resetFilter">
+                <i class="fas fa-undo me-1"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Invoices Table Card (Expanded Vertical Real Estate) -->
+    <div class="card border-0 shadow-sm mb-2">
+      <div class="card-body p-0 table-responsive" id="invoiceTablePrintArea" style="min-height: 420px; max-height: calc(100vh - 230px); overflow-y: auto;">
+        <table class="table table-hover table-sm align-middle mb-0" style="font-size: 13px;">
+          <thead class="table-dark sticky-top" style="z-index: 2;">
+            <tr>
+              <th width="4%" class="text-center">#</th>
+              <th width="14%">Invoice No</th>
+              <th width="12%">Date</th>
+              <th width="24%">Customer (গ্রাহক)</th>
+              <th width="11%" class="text-end">Original (Tk)</th>
+              <th width="9%" class="text-end">Discount</th>
+              <th width="12%" class="text-end">Net Total</th>
+              <th width="11%" class="text-end">Paid (পরিশোধ)</th>
+              <th width="10%" class="text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(inv, index) in invoices"
+              :key="inv.id"
+              class="invoice-table-row"
+            >
+              <td class="text-center text-muted">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
+              <td>
+                <router-link :to="{ name: 'invoice.show', params: { id: inv.id } }" class="fw-bold font-monospace text-primary text-decoration-none" title="Click to View Details">
+                  {{ inv.invoice_no }}
+                </router-link>
+              </td>
+              <td>
+                <span class="text-nowrap">{{ inv.invoice_date }}</span>
+              </td>
+              <td>
+                <div v-if="inv.client">
+                  <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" :title="inv.client.name">{{ inv.client.name }}</div>
+                  <small class="text-muted font-monospace"><i class="fas fa-phone-alt me-1" style="font-size: 10px;"></i>{{ inv.client.mobile }}</small>
+                </div>
+                <div v-else class="text-muted small">
+                  <i class="fas fa-walking me-1"></i>Walk-in Customer
+                </div>
+              </td>
+              <td class="text-end font-monospace">{{ formatPrice(inv.original_amount) }}</td>
+              <td class="text-end font-monospace text-muted">{{ formatPrice(inv.discount) }}</td>
+              <td class="text-end font-monospace fw-bold text-dark fs-6">{{ formatPrice(inv.amount) }}</td>
+              <td class="text-end font-monospace fw-bold text-success">{{ formatPrice(inv.paid_amount) }}</td>
+              <td class="text-center position-relative">
+                <span class="badge font-monospace" :class="getPaymentStatusBadge(inv)">
+                  {{ getPaymentStatusText(inv) }}
+                </span>
+
+                <!-- ⭐️ Floating Hover Action Buttons on this specific row (No Action Column Header) -->
+                <div class="hover-floating-actions">
+                  <div class="btn-group btn-group-sm shadow-sm bg-white border rounded px-1 py-1">
+                    <!-- View Details (Icon only) -->
+                    <router-link
+                      :to="{ name: 'invoice.show', params: { id: inv.id } }"
+                      class="btn btn-xs btn-outline-primary border-0"
+                      title="View Invoice Details"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </router-link>
+
+                    <!-- Direct POS 80mm Receipt Print -->
+                    <button
+                      type="button"
+                      class="btn btn-xs btn-outline-secondary border-0"
+                      @click.stop="printReceipt(inv)"
+                      title="Print POS Thermal Receipt (80mm)"
+                    >
+                      <i class="fas fa-receipt"></i>
+                    </button>
+
+                    <!-- Full A4 Invoice Bill -->
+                    <router-link
+                      :to="{ name: 'invoice.bill', params: { id: inv.id } }"
+                      class="btn btn-xs btn-outline-dark border-0"
+                      title="Print Standard A4 Invoice Bill"
+                    >
+                      <i class="fas fa-print"></i>
+                    </router-link>
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+            <tr v-if="invoices.length === 0 && !loading">
+              <td colspan="9" class="text-center py-5 text-muted">
+                <i class="fas fa-file-invoice fa-3x mb-2 text-secondary opacity-50"></i>
+                <p class="mb-0">No invoices found matching the selected filters.</p>
+              </td>
+            </tr>
+            <tr v-if="loading">
+              <td colspan="9" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <div class="mt-2 small text-muted">Loading invoices...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ⭐️ Bottom Sleek Footer: Compact KPI Summary Strip & Pagination -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-2 px-3">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <!-- Small KPI Summary Information at the bottom -->
+          <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 12px;">
+            <div class="d-flex align-items-center gap-1">
+              <span class="text-muted fw-bold">Invoices:</span>
+              <span class="badge bg-primary font-monospace">{{ kpi.total_invoices }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+              <span class="text-muted fw-bold">Total Sales:</span>
+              <span class="badge bg-info text-dark font-monospace">Tk. {{ formatPrice(kpi.total_sales) }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+              <span class="text-muted fw-bold">Collected:</span>
+              <span class="badge bg-success font-monospace">Tk. {{ formatPrice(kpi.total_paid) }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+              <span class="text-muted fw-bold">Total Due:</span>
+              <span class="badge bg-danger font-monospace">Tk. {{ formatPrice(kpi.total_due) }}</span>
+            </div>
+          </div>
+
+          <!-- Pagination & Per Page Selector -->
+          <div class="d-flex align-items-center gap-2" v-if="pagination.total > 0">
+            <span class="small text-muted font-monospace d-none d-md-inline" style="font-size: 11px;">
+              {{ pagination.from || 0 }}-{{ pagination.to || 0 }} of {{ pagination.total }}
+            </span>
+
+            <div class="d-flex align-items-center gap-1">
+              <button
+                type="button"
+                class="btn btn-xs btn-outline-secondary py-1 px-2"
+                :disabled="pagination.current_page <= 1"
+                @click="fetchInvoices(pagination.current_page - 1)"
+                title="Previous Page"
+              >
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <span class="small text-dark font-monospace px-1">
+                {{ pagination.current_page }}/{{ pagination.last_page }}
+              </span>
+              <button
+                type="button"
+                class="btn btn-xs btn-outline-secondary py-1 px-2"
+                :disabled="pagination.current_page >= pagination.last_page"
+                @click="fetchInvoices(pagination.current_page + 1)"
+                title="Next Page"
+              >
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+
+            <select class="form-select form-select-sm py-0 font-monospace" style="width: 70px; height: 28px; font-size: 11px;" v-model.number="pagination.per_page" @change="fetchInvoices(1)">
+              <option :value="15">15</option>
+              <option :value="30">30</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden Printable POS Thermal Receipt Area -->
+    <div id="thermalReceiptPrintArea" class="d-none" v-if="selectedPrintInvoice">
+      <div style="width: 80mm; font-family: monospace; font-size: 11px; line-height: 1.3; padding: 5px; margin: 0 auto; color: #000;">
+        <div style="text-align: center; margin-bottom: 8px;">
+          <h2 style="font-size: 16px; font-weight: bold; margin: 0 0 3px 0;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
+          <div style="font-size: 10px;">{{ $root.site?.address || '' }}</div>
+          <div style="font-size: 10px;">Mob: {{ $root.site?.mobile1 || '' }}</div>
+          <div style="font-size: 11px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2px 0;">
+            SALES RECEIPT
+          </div>
+        </div>
+
+        <div style="margin-bottom: 6px; font-size: 10px;">
+          <div><strong>Inv #:</strong> {{ selectedPrintInvoice.invoice_no }}</div>
+          <div><strong>Date:</strong> {{ selectedPrintInvoice.invoice_date }}</div>
+          <div><strong>Customer:</strong> {{ selectedPrintInvoice.client ? selectedPrintInvoice.client.name : 'Walk-in Customer' }}</div>
+          <div v-if="selectedPrintInvoice.client && selectedPrintInvoice.client.mobile"><strong>Mobile:</strong> {{ selectedPrintInvoice.client.mobile }}</div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
+          <thead>
+            <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
+              <th style="text-align: left; padding: 3px 0;">Item</th>
+              <th style="text-align: center; padding: 3px 0;">Qty</th>
+              <th style="text-align: right; padding: 3px 0;">Price</th>
+              <th style="text-align: right; padding: 3px 0;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="d in selectedPrintInvoice.details" :key="d.id" style="border-bottom: 1px dashed #ccc;">
+              <td style="padding: 3px 0;">
+                <div>{{ d.item ? d.item.title : 'Product' }}</div>
+                <div style="font-size: 9px; color: #444;" v-if="d.color || d.size">
+                  {{ d.color ? d.color.title : '' }} {{ d.size ? '/' + d.size.title : '' }}
+                </div>
+                <div style="font-size: 9px; color: #444;" v-if="d.serial_no">
+                  S/N: {{ d.serial_no }}
+                </div>
+              </td>
+              <td style="text-align: center; padding: 3px 0;">{{ d.qty }}</td>
+              <td style="text-align: right; padding: 3px 0;">{{ formatPrice(d.amount) }}</td>
+              <td style="text-align: right; padding: 3px 0;">{{ formatPrice(d.total_amount) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="border-top: 1px solid #000; padding-top: 4px; font-size: 10px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span>Subtotal:</span>
+            <span>Tk. {{ formatPrice(selectedPrintInvoice.original_amount) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;" v-if="selectedPrintInvoice.discount > 0">
+            <span>Discount:</span>
+            <span>- Tk. {{ formatPrice(selectedPrintInvoice.discount) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-top: 4px; border-top: 1px dashed #000; padding-top: 3px;">
+            <span>Net Payable:</span>
+            <span>Tk. {{ formatPrice(selectedPrintInvoice.amount) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Paid Amount:</span>
+            <span>Tk. {{ formatPrice(selectedPrintInvoice.paid_amount) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;" v-if="(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) > 0">
+            <span>Due Amount:</span>
+            <span>Tk. {{ formatPrice(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) }}</span>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 12px; border-top: 1px dashed #000; padding-top: 6px; font-size: 9px;">
+          <div>Thank you for shopping with us!</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
-
-const model = "invoice";
-
-const tableColumns = [
-    { field: "invoice_no", title: "Invoice No" },
-    { field: "invoice_date", title: "Invoice Date" },
-    { field: "client_id", title: "Client", subfield: "client.name" },
-    { field: "amount", title: "Amount" },
-    { field: "is_closed", title: "Is Closed" },
-    { field: "status", title: "Status", align: "center" },
-];
-
-const json_fields = {
-    "Client": "client_id",
-    "Invoice No": "invoice_no",
-    "Invoice Date": "invoice_date",
-    "Amount": "amount",
-    "Paid Amount": "paid_amount",
-    "Payment Date": "payment_date",
-    "Trxid": "trxid",
-    "Payment Status": "payment_status",
-};
+import axios from 'axios';
 
 export default {
-
-    data() {
-        return {
-            model: model,
-            page_title: "",
-            json_fields: json_fields,
-            fields_name: {
-                default: "Select One",
-                invoice_no: "Invoice No",
-                trxid: 'Trx ID',
-                card_type: 'Card Type'
-            },
-            search_data: {
-                account_id: "",
-                is_closed: 0,
-                from_invoice_date: "",
-                to_invoice_date: "",
-                pagination: this.$route.query.pagination ?? 10,
-                page: this.$route.query.page ?? 1,
-                field_name: this.$route.query.field_name ?? "",
-                value: this.$route.query.value ?? "",
-                status: this.$route.query.status ?? "",
-            },
-            minToDate: null,
-            table: {
-                columns: tableColumns,
-                datas: [],
-                meta: [],
-                links: []
-            },
-            clients: [],
-        };
+  data() {
+    return {
+      invoices: [],
+      clients: [],
+      loading: false,
+      showAdvanced: false,
+      filter: {
+        keyword: '',
+        client_id: '',
+        payment_status: '',
+        from_invoice_date: '',
+        to_invoice_date: '',
+      },
+      pagination: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 0,
+        from: 0,
+        to: 0,
+      },
+      kpi: {
+        total_invoices: 0,
+        total_sales: 0,
+        total_paid: 0,
+        total_due: 0,
+      },
+      selectedPrintInvoice: null,
+      exportFields: {
+        'Invoice No': 'invoice_no',
+        'Date': 'invoice_date',
+        'Customer Name': 'client_name',
+        'Mobile': 'client_mobile',
+        'Original Amount': 'original_amount',
+        'Discount': 'discount',
+        'Net Amount': 'amount',
+        'Paid Amount': 'paid_amount',
+        'Due Amount': 'due_amount',
+        'Status': 'status',
+      }
+    };
+  },
+  computed: {
+    activeFilterCount() {
+      let count = 0;
+      if (this.filter.client_id) count++;
+      if (this.filter.payment_status) count++;
+      if (this.filter.from_invoice_date) count++;
+      if (this.filter.to_invoice_date) count++;
+      return count;
     },
-    provide() {
-        return {
-            validate: this.validation,
-            model: this.model,
-            fields_name: this.fields_name,
-            search_data: this.search_data,
-            table: this.table,
-            json_fields: this.json_fields,
-            search: this.search,
-            resetSearchData: this.resetSearchData,
-        };
+    exportData() {
+      return this.invoices.map(inv => ({
+        invoice_no: inv.invoice_no,
+        invoice_date: inv.invoice_date,
+        client_name: inv.client ? inv.client.name : 'Walk-in Customer',
+        client_mobile: inv.client ? inv.client.mobile : '',
+        original_amount: inv.original_amount,
+        discount: inv.discount,
+        amount: inv.amount,
+        paid_amount: inv.paid_amount,
+        due_amount: Math.max(0, floatval(inv.amount) - floatval(inv.paid_amount)),
+        status: this.getPaymentStatusText(inv),
+      }));
+    }
+  },
+  methods: {
+    formatPrice(val) {
+      const f = parseFloat(val);
+      return isNaN(f) ? '0.00' : f.toFixed(2);
     },
-
-    methods: {
-        hasPaymentDetails(row) {
-            return Array.isArray(row?.payment_details)
-                && row.payment_details.length > 0;
-        },
-        updateToDateMin(date) {
-            console.log(date);
-            this.minToDate = date; // যখন from date select হবে → to date এর জন্য minDate সেট হবে
-            if (this.search_data.to_invoice_date && this.search_data.to_invoice_date < date) {
-                this.search_data.to_invoice_date = ""; // যদি আগে থেকে ছোট date select করা থাকে → clear করে দেবে
-            }
-        },
-        isDisableShowOption(prevOptionValue) {
-            return !(this.safeNumber(this.table.meta?.total) > prevOptionValue);
-        },
-        updateQueryParams() {
-            this.$router.push({
-                query: this.search_data,
-            });
-
-            this.search();
-        },
-        tableSortingByButton(id, sorting = null, model) {
-            let value = 1;
-
-            if (this.isEmpty(sorting)) {
-                let input = $(`input[data-item="${id}"]`);
-                value = input.val();
-                console.log(value);
-            }
-
-            $(".change_sorting").removeClass("sorting-success");
-            this.sorting_spin = id;
-
-            let data = { number: value, id: id, model: model };
-
-            axios
-                .get("table-sorting", { params: data })
-                .then((res) => {
-                    this.get_paginate(this.model, this.search_data);
-                })
-                .catch((error) => console.log(error))
-                .then((alw) => {
-                    this.sorting_spin = "";
-                });
-
-            setTimeout(
-                () => $(".change_sorting").removeClass("sorting-success"),
-                5000
-            );
-        },
-        tableSorting(number, id, model, auto) {
-            console.log(number, id, model, auto);
-
-            $(".change_sorting").removeClass("sorting-success");
-            this.sorting_spin = id;
-            let data = { number: number, id: id, model: model, auto: auto };
-            axios
-                .get("table-sorting", { params: data })
-                .then((res) => { })
-                .catch((error) => console.log(error))
-                .then((alw) => {
-                    this.sorting_spin = "";
-                    $(".change_sorting" + number).addClass("sorting-success");
-                });
-
-            setTimeout(
-                () => $(".change_sorting").removeClass("sorting-success"),
-                5000
-            );
-        },
-
-        sort(field, enableDataSorting = true) {
-            if (enableDataSorting === true) {
-                this.coloumSort = field;
-                this.table.datas.sort(this.sortBy(field));
-            }
-        },
-
-        sortBy(property) {
-            if (this.order === "desc") {
-                this.order = "asc";
-            } else {
-                this.order = "desc";
-            }
-            const order = this.order;
-            return function (a, b) {
-                const varA =
-                    typeof a[property] === "string"
-                        ? a[property].toUpperCase()
-                        : a[property];
-                const varB =
-                    typeof b[property] === "string"
-                        ? b[property].toUpperCase()
-                        : b[property];
-
-                let comparison = 0;
-                if (varA > varB) comparison = 1;
-                else if (varA < varB) comparison = -1;
-                return order === "desc" ? comparison * -1 : comparison;
-            };
-        },
-        generatePdf() {
-            if (this.customPdfUrl) {
-                window.open(this.customPdfUrl, "_blank");
-                return false;
-            }
-
-            const doc = new jsPDF();
-            $(".action").css("display", "none");
-            doc.setFontSize(10);
-            doc.text(new Date().toISOString().slice(0, 10), 185, 12, "center");
-
-            doc.setFontSize(16);
-            const title = `${this.ucfirst(
-                process.env.MIX_VUE_APP_NAME
-            )} ${this.ucfirst(this.model)}`;
-            doc.text(title, 100, 12, "center");
-            console.log(doc);
-
-            autoTable(doc, { html: "#pdf-table" });
-            doc.save(this.model + ".pdf");
-            setTimeout(() => $(".action").show(), 300);
-        },
-        goToView(id) {
-            this.$router.push({
-                name: this.model + ".show",
-                params: { id: id },
-            });
-        },
-        search() {
-            this.get_paginate(this.model, this.search_data);
-        },
-        destroy(item, is_delete) {
-            this.deleted_item = item;
-            this.deleted_id = item.id;
-            this.is_delete = is_delete;
-            $("#deleteModal").modal("show");
-        },
-        setModal(id, htmlid) {
-            localStorage.setItem("model_id", id);
-            $("#" + htmlid).modal("show");
-        },
-        deleteConfirm() {
-            if (!this.delete_password) {
-                this.$toast("Password field is required", "error");
-                return false;
-            }
-            let data = {
-                for_delete: true,
-                id: this.user.id,
-                old_password: this.delete_password,
-            };
-            this.$root.submit = true;
-            axios
-                .post("/check-old-password", data)
-                .then((res) => {
-                    if (res.data) {
-                        this.search_data.is_delete = this.is_delete;
-
-                        if (this.customDestroyData) {
-                            this.customDestroyData(this.deleted_item);
-                        } else {
-                            this.destroy_data(this.model, this.deleted_id, this.search_data);
-                        }
-
-                        this.deleted_item = null;
-                        this.deleted_id = "";
-                        this.delete_password = "";
-
-                        $("#deleteModal").modal("hide");
-                    } else {
-                        this.$toast("Password does not match", "error");
-                        return false;
-                    }
-                })
-                .finally((res) => (this.$root.submit = false));
-        },
-        search() {
-            this.get_paginate(this.model, this.search_data);
-        },
-        getClients() {
-            axios.get(
-                `clients/`
-            )
-                .then((response) => {
-                    this.clients = response.data;
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-        },
-        resetSearchData() {
-            this.search_data.pagination = 10;
-            this.search_data.page = 1;
-            this.search_data.field_name = "";
-            this.search_data.value = "";
-            this.search_data.status = "";
-        },
+    getPaymentStatusText(inv) {
+      const due = floatval(inv.amount) - floatval(inv.paid_amount);
+      if (due <= 0) return 'Paid';
+      if (floatval(inv.paid_amount) > 0) return 'Partial';
+      return 'Due';
     },
-
-    created() {
-        // this.getRouteName(this.model);
-        this.page_title = `${this.headline(this.model)} List`;
-        this.search();
-        this.getClients();
+    getPaymentStatusBadge(inv) {
+      const status = this.getPaymentStatusText(inv);
+      if (status === 'Paid') return 'bg-success';
+      if (status === 'Partial') return 'bg-warning text-dark';
+      return 'bg-danger';
     },
+    fetchInvoices(page = 1) {
+      this.loading = true;
+      this.pagination.current_page = page;
 
-    validators: {},
+      const params = {
+        page: page,
+        pagination: this.pagination.per_page,
+        keyword: this.filter.keyword,
+        client_id: this.filter.client_id,
+        payment_status: this.filter.payment_status,
+        from_invoice_date: this.filter.from_invoice_date,
+        to_invoice_date: this.filter.to_invoice_date,
+      };
+
+      axios.get('invoice', { params })
+        .then(res => {
+          this.loading = false;
+          if (res.data) {
+            this.invoices = res.data.data || [];
+            this.pagination.total = res.data.total || 0;
+            this.pagination.last_page = res.data.last_page || 1;
+            this.pagination.from = res.data.from || 0;
+            this.pagination.to = res.data.to || 0;
+
+            if (res.data.kpi) {
+              this.kpi = res.data.kpi;
+            }
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          console.error(err);
+        });
+    },
+    fetchClients() {
+      axios.get('client', { params: { allData: true } })
+        .then(res => {
+          this.clients = res.data || [];
+        });
+    },
+    resetFilter() {
+      this.filter = {
+        keyword: '',
+        client_id: '',
+        payment_status: '',
+        from_invoice_date: '',
+        to_invoice_date: '',
+      };
+      this.fetchInvoices(1);
+    },
+    printReceipt(inv) {
+      this.selectedPrintInvoice = inv;
+      this.$nextTick(() => {
+        this.print('thermalReceiptPrintArea', `POS Receipt - ${inv.invoice_no}`);
+      });
+    }
+  },
+  mounted() {
+    this.fetchInvoices(1);
+    this.fetchClients();
+  }
 };
+
+function floatval(val) {
+  const f = parseFloat(val);
+  return isNaN(f) ? 0 : f;
+}
 </script>
+
+<style scoped>
+.cursor-pointer {
+  cursor: pointer;
+}
+.btn-xs {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.75rem;
+}
+.advance-filter-panel {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 6px;
+}
+.advance_filter_btn {
+  background-color: #112C47;
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(17, 44, 71, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+.advance_filter_btn:hover {
+  background-color: #1a3d61;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+.theme_search_btn {
+  background-color: #112C47 !important;
+  border-color: #112C47 !important;
+  color: #ffffff !important;
+}
+.theme_search_btn:hover {
+  background-color: #1a3d61 !important;
+  border-color: #1a3d61 !important;
+  color: #ffffff !important;
+}
+.btn-pos-sale {
+  background-color: #112C47;
+  color: #ffffff;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 16px 3px 4px;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(17, 44, 71, 0.2);
+  transition: all 0.2s ease-in-out;
+}
+.btn-pos-sale span {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: #112C47;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  font-size: 13px;
+}
+.btn-pos-sale:hover {
+  background-color: #1a3d61;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
+/* ⭐️ Seamless Floating Row Hover Action Buttons (No visible action column) */
+.invoice-table-row {
+  position: relative !important;
+  transition: background-color 0.15s ease-in-out;
+}
+.invoice-table-row:hover {
+  background-color: #eef6ff !important;
+}
+.invoice-table-row:hover td {
+  background-color: #eef6ff !important;
+}
+
+.hover-floating-actions {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 1000;
+  white-space: nowrap;
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+}
+
+.invoice-table-row:hover .hover-floating-actions {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.btn-xs {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

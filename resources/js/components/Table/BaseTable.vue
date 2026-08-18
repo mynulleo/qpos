@@ -165,7 +165,7 @@
                         </tr>
                     </thead>
                     <tbody v-if="Object.keys(table.datas).length > 0">
-                        <tr v-for="(item, index) in table.datas" :key="index" class="td_track change_sorting" :class="'change_sorting' +
+                        <tr v-for="(item, index) in table.datas" :key="index" class="td_track change_sorting base-table-row position-relative" :class="'change_sorting' +
                             item.sorting +
                             ' update_item' +
                             item.id
@@ -432,11 +432,9 @@
                                 </td>
                             </slot>
 
-                            <td class="action_td" :class="table.routes.array ? 'action-extra' : 'action'">
-                                <div class="actions position-relative">
-                                    <XBaseTableActionRoutes :key="`table_action_${index}`" :tableRoutes="table.routes"
-                                        :item="item" />
-                                </div>
+                            <td class="action_td position-relative" :class="table.routes.array ? 'action-extra' : 'action'">
+                                <XBaseTableActionRoutes :key="`table_action_${index}`" :tableRoutes="table.routes"
+                                    :item="item" />
                             </td>
                         </tr>
                     </tbody>
@@ -869,3 +867,63 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.base-table-row {
+    position: relative !important;
+    transition: background-color 0.15s ease-in-out;
+}
+.base-table-row:hover,
+tr.td_track:hover {
+    background-color: #eef6ff !important;
+}
+
+.base-table-row:hover td,
+tr.td_track:hover td {
+    background-color: #eef6ff !important;
+}
+
+.action_td {
+    position: relative !important;
+    padding: 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    border: none !important;
+    overflow: visible !important;
+}
+
+:deep(.hover-floating-actions),
+.hover-floating-actions {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 1000;
+    white-space: nowrap;
+    transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+}
+
+.base-table-row:hover :deep(.hover-floating-actions),
+tr.td_track:hover :deep(.hover-floating-actions),
+.base-table-row:hover .hover-floating-actions,
+tr.td_track:hover .hover-floating-actions,
+tr:hover .hover-floating-actions {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+:deep(.btn-xs),
+.btn-xs {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.8rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>

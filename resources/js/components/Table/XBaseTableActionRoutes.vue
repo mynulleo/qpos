@@ -1,92 +1,87 @@
 <template>
-    <div class="action_btn">
-        <template v-if="tableRoutes.array && tableRoutes.array.length > 0">
-            <template v-for="(route, index) in tableRoutes.array">
-                <template v-if="!route.showWhen || (route.showWhen && route.showWhen(this, item))">
-                    <template v-if="route.type == 'destroy'">
-                        <a href="javascript:void(0)" v-if="
-                            route.route &&
-                            $root.checkPermission(route.route)
-                        " @click="$parent.destroy(item, item.is_delete ?? null)" data-bs-toggle="tooltip"
-                            data-bs-placement="top" data-bs-title="Delete" v-x-tooltip>
-                            <span v-if="item.is_delete">
-                                <i class="fa-solid fa-send-back"></i>
-                            </span>
-                            <template v-else>
-                                <span v-html="route.content"></span>
-                            </template>
+    <div class="hover-floating-actions">
+        <div class="btn-group btn-group-sm shadow-sm bg-white border rounded px-1 py-1">
+            <!-- Custom routes in tableRoutes.array -->
+            <template v-if="tableRoutes.array && tableRoutes.array.length > 0">
+                <template v-for="(route, index) in tableRoutes.array">
+                    <template v-if="!route.showWhen || (route.showWhen && route.showWhen(this, item))">
+                        <template v-if="route.type == 'destroy'">
+                            <a href="javascript:void(0)"
+                                v-if="route.route && $root.checkPermission(route.route)"
+                                @click.stop="$parent.destroy(item, item.is_delete ?? null)"
+                                class="btn btn-xs btn-outline-danger border-0"
+                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Delete" v-x-tooltip>
+                                <span v-if="item.is_delete"><i class="fa-solid fa-send-back"></i></span>
+                                <template v-else><span v-html="route.content"></span></template>
+                            </a>
+                        </template>
+
+                        <a href="javascript:void(0)"
+                            v-else-if="route.callback || route.modal"
+                            @click.stop="route.callback ? route.callback(this, item) : $parent.setModal(item['id'], route.modalid)"
+                            class="btn btn-xs btn-outline-secondary border-0"
+                            v-html="route.content">
                         </a>
-                    </template>
 
-                    <a href="javascript:void(0)" v-else-if="route.callback || route.modal"
-                        @click="route.callback ? route.callback(this, item) : $parent.setModal(item['id'], route.modalid)"
-                        v-html="route.content">
-                    </a>
-
-                    <template v-else>
-                        <router-link v-if="route.route && $root.checkPermission(route.route)" :to="generateRoute(route)"
-                            :class="route.class" data-bs-toggle="tooltip" data-bs-placement="top"
-                            :data-bs-title="route.title" v-x-tooltip v-html="route.content"></router-link>
+                        <template v-else>
+                            <router-link
+                                v-if="route.route && $root.checkPermission(route.route)"
+                                :to="generateRoute(route)"
+                                class="btn btn-xs btn-outline-secondary border-0"
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                :data-bs-title="route.title" v-x-tooltip v-html="route.content"></router-link>
+                        </template>
                     </template>
                 </template>
             </template>
-        </template>
 
-        <template v-if="Object.keys(tableRoutes).length > 0">
-            <router-link v-if="
-                tableRoutes.view && $root.checkPermission(tableRoutes.view)
-            " :to="{
-                name: tableRoutes.view,
-                params: { id: item.id },
-                query: {
-                    page: $route.query.page,
-                },
-            }" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View" v-x-tooltip>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="icon icon-tabler icons-tabler-outline icon-tabler-eye">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                </svg>
-            </router-link>
+            <!-- Standard View, Edit, Delete Routes -->
+            <template v-if="Object.keys(tableRoutes).length > 0">
+                <!-- View Action (Icon only) -->
+                <router-link
+                    v-if="tableRoutes.view && $root.checkPermission(tableRoutes.view)"
+                    :to="{
+                        name: tableRoutes.view,
+                        params: { id: item.id },
+                        query: { page: $route.query.page },
+                    }"
+                    class="btn btn-xs btn-outline-primary border-0"
+                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View" v-x-tooltip
+                >
+                    <i class="fas fa-eye"></i>
+                </router-link>
 
-            <router-link v-if="
-                tableRoutes.edit && $root.checkPermission(tableRoutes.edit)
-            " :to="{
-                name: tableRoutes.edit,
-                params: { id: item.id },
-                query: {
-                    page: $route.query.page,
-                },
-            }" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit" v-x-tooltip>
+                <!-- Edit Action (Icon only) -->
+                <router-link
+                    v-if="tableRoutes.edit && $root.checkPermission(tableRoutes.edit)"
+                    :to="{
+                        name: tableRoutes.edit,
+                        params: { id: item.id },
+                        query: { page: $route.query.page },
+                    }"
+                    class="btn btn-xs btn-outline-success border-0"
+                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit" v-x-tooltip
+                >
+                    <i class="fas fa-pencil-alt"></i>
+                </router-link>
 
-                <span class="icon icon-tabler icons-tabler-outline icon-tabler-pencil"><i
-                        class="fa-solid fa-pencil"></i></span>
-            </router-link>
-
-            <a href="javascript:void(0)" v-if="
-                tableRoutes.destroy &&
-                $root.checkPermission(tableRoutes.destroy)
-            " @click="$parent.destroy(item, item.is_delete ?? null)" data-bs-toggle="tooltip" data-bs-placement="top"
-                data-bs-title="Delete" v-x-tooltip>
-                <span v-if="item.is_delete">
-                    <i class="fa-solid fa-send-back"></i>
-                </span>
-                <span v-else>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M4 7l16 0" />
-                        <path d="M10 11l0 6" />
-                        <path d="M14 11l0 6" />
-                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                    </svg>
-                </span>
-            </a>
-        </template>
+                <!-- Delete Action (Icon only) -->
+                <a
+                    href="javascript:void(0)"
+                    v-if="tableRoutes.destroy && $root.checkPermission(tableRoutes.destroy)"
+                    @click.stop="$parent.destroy(item, item.is_delete ?? null)"
+                    class="btn btn-xs btn-outline-danger border-0"
+                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Delete" v-x-tooltip
+                >
+                    <span v-if="item.is_delete">
+                        <i class="fa-solid fa-send-back"></i>
+                    </span>
+                    <span v-else>
+                        <i class="fas fa-trash-alt"></i>
+                    </span>
+                </a>
+            </template>
+        </div>
     </div>
 </template>
 
@@ -166,3 +161,14 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.btn-xs {
+    padding: 0.18rem 0.45rem;
+    font-size: 0.8rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>

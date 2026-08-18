@@ -69,12 +69,18 @@ class Item extends BaseModel
 
 	public static function generateBarcode()
 	{
-		$barcode = 111;
-		$item = Item::latest()->first(['id', 'barcode']);
-		if ($item) {
-			$barcode = $item->barcode + 1;
+		$maxBarcode = \Illuminate\Support\Facades\DB::table('items')
+			->whereRaw("barcode REGEXP '^[0-9]+$'")
+			->selectRaw('MAX(CAST(barcode AS UNSIGNED)) as max_barcode')
+			->value('max_barcode');
+
+		$nextBarcode = $maxBarcode ? max(111, intval($maxBarcode) + 1) : 111;
+
+		while (\Illuminate\Support\Facades\DB::table('items')->where('barcode', (string)$nextBarcode)->exists()) {
+			$nextBarcode++;
 		}
-		return $barcode;
+
+		return (string)$nextBarcode;
 	}
 	// date format
 

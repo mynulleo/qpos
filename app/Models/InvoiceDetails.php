@@ -77,7 +77,7 @@ class InvoiceDetails extends BaseModel
 
     public function invoice()
     {
-        return $this->belongsTo(Invoice::class, 'currency_id', 'id');
+        return $this->belongsTo(Invoice::class, 'invoice_id', 'id');
     }
 
     public function currency()

@@ -28,6 +28,7 @@
             <ul class="list-unstyled" v-if="filteredMenus && Object.keys(menus).length > 0">
                 <template v-for="(root_menu, index) in filteredMenus">
                     <template v-if="
+                        (root_menu.status === 'active' || !root_menu.status) &&
                         root_menu.child_menus &&
                         Object.keys(root_menu.child_menus).length > 0
                     ">
@@ -64,7 +65,7 @@
                         </li>
                     </template>
 
-                    <template v-else>
+                    <template v-else-if="root_menu.status === 'active' || !root_menu.status">
                         <li class="menu_item" :key="`parent_menu_${index}`" v-if="
                             root_menu.route_name &&
                             $root.checkPermission(root_menu.route_name)
@@ -185,7 +186,7 @@ export default {
         isMenuActive(routeName) {
             if (!routeName) return false;
             const prefix = this.activeRouteNamePrefix;
-            if (prefix === "report." || prefix === "bulkdataimport.") return false;
+            if (prefix === "report." || prefix === "bulkdataimport." || prefix === 'pos.') return false;
             return routeName.startsWith(prefix);
         },
 

@@ -1,7 +1,16 @@
 <template>
   <index-page>
+    <template v-slot:button>
+      <div class="d-flex gap-2 align-items-center">
+        <router-link :to="{ name: 'pos.labelprint' }" class="btn btn-sm btn-info text-white d-inline-flex align-items-center gap-1 shadow-sm">
+          <i class="fas fa-barcode"></i> Label Print
+        </router-link>
+        <AddOrBackButton :route="model + '.create'" :portion="model" :icon="'plus'" />
+      </div>
+    </template>
+
     <template v-slot:search-field>
-      <v-select-container title="Supplier" field="search_data.category_id" col="3">
+      <v-select-container title="Category" field="search_data.category_id" col="3">
         <v-select v-model="search_data.category_id" label="title" :reduce="(obj) => obj.id" :options="categories"
           placeholder="--Select Category--" :closeOnSelect="true"></v-select>
       </v-select-container>

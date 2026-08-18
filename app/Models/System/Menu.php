@@ -60,20 +60,41 @@ class Menu extends Model
         $permittedMenuArr = App::make('permittedMenuArr');
 
         return Menu::whereNull('parent_id')
+            ->where(function ($q) {
+                $q->where('status', 'active')->orWhereNull('status');
+            })
             ->with(['childMenus' => function ($query) use ($permittedMenuArr) {
-                $query->whereIn('route_name', $permittedMenuArr)
-                    ->orderBy('menu_name'); // Sort child menus alphabetically
+                $query->where(function ($q) {
+                    $q->where('status', 'active')->orWhereNull('status');
+                })
+                ->whereIn('route_name', $permittedMenuArr)
+                ->orderBy('menu_name'); // Sort child menus alphabetically
             }])
-
             ->oldest('sorting')
             ->get()
+            ->filter(function ($parentMenu) {
+                if ($parentMenu->childMenus->isEmpty() && empty($parentMenu->route_name)) {
+                    return false;
+                }
+                return true;
+            })
+            ->values()
             ->toArray();
     }
 
     public static function getMenuList()
     {
-        $parent = Menu::with('childs')->where('parent_id', null)
-            ->oldest('sorting')->get();
+        $parent = Menu::with(['childs' => function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('status', 'active')->orWhereNull('status');
+                });
+            }])
+            ->whereNull('parent_id')
+            ->where(function ($q) {
+                $q->where('status', 'active')->orWhereNull('status');
+            })
+            ->oldest('sorting')
+            ->get();
         $menus = Menu::recursiveMenuList($parent);
 
         return $menus;

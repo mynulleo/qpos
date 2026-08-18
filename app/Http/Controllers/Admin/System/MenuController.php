@@ -18,13 +18,17 @@ class MenuController extends Controller
     public function index(Request $request)
     {
         $query = Menu::with(['parent:id,menu_name,icon'])
-            ->select('id', 'parent_id', 'menu_name', 'route_name', 'sorting', 'params', 'show_dasboard', 'icon')
+            ->select('id', 'parent_id', 'menu_name', 'route_name', 'sorting', 'params', 'show_dasboard', 'icon', 'status')
             ->latest();
 
         $query->whereLike($request->field_name, $request->value);
 
         if ($request->filled('parent_id')) {
             $query->where('parent_id', $request->parent_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         if ($request->filled('show_dashboard') && $request->show_dashboard == 'true') {
@@ -142,7 +146,7 @@ class MenuController extends Controller
      */
     public function dashboardMenu()
     {
-        return Menu::where('show_dasboard', 1)->get();
+        return Menu::where('show_dasboard', 1)->where('status', 'active')->get();
     }
 
     /**
@@ -155,6 +159,7 @@ class MenuController extends Controller
         return $request->validate([
             'menu_name' => 'required|string|min:0|max:191',
             'sorting' => 'required',
+            'status' => 'nullable|string|in:active,deactive',
         ]);
     }
 }

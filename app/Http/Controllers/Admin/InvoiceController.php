@@ -32,21 +32,32 @@ class InvoiceController extends BaseController
      */
     public function index(Request $request)
     {
-        $query = Invoice::with(['invoice_details', 'client:id,clientid,name,org_name', 'payment_details:id,payment_id,reference_type,reference_id,amount,is_closed'])->latest();
+        $query = Invoice::with([
+            'client:id,clientid,name,org_name,mobile',
+            'details' => function ($q) {
+                $q->with('item:id,title,barcode', 'color:id,title', 'size:id,title');
+            },
+            'payment_details:id,payment_id,reference_type,reference_id,amount,is_closed'
+        ])->latest('id');
 
-        // ✅ account_id → invoice_details টেবিলে filter
-        if (!empty($request->account_id)) {
-            $query->whereHas('invoice_details', function ($q) use ($request) {
-                $q->where('account_id', $request->account_id);
-            });
-        }
-
-        // ✅ payment_status → invoices টেবিলে
+        // ✅ Filter by Client
         if (!empty($request->client_id)) {
             $query->where('client_id', $request->client_id);
         }
 
-        // ✅ invoice date range
+        // ✅ Filter by Keyword (Invoice No, Client Mobile, Client Name)
+        if (!empty($request->keyword)) {
+            $kw = trim($request->keyword);
+            $query->where(function ($q) use ($kw) {
+                $q->where('invoice_no', 'like', "%{$kw}%")
+                  ->orWhereHas('client', function ($cq) use ($kw) {
+                      $cq->where('mobile', 'like', "%{$kw}%")
+                         ->orWhere('name', 'like', "%{$kw}%");
+                  });
+            });
+        }
+
+        // ✅ Filter by Invoice Date Range
         if (!empty($request->from_invoice_date) && !empty($request->to_invoice_date)) {
             $query->whereBetween('invoice_date', [
                 date('Y-m-d', strtotime($request->from_invoice_date)),
@@ -58,21 +69,47 @@ class InvoiceController extends BaseController
             $query->whereDate('invoice_date', '<=', date('Y-m-d', strtotime($request->to_invoice_date)));
         }
 
-        // ✅ payment_status → invoices টেবিলে
-        if (!empty($request->is_closed) &&  $request->is_closed == 1) {
-            $query->where('is_closed', 1);
+        // ✅ Filter by Payment Status (Paid, Partial, Due)
+        if (!empty($request->payment_status)) {
+            if ($request->payment_status === 'paid') {
+                $query->whereRaw('paid_amount >= amount');
+            } elseif ($request->payment_status === 'partial') {
+                $query->whereRaw('paid_amount > 0 AND paid_amount < amount');
+            } elseif ($request->payment_status === 'due') {
+                $query->whereRaw('paid_amount = 0 OR paid_amount IS NULL');
+            }
         }
 
-        // ✅ field_name & value (যদি generic search থাকে)
+        // ✅ Filter by is_closed
+        if (isset($request->is_closed) && $request->is_closed !== '') {
+            $query->where('is_closed', $request->is_closed);
+        }
+
+        // ✅ Generic field search
         if (!empty($request->field_name) && !empty($request->value)) {
             $query->whereLike($request->field_name, $request->value);
         }
 
+        // Summary KPI Metrics for the list page
+        $totalInvoicesCount = (clone $query)->count();
+        $totalSalesAmount = (clone $query)->sum('amount');
+        $totalPaidAmount = (clone $query)->sum('paid_amount');
+        $totalDueAmount = max(0, $totalSalesAmount - $totalPaidAmount);
+
         if ($request->allData) {
             return $query->get();
         } else {
-            $datas = $query->paginate($request->pagination);
-            return new Resource($datas);
+            $datas = $query->paginate($request->pagination ?? 15);
+            $resource = new Resource($datas);
+            $resource->additional([
+                'kpi' => [
+                    'total_invoices' => $totalInvoicesCount,
+                    'total_sales' => $totalSalesAmount,
+                    'total_paid' => $totalPaidAmount,
+                    'total_due' => $totalDueAmount,
+                ]
+            ]);
+            return $resource;
         }
     }
 
@@ -83,7 +120,7 @@ class InvoiceController extends BaseController
      */
     public function create()
     {
-        return view('layouts.backend_app');
+        return redirect('/pos');
     }
 
     /**
@@ -94,81 +131,168 @@ class InvoiceController extends BaseController
      */
     public function store(Request $request)
     {
-        DB::beginTransaction();
-        try {
-            $data = $request->all();
-
-            $data['client_id'] = $request->client['id'];
-
-            $invoiceDetails = $data['invoice_details'] ?? [];
-
-            unset($data['invoice_details']);
-
-            $data['invoice_no'] = Invoice::generateInvoiceNumber();
-            $data['invoice_date'] = vue_to_server_date($data['invoice_date']);
-
-            $invoice = Invoice::create($data);
-            foreach ($invoiceDetails as $d) {
-                $invoice->invoice_details()->create([
-                    'workorder_id' => $d['workorder_id'],
-                    'reference' => $d['reference'],
-                    'description' => $d['description'],
-                    'qty' => $d['qty'],
-                    'amount' => $d['amount'],
-                    'currency_id' => $d['currency_id'],
-                    'currency_rate' => $d['currency_rate'],
-                    'total_amount' => $d['total_amount'] ?? 0,
-                ]);
-            }
-
-            DB::commit();
-            return $this->responseReturn("create", $invoice);
-        } catch (\Exception $ex) {
-            DB::rollBack();
-            return response()->json(['exception' => $ex->getMessage()], 422);
-        }
+        return response()->json(['exception' => 'ইনভয়েস তৈরির জন্য দয়া করে POS টার্মিনাল ব্যবহার করুন।'], 422);
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified resource with rich details, client history, loyalty points, and item stock analytics.
      *
-     * @param  \App\Models\Invoice  $invoice
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
         $invoice = Invoice::with([
             'client',
-            'invoice_details',
-            'invoice_details.account'
-        ])->find($id);
+            'details' => function ($q) {
+                $q->with([
+                    'item' => function ($iq) {
+                        $iq->with('category:id,title', 'unit:id,title');
+                    },
+                    'color:id,title',
+                    'size:id,title'
+                ]);
+            },
+            'payment_details.payment'
+        ])->findOrFail($id);
 
+        // 1. Client History Summary
+        $clientHistory = null;
+        $loyaltyPoints = null;
+
+        $siteSetting = \App\Models\System\SiteSetting::first();
+        $couponEnabled = boolval($siteSetting->coupon_enabled ?? 0);
+        $pointRedeemRate = floatval($siteSetting->point_redeem_rate ?: 10);
+
+        if ($invoice->client) {
+            $clientId = $invoice->client->id;
+            $allClientInvoices = Invoice::where('client_id', $clientId)->get();
+            $lifetimeSales = $allClientInvoices->sum('amount');
+            $lifetimePaid = $allClientInvoices->sum('paid_amount');
+
+            $clientHistory = [
+                'total_orders' => $allClientInvoices->count(),
+                'lifetime_sales' => $lifetimeSales,
+                'lifetime_paid' => $lifetimePaid,
+                'lifetime_due' => max(0, $lifetimeSales - $lifetimePaid),
+                'current_due' => $invoice->client->current_due ?? 0,
+            ];
+
+            // Points earned & redeemed in this invoice
+            $pointsEarnedThis = \App\Models\ClientPointTransaction::where('invoice_id', $invoice->id)
+                ->where('type', 'Earn')
+                ->sum('points_in');
+
+            $pointsRedeemedThis = \App\Models\ClientPointTransaction::where('invoice_id', $invoice->id)
+                ->where('type', 'Redeem')
+                ->sum('points_out');
+
+            $loyaltyPoints = [
+                'coupon_enabled' => $couponEnabled,
+                'points_balance' => floatval($invoice->client->points_balance ?? 0),
+                'points_value_in_tk' => round(floatval($invoice->client->points_balance ?? 0) / $pointRedeemRate, 2),
+                'points_earned_this_invoice' => floatval($pointsEarnedThis),
+                'points_redeemed_this_invoice' => floatval($pointsRedeemedThis),
+                'point_redeem_rate' => $pointRedeemRate,
+            ];
+        }
+
+        // 2. Enrich Details with Live Stock and Lifetime Sold Quantities
+        $details = $invoice->details->map(function ($d) {
+            $itemId = $d->item_id;
+            $colorId = $d->color_id;
+            $sizeId = $d->size_id;
+
+            // Overall present stock of the product across all variants
+            $overallStock = \App\Models\ItemStockSummary::where('item_id', $itemId)->sum('current_stock');
+
+            // Variant specific stock
+            $variantStockQuery = \App\Models\ItemStockSummary::where('item_id', $itemId);
+            if ($colorId) {
+                $variantStockQuery->where('color_id', $colorId);
+            }
+            if ($sizeId) {
+                $variantStockQuery->where('size_id', $sizeId);
+            }
+            $variantStock = $variantStockQuery->sum('current_stock');
+
+            // Total sold quantity across all invoices in system
+            $totalSoldQty = \App\Models\InvoiceDetails::where('item_id', $itemId)->sum('qty');
+
+            // Stock status
+            $stockStatus = 'In Stock';
+            $stockBadge = 'success';
+            if ($variantStock <= 0) {
+                $stockStatus = 'Out of Stock';
+                $stockBadge = 'danger';
+            } elseif ($variantStock <= 5) {
+                $stockStatus = 'Low Stock';
+                $stockBadge = 'warning';
+            }
+
+            return [
+                'id' => $d->id,
+                'invoice_id' => $d->invoice_id,
+                'item_id' => $itemId,
+                'title' => $d->item ? $d->item->title : 'Product',
+                'barcode' => $d->item ? $d->item->barcode : '',
+                'category_title' => $d->item && $d->item->category ? $d->item->category->title : 'N/A',
+                'unit_title' => $d->item && $d->item->unit ? $d->item->unit->title : 'Pcs',
+                'warranty_type' => $d->item ? $d->item->warranty_type : 'none',
+                'warranty_period' => $d->item ? $d->item->warranty_period : null,
+                'color_id' => $colorId,
+                'color_title' => $d->color ? $d->color->title : null,
+                'size_id' => $sizeId,
+                'size_title' => $d->size ? $d->size->title : null,
+                'serial_no' => $d->serial_no,
+                'qty' => floatval($d->qty),
+                'amount' => floatval($d->amount),
+                'total_amount' => floatval($d->total_amount),
+                'status' => $d->status,
+                // ⭐️ Requested Item Insights
+                'present_stock' => floatval($variantStock),
+                'overall_stock' => floatval($overallStock),
+                'total_sold_qty' => floatval($totalSoldQty),
+                'stock_status' => $stockStatus,
+                'stock_badge' => $stockBadge,
+            ];
+        });
+
+        // 3. Sales Returns for this Invoice
+        $returns = \App\Models\StockTransaction::where('reference_type', 'SalesReturn')
+            ->where('reference_id', (string)$invoice->id)
+            ->with(['item:id,title,barcode', 'color:id,title', 'size:id,title'])
+            ->get();
+
+        // 4. Calculations
+        $dueAmount = max(0, floatval($invoice->amount) - floatval($invoice->paid_amount));
+        $paymentStatus = 'Paid';
+        if ($dueAmount > 0 && floatval($invoice->paid_amount) > 0) {
+            $paymentStatus = 'Partial';
+        } elseif ($dueAmount > 0 && floatval($invoice->paid_amount) <= 0) {
+            $paymentStatus = 'Due';
+        }
 
         return response()->json([
-            'id'              => $invoice->id,
-            'client_id'       => $invoice->client_id,
-            'original_amount' => $invoice->original_amount,
-            'invoice_date'    => $invoice->invoice_date,
-            'discount'        => $invoice->discount,
-            'original_amount' => $invoice->original_amount,
-            'discount'        => $invoice->discount,
-            'amount'          => $invoice->amount,
-            'client'          => $invoice->client,
-            'invoice_details' => $invoice->invoice_details->map(function ($row) {
-                return [
-                    'invoice_id'    => $row->invoice_id,
-                    'workorder_id'  => $row->workorder_id,
-                    'account'       => $row->account,
-                    'description'   => $row->description,
-                    'reference'     => $row->reference,
-                    'qty'           => $row->qty,
-                    'amount'        => $row->amount,
-                    'currency_id'   => $row->currency_id,
-                    'currency_rate' => $row->currency_rate,
-                    'total_amount'  => $row->total_amount,
-                ];
-            })->values(),
-            'status'          => $invoice->status,
+            'id' => $invoice->id,
+            'invoice_no' => $invoice->invoice_no,
+            'invoice_date' => $invoice->invoice_date,
+            'created_at' => $invoice->created_at ? $invoice->created_at->format('d M, Y h:i A') : '',
+            'original_amount' => floatval($invoice->original_amount),
+            'discount' => floatval($invoice->discount),
+            'vat' => floatval($invoice->vat ?? 0),
+            'amount' => floatval($invoice->amount),
+            'paid_amount' => floatval($invoice->paid_amount),
+            'due_amount' => $dueAmount,
+            'payment_status' => $paymentStatus,
+            'is_closed' => $invoice->is_closed,
+            'status' => $invoice->status,
+            'client' => $invoice->client,
+            'client_history' => $clientHistory,
+            'loyalty_points' => $loyaltyPoints,
+            'details' => $details,
+            'payment_details' => $invoice->payment_details,
+            'returns' => $returns,
         ]);
     }
 
@@ -180,7 +304,7 @@ class InvoiceController extends BaseController
      */
     public function edit($id)
     {
-        return view('layouts.backend_app');
+        return redirect()->route('invoice.show', $id);
     }
 
     /**
@@ -192,77 +316,9 @@ class InvoiceController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $invoice = Invoice::findOrFail($id);
-
-        DB::beginTransaction();
-        try {
-            $data = $request->all();
-
-            $details = $data['invoice_details'] ?? [];
-            $months  = $data['invoice_months'] ?? [];
-
-            unset($data['invoice_details'], $data['invoice_months']);
-
-            $data['invoice_date'] = vue_to_server_date($data['invoice_date']);
-
-            $invoice->fill($data)->save();
-
-            /*
-            |--------------------------------------------------------------------------
-            | INVOICE DETAILS (UPDATE / CREATE / DELETE)
-            |--------------------------------------------------------------------------
-            */
-
-            $existingDetailIds = $invoice->invoice_details()->pluck('id')->toArray();
-            $submittedDetailIds = collect($details)->pluck('id')->filter()->toArray();
-
-            // DELETE (which are removed from frontend)
-            $deleteIds = array_diff($existingDetailIds, $submittedDetailIds);
-            if (!empty($deleteIds)) {
-                InvoiceDetails::whereIn('id', $deleteIds)->delete();
-            }
-
-            $account_id = Account::whereNotNull('system_key_name')->first()->id;
-
-            foreach ($details as $d) {
-
-                if (!empty($d['id'])) {
-                    // UPDATE (this will trigger boot->updating)
-                    $detail = InvoiceDetails::find($d['id']);
-                    if ($detail) {
-                        $detail->update([
-                            'workorder_id'  => $d['workorder_id'],
-                            'reference'     => $d['reference'],
-                            'description'   => $d['description'],
-                            'qty'           => $d['qty'],
-                            'currency_id'   => $d['currency_id'] ?? null,
-                            'currency_rate' => $d['currency_rate'] ?? null,
-                            'amount'        => $d['amount'] ?? 0,
-                            'total_amount'  => $d['total_amount'] ?? 0,
-                        ]);
-                    }
-                } else {
-                    // CREATE (this will trigger boot->created)
-                    $invoice->invoice_details()->create([
-                        'workorder_id'  => $d['workorder_id'],
-                        'reference'     => $d['reference'],
-                        'description'   => $d['description'],
-                        'qty'           => $d['qty'],
-                        'currency_id'   => $d['currency_id'] ?? null,
-                        'currency_rate' => $d['currency_rate'] ?? null,
-                        'amount'        => $d['amount'] ?? 0,
-                        'total_amount'  => $d['total_amount'] ?? 0,
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            return $this->responseReturn("update", $invoice);
-        } catch (\Exception $ex) {
-            DB::rollBack();
-            return response()->json(['exception' => $ex->getMessage()], 422);
-        }
+        return response()->json([
+            'exception' => 'ইনভয়েস এডিট করা সম্ভব নয়। বিক্রয় ও স্টক অখণ্ডতা বজায় রাখতে ইনভয়েস অপরিবর্তনীয়।'
+        ], 422);
     }
 
     /**
@@ -273,50 +329,9 @@ class InvoiceController extends BaseController
      */
     public function destroy($id)
     {
-        $invoice = Invoice::findOrFail($id);
-
-        DB::beginTransaction();
-
-        try {
-
-            // 1️⃣ Check payment
-            $hasPayment = PaymentDetail::where('reference_type', 'Invoice')
-                ->where('reference_id', $invoice->id)
-                ->exists();
-
-            if ($hasPayment) {
-                return response()->json([
-                    'message' => 'This invoice has payments. Delete is not allowed.'
-                ], 422);
-            }
-
-            // 2️⃣ Delete vouchers (with boot)
-            $vouchers = Voucher::where('source', 'Invoice')
-                ->where('source_id', $invoice->id)
-                ->get();
-
-            foreach ($vouchers as $voucher) {
-                // voucher details delete (boot trigger)
-                $voucher->voucher_details->each->delete();
-                // voucher delete (boot trigger)
-                $voucher->delete();
-            }
-
-            // 3️⃣ Invoice details delete (boot trigger)
-            $invoice->invoice_details->each->delete();
-
-            // 4️⃣ Invoice delete (boot trigger)
-            $invoice->delete();
-
-            DB::commit();
-
-            return $this->responseReturn("delete", true);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'exception' => $e->getMessage()
-            ], 422);
-        }
+        return response()->json([
+            'exception' => 'ইনভয়েস ডিলিট করা সম্ভব নয়। এটি সংরক্ষিত বিক্রয় রেকর্ড।'
+        ], 422);
     }
 
     public function paynow($invoiceid)
@@ -373,7 +388,9 @@ class InvoiceController extends BaseController
         $invoice = Invoice::with(
             [
                 'client',
-                'invoice_details.currency:id,title,short_name',
+                'invoice_details' => function($q) {
+                    $q->with('item:id,title,barcode,warranty_type,warranty_period', 'color:id,title', 'size:id,title', 'currency:id,title,short_name');
+                }
             ]
         )->where('id', $invoiceid)->first();
 
@@ -384,7 +401,7 @@ class InvoiceController extends BaseController
             $invoice->total_amount  = $invoice->amount + $previous_due;
         }
 
-        return $invoice->toArray();
+        return $invoice ? $invoice->toArray() : [];
     }
 
     public function moneyreceipt(Request $request, $invoiceid)

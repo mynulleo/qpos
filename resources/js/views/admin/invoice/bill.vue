@@ -50,29 +50,36 @@
                     <!-- Items Table -->
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle">
-                            <thead class="text-center">
+                            <thead class="text-center table-light">
                                 <tr>
-                                    <th>#</th>
-                                    <th width="10%">Reference</th>
-                                    <th width="20%">Description</th>
-                                    <th class="text-end">Qty</th>
-                                    <th class="text-end">Amount</th>
-                                    <th class="text-end">Currency</th>
-                                    <th class="text-end">Curr. Rate</th>
-                                    <th class="text-end">Total <br>(৳)</th>
+                                    <th width="5%">#</th>
+                                    <th width="40%">Item / Description</th>
+                                    <th width="15%">Variant / Serial</th>
+                                    <th class="text-center" width="10%">Qty</th>
+                                    <th class="text-end" width="15%">Rate (৳)</th>
+                                    <th class="text-end" width="15%">Total (৳)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template v-for="(invd, index) in data.invoice_details" :key="index">
                                     <tr>
                                         <td class="text-center">{{ index + 1 }}</td>
-                                        <td>{{ invd.reference }}</td>
-                                        <td>{{ invd.description }}</td>
-                                        <td class="text-end">{{ invd.qty }}</td>
-                                        <td class="text-end">{{ invd.amount }}</td>
-                                        <td class="text-end">{{ invd.currency?.short_name }}</td>
-                                        <td class="text-end">{{ invd.currency_rate }}</td>
-                                        <td class="text-end"> {{ invd.total_amount }}</td>
+                                        <td>
+                                            <div class="fw-bold">{{ invd.item ? invd.item.title : (invd.description || invd.reference || 'Item') }}</div>
+                                            <small class="text-muted font-monospace" v-if="invd.item?.barcode">Barcode: {{ invd.item.barcode }}</small>
+                                            <div v-if="invd.item?.warranty_type && invd.item.warranty_type !== 'none'" class="small text-success" style="font-size: 11px;">
+                                                {{ invd.item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}: {{ invd.item.warranty_period }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-dark me-1" v-if="invd.color">{{ invd.color.title }}</span>
+                                            <span class="badge bg-secondary me-1" v-if="invd.size">{{ invd.size.title }}</span>
+                                            <div v-if="invd.serial_no" class="small text-muted font-monospace" style="font-size: 10px;">S/N: {{ invd.serial_no }}</div>
+                                            <span v-if="!invd.color && !invd.size && !invd.serial_no" class="text-muted small">Standard</span>
+                                        </td>
+                                        <td class="text-center font-monospace fw-bold">{{ invd.qty }}</td>
+                                        <td class="text-end font-monospace">{{ $filter.money(invd.amount) }}</td>
+                                        <td class="text-end font-monospace fw-bold">{{ $filter.money(invd.total_amount || (invd.qty * invd.amount)) }}</td>
                                     </tr>
                                 </template>
                             </tbody>

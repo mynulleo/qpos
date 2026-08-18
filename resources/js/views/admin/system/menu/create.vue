@@ -32,6 +32,8 @@
             v-model="data.module_name" label="name" :reduce="(obj) => obj.base" :options="allModules"
             placeholder="--Select Any--" :closeOnSelect="true" />
 
+        <Switch v-model="data.status" field="data.status" title="Status" on-label="Active" off-label="Deactive" :req="true"></Switch>
+
     </create-form>
 </template>
 
@@ -52,6 +54,7 @@ export default {
                 show_dasboard: 0,
                 show_profile: 0,
                 module_name: null,
+                status: "active",
             },
         };
     },

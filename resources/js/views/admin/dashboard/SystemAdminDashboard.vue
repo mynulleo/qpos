@@ -1,5 +1,5 @@
 <template>
-    <div class="row g-3">
+    <div class="row g-3 dashboard-wrapper">
         <!-- Loader -->
         <div class="component_loader" :class="{ 'z-top': $root.initialLoader }"
             v-if="$root.spinner && !$root.tableSpinner">
@@ -7,23 +7,120 @@
         </div>
 
         <template v-else>
-            <!-- Counter Section -->
-            <div class="col-md-12">
-                <div class="row">
-                    <div class="col-xl-3 col-lg-6 col-md-6" v-for="(menu, index) in data.dashboard?.dashboardMenus"
-                        :key="index">
-                        <div class="card top_short_info_card">
-                            <div class="card-body">
-                                <router-link :to="{ name: menu.route_name }" class="d-block w-100">
-                                    <div class="top_short_info d-flex justify-content-between gap-4 align-items-center">
-                                        <div class="text">
-                                            <h4 class="label">{{ menu.menu_name }}</h4>
-                                            <h3 class="title">{{ menu.total_data_count }}</h3>
-                                        </div>
-                                        <div v-html="menu.icon"
-                                            class="icon rounded-pill d-flex justify-content-center align-items-center"
-                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                            :data-bs-title="menu.menu_name" v-x-tooltip></div>
+            <!-- ⚡ Quick Action & POS Shortcut Bar -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm quick-action-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge theme-bg text-white px-2 py-1"><i class="fas fa-bolt me-1"></i>Quick POS Actions</span>
+                                <span class="text-muted small fw-semibold">Frequently used terminal tools & shortcuts</span>
+                            </div>
+                            <span class="text-muted small font-monospace d-none d-md-inline"><i class="far fa-clock me-1"></i>{{ currentDate }}</span>
+                        </div>
+
+                        <div class="row g-2 quick-links-grid">
+                            <!-- 1. New Sale (POS) -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                                <router-link to="/pos" class="quick-btn btn-pos-primary d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
+                                    <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-cash-register text-white fs-5"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">New Sale (POS)</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">Sell & Print (F8)</div>
+                                    </div>
+                                </router-link>
+                            </div>
+
+                            <!-- 2. Available Stock -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                                <router-link to="/report/availablestock" class="quick-btn btn-pos-emerald d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
+                                    <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-boxes text-white fs-5"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Available Stock</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">Real-time Inventory</div>
+                                    </div>
+                                </router-link>
+                            </div>
+
+                            <!-- 3. Sales Return -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                                <router-link to="/pos/return" class="quick-btn btn-pos-amber d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
+                                    <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-undo-alt text-white fs-5"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Sales Return</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">Invoice Refund</div>
+                                    </div>
+                                </router-link>
+                            </div>
+
+                            <!-- 4. Barcode / Label Print -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                                <router-link to="/pos/labelprint" class="quick-btn btn-pos-purple d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
+                                    <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-barcode text-white fs-5"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Label Print</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">Barcode Generator</div>
+                                    </div>
+                                </router-link>
+                            </div>
+
+                            <!-- Secondary Shortcuts -->
+                            <!-- 5. Invoices -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                                <router-link to="/invoice" class="quick-btn btn-pos-blue d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
+                                    <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-file-invoice-dollar text-white fs-5"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Invoices List</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">Order Records</div>
+                                    </div>
+                                </router-link>
+                            </div>
+
+                            <!-- 6. New Purchase -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                                <router-link to="/purchase/create" class="quick-btn btn-pos-teal d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
+                                    <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-cart-plus text-white fs-5"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">New Purchase</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">Stock Inward</div>
+                                    </div>
+                                </router-link>
+                            </div>
+
+                            <!-- 7. Warranty Claims -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                                <router-link to="/warrantyClaim" class="quick-btn btn-pos-rose d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
+                                    <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-shield-alt text-white fs-5"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Warranty Claims</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">Tracking & Logs</div>
+                                    </div>
+                                </router-link>
+                            </div>
+
+                            <!-- 8. Sales Report -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                                <router-link to="/report/sales" class="quick-btn btn-pos-indigo d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
+                                    <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-chart-line text-white fs-5"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Daily Sales Report</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">Analytics & Summary</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -31,40 +128,242 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-12"></div>
-            <div class="col-xxl-4 col-xl-4 col-lg-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card_title text-start">Stock Summary</h4>
-                        <div class="table-responsive text-nowrap rounded-3">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th class="sl" style="min-width: 70px">
-                                            <span class="heading"> SL </span>
-                                        </th>
-                                        <th>
-                                            <div class="heading">Item Name</div>
-                                        </th>
-                                        <th>
-                                            <div class="heading">Stock</div>
-                                        </th>
-                                    </tr>
 
+            <!-- 📊 Top Metric KPI Counter Cards -->
+            <div class="col-12">
+                <div class="row g-3">
+                    <!-- Today Sales -->
+                    <div class="col-xl-3 col-lg-6 col-md-6">
+                        <div class="card stat-card border-0 shadow-sm h-100">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="text-muted fw-bold small text-uppercase">Today's Sales</span>
+                                    <div class="stat-icon-wrapper theme-bg-soft text-theme rounded-circle">
+                                        <i class="fas fa-shopping-bag"></i>
+                                    </div>
+                                </div>
+                                <h3 class="fw-bold mb-1 text-dark">৳ {{ formatNum(stats.today_sales) }}</h3>
+                                <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
+                                    <span><i class="fas fa-file-invoice text-success me-1"></i>{{ stats.today_sales_count || 0 }} Invoices</span>
+                                    <span class="text-success fw-semibold">Received: ৳ {{ formatNum(stats.today_received) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Month Sales -->
+                    <div class="col-xl-3 col-lg-6 col-md-6">
+                        <div class="card stat-card border-0 shadow-sm h-100">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="text-muted fw-bold small text-uppercase">Monthly Sales</span>
+                                    <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success rounded-circle">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                </div>
+                                <h3 class="fw-bold mb-1 text-dark">৳ {{ formatNum(stats.month_sales) }}</h3>
+                                <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
+                                    <span><i class="fas fa-receipt text-primary me-1"></i>{{ stats.month_sales_count || 0 }} Invoices</span>
+                                    <span class="text-primary fw-semibold">Received: ৳ {{ formatNum(stats.month_received) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Customer Due -->
+                    <div class="col-xl-3 col-lg-6 col-md-6">
+                        <div class="card stat-card border-0 shadow-sm h-100">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="text-muted fw-bold small text-uppercase">Total Receivables (Due)</span>
+                                    <div class="stat-icon-wrapper bg-danger bg-opacity-10 text-danger rounded-circle">
+                                        <i class="fas fa-hand-holding-usd"></i>
+                                    </div>
+                                </div>
+                                <h3 class="fw-bold mb-1 text-danger">৳ {{ formatNum(clientSummary.total_outstanding) }}</h3>
+                                <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
+                                    <span>This Month Due: ৳ {{ formatNum(clientSummary.cm_due) }}</span>
+                                    <router-link to="/report/receivable" class="text-decoration-none small text-danger fw-semibold">Details &rarr;</router-link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory & Low Stock -->
+                    <div class="col-xl-3 col-lg-6 col-md-6">
+                        <div class="card stat-card border-0 shadow-sm h-100">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="text-muted fw-bold small text-uppercase">Total Items in Stock</span>
+                                    <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning rounded-circle">
+                                        <i class="fas fa-cubes"></i>
+                                    </div>
+                                </div>
+                                <h3 class="fw-bold mb-1 text-dark">{{ stats.total_items || 0 }}</h3>
+                                <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
+                                    <span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle me-1"></i>{{ zeroStockList.length }} Zero Stock</span>
+                                    <router-link to="/report/availablestock" class="text-decoration-none small text-muted">Stock Report &rarr;</router-link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📈 Middle Section: Current Month Sales Line Chart (8-col) + Collapsible Fund Section (4-col) -->
+            <div class="col-xl-8 col-lg-12">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-theme d-flex align-items-center gap-2">
+                                    <i class="fas fa-chart-line theme-text"></i>
+                                    <span>Current Month Sales Trend ({{ barChartDataMonth }})</span>
+                                </h5>
+                                <span class="text-muted small">Daily trajectory of Sales, Collections & Due</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light text-dark border"><strong class="text-primary">Sales:</strong> ৳ {{ formatNum(totalMonthSales) }}</span>
+                                <span class="badge bg-light text-dark border"><strong class="text-success">Received:</strong> ৳ {{ formatNum(totalMonthReceived) }}</span>
+                                <span class="badge bg-light text-dark border"><strong class="text-danger">Due:</strong> ৳ {{ formatNum(totalMonthDue) }}</span>
+                            </div>
+                        </div>
+
+                        <div style="height: 340px; position: relative;">
+                            <LineChart :chartData="lineChartData" :chartOptions="lineChartOptions" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🏦 Fund & Financial Accounts Balance (Collapsible / Click to View) -->
+            <div class="col-xl-4 col-lg-12">
+                <div class="card border-0 shadow-sm h-100 fund-card">
+                    <div class="card-body p-3 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-vault fs-5 theme-text"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">Fund & Financial Accounts</h6>
+                                    <small class="text-muted" style="font-size: 11px;">Protected liquidity details</small>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                class="btn btn-sm"
+                                :class="showFunds ? 'btn-outline-danger' : 'btn-theme'"
+                                @click="showFunds = !showFunds"
+                                style="font-size: 12px; font-weight: 600;"
+                            >
+                                <i :class="showFunds ? 'fas fa-eye-slash me-1' : 'fas fa-eye me-1'"></i>
+                                {{ showFunds ? 'Hide Info' : 'Click to View' }}
+                            </button>
+                        </div>
+
+                        <!-- 🔒 Collapsed State: Privacy Shield -->
+                        <div v-if="!showFunds" class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center p-4 bg-light bg-opacity-50 rounded border border-dashed my-2">
+                            <div class="privacy-lock-icon mb-3">
+                                <i class="fas fa-lock fs-1 text-muted"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">Fund Information is Hidden</h6>
+                            <p class="text-muted small mb-3" style="max-width: 260px;">
+                                Bank balances, cash registers & fund accounts are hidden for confidentiality.
+                            </p>
+                            <button type="button" class="btn btn-theme btn-sm px-3" @click="showFunds = true">
+                                <i class="fas fa-unlock me-1"></i> Reveal Fund Data
+                            </button>
+                        </div>
+
+                        <!-- 👁️ Expanded State: Account Balances & Pie Chart -->
+                        <div v-else class="flex-grow-1 overflow-auto">
+                            <div class="p-2 mb-3 bg-success bg-opacity-10 border border-success rounded d-flex align-items-center justify-content-between">
+                                <span class="small fw-bold text-success"><i class="fas fa-coins me-1"></i>Total Liquid Funds:</span>
+                                <strong class="fs-6 text-success">৳ {{ formatNum(totalLiquidity) }}</strong>
+                            </div>
+
+                            <!-- Accounts Table -->
+                            <div class="table-responsive mb-3" style="max-height: 160px;">
+                                <table class="table table-sm table-hover align-middle mb-0" style="font-size: 12px;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Account Name</th>
+                                            <th class="text-end">Balance (৳)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(acc, i) in fundAccounts" :key="i">
+                                            <td class="fw-semibold">{{ acc.account_name }}</td>
+                                            <td class="text-end font-monospace fw-bold text-dark">৳ {{ formatNum(acc.current_balance) }}</td>
+                                        </tr>
+                                        <tr v-if="!fundAccounts || fundAccounts.length === 0">
+                                            <td colspan="2" class="text-center text-muted py-2">No fund accounts found</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pie Chart -->
+                            <div style="height: 160px; position: relative;">
+                                <PieChart :chartData="pieChartData" :chartOptions="pieChartOptions" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🚨 Out of Stock - High Demand (Top Sold Zero Stock Items) (6-col) -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-exclamation-triangle text-danger fs-5"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">🚨 Top Selling Out of Stock (জিরো স্টক পণ্য)</h6>
+                                    <small class="text-muted" style="font-size: 11px;">Most sold items currently at 0 stock (Priority Restock)</small>
+                                </div>
+                            </div>
+                            <router-link to="/report/availablestock" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
+                                Stock Report
+                            </router-link>
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0" style="font-size: 12px;">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Barcode</th>
+                                        <th>Item Name</th>
+                                        <th>Category</th>
+                                        <th class="text-center">Total Sold</th>
+                                        <th class="text-center">Stock</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    <template v-if="data.dashboard?.stockData && data.dashboard?.stockData.length > 0">
-                                        <tr v-for="(itemstock, index) in data?.dashboard?.stockData" :key="index">
-                                            <td>{{ index + 1 }}</td>
-                                            <td>{{ itemstock.item?.barcode }} - {{ itemstock.item?.title }}</td>
-                                            <td>{{ itemstock.current_stock }}</td>
-                                        </tr>
-                                    </template>
-                                    <tr v-else>
-                                        <td colspan="5">
-                                            <p class="text-center">
-                                                No data available
-                                            </p>
+                                    <tr v-for="(s, idx) in zeroStockList" :key="idx">
+                                        <td class="font-monospace text-muted">{{ s.barcode || 'N/A' }}</td>
+                                        <td class="fw-bold text-dark">{{ s.title || 'Unknown' }}</td>
+                                        <td><span class="badge bg-light text-dark border">{{ s.category_title || 'General' }}</span></td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary fw-bold font-monospace">
+                                                {{ s.total_sold_qty }} Sold
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-danger text-white">
+                                                0 (Empty)
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <router-link to="/purchase/create" class="btn btn-xs btn-outline-danger" title="Purchase Reorder">
+                                                <i class="fas fa-cart-plus"></i> Restock
+                                            </router-link>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!zeroStockList || zeroStockList.length === 0">
+                                        <td colspan="6" class="text-center text-success py-3">
+                                            <i class="fas fa-check-circle me-1"></i> No zero stock items! All products have stock available.
                                         </td>
                                     </tr>
                                 </tbody>
@@ -73,252 +372,172 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xxl-8 col-xl-8 col-lg-8">
-                <div class="card">
-                    <div class="card-body">
-                        <!-- Card Title -->
-                        <div class="mb-4">
-                            <h5 class="fw-semibold mb-1">Statistics Summary</h5>
-                            <p class="text-muted small mb-0">Overall system overview</p>
+
+            <!-- Recent POS Invoices Table (6-col) -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-history theme-text fs-5"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">Recent Invoices</h6>
+                                    <small class="text-muted" style="font-size: 11px;">Latest completed sales orders</small>
+                                </div>
+                            </div>
+                            <router-link to="/invoice" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
+                                View All
+                            </router-link>
                         </div>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="icon-box bg-soft-success text-success">
-                                            <i class="fas fa-users"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 small text-muted">Total Clients</p>
-                                            <h6 class="mb-0 fw-bold">
-                                                {{ data.dashboard?.clientSummary?.total_clients }}
-                                            </h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Stat Item -->
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="icon-box bg-soft-success text-success">
-                                            <i class="fas fa-boxes"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 small text-muted">Total Item</p>
-                                            <h6 class="mb-0 fw-bold">
-                                                {{ data.dashboard?.statisticsData?.total_items }}
-                                            </h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Stat Item -->
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="icon-box bg-soft-warning text-warning">
-                                            <i class="fas fa-users"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 small text-muted">Total Suppliers</p>
-                                            <h6 class="mb-0 fw-bold">
-                                                {{ data.dashboard?.statisticsData?.total_suppliers }}
-                                            </h6>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="icon-box bg-soft-success text-success">
-                                            <i class="fas fa-money-bill"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 small text-muted">Total Outstanding</p>
-                                            <h6 class="mb-0 fw-bold">
-                                                ৳
-                                                {{
-                                                    Number(data.dashboard?.clientSummary?.total_outstanding || 0).toFixed(2)
-                                                }}
-                                            </h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="icon-box bg-soft-success text-success">
-                                            <i class="fas fa-money-bill"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 small text-muted">Previous Month Due</p>
-                                            <h6 class="mb-0 fw-bold">
-                                                ৳
-                                                {{
-                                                    Number(data.dashboard?.clientSummary?.pm_due || 0).toFixed(2)
-                                                }}
-                                            </h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="icon-box bg-soft-success text-success">
-                                            <i class="fas fa-money-bill"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 small text-muted">Current Month Due</p>
-                                            <h6 class="mb-0 fw-bold">
-                                                ৳
-                                                {{
-                                                    Number(data.dashboard?.clientSummary?.cm_due || 0).toFixed(2)
-                                                }}
-                                            </h6>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <!-- Stat Item -->
-                                <div class="d-flex align-items-center gap-3 mb-3">
-                                    <div class="icon-box bg-soft-danger text-danger">
-                                        🧾
-                                    </div>
-                                    <div>
-                                        <p class="mb-0 small text-muted">Total Workorders</p>
-                                        <h6 class="mb-0 fw-bold">
 
-                                            {{
-                                                data.dashboard?.statisticsData?.total_workorder
-                                            }}
-                                        </h6>
-                                    </div>
-                                </div>
-                                <!-- Stat Item -->
-                                <div class="d-flex align-items-center gap-3 mb-3">
-                                    <div class="icon-box bg-soft-danger text-danger">
-                                        🧾
-                                    </div>
-                                    <div>
-                                        <p class="mb-0 small text-muted">Active Workorders</p>
-                                        <h6 class="mb-0 fw-bold">
-                                            {{
-                                                data.dashboard?.statisticsData?.active_workorder
-                                            }}
-                                        </h6>
-                                    </div>
-                                </div>
-                                <!-- Stat Item -->
-
-                            </div>
-                            <div class="col-md-3">
-                                <div class="d-flex align-items-center gap-3 mb-3">
-                                    <div class="icon-box bg-soft-danger text-danger">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-0 small text-muted">Current Month Purchase</p>
-                                        <h6 class="mb-0 fw-bold">
-                                            ৳
-                                            {{
-                                                Number(data.dashboard?.statisticsData?.current_month_purchase || 0).toFixed(2)
-                                            }}
-                                        </h6>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-3 mb-3">
-                                    <div class="icon-box bg-soft-danger text-danger">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-0 small text-muted">Today's Expense</p>
-                                        <h6 class="mb-0 fw-bold">
-                                            ৳
-                                            {{
-                                                Number(data.dashboard?.statisticsData?.today_expense || 0).toFixed(2)
-                                            }}
-                                        </h6>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-3 mb-3">
-                                    <div class="icon-box bg-soft-danger text-danger">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-0 small text-muted">Current Month Expense</p>
-                                        <h6 class="mb-0 fw-bold">
-                                            ৳
-                                            {{
-                                                Number(data.dashboard?.statisticsData?.current_month_expense || 0).toFixed(2)
-                                            }}
-                                        </h6>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0" style="font-size: 12px;">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Invoice #</th>
+                                        <th>Customer</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Paid</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-end">View</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(inv, idx) in recentInvoicesList" :key="idx">
+                                        <td class="font-monospace fw-bold text-dark">{{ inv.invoice_no }}</td>
+                                        <td>
+                                            <div class="fw-semibold text-truncate" style="max-width: 130px;">{{ inv.client_name || 'Walk-in' }}</div>
+                                            <small class="text-muted font-monospace" style="font-size: 10px;">{{ inv.client_mobile || '' }}</small>
+                                        </td>
+                                        <td class="text-end font-monospace fw-bold text-dark">৳ {{ formatNum(inv.amount) }}</td>
+                                        <td class="text-end font-monospace text-success">৳ {{ formatNum(inv.paid_amount) }}</td>
+                                        <td class="text-center">
+                                            <span class="badge" :class="inv.is_closed ? 'bg-success' : 'bg-danger'">
+                                                {{ inv.is_closed ? 'Paid' : 'Due' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <router-link :to="'/invoice/' + inv.id" class="btn btn-xs btn-light border" title="View Invoice">
+                                                <i class="fas fa-eye text-muted"></i>
+                                            </router-link>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!recentInvoicesList || recentInvoicesList.length === 0">
+                                        <td colspan="6" class="text-center text-muted py-3">No recent invoices recorded</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-lg-8">
-                <!-- Chart Section -->
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card_title text-start">Invoice Statistics</h4>
-                        <div style="height: 400px; max-width: 800px; margin: 0 auto;">
-                            <BarChart :chartData="barChartData" :chartOptions="barChartOptions" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card_title text-start">Fund Data</h4>
-                        <PieChart :chartData="pieChartData" :chartOptions="pieChartOptions" />
-                    </div>
-                </div>
-            </div>
-            <!-- Chart Section -->
         </template>
     </div>
 </template>
 
 <script>
 import PieChart from "../../../components/chart/pie.vue";
-import BarChart from "../../../components/chart/bar.vue";
+import LineChart from "../../../components/chart/line.vue";
+
 export default {
-    name: "ResidenceOwnerDashboard",
-    components: { PieChart, BarChart },
-    data() {
-        return {
-            barChartData: {
-                labels: [],
-                datasets: [],
-            },
-
-            pieChartData: {
-                labels: [],
-                datasets: [],
-            },
-
-            barChartOptions: {
-                responsive: true
-            },
-
-            pieChartOptions: {
-                responsive: true
-            }
-        };
-    },
+    name: "SystemAdminDashboard",
+    components: { PieChart, LineChart },
     props: {
         data: {
             type: Object,
             required: true,
         },
     },
+    data() {
+        return {
+            showFunds: false,
+            currentDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            lineChartData: {
+                labels: [],
+                datasets: [],
+            },
+            pieChartData: {
+                labels: [],
+                datasets: [],
+            },
+            lineChartOptions: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { font: { size: 11, weight: 'bold' } }
+                    },
+                    tooltip: {
+                        padding: 10,
+                        boxPadding: 4,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { color: '#f1f5f9' },
+                        beginAtZero: true,
+                        ticks: { font: { size: 10 } }
+                    }
+                }
+            },
+            pieChartOptions: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { font: { size: 10 } }
+                    }
+                }
+            }
+        };
+    },
+    computed: {
+        stats() {
+            return this.data?.dashboard?.statisticsData || {};
+        },
+        clientSummary() {
+            return this.data?.dashboard?.clientSummary || {};
+        },
+        zeroStockList() {
+            return this.data?.dashboard?.zeroStockData || [];
+        },
+        recentInvoicesList() {
+            return this.data?.dashboard?.recentInvoices || [];
+        },
+        fundAccounts() {
+            return this.data?.dashboard?.fundData?.accounts || [];
+        },
+        totalLiquidity() {
+            return this.data?.dashboard?.fundData?.total_liquidity || 0;
+        },
+        barChartDataMonth() {
+            return this.data?.dashboard?.barData?.month_name || 'This Month';
+        },
+        totalMonthSales() {
+            return this.data?.dashboard?.barData?.total_sales || this.stats.month_sales || 0;
+        },
+        totalMonthReceived() {
+            return this.data?.dashboard?.barData?.total_receive || this.stats.month_received || 0;
+        },
+        totalMonthDue() {
+            return this.data?.dashboard?.barData?.total_due || 0;
+        }
+    },
     watch: {
         data: {
             handler(newData) {
                 if (newData) {
-                    this.generateBarChart(newData);
+                    this.generateLineChart(newData);
                     this.generatePieChart(newData);
                 }
             },
@@ -327,44 +546,80 @@ export default {
         },
     },
     methods: {
-        generateBarChart(data) {
+        formatNum(val) {
+            const num = parseFloat(val);
+            if (isNaN(num)) return '0.00';
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        generateLineChart(data) {
             if (!data?.dashboard?.barData) return;
             const { labels, data: chartData } = data.dashboard.barData;
-            this.barChartData = {
-                labels,
+            this.lineChartData = {
+                labels: labels || [],
                 datasets: [
-                    { label: "Invoice", backgroundColor: "#41B883", data: Object.values(chartData.invoice) },
-                    { label: "Receive", backgroundColor: "#E46651", data: Object.values(chartData.receive) },
-                    { label: "Due", backgroundColor: "#00D8FF", data: Object.values(chartData.due) },
+                    {
+                        label: "Invoice (Tk.)",
+                        borderColor: "#112C47",
+                        backgroundColor: "rgba(17, 44, 70, 0.08)",
+                        borderWidth: 2.5,
+                        pointBackgroundColor: "#112C47",
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        tension: 0.35,
+                        fill: true,
+                        data: Object.values(chartData?.invoice || {})
+                    },
+                    {
+                        label: "Received (Tk.)",
+                        borderColor: "#10b981",
+                        backgroundColor: "rgba(16, 185, 129, 0.08)",
+                        borderWidth: 2.5,
+                        pointBackgroundColor: "#10b981",
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        tension: 0.35,
+                        fill: true,
+                        data: Object.values(chartData?.receive || {})
+                    },
+                    {
+                        label: "Due (Tk.)",
+                        borderColor: "#ef4444",
+                        backgroundColor: "rgba(239, 68, 68, 0.08)",
+                        borderWidth: 2,
+                        pointBackgroundColor: "#ef4444",
+                        pointRadius: 2.5,
+                        pointHoverRadius: 4,
+                        borderDash: [4, 4],
+                        tension: 0.35,
+                        fill: false,
+                        data: Object.values(chartData?.due || {})
+                    },
                 ],
             };
         },
         generatePieChart(data) {
             if (!data?.dashboard?.pieData) {
-                this.pieChartData = {
-                    labels: [],
-                    datasets: []
-                };
+                this.pieChartData = { labels: [], datasets: [] };
                 return;
             }
 
             const { labels, data: chartData } = data.dashboard.pieData;
 
             this.pieChartData = {
-                labels: labels ?? [],
+                labels: labels || [],
                 datasets: [
                     {
                         backgroundColor: [
-                            "#6A0572",
-                            "#AB83A1",
-                            "#3E92CC",
-                            "#FA7921",
-                            "#9BC53D",
-                            "#5D2E8C",
-                            "#FE5F55",
-                            "#247BA0",
+                            "#112C47",
+                            "#10b981",
+                            "#3b82f6",
+                            "#f59e0b",
+                            "#8b5cf6",
+                            "#ec4899",
+                            "#06b6d4",
+                            "#64748b",
                         ],
-                        data: Object.values(chartData ?? {}),
+                        data: Object.values(chartData || {}),
                     },
                 ],
             };
@@ -372,3 +627,123 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.dashboard-wrapper {
+    font-family: inherit;
+}
+
+.theme-bg {
+    background-color: rgb(17, 44, 70) !important;
+}
+
+.theme-text {
+    color: rgb(17, 44, 70) !important;
+}
+
+.text-theme {
+    color: rgb(17, 44, 70) !important;
+}
+
+.theme-bg-soft {
+    background-color: rgba(17, 44, 70, 0.1) !important;
+}
+
+.btn-theme {
+    background-color: rgb(17, 44, 70) !important;
+    border-color: rgb(17, 44, 70) !important;
+    color: #ffffff !important;
+}
+
+.btn-theme:hover {
+    background-color: #1a3d61 !important;
+    color: #ffffff !important;
+}
+
+/* Quick Action Buttons Styling */
+.quick-btn {
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.quick-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.quick-icon-box {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+}
+
+.btn-pos-primary {
+    background: linear-gradient(135deg, rgb(17, 44, 70) 0%, #1e3a5f 100%);
+}
+
+.btn-pos-emerald {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.btn-pos-amber {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+}
+
+.btn-pos-purple {
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+}
+
+.btn-pos-blue {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+}
+
+.btn-pos-teal {
+    background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+}
+
+.btn-pos-rose {
+    background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+}
+
+.btn-pos-indigo {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+}
+
+/* Stat Cards */
+.stat-card {
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.stat-icon-wrapper {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.fund-card {
+    min-height: 400px;
+}
+
+.privacy-lock-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-xs {
+    padding: 2px 8px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+}
+</style>

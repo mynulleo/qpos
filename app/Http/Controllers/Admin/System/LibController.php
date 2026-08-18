@@ -121,6 +121,9 @@ class LibController extends Controller
     public function profileMenus()
     {
         return Menu::where('show_profile', 1)
+            ->where(function ($q) {
+                $q->where('status', 'active')->orWhereNull('status');
+            })
             ->oldest('sorting')
             ->get(['icon', 'menu_name', 'route_name', 'params']);
     }

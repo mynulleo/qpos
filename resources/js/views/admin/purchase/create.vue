@@ -28,7 +28,7 @@
                     <th style="width:9%">Purchase Price</th>
                     <th style="width:9%">Selling Price</th>
                     <th style="width:7%">Qty</th>
-                    <th style="width:9%">Serial Nos</th>
+                    <th style="width:9%" v-if="isElectronicsShop">Serial Nos</th>
                     <th style="width:10%">Amount</th>
                     <th style="width:4%"></th>
                   </tr>
@@ -70,7 +70,7 @@
                     <td>
                       <Input v-model="pitem.qty" field="pitem.qty" col="12" placeholder="0" />
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" v-if="isElectronicsShop">
                       <button type="button" class="btn btn-sm btn-outline-primary position-relative px-2 py-1" @click="openSerialModal(index, pitem)" title="Add / View Serial Numbers">
                         <i class="fas fa-barcode me-1"></i> Serials
                         <span class="badge bg-danger ms-1" v-if="getSerialCount(pitem.serial_no) > 0">{{ getSerialCount(pitem.serial_no) }}</span>
@@ -162,7 +162,12 @@
 const model = 'purchase';
 
 export default {
-
+  computed: {
+    isElectronicsShop() {
+      const shopType = this.$root.site?.shop_type;
+      return !shopType || shopType === 'electronics';
+    },
+  },
   data() {
     return {
       model: model,

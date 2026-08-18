@@ -848,6 +848,11 @@ const routes = [
                 name: "pos.return",
                 component: () => import("./../views/admin/pos/return"),
             },
+            {
+                path: "/pos/labelprint",
+                name: "pos.labelprint",
+                component: () => import("./../views/admin/pos/labelprint"),
+            },
             // ------------------LoanInfo PORTION------------------
             {
                 path: "/loanInfo",
@@ -1147,7 +1152,34 @@ const routes = [
                 component: () => import("./../views/admin/size/create"),
             },
 
+            // ------------------Warranty Claim PORTION------------------
+            {
+                path: "/warrantyClaim",
+                name: "warrantyClaim.index",
+                component: () => import("./../views/admin/warrantyClaim/index"),
+            },
+            {
+                path: "/warrantyClaim/create",
+                name: "warrantyClaim.create",
+                component: () => import("./../views/admin/warrantyClaim/create"),
+            },
+            {
+                path: "/warrantyClaim/:id",
+                name: "warrantyClaim.show",
+                component: () => import("./../views/admin/warrantyClaim/view"),
+            },
+            {
+                path: "/warrantyClaim/:id/edit",
+                name: "warrantyClaim.edit",
+                component: () => import("./../views/admin/warrantyClaim/create"),
+            },
+
             // ------------------Report PORTION------------------
+            {
+                path: "/report/sales",
+                name: "report.sales",
+                component: () => import("./../views/admin/report/sales"),
+            },
             {
                 path: "/report/itemladger",
                 name: "report.itemladger",
@@ -1227,6 +1259,28 @@ const routes = [
                 path: "/report/funds",
                 name: "report.funds",
                 component: () => import("./../views/admin/report/funds"),
+            },
+            {
+                path: "/report/coupon",
+                name: "report.coupon",
+                component: () => import("./../views/admin/report/coupon"),
+            },
+            {
+                path: "/report/serial",
+                name: "report.serial",
+                component: () => import("./../views/admin/report/serial"),
+            },
+            {
+                path: "/report/warrantyclaim",
+                name: "report.warrantyclaim",
+                component: () =>
+                    import("./../views/admin/report/warrantyclaim"),
+            },
+            {
+                path: "/report/warrantyClaim",
+                name: "report.warrantyClaim",
+                component: () =>
+                    import("./../views/admin/report/warrantyclaim"),
             },
         ],
     },

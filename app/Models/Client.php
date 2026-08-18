@@ -53,5 +53,10 @@ class Client extends BaseModel
         return $this->belongsTo(District::class);
     }
 
+    public function pointTransactions()
+    {
+        return $this->hasMany(ClientPointTransaction::class, 'client_id', 'id')->latest('id');
+    }
+
     // date format
 }
