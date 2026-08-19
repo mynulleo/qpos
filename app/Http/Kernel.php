@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'auth.access' => \App\Http\Middleware\AdminAccess::class,
         'theme' => \App\Http\Middleware\ThemeMiddleware::class,
         'tenantDB' => \App\Http\Middleware\TenantDB::class,
+        'checkExpiry' => \App\Http\Middleware\CheckExpiry::class,
     ];
 }

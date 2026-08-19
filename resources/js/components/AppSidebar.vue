@@ -226,13 +226,17 @@ export default {
         },
 
         async logout() {
-            this.$root.spinner = true;
-            const res = await this.callApi("post", "logout");
-            if (res.status == 200) {
+            try {
+                this.$root.spinner = true;
+                const res = await this.callApi("post", "logout");
+                if (res && res.data && res.data.message) {
+                    this.$toast(res.data.message, "success");
+                }
+            } catch (e) {
+            } finally {
                 this.$root.spinner = false;
                 this.$store.dispatch("auth/logout");
-                this.$toast(res.data.message, "success");
-                window.location.href = this.$root.baseurl + "/";
+                window.location.href = (this.$root.baseurl ? this.$root.baseurl : '') + "/";
             }
         },
     },

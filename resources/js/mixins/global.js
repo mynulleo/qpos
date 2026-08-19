@@ -51,5 +51,14 @@ export default {
         attach() {
             return `${laravel.baseurl}/images/pdf-cover.png`;
         },
+        subscription() {
+            return this.$store.state.global.subscription || {};
+        },
+        isExpired() {
+            return !!(this.subscription && this.subscription.is_expired);
+        },
+        expiredDate() {
+            return this.subscription ? this.subscription.expired_date : null;
+        },
     },
 };

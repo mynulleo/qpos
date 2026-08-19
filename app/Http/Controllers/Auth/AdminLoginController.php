@@ -46,7 +46,7 @@ class AdminLoginController extends Controller
                     'status' => 'active',
                 ];
 
-                $organization = OrganizationUser::with('organization:id,organization_name,block,expired_date,status')->where('email', $email)->first();
+                $organization = OrganizationUser::with('organization:id,organization_name,block,expired_date,subscription_fee,status')->where('email', $email)->first();
 
                 if (!empty($organization)) {
                     if ($organization->block == 0) {
@@ -60,12 +60,26 @@ class AdminLoginController extends Controller
                             $userId = Auth::guard('admin')->user()->id;
                             $this->storeLoginDetails($userId, 'admin');
 
+                            $org = $organization->organization ?? null;
+                            $expiredDate = $org ? $org->expired_date : (Auth::guard('admin')->user()->residence->expired_date ?? null);
+                            $isExpired = false;
+                            if (!empty($expiredDate)) {
+                                try {
+                                    $isExpired = \Carbon\Carbon::today()->gt(\Carbon\Carbon::parse($expiredDate)->startOfDay());
+                                } catch (\Exception $e) {
+                                    $isExpired = false;
+                                }
+                            }
+
                             return response([
                                 // 'message' => 'Logged in successfully',
                                 'user' => Auth::guard('admin')->user(),
                                 'role' => Auth::guard('admin')->user()->role->name ?? '',
-                                'organization_id' => Auth::guard('admin')->user()->organization_id ?? '',
-                                'expired_date' => Auth::guard('admin')->user()->residence->expired_date ?? '',
+                                'organization_id' => Auth::guard('admin')->user()->organization_id ?? ($organization->organization_id ?? ''),
+                                'organization_name' => $org ? $org->organization_name : 'My Organization',
+                                'expired_date' => $expiredDate ?? '',
+                                'subscription_fee' => $org ? ($org->subscription_fee ?? 1000) : 1000,
+                                'is_expired' => $isExpired,
                                 'redirect_url' => $request->session()->pull('url.intended', route('dashboard.index')),
                             ], 200);
                         } else {
@@ -129,13 +143,30 @@ class AdminLoginController extends Controller
      *
      * @return response
      */
-    public function logout()
+    public function logout(Request $request = null)
     {
-        Artisan::call('cache:clear');
-        $logout = Auth::guard('admin')->logout();
-        return response([
-            'message' => 'You have been successfully logged out',
-        ], 200);
+        try {
+            if (Auth::guard('admin')->check()) {
+                Auth::guard('admin')->logout();
+            }
+            if (Auth::check()) {
+                Auth::logout();
+            }
+            if ($request && $request->hasSession()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+        } catch (\Exception $e) {}
+
+        if ($request && $request->expectsJson()) {
+            return response([
+                'success' => true,
+                'message' => 'You have been successfully logged out',
+                'redirect_url' => url('/'),
+            ], 200);
+        }
+
+        return redirect('/');
     }
 
     /**

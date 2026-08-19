@@ -8,7 +8,7 @@
                             <span class="legend">Invoice</span>
                             <div class="row g-3">
                                 <Select title='Client' v-model='data.client_id' field='data.client_id' col="6"
-                                    label='org_name' :reduce='(obj) => obj.id' :options='clients'
+                                    label='name' :reduce='(obj) => obj.id' :options='clients'
                                     placeholder='--Select One--' @change="fetchClientData" :closeOnSelect='true'
                                     :required='false' :disabled="this.$route.params.id ? true : false" />
 

@@ -4,10 +4,10 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Carbon\Carbon;
+use App\Models\Organization;
 use App\Models\Residence;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 
 class CheckExpiry
 {
@@ -20,49 +20,68 @@ class CheckExpiry
      */
     public function handle(Request $request, Closure $next)
     {
-        $expired_date = null;
-        $user = Auth::user();
+        $user = Auth::guard('admin')->user() ?? Auth::user();
         if ($user) {
-            $residence_id = $user->residence_id;
-            $residence = Residence::select('expired_date')->where('id', $residence_id)->first();
+            $expiredDate = null;
+            if (!empty($user->organization_id)) {
+                try {
+                    $org = Organization::select('id', 'expired_date', 'status', 'block')->find($user->organization_id);
+                    if ($org) {
+                        $expiredDate = $org->expired_date;
+                    }
+                } catch (\Exception $e) {}
+            }
 
-            if ($residence && $residence->expired_date && Carbon::now()->gt($residence->expired_date)) {
+            if (!$expiredDate && isset($user->residence)) {
+                $expiredDate = $user->residence->expired_date ?? null;
+            }
 
-                // এখানে যেসব route allow করা হবে সেগুলো define করুন
-                $allowedRoutes = [
-                    'qpanel',
-                    'failed-from-ssl',
-                    'success-from-ssl',
-                    'ssl-payment-cancel',
-                    'warning-from-ssl',
-                    'failed-from-ssl',
-                    'admin/dashboard',
-                    'admin/invoice',
-                    'admin/invoice/*',
-                    'admin/initialize-systems',
-                    'admin/subscription',
-                    'admin/get-residence',
-                    'admin/logout',
-                ];
+            if (!empty($expiredDate)) {
+                try {
+                    $isExpired = Carbon::today()->gt(Carbon::parse($expiredDate)->startOfDay());
+                } catch (\Exception $e) {
+                    $isExpired = false;
+                }
 
-                // যদি request কোনো allowed route এর সাথে match না করে
-                $isAllowed = false;
-                foreach ($allowedRoutes as $route) {
-                    if ($request->is($route)) {
+                if ($isExpired) {
+                    // Allowed essential routes for initial page load, payment renewal, and logout
+                    $allowedRoutes = [
+                        'admin/initialize-systems',
+                        'initialize-systems',
+                        'admin/subscription/initiate-payment',
+                        'subscription/initiate-payment',
+                        'subscription/payment/*',
+                        'admin/logout',
+                        'logout',
+                        'admin/qlogout',
+                        'qlogin',
+                        'admin/loginCheck',
+                        'loginCheck',
+                    ];
+
+                    $isAllowed = false;
+                    foreach ($allowedRoutes as $route) {
+                        if ($request->is($route) || $request->is("*/{$route}")) {
+                            $isAllowed = true;
+                            break;
+                        }
+                    }
+
+                    // HTML views (GET) can load so Vue mounts and displays the software lock screen
+                    if ($request->format() == 'html' && $request->isMethod('get')) {
                         $isAllowed = true;
-                        break;
+                    }
+
+                    if (!$isAllowed) {
+                        return response()->json([
+                            'success' => false,
+                            'is_expired' => true,
+                            'expired_date' => $expiredDate,
+                            'message' => 'Your software subscription has expired. Access is locked.',
+                            'error' => 'SUBSCRIPTION_EXPIRED'
+                        ], 403);
                     }
                 }
-
-                if (!$isAllowed) {
-                    if ($request->expectsJson()) {
-                        return response()->json(['message' => 'Your subscription expired'], 403);
-                    }
-                    return redirect()->route('invoice.payment');
-                }
-
-                // যদি allowed route হয় → শুধু next
-                return $next($request);
             }
         }
 

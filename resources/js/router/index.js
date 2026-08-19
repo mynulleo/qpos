@@ -686,6 +686,12 @@ const routes = [
                 component: () =>
                     import("./../views/admin/bulkdataimport/client"),
             },
+            {
+                path: "bulkdataimport/item",
+                name: "bulkdataimport.item",
+                component: () =>
+                    import("./../views/admin/bulkdataimport/item"),
+            },
 
             // ------------------Account PORTION------------------
             {

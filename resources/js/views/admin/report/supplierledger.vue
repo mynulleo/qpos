@@ -159,11 +159,19 @@ export default {
                 });
         },
         getSupplierLedger() {
+            this.$root.tableSpinner = true;
             axios
                 .get(`report/supplierledger/`, { params: this.search_data })
                 .then((res) => {
-                    this.datas = res.data
+                    this.datas = res.data || { supplier: null, opening_balance: 0, records: [] };
                 })
+                .catch((error) => {
+                    console.error(error);
+                })
+                .finally(() => {
+                    this.$root.tableSpinner = false;
+                    this.$root.spinner = false;
+                });
         },
         // Capitalize the first letter of a string
         ucfirst(str) {

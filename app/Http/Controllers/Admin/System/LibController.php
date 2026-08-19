@@ -107,6 +107,56 @@ class LibController extends Controller
      */
     public function systems()
     {
+        $user = auth('admin')->user() ?? auth()->user();
+        $expiredDate = null;
+        $orgName = null;
+        $subscriptionFee = 500;
+        $isExpired = false;
+        $daysOverdue = 0;
+
+        if ($user) {
+            $orgId = $user->organization_id ?? null;
+            if ($orgId) {
+                try {
+                    $org = Organization::select('id', 'organization_name', 'expired_date', 'subscription_fee', 'status', 'block')->find($orgId);
+                    if ($org) {
+                        $expiredDate = $org->expired_date;
+                        $orgName = $org->organization_name;
+                        if (!empty($org->subscription_fee)) {
+                            $subscriptionFee = floatval($org->subscription_fee);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Fallback if accessdb connection not reachable
+                }
+            }
+
+            if (!$expiredDate && isset($user->residence)) {
+                $expiredDate = $user->residence->expired_date ?? null;
+                $orgName = $user->residence->residence_name ?? $orgName;
+            }
+
+            $siteObj = App::make('siteSettingObj');
+            if (empty($orgName) && !empty($siteObj['title'])) {
+                $orgName = $siteObj['title'];
+            }
+            if (!$expiredDate && !empty($siteObj['expired_date'])) {
+                $expiredDate = $siteObj['expired_date'];
+            }
+
+            if (!empty($expiredDate)) {
+                try {
+                    $expCarbon = \Carbon\Carbon::parse($expiredDate)->startOfDay();
+                    $todayCarbon = \Carbon\Carbon::today();
+                    if ($todayCarbon->gt($expCarbon)) {
+                        $isExpired = true;
+                        $daysOverdue = $todayCarbon->diffInDays($expCarbon);
+                    }
+                } catch (\Exception $e) {
+                    $isExpired = false;
+                }
+            }
+        }
 
         return [
             'global' => $this->index(),
@@ -115,6 +165,14 @@ class LibController extends Controller
             'menus' => App::make('sideMenus'),
             'categoriesModuleNames' => $this->categoriesModuleNames(),
             'user' => auth('admin')->user(),
+            'subscription' => [
+                'organization_name' => $orgName ?? 'My Organization',
+                'expired_date' => $expiredDate,
+                'subscription_fee' => $subscriptionFee,
+                'is_expired' => $isExpired,
+                'days_overdue' => $daysOverdue,
+                'today' => date('Y-m-d'),
+            ],
         ];
     }
 

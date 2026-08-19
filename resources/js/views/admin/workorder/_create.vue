@@ -7,7 +7,7 @@
           <div class="row g-3">
             <date-picker id='date1' v-model='data.order_date' field='data.order_date' title='Order Date'
               placeholder='Order Date' col='2' :req='true'></date-picker>
-            <Select title='Client' v-model='data.client_id' field='data.client_id' label='org_name'
+            <Select title='Client' v-model='data.client_id' field='data.client_id' label='name'
               :reduce='(obj) => obj.id' :options='clients' placeholder='--Select One--' :closeOnSelect='true'
               :required='true' col="4" />
 

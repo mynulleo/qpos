@@ -2,6 +2,9 @@
   <index-page>
     <template v-slot:button>
       <div class="d-flex gap-2 align-items-center">
+        <router-link :to="{ name: 'bulkdataimport.item' }" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm fw-semibold">
+          <i class="fas fa-file-import"></i> Bulk Import
+        </router-link>
         <router-link :to="{ name: 'pos.labelprint' }" class="btn btn-sm btn-info text-white d-inline-flex align-items-center gap-1 shadow-sm">
           <i class="fas fa-barcode"></i> Label Print
         </router-link>

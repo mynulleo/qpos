@@ -25,6 +25,22 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
+// 🛡️ Zero-Click Event Capture Barrier when Software is Expired
+const blockedEvents = ['click', 'dblclick', 'mousedown', 'mouseup', 'contextmenu', 'keydown', 'keypress', 'keyup', 'touchstart', 'touchend', 'submit'];
+blockedEvents.forEach((eventType) => {
+    window.addEventListener(eventType, (e) => {
+        if (window.__IS_SOFTWARE_EXPIRED__) {
+            const target = e.target;
+            const isInsideLockModal = target && target.closest('#software-lock-overlay');
+            if (!isInsideLockModal) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                return false;
+            }
+        }
+    }, { capture: true, passive: false });
+});
+
 // App Initialize...
 const app = createApp({
     data() {

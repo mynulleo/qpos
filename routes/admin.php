@@ -17,7 +17,7 @@ Route::group(['prefix' => 'backend', 'as' => 'backend.'], function () {
 });
 
 // Authorized Route...
-Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
+Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () {
 
     // Support Route...
     Route::get('support/countries', [SupportController::class, 'countries']);
@@ -42,6 +42,7 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
     Route::get('get-permissions', [App\Http\Controllers\Admin\System\RoleController::class, 'getPermissions']);
     Route::get('get-menus/{any?}', [App\Http\Controllers\Admin\System\MenuController::class, 'menus']);
     Route::get('initialize-systems', [App\Http\Controllers\Admin\System\LibController::class, 'systems']);
+    Route::post('subscription/initiate-payment', [App\Http\Controllers\SubscriptionPaymentController::class, 'initiatePayment'])->name('subscription.initiatePayment');
 
     // Category Route...
     Route::get('get-category/{type}', [App\Http\Controllers\Admin\CategoryController::class, 'getCategory']);
@@ -165,9 +166,12 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
 
         Route::get('bulkdataimport/employee', [App\Http\Controllers\Admin\BulkDataImportController::class, 'employee'])->name('bulkdataimport.employee');
         Route::get('bulkdataimport/client', [App\Http\Controllers\Admin\BulkDataImportController::class, 'client'])->name('bulkdataimport.client');
+        Route::get('bulkdataimport/item', [App\Http\Controllers\Admin\BulkDataImportController::class, 'item'])->name('bulkdataimport.item');
+        Route::get('bulkdataimport/item-sample-csv', [App\Http\Controllers\Admin\BulkDataImportController::class, 'downloadItemSampleCsv'])->name('bulkdataimport.itemSampleCsv');
 
         Route::post('bulkdataimport/empimport', [App\Http\Controllers\Admin\BulkDataImportController::class, 'empimport'])->name('bulkdataimport.empimport');
         Route::post('bulkdataimport/clientimport', [App\Http\Controllers\Admin\BulkDataImportController::class, 'clientimport'])->name('bulkdataimport.clientimport');
+        Route::post('bulkdataimport/itemimport', [App\Http\Controllers\Admin\BulkDataImportController::class, 'itemimport'])->name('bulkdataimport.itemimport');
 
         // invoice extra action
         Route::get('invoice/bill/{id}', [App\Http\Controllers\Admin\InvoiceController::class, 'bill'])->name('invoice.bill');

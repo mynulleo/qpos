@@ -17,6 +17,7 @@ class VerifyCsrfToken extends Middleware
         '/failed-from-ssl',
         '/cancel-from-ssl',
         '/ipn',
+        '/subscription/payment/*',
         'module/*',
     ];
 }

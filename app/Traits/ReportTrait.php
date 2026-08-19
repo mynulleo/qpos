@@ -943,17 +943,19 @@ trait ReportTrait
 
         if (!$client_id) {
             return response()->json([
-                'status'  => false,
-                'message' => 'Client ID is required'
-            ], 422);
+                'client'          => null,
+                'opening_balance' => 0,
+                'records'         => []
+            ], 200);
         }
 
         $client = Client::find($client_id);
         if (!$client) {
             return response()->json([
-                'status'  => false,
-                'message' => 'Client not found'
-            ], 404);
+                'client'          => null,
+                'opening_balance' => 0,
+                'records'         => []
+            ], 200);
         }
 
         $receivableAccountId = Account::where('system_key_name', 'accounts-receivable')->first()?->id; // Accounts Receivable
@@ -1042,17 +1044,19 @@ trait ReportTrait
 
         if (!$supplier_id) {
             return response()->json([
-                'type'    => 'error',
-                'message' => 'Supplier ID is required'
-            ], 422);
+                'supplier'        => null,
+                'opening_balance' => 0,
+                'records'         => []
+            ], 200);
         }
 
         $supplier = Supplier::find($supplier_id);
         if (!$supplier) {
             return response()->json([
-                'status'  => false,
-                'message' => 'Supplier not found'
-            ], 404);
+                'supplier'        => null,
+                'opening_balance' => 0,
+                'records'         => []
+            ], 200);
         }
 
         $payableAccountId = Account::where('system_key_name', 'accounts-payable')->first()?->id; // Accounts Receivable
