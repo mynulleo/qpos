@@ -1,7 +1,7 @@
 <template>
     <ul class="list-unstyled sub_menu">
         <template v-for="(child_menu, index) in child_menus" :key="`sub_menu_${index}`">
-            <li v-if="child_menu && (child_menu.status === 'active' || !child_menu.status)">
+            <li v-if="child_menu && (child_menu.status === 'active' || !child_menu.status) && hasMenuPermission(child_menu)">
                 <template v-if="child_menu.child_menus && Object.keys(child_menu.child_menus).length > 0">
                     <a href="javascript:void(0)" data-bs-toggle="tooltip" data-bs-placement="right"
                         :data-bs-title="child_menu.menu_name" v-x-tooltip="child_menu.menu_name && child_menu.menu_name.length >= tooltipLength">
@@ -35,7 +35,7 @@
                     <!-- ===================Children Menu=================== -->
                 </template>
                 <template v-else>
-                    <router-link v-if="$root.checkPermission(child_menu.route_name)" :to="{
+                    <router-link :to="{
                         name: child_menu.route_name,
                         params: { slug: child_menu.params },
                     }" :class="isMenuActive(child_menu.route_name) ? 'router-link-active active' : ''" data-bs-toggle="
@@ -86,6 +86,13 @@ export default {
         },
     },
     methods: {
+        hasMenuPermission(menu) {
+            if (menu.child_menus && Object.keys(menu.child_menus).length > 0) {
+                return Object.values(menu.child_menus).some(child => this.hasMenuPermission(child));
+            }
+            return menu.route_name ? this.$root.checkPermission(menu.route_name) : false;
+        },
+
         isMenuActive(routeName) {
             if (!routeName) return false;
             const prefix = this.activeRouteNamePrefix;

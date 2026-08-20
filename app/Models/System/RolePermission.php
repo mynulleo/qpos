@@ -29,10 +29,14 @@ class RolePermission extends BaseModel
 
     public static function permissions()
     {
-        return RolePermission::select('permission_id', 'role_id')
-            ->with(['permission' => function ($q) {
-                $q->select('id', 'name', 'route', 'parent_id');
-            }])->get()->groupBy('role_id');
+        try {
+            return RolePermission::select('permission_id', 'role_id')
+                ->with(['permission' => function ($q) {
+                    $q->select('id', 'name', 'route', 'parent_id');
+                }])->get()->groupBy('role_id');
+        } catch (\Exception $e) {
+            return collect();
+        }
     }
 
     public static function permissionProcess($obj)
@@ -46,12 +50,12 @@ class RolePermission extends BaseModel
         $rolePermissions = $obj->get($user->role_id);
         if ($rolePermissions) {
             foreach ($rolePermissions->toArray() as $value) {
-                if (! empty($value['permission']['parent_id'])) {
+                if (! empty($value['permission']['parent_id']) && ! empty($value['permission']['route'])) {
                     $routes[] = $value['permission']['route'];
                 }
             }
         }
 
-        return $routes;
+        return array_values(array_unique($routes));
     }
 }

@@ -30,7 +30,8 @@
                     <template v-if="
                         (root_menu.status === 'active' || !root_menu.status) &&
                         root_menu.child_menus &&
-                        Object.keys(root_menu.child_menus).length > 0
+                        Object.keys(root_menu.child_menus).length > 0 &&
+                        hasChildPermission(root_menu)
                     ">
                         <li class="menu_item" :key="`parent_menu_${index}`">
                             <a href="javascript:void(0)" data-bs-toggle="tooltip" data-bs-placement="right"
@@ -183,6 +184,13 @@ export default {
     },
 
     methods: {
+        hasChildPermission(menu) {
+            if (!menu.child_menus || Object.keys(menu.child_menus).length === 0) {
+                return menu.route_name ? this.$root.checkPermission(menu.route_name) : false;
+            }
+            return Object.values(menu.child_menus).some(child => this.hasChildPermission(child));
+        },
+
         isMenuActive(routeName) {
             if (!routeName) return false;
             const prefix = this.activeRouteNamePrefix;

@@ -77,31 +77,40 @@ class DatabaseServiceProvider extends ServiceProvider
     {
         if (!$organizationId) return;
 
-        $organization = Organization::find($organizationId);
-        if (!$organization || !$organization->db_name) return;
+        try {
+            $organization = Organization::find($organizationId);
+            if (!$organization || !$organization->db_name) return;
 
-        config([
-            'database.connections.tenant' => [
-                'driver' => 'mysql',
-                'host' => !empty($organization->db_host) ? $organization->db_host : env('DB_HOST', '127.0.0.1'),
-                'port' => env('DB_PORT', '3306'),
-                'database' => $organization->db_name,
-                'username' => $organization->db_user ?? env('DB_USERNAME', 'root'),
-                'password' => $organization->db_password ?? env('DB_PASSWORD', ''),
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-                'prefix' => '',
-                'prefix_indexes' => true,
-                'strict' => true,
-                'engine' => 'InnoDB',
-                'options' => extension_loaded('pdo_mysql') ? array_filter([
-                    \PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-                ]) : [],
-            ],
-        ]);
+            $host = !empty($organization->db_host) ? $organization->db_host : env('DB_HOST', '127.0.0.1');
+            if ($host === 'localhost') {
+                $host = '127.0.0.1';
+            }
 
-        DB::purge('tenant');
-        DB::reconnect('tenant');
-        DB::setDefaultConnection('tenant');
+            config([
+                'database.connections.tenant' => [
+                    'driver' => 'mysql',
+                    'host' => $host,
+                    'port' => env('DB_PORT', '3306'),
+                    'database' => $organization->db_name,
+                    'username' => $organization->db_user ?? env('DB_USERNAME', 'root'),
+                    'password' => $organization->db_password ?? env('DB_PASSWORD', ''),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                    'prefix' => '',
+                    'prefix_indexes' => true,
+                    'strict' => true,
+                    'engine' => 'InnoDB',
+                    'options' => extension_loaded('pdo_mysql') ? array_filter([
+                        \PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                    ]) : [],
+                ],
+            ]);
+
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+            DB::setDefaultConnection('tenant');
+        } catch (\Exception $e) {
+            DB::setDefaultConnection(config('database.default', 'mysql'));
+        }
     }
 }

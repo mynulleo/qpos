@@ -89,4 +89,23 @@ class OrganizationUser extends Authenticatable
     {
         return $this->hasOne(Role::class, 'id', 'role_id')->select('id', 'name');
     }
+
+    public function getRoleAttribute()
+    {
+        if ($this->relationLoaded('role')) {
+            $r = $this->getRelation('role');
+            if ($r) return $r;
+        }
+
+        if (!empty($this->role_id)) {
+            try {
+                $conn = config('database.default', 'mysql');
+                return Role::on($conn)->select('id', 'name')->find($this->role_id);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
 }

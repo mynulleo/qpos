@@ -71,11 +71,20 @@ class AdminLoginController extends Controller
                                 }
                             }
 
+                            $authUser = Auth::guard('admin')->user();
+                            $roleName = $authUser->role->name ?? '';
+                            if (empty($roleName) && !empty($authUser->role_id)) {
+                                try {
+                                    $rObj = \App\Models\System\Role::on(config('database.default', 'mysql'))->find($authUser->role_id);
+                                    $roleName = $rObj->name ?? '';
+                                } catch (\Exception $e) {}
+                            }
+
                             return response([
                                 // 'message' => 'Logged in successfully',
-                                'user' => Auth::guard('admin')->user(),
-                                'role' => Auth::guard('admin')->user()->role->name ?? '',
-                                'organization_id' => Auth::guard('admin')->user()->organization_id ?? ($organization->organization_id ?? ''),
+                                'user' => $authUser,
+                                'role' => $roleName ?: 'User',
+                                'organization_id' => $authUser->organization_id ?? ($organization->organization_id ?? ''),
                                 'organization_name' => $org ? $org->organization_name : 'My Organization',
                                 'expired_date' => $expiredDate ?? '',
                                 'subscription_fee' => $org ? ($org->subscription_fee ?? 1000) : 1000,
@@ -176,11 +185,20 @@ class AdminLoginController extends Controller
      */
     public function loginCheck()
     {
-        if (Auth::guard('admin')->user()) {
+        $user = Auth::guard('admin')->user();
+        if ($user) {
+            $roleName = $user->role->name ?? '';
+            if (empty($roleName) && !empty($user->role_id)) {
+                try {
+                    $rObj = \App\Models\System\Role::on(config('database.default', 'mysql'))->find($user->role_id);
+                    $roleName = $rObj->name ?? '';
+                } catch (\Exception $e) {}
+            }
+
             return response([
                 'message' => 'Login Successfully',
-                'user' => Auth::guard('admin')->user(),
-                'role' => Auth::guard('admin')->user()->role->name ?? '',
+                'user' => $user,
+                'role' => $roleName ?: 'User',
             ], 200);
         }
 

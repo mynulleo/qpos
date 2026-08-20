@@ -23,23 +23,32 @@ class TenantDB
             }
 
             if ($organization && !empty($organization->db_name)) {
-                Config::set('database.connections.tenant', [
-                    'driver' => 'mysql',
-                    'host' => !empty($organization->db_host) ? $organization->db_host : env('DB_HOST', '127.0.0.1'),
-                    'port' => env('DB_PORT', '3306'),
-                    'database' => $organization->db_name,
-                    'username' => $organization->db_user ?? env('DB_USERNAME', 'root'),
-                    'password' => $organization->db_password ?? env('DB_PASSWORD', ''),
-                    'charset' => 'utf8mb4',
-                    'collation' => 'utf8mb4_unicode_ci',
-                    'prefix' => '',
-                    'prefix_indexes' => true,
-                    'strict' => true,
-                    'engine' => 'InnoDB',
-                ]);
-                DB::purge('tenant');
-                DB::reconnect('tenant');
-                DB::setDefaultConnection('tenant');
+                try {
+                    $host = !empty($organization->db_host) ? $organization->db_host : env('DB_HOST', '127.0.0.1');
+                    if ($host === 'localhost') {
+                        $host = '127.0.0.1';
+                    }
+
+                    Config::set('database.connections.tenant', [
+                        'driver' => 'mysql',
+                        'host' => $host,
+                        'port' => env('DB_PORT', '3306'),
+                        'database' => $organization->db_name,
+                        'username' => $organization->db_user ?? env('DB_USERNAME', 'root'),
+                        'password' => $organization->db_password ?? env('DB_PASSWORD', ''),
+                        'charset' => 'utf8mb4',
+                        'collation' => 'utf8mb4_unicode_ci',
+                        'prefix' => '',
+                        'prefix_indexes' => true,
+                        'strict' => true,
+                        'engine' => 'InnoDB',
+                    ]);
+                    DB::purge('tenant');
+                    DB::reconnect('tenant');
+                    DB::setDefaultConnection('tenant');
+                } catch (\Exception $e) {
+                    DB::setDefaultConnection(config('database.default', 'mysql'));
+                }
             }
         }
 

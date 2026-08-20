@@ -75,14 +75,17 @@ const app = createApp({
                 });
         },
         checkPermission(route) {
-            let routeName = !route ? this.$route.name : route;
-            let check = this.permissions.filter
-                ? this.permissions.filter((x) => x == routeName)
-                : [];
-            console.log(
-                "app.js check permission :" + Object.keys(check).length,
-            );
-            return Object.keys(check).length > 0 ? true : false;
+            let routeName = !route ? this.$route?.name : route;
+            if (!routeName) return false;
+            const perms = this.permissions;
+            if (!perms) return false;
+            if (Array.isArray(perms)) {
+                return perms.includes(routeName);
+            }
+            if (typeof perms === "object") {
+                return Object.values(perms).includes(routeName);
+            }
+            return false;
         },
         handleServerUnavailable() {
             if (!this.retried) {

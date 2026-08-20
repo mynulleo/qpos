@@ -1296,7 +1296,7 @@ const routes = [
 function checkAuth(to, from, next) {
     let role = localStorage.getItem("role");
     let user = localStorage.getItem("user");
-    if (role && user) {
+    if ((user && user !== "undefined" && user !== "null") || role) {
         next();
     } else {
         window.location.href = "/";

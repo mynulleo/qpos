@@ -34,33 +34,42 @@ class LibController extends Controller
         $orgId = $user->organization_id ?? null;
         if (!$orgId) return;
 
-        $residence = Organization::select('db_host', 'db_name', 'db_user', 'db_password')
-            ->where('id', $orgId)
-            ->first();
+        try {
+            $residence = Organization::select('db_host', 'db_name', 'db_user', 'db_password')
+                ->where('id', $orgId)
+                ->first();
 
-        if (!$residence || !$residence->db_name) return;
+            if (!$residence || !$residence->db_name) return;
 
-        Config::set('database.connections.tenant', [
-            'driver' => 'mysql',
-            'host' => !empty($residence->db_host) ? $residence->db_host : env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => $residence->db_name,
-            'username' => $residence->db_user ?? env('DB_USERNAME', 'root'),
-            'password' => $residence->db_password ?? env('DB_PASSWORD', ''),
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => 'InnoDB',
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
-        ]);
+            $host = !empty($residence->db_host) ? $residence->db_host : env('DB_HOST', '127.0.0.1');
+            if ($host === 'localhost') {
+                $host = '127.0.0.1';
+            }
 
-        DB::purge('tenant');
-        DB::reconnect('tenant');
-        DB::setDefaultConnection('tenant');
+            Config::set('database.connections.tenant', [
+                'driver' => 'mysql',
+                'host' => $host,
+                'port' => env('DB_PORT', '3306'),
+                'database' => $residence->db_name,
+                'username' => $residence->db_user ?? env('DB_USERNAME', 'root'),
+                'password' => $residence->db_password ?? env('DB_PASSWORD', ''),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'prefix_indexes' => true,
+                'strict' => true,
+                'engine' => 'InnoDB',
+                'options' => extension_loaded('pdo_mysql') ? array_filter([
+                    PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                ]) : [],
+            ]);
+
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+            DB::setDefaultConnection('tenant');
+        } catch (\Exception $e) {
+            DB::setDefaultConnection(config('database.default', 'mysql'));
+        }
     }
 
     private function index()

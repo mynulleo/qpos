@@ -57,29 +57,36 @@ class Menu extends Model
 
     public static function menus()
     {
-        $permittedMenuArr = App::make('permittedMenuArr');
+        try {
+            $permittedMenuArr = App::make('permittedMenuArr');
 
-        return Menu::whereNull('parent_id')
-            ->where(function ($q) {
-                $q->where('status', 'active')->orWhereNull('status');
-            })
-            ->with(['childMenus' => function ($query) use ($permittedMenuArr) {
-                $query->where(function ($q) {
+            return Menu::whereNull('parent_id')
+                ->where(function ($q) {
                     $q->where('status', 'active')->orWhereNull('status');
                 })
-                ->whereIn('route_name', $permittedMenuArr)
-                ->orderBy('menu_name'); // Sort child menus alphabetically
-            }])
-            ->oldest('sorting')
-            ->get()
-            ->filter(function ($parentMenu) {
-                if ($parentMenu->childMenus->isEmpty() && empty($parentMenu->route_name)) {
+                ->with(['childMenus' => function ($query) use ($permittedMenuArr) {
+                    $query->where(function ($q) {
+                        $q->where('status', 'active')->orWhereNull('status');
+                    })
+                    ->whereIn('route_name', $permittedMenuArr)
+                    ->orderBy('menu_name'); // Sort child menus alphabetically
+                }])
+                ->oldest('sorting')
+                ->get()
+                ->filter(function ($parentMenu) use ($permittedMenuArr) {
+                    if ($parentMenu->childMenus->isNotEmpty()) {
+                        return true;
+                    }
+                    if (!empty($parentMenu->route_name) && in_array($parentMenu->route_name, $permittedMenuArr)) {
+                        return true;
+                    }
                     return false;
-                }
-                return true;
-            })
-            ->values()
-            ->toArray();
+                })
+                ->values()
+                ->toArray();
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 
     public static function getMenuList()
