@@ -28,51 +28,160 @@
 
     <!-- ⚙️ Label Settings & Customization Panel (Collapsible) -->
     <div class="card border-0 shadow-sm mb-3" v-if="showSettings">
-      <div class="card-header bg-light py-2">
-        <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-sliders-h me-1 text-primary"></i> Label Layout & Content Settings</h6>
+      <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+          <i class="fas fa-sliders-h text-primary"></i> Label Dimensions, Sizing & Layout Settings (লেবেল সাইজ ও কাস্টমাইজেশন)
+        </h6>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-primary px-2 py-1 font-monospace">
+            {{ settings.width }}{{ settings.unit }} × {{ settings.height }}{{ settings.unit }} ({{ formattedDimensionMm }})
+          </span>
+          <button type="button" class="btn btn-xs btn-outline-dark py-1 px-2 d-inline-flex align-items-center gap-1" @click="swapDimensions" title="Rotate label (Swap Width & Height)">
+            <i class="fas fa-sync-alt"></i> Rotate / Swap
+          </button>
+        </div>
       </div>
       <div class="card-body p-3">
         <div class="row g-3">
-          <!-- Preset Layout Selection -->
-          <div class="col-md-4">
-            <label class="form-label fw-bold small">Label Layout & Paper Type (লেবেল সাইজ ও লেআউট):</label>
-            <select class="form-select form-select-sm" v-model="settings.layout">
-              <option value="thermal">Continuous Roll / 1 Column (Thermal 50x30mm / 40x25mm)</option>
-              <option value="2col">2 Columns Sheet (50x30mm)</option>
-              <option value="3col">3 Columns Sheet (38x25mm / 24 per A4 Sheet)</option>
-              <option value="4col">4 Columns Sheet (30x20mm / 40 per A4 Sheet)</option>
-              <option value="grid">Compact Grid (Retail / Small Stickers)</option>
+          <!-- 1. Preset Size Dropdown -->
+          <div class="col-lg-4 col-md-6">
+            <label class="form-label fw-bold small text-secondary">
+              <i class="fas fa-ruler-combined me-1 text-primary"></i> Label Size Preset (সাইজ প্রিসেট):
+            </label>
+            <select class="form-select form-select-sm fw-semibold" v-model="settings.preset" @change="onPresetChange">
+              <option value="4x2">4" × 2" (101.6 × 50.8 mm) - Standard Barcode Tag (Landscape)</option>
+              <option value="2x4">2" × 4" (50.8 × 101.6 mm) - Rotated / Tall Tag (Portrait)</option>
+              <option value="3x2">3" × 2" (76.2 × 50.8 mm) - Retail Label (Landscape)</option>
+              <option value="2x1">2" × 1" (50.8 × 25.4 mm) - Compact Price Tag (Landscape)</option>
+              <option value="4x6">4" × 6" (101.6 × 152.4 mm) - Shipping & Box Label (Portrait)</option>
+              <option value="50x30">50 × 30 mm (2.0" × 1.2") - Standard Thermal Roll</option>
+              <option value="30x50">30 × 50 mm (1.2" × 2.0") - Rotated 30x50mm Thermal Tag</option>
+              <option value="40x25">40 × 25 mm (1.6" × 1.0") - Jewelry & Small Sticker</option>
+              <option value="38x25">38 × 25 mm - 3 Columns A4 Sheet (24 per page)</option>
+              <option value="30x20">30 × 20 mm - 4 Columns A4 Sheet (40 per page)</option>
+              <option value="custom">Custom Size (কাস্টম সাইজ)</option>
             </select>
           </div>
 
-          <!-- Company Name Customization -->
-          <div class="col-md-4">
-            <label class="form-label fw-bold small">Store / Business Name on Label:</label>
-            <input type="text" class="form-control form-control-sm" v-model="settings.companyName"
-              placeholder="e.g. QPOS Store">
+          <!-- 2. Width, Height & Unit Selector with Rotate Button -->
+          <div class="col-lg-4 col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-bold small text-secondary mb-0">
+                <i class="fas fa-arrows-alt me-1 text-primary"></i> Custom Dimensions (প্রস্থ × উচ্চতা):
+              </label>
+              <div class="btn-group btn-group-sm">
+                <button
+                  type="button"
+                  class="btn btn-xs py-0 px-2"
+                  :class="settings.unit === 'in' ? 'btn-primary' : 'btn-outline-secondary'"
+                  style="font-size: 11px;"
+                  @click="changeUnit('in')">
+                  Inch (in)
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-xs py-0 px-2"
+                  :class="settings.unit === 'mm' ? 'btn-primary' : 'btn-outline-secondary'"
+                  style="font-size: 11px;"
+                  @click="changeUnit('mm')">
+                  MM (mm)
+                </button>
+              </div>
+            </div>
+
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-white small fw-bold">W:</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0.1"
+                class="form-control text-center font-monospace fw-bold"
+                v-model.number="settings.width"
+                @input="onDimensionManualChange"
+                placeholder="Width"
+              />
+              <span class="input-group-text bg-white px-1 border-start-0 border-end-0">×</span>
+              <span class="input-group-text bg-white small fw-bold">H:</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0.1"
+                class="form-control text-center font-monospace fw-bold"
+                v-model.number="settings.height"
+                @input="onDimensionManualChange"
+                placeholder="Height"
+              />
+              <span class="input-group-text bg-light fw-bold font-monospace">{{ settings.unit }}</span>
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                @click="swapDimensions"
+                title="Rotate / Swap Width & Height (যেমন 4x2 থেকে 2x4 বা 2x4 থেকে 4x2)">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+            <div class="d-flex justify-content-between mt-1">
+              <small class="text-muted" style="font-size: 11px;">
+                Orientation: <strong>{{ isPortraitLabel ? '↕ Portrait (খাড়া)' : '↔ Landscape (অনুভূমিক)' }}</strong>
+              </small>
+              <small class="text-primary font-monospace" style="font-size: 11px;">
+                {{ settings.unit === 'in' ? formattedDimensionMm : formattedDimensionIn }}
+              </small>
+            </div>
           </div>
 
-          <!-- Content Toggles -->
-          <div class="col-md-4">
-            <label class="form-label fw-bold small d-block">Content Options:</label>
-            <div class="d-flex flex-wrap gap-3 mt-1">
-              <div class="form-check form-check-inline">
+          <!-- 3. Paper Type & Column Layout -->
+          <div class="col-lg-4 col-md-6">
+            <label class="form-label fw-bold small text-secondary mb-1">
+              <i class="fas fa-print me-1 text-primary"></i> Printer Paper & Columns:
+            </label>
+            <div class="input-group input-group-sm">
+              <select class="form-select form-select-sm" v-model="settings.paperType">
+                <option value="thermal">Continuous Roll / Barcode Printer</option>
+                <option value="A4">A4 Sheet Paper (210 × 297 mm)</option>
+                <option value="letter">Letter Sheet Paper (8.5 × 11 in)</option>
+              </select>
+              <select class="form-select form-select-sm" v-model.number="settings.columns" style="max-width: 115px;">
+                <option :value="1">1 Column</option>
+                <option :value="2">2 Columns</option>
+                <option :value="3">3 Columns</option>
+                <option :value="4">4 Columns</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 4. Store / Business Name on Label -->
+          <div class="col-lg-4 col-md-6">
+            <label class="form-label fw-bold small text-secondary mb-1">Store / Business Name on Label:</label>
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              v-model="settings.companyName"
+              placeholder="e.g. QPOS Store"
+            />
+          </div>
+
+          <!-- 5. Content Toggles -->
+          <div class="col-lg-8 col-md-12">
+            <label class="form-label fw-bold small text-secondary d-block mb-1">Label Content & Formatting Toggles:</label>
+            <div class="d-flex flex-wrap gap-3 mt-1 bg-light p-2 rounded border">
+              <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showCompany" v-model="settings.showCompany">
                 <label class="form-check-label small" for="showCompany">Store Name</label>
               </div>
-              <div class="form-check form-check-inline">
+              <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showTitle" v-model="settings.showTitle">
                 <label class="form-check-label small" for="showTitle">Product Title</label>
               </div>
-              <div class="form-check form-check-inline">
+              <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showPrice" v-model="settings.showPrice">
                 <label class="form-check-label small" for="showPrice">Price (মূল্য)</label>
               </div>
-              <div class="form-check form-check-inline">
+              <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showBarcodeNum" v-model="settings.showBarcodeNum">
-                <label class="form-check-label small" for="showBarcodeNum">Barcode Text</label>
+                <label class="form-check-label small" for="showBarcodeNum">Barcode Digits</label>
               </div>
-              <div class="form-check form-check-inline">
+              <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showBorder" v-model="settings.showBorder">
                 <label class="form-check-label small" for="showBorder">Sticker Border</label>
               </div>
@@ -319,11 +428,16 @@
             <span class="fw-bold small text-dark d-flex align-items-center gap-1">
               <i class="fas fa-eye text-primary"></i> Live Label Preview
             </span>
-            <div class="d-flex align-items-center gap-2" v-if="labelQueue.length > 1">
-              <span class="small text-muted" style="font-size: 11px;">
-                Item {{ selectedPreviewIndex + 1 }} of {{ labelQueue.length }}
-              </span>
-              <div class="btn-group btn-group-sm">
+            <div class="d-flex align-items-center gap-2">
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
+                style="font-size: 11px;"
+                @click="swapDimensions"
+                title="Rotate preview (Swap Width & Height)">
+                <i class="fas fa-sync-alt"></i> Rotate ({{ isPortraitLabel ? 'Portrait' : 'Landscape' }})
+              </button>
+              <div class="btn-group btn-group-sm" v-if="labelQueue.length > 1">
                 <button
                   type="button"
                   class="btn btn-outline-secondary btn-sm px-2 py-0"
@@ -343,11 +457,12 @@
           </div>
 
           <div class="card-body p-3 bg-light text-center">
-            <!-- Realistic Sticker Label Container -->
+            <!-- Realistic Sticker Label Container (Dynamically Scaled & Styled) -->
             <div class="label-preview-stage">
               <div
                 class="thermal-label-box"
-                :class="['preset-' + settings.layout, { 'bordered': settings.showBorder }]">
+                :class="[{ 'bordered': settings.showBorder, 'is-portrait': isPortraitLabel }]"
+                :style="previewLabelStyle">
                 
                 <!-- Store Name -->
                 <div v-if="settings.showCompany" class="label-company-name">
@@ -387,15 +502,16 @@
 
             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
               <small class="text-muted" style="font-size: 11px;">
-                <i class="fas fa-info-circle me-1 text-primary"></i>
-                Preset: <strong>{{ layoutPresetLabel }}</strong>
+                <i class="fas fa-ruler-combined me-1 text-primary"></i>
+                Size: <strong>{{ settings.width }} {{ settings.unit }} × {{ settings.height }} {{ settings.unit }}</strong>
+                ({{ formattedDimensionMm }}) • <strong>{{ isPortraitLabel ? 'Portrait ↕' : 'Landscape ↔' }}</strong>
               </small>
               <button
                 type="button"
                 class="btn btn-link btn-sm text-decoration-none p-0"
                 style="font-size: 11px;"
                 @click="showSettings = !showSettings">
-                <i class="fas fa-sliders-h me-1"></i> Customize Layout
+                <i class="fas fa-sliders-h me-1"></i> {{ showSettings ? 'Hide Settings' : 'Customize Size' }}
               </button>
             </div>
           </div>
@@ -403,40 +519,344 @@
       </div>
     </div>
 
-    <!-- 📦 Modal: Browse Inventory Items -->
+    <!-- 📦 Modal: Browse Inventory Items (Advanced Filtering) -->
     <div class="modal fade" id="browseItemsModal" tabindex="-1" aria-hidden="true" ref="browseModal">
-      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header bg-light">
-            <h5 class="modal-title fw-bold">
-              <i class="fas fa-boxes me-2 text-primary"></i> Select Products for Label Printing
-            </h5>
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+          <!-- Modal Header -->
+          <div class="modal-header bg-light border-bottom py-3">
+            <div class="d-flex align-items-center gap-2">
+              <span class="p-2 bg-primary bg-opacity-10 text-primary rounded-circle">
+                <i class="fas fa-boxes fa-lg"></i>
+              </span>
+              <div>
+                <h5 class="modal-title fw-bold mb-0 text-dark">
+                  Browse Inventory & Select Products for Barcode Labels
+                </h5>
+                <p class="small text-muted mb-0">
+                  Filter by Barcode range, New/Recent items date, Category, or Keyword to batch print stickers.
+                </p>
+              </div>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body p-3">
-            <div class="row g-2 mb-3">
-              <div class="col-md-7">
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="Search by title or barcode..."
-                  v-model="modalSearchTerm"
-                  @input="filterModalItems"
-                />
+
+          <!-- Modal Body -->
+          <div class="modal-body p-3 bg-white">
+            <!-- 🔍 Advanced Filter Toolbar Box -->
+            <div class="bg-light p-3 rounded-3 border mb-3">
+              <div class="row g-2 align-items-center">
+                <!-- 1. Search Keyword -->
+                <div class="col-lg-3 col-md-6">
+                  <label class="form-label fw-bold small text-secondary mb-1">
+                    <i class="fas fa-search me-1 text-primary"></i> Search Product:
+                  </label>
+                  <div class="input-group input-group-sm">
+                    <input
+                      type="text"
+                      class="form-control form-control-sm"
+                      placeholder="Title or barcode..."
+                      v-model="modalFilters.searchTerm"
+                      @input="onModalFilterChangeDebounced"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      v-if="modalFilters.searchTerm"
+                      @click="modalFilters.searchTerm = ''; fetchModalItems();">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 2. Category Filter -->
+                <div class="col-lg-3 col-md-6">
+                  <label class="form-label fw-bold small text-secondary mb-1">
+                    <i class="fas fa-tags me-1 text-primary"></i> Category:
+                  </label>
+                  <select
+                    class="form-select form-select-sm"
+                    v-model="modalFilters.categoryId"
+                    @change="fetchModalItems">
+                    <option value="">-- All Categories --</option>
+                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.title }}</option>
+                  </select>
+                </div>
+
+                <!-- 3. New Items / Date Filter Preset -->
+                <div class="col-lg-3 col-md-6">
+                  <label class="form-label fw-bold small text-secondary mb-1">
+                    <i class="fas fa-clock me-1 text-success"></i> New Items / Date:
+                  </label>
+                  <select
+                    class="form-select form-select-sm fw-semibold"
+                    :class="{ 'border-success text-success': modalFilters.dateFilter !== 'all' }"
+                    v-model="modalFilters.dateFilter"
+                    @change="onDateFilterPresetChange">
+                    <option value="all">All Products (সব আইটেম)</option>
+                    <option value="today">✨ Added Today (আজকের নতুন আইটেম)</option>
+                    <option value="yesterday">🕒 Added Yesterday (গতকালের আইটেম)</option>
+                    <option value="last_7_days">📅 Last 7 Days (গত ৭ দিনের আইটেম)</option>
+                    <option value="last_30_days">🗓️ Last 30 Days (গত ৩০ দিনের আইটেম)</option>
+                    <option value="custom">📆 Custom Date Range (তারিখ নির্বাচন)</option>
+                  </select>
+                </div>
+
+                <!-- 4. Barcode Range (From - To) -->
+                <div class="col-lg-3 col-md-6">
+                  <label class="form-label fw-bold small text-secondary mb-1">
+                    <i class="fas fa-barcode me-1 text-dark"></i> Barcode Range (From - To):
+                  </label>
+                  <div class="input-group input-group-sm">
+                    <input
+                      type="text"
+                      class="form-control form-control-sm font-monospace text-center"
+                      placeholder="From Barcode"
+                      v-model="modalFilters.fromBarcode"
+                      @input="onModalFilterChangeDebounced"
+                    />
+                    <span class="input-group-text px-1 bg-white border-start-0 border-end-0 text-muted">-</span>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm font-monospace text-center"
+                      placeholder="To Barcode"
+                      v-model="modalFilters.toBarcode"
+                      @input="onModalFilterChangeDebounced"
+                    />
+                  </div>
+                </div>
               </div>
-              <div class="col-md-5">
-                <select class="form-select" v-model="modalCategoryFilter" @change="filterModalItems">
-                  <option value="">-- All Categories --</option>
-                  <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.title }}</option>
-                </select>
+
+              <!-- Secondary Row: Custom Date Range & Filter Actions -->
+              <div class="row g-2 mt-2 pt-2 border-top align-items-center" v-if="modalFilters.dateFilter === 'custom' || showMoreModalFilters">
+                <!-- Custom From Date -->
+                <div class="col-lg-3 col-md-4" v-if="modalFilters.dateFilter === 'custom'">
+                  <label class="form-label fw-bold small text-muted mb-1">From Date:</label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm"
+                    v-model="modalFilters.fromDate"
+                    @change="fetchModalItems"
+                  />
+                </div>
+
+                <!-- Custom To Date -->
+                <div class="col-lg-3 col-md-4" v-if="modalFilters.dateFilter === 'custom'">
+                  <label class="form-label fw-bold small text-muted mb-1">To Date:</label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm"
+                    v-model="modalFilters.toDate"
+                    @change="fetchModalItems"
+                  />
+                </div>
+
+                <!-- Barcode Status Filter -->
+                <div class="col-lg-3 col-md-4">
+                  <label class="form-label fw-bold small text-muted mb-1">Barcode Status:</label>
+                  <select
+                    class="form-select form-select-sm"
+                    v-model="modalFilters.hasBarcode"
+                    @change="fetchModalItems">
+                    <option value="all">All (With & Without Barcode)</option>
+                    <option value="yes">Only With Barcode Generated</option>
+                    <option value="no">Only Missing Barcode</option>
+                  </select>
+                </div>
+
+                <!-- Price Range -->
+                <div class="col-lg-3 col-md-4">
+                  <label class="form-label fw-bold small text-muted mb-1">Price Range (Tk.):</label>
+                  <div class="input-group input-group-sm">
+                    <input
+                      type="number"
+                      class="form-control form-control-sm text-end"
+                      placeholder="Min"
+                      v-model.number="modalFilters.minPrice"
+                      @input="onModalFilterChangeDebounced"
+                    />
+                    <span class="input-group-text px-1 bg-white border-start-0 border-end-0 text-muted">-</span>
+                    <input
+                      type="number"
+                      class="form-control form-control-sm text-end"
+                      placeholder="Max"
+                      v-model.number="modalFilters.maxPrice"
+                      @input="onModalFilterChangeDebounced"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Filter Chips & Reset Row -->
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
+                <!-- Left: Quick Date Preset Buttons -->
+                <div class="d-flex flex-wrap align-items-center gap-1">
+                  <span class="small text-muted fw-bold me-1" style="font-size: 11px;">Quick Presets:</span>
+                  <button
+                    type="button"
+                    class="btn btn-xs py-0 px-2 rounded-pill"
+                    :class="modalFilters.dateFilter === 'today' ? 'btn-success' : 'btn-outline-secondary'"
+                    style="font-size: 11px;"
+                    @click="setQuickDatePreset('today')">
+                    ✨ Today (আজকে)
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-xs py-0 px-2 rounded-pill"
+                    :class="modalFilters.dateFilter === 'yesterday' ? 'btn-info text-white' : 'btn-outline-secondary'"
+                    style="font-size: 11px;"
+                    @click="setQuickDatePreset('yesterday')">
+                    🕒 Yesterday (গতকাল)
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-xs py-0 px-2 rounded-pill"
+                    :class="modalFilters.dateFilter === 'last_7_days' ? 'btn-primary' : 'btn-outline-secondary'"
+                    style="font-size: 11px;"
+                    @click="setQuickDatePreset('last_7_days')">
+                    📅 Last 7 Days (৭ দিন)
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-xs py-0 px-2 rounded-pill"
+                    :class="modalFilters.dateFilter === 'last_30_days' ? 'btn-primary' : 'btn-outline-secondary'"
+                    style="font-size: 11px;"
+                    @click="setQuickDatePreset('last_30_days')">
+                    🗓️ Last 30 Days
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-xs py-0 px-2 rounded-pill"
+                    :class="modalFilters.hasBarcode === 'yes' ? 'btn-dark' : 'btn-outline-secondary'"
+                    style="font-size: 11px;"
+                    @click="toggleBarcodeOnlyPreset">
+                    <i class="fas fa-barcode me-1"></i> Has Barcode
+                  </button>
+                </div>
+
+                <!-- Right: More Filters & Reset -->
+                <div class="d-flex align-items-center gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm text-decoration-none p-0 text-secondary"
+                    style="font-size: 11px;"
+                    @click="showMoreModalFilters = !showMoreModalFilters">
+                    <i class="fas" :class="showMoreModalFilters ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    {{ showMoreModalFilters ? 'Less Filters' : 'More Filters' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger py-0 px-2 d-inline-flex align-items-center gap-1"
+                    style="font-size: 11px;"
+                    v-if="hasActiveModalFilters"
+                    @click="resetModalFilters">
+                    <i class="fas fa-undo"></i> Reset Filters
+                  </button>
+                </div>
+              </div>
+
+              <!-- Active Filter Chips -->
+              <div class="d-flex flex-wrap gap-1 mt-2" v-if="hasActiveModalFilters">
+                <span class="small text-muted fw-bold me-1 align-self-center" style="font-size: 10px;">Active Filters:</span>
+                <span class="badge bg-primary text-white d-inline-flex align-items-center gap-1" v-if="modalFilters.searchTerm">
+                  Keyword: "{{ modalFilters.searchTerm }}"
+                  <i class="fas fa-times cursor-pointer" @click="modalFilters.searchTerm = ''; fetchModalItems();"></i>
+                </span>
+                <span class="badge bg-secondary text-white d-inline-flex align-items-center gap-1" v-if="modalFilters.categoryId">
+                  Category: {{ getCategoryTitle(modalFilters.categoryId) }}
+                  <i class="fas fa-times cursor-pointer" @click="modalFilters.categoryId = ''; fetchModalItems();"></i>
+                </span>
+                <span class="badge bg-success text-white d-inline-flex align-items-center gap-1" v-if="modalFilters.dateFilter !== 'all'">
+                  Date: {{ getDatePresetLabel(modalFilters.dateFilter) }}
+                  <i class="fas fa-times cursor-pointer" @click="modalFilters.dateFilter = 'all'; fetchModalItems();"></i>
+                </span>
+                <span class="badge bg-dark text-white d-inline-flex align-items-center gap-1 font-monospace" v-if="modalFilters.fromBarcode || modalFilters.toBarcode">
+                  Barcode: {{ modalFilters.fromBarcode || 'Min' }} - {{ modalFilters.toBarcode || 'Max' }}
+                  <i class="fas fa-times cursor-pointer" @click="modalFilters.fromBarcode = ''; modalFilters.toBarcode = ''; fetchModalItems();"></i>
+                </span>
+                <span class="badge bg-info text-white d-inline-flex align-items-center gap-1" v-if="modalFilters.hasBarcode !== 'all'">
+                  {{ modalFilters.hasBarcode === 'yes' ? 'Has Barcode Only' : 'Missing Barcode Only' }}
+                  <i class="fas fa-times cursor-pointer" @click="modalFilters.hasBarcode = 'all'; fetchModalItems();"></i>
+                </span>
               </div>
             </div>
 
-            <div class="table-responsive" style="max-height: 380px;">
-              <table class="table table-hover table-sm align-middle mb-0">
-                <thead class="table-light sticky-top">
-                  <tr>
-                    <th width="6%" class="text-center">
+            <!-- 📊 Table Top Selection & Statistics Bar -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center bg-light px-3 py-2 rounded-2 border mb-2 gap-2">
+              <div class="d-flex align-items-center gap-3">
+                <div class="form-check mb-0">
+                  <input
+                    type="checkbox"
+                    id="selectAllModalCheckbox"
+                    class="form-check-input"
+                    :checked="isAllSelectedInModal"
+                    @change="toggleSelectAllModal"
+                  />
+                  <label class="form-check-label fw-bold small text-dark cursor-pointer" for="selectAllModalCheckbox">
+                    Select All ({{ filteredModalItems.length }} Products)
+                  </label>
+                </div>
+
+                <div class="btn-group btn-group-sm">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm py-0 px-2"
+                    style="font-size: 11px;"
+                    @click="selectFirstNItems(10)"
+                    title="Select first 10 items">
+                    +10
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm py-0 px-2"
+                    style="font-size: 11px;"
+                    @click="selectFirstNItems(25)"
+                    title="Select first 25 items">
+                    +25
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm py-0 px-2"
+                    style="font-size: 11px;"
+                    @click="selectFirstNItems(50)"
+                    title="Select first 50 items">
+                    +50
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm py-0 px-2 text-danger"
+                    style="font-size: 11px;"
+                    v-if="selectedModalItemIds.length > 0"
+                    @click="selectedModalItemIds = []"
+                    title="Clear current selection">
+                    Clear ({{ selectedModalItemIds.length }})
+                  </button>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted" style="font-size: 12px;">
+                  Showing <strong>{{ filteredModalItems.length }}</strong> products
+                </span>
+                <span class="badge bg-primary fs-6 px-2 py-1 rounded-pill" v-if="selectedModalItemIds.length > 0">
+                  {{ selectedModalItemIds.length }} Selected
+                </span>
+              </div>
+            </div>
+
+            <!-- 📋 Modal Products Table -->
+            <div class="table-responsive border rounded-2" style="max-height: 400px; min-height: 200px;">
+              <!-- Loading Spinner Overlay -->
+              <div v-if="modalLoading" class="text-center py-5">
+                <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                <span class="text-muted small fw-bold">Loading inventory items...</span>
+              </div>
+
+              <table v-else class="table table-hover table-sm align-middle mb-0">
+                <thead class="table-light sticky-top shadow-sm">
+                  <tr class="small text-muted text-uppercase">
+                    <th width="4%" class="text-center">#</th>
+                    <th width="4%" class="text-center">
                       <input
                         type="checkbox"
                         class="form-check-input"
@@ -444,13 +864,21 @@
                         @change="toggleSelectAllModal"
                       />
                     </th>
-                    <th width="44%">Product Name</th>
-                    <th width="25%">Barcode</th>
-                    <th width="25%">Price</th>
+                    <th width="32%">Product Details</th>
+                    <th width="16%">Barcode</th>
+                    <th width="16%">Created Date</th>
+                    <th width="14%" class="text-end">Price (Tk.)</th>
+                    <th width="14%" class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="item in filteredModalItems" :key="item.id" class="cursor-pointer" @click="toggleModalItem(item)">
+                  <tr
+                    v-for="(item, idx) in filteredModalItems"
+                    :key="item.id"
+                    :class="{ 'table-primary-subtle': selectedModalItemIds.includes(item.id) }"
+                    class="cursor-pointer"
+                    @click="toggleModalItem(item)">
+                    <td class="text-center text-muted small" @click.stop>{{ idx + 1 }}</td>
                     <td class="text-center" @click.stop>
                       <input
                         type="checkbox"
@@ -460,33 +888,126 @@
                       />
                     </td>
                     <td>
-                      <div class="fw-bold text-dark">{{ item.title }}</div>
-                      <small class="text-muted" v-if="item.category">{{ item.category.title }}</small>
+                      <div class="d-flex align-items-center gap-2">
+                        <img
+                          v-if="item.image"
+                          :src="item.image"
+                          class="rounded border"
+                          style="width: 34px; height: 34px; object-fit: cover;"
+                        />
+                        <div
+                          v-else
+                          class="rounded bg-light border d-flex align-items-center justify-content-center"
+                          style="width: 34px; height: 34px;">
+                          <i class="fas fa-box text-muted small"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-dark text-break" style="font-size: 13px;">
+                            {{ item.title }}
+                          </div>
+                          <div class="small text-muted d-flex align-items-center gap-1">
+                            <span class="badge bg-light text-dark border py-0 px-1" style="font-size: 10px;" v-if="item.category">
+                              {{ item.category.title }}
+                            </span>
+                            <span v-if="item.unit" style="font-size: 10px;">{{ item.unit.title }}</span>
+                          </div>
+                        </div>
+                      </div>
                     </td>
-                    <td class="font-monospace fw-bold">{{ item.barcode || 'N/A' }}</td>
-                    <td class="font-monospace text-success fw-bold">
+                    <td>
+                      <span class="badge bg-light text-dark border font-monospace px-2 py-1" style="font-size: 12px;">
+                        <i class="fas fa-barcode me-1 text-primary"></i>{{ item.barcode || 'N/A' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        v-if="getItemDateBadge(item.created_at)"
+                        class="badge py-1 px-2 fw-semibold"
+                        :class="getItemDateBadge(item.created_at).class"
+                        style="font-size: 11px;">
+                        {{ getItemDateBadge(item.created_at).label }}
+                      </span>
+                      <small v-else class="text-muted">-</small>
+                    </td>
+                    <td class="text-end font-monospace text-success fw-bold">
                       Tk. {{ formatMoney(item.opening_rate || (item.item_prices && item.item_prices[0] ? item.item_prices[0].selling_price : 0)) }}
                     </td>
+                    <td class="text-center" @click.stop>
+                      <button
+                        type="button"
+                        class="btn btn-xs btn-outline-primary py-1 px-2 rounded-pill d-inline-flex align-items-center gap-1"
+                        style="font-size: 11px;"
+                        @click="addSingleItemToQueue(item)">
+                        <i class="fas fa-plus"></i> Add
+                      </button>
+                    </td>
                   </tr>
-                  <tr v-if="filteredModalItems.length === 0">
-                    <td colspan="4" class="text-center py-4 text-muted">No products found matching search.</td>
+                  <tr v-if="filteredModalItems.length === 0 && !modalLoading">
+                    <td colspan="7" class="text-center py-5 text-muted">
+                      <div class="mb-2">
+                        <i class="fas fa-search fa-2x text-secondary opacity-50"></i>
+                      </div>
+                      <div class="fw-bold">No products match your active filters.</div>
+                      <p class="small text-muted mb-2">Try adjusting or clearing your search term, barcode range, or date filter.</p>
+                      <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill" @click="resetModalFilters">
+                        <i class="fas fa-undo me-1"></i> Reset Filters
+                      </button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <div class="modal-footer bg-light justify-content-between">
-            <span class="small text-muted fw-bold">
-              Selected: {{ selectedModalItemIds.length }} item(s)
-            </span>
-            <div class="d-flex gap-2">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+
+          <!-- Modal Footer with Batch Quantity Selector & Add Button -->
+          <div class="modal-footer bg-light border-top d-flex flex-wrap justify-content-between align-items-center py-2 px-3">
+            <!-- Left: Default Quantity per Item to Add -->
+            <div class="d-flex align-items-center gap-2">
+              <span class="small fw-bold text-dark">Sticker Copies per Product:</span>
+              <div class="input-group input-group-sm" style="width: 110px;">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  @click="modalAddQty > 1 ? modalAddQty-- : null">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max="999"
+                  class="form-control text-center font-monospace fw-bold"
+                  v-model.number="modalAddQty"
+                />
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  @click="modalAddQty++">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+              <div class="d-none d-sm-flex gap-1">
+                <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalAddQty = 1">1</span>
+                <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalAddQty = 2">2</span>
+                <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalAddQty = 5">5</span>
+                <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalAddQty = 10">10</span>
+              </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="d-flex align-items-center gap-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">
+                Close
+              </button>
               <button
                 type="button"
-                class="btn btn-primary"
+                class="btn btn-primary btn-sm px-4 fw-bold shadow-sm d-inline-flex align-items-center gap-2"
                 :disabled="selectedModalItemIds.length === 0"
                 @click="addSelectedModalItems">
-                <i class="fas fa-plus me-1"></i> Add Selected ({{ selectedModalItemIds.length }})
+                <i class="fas fa-plus-circle"></i>
+                <span>Add Selected ({{ selectedModalItemIds.length }})</span>
+                <span class="badge bg-white text-primary rounded-pill font-monospace" v-if="selectedModalItemIds.length > 0">
+                  {{ selectedModalItemIds.length * modalAddQty }} Stickers
+                </span>
               </button>
             </div>
           </div>
@@ -538,6 +1059,19 @@ import bootstrap from "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const model = "pos";
 
+const sizePresetMap = {
+  "4x2": { unit: "in", width: 4, height: 2, columns: 1, paperType: "thermal", orientation: "landscape" },
+  "2x4": { unit: "in", width: 2, height: 4, columns: 1, paperType: "thermal", orientation: "portrait" },
+  "3x2": { unit: "in", width: 3, height: 2, columns: 1, paperType: "thermal", orientation: "landscape" },
+  "2x1": { unit: "in", width: 2, height: 1, columns: 1, paperType: "thermal", orientation: "landscape" },
+  "4x6": { unit: "in", width: 4, height: 6, columns: 1, paperType: "thermal", orientation: "portrait" },
+  "50x30": { unit: "mm", width: 50, height: 30, columns: 1, paperType: "thermal", orientation: "landscape" },
+  "30x50": { unit: "mm", width: 30, height: 50, columns: 1, paperType: "thermal", orientation: "portrait" },
+  "40x25": { unit: "mm", width: 40, height: 25, columns: 1, paperType: "thermal", orientation: "landscape" },
+  "38x25": { unit: "mm", width: 38, height: 25, columns: 3, paperType: "A4", orientation: "landscape" },
+  "30x20": { unit: "mm", width: 30, height: 20, columns: 4, paperType: "A4", orientation: "landscape" },
+};
+
 export default {
   data() {
     return {
@@ -550,20 +1084,48 @@ export default {
       selectedPreviewIndex: 0,
       showSettings: false,
       settings: {
-        layout: "thermal", // thermal, 2col, 3col, 4col, grid
+        preset: "4x2", // 4x2, 2x4, 3x2, 2x1, 4x6, 50x30, 30x50, 40x25, 38x25, 30x20, custom
+        unit: "in", // 'in' or 'mm'
+        width: 4, // 4 inches (101.6 mm)
+        height: 2, // 2 inches (50.8 mm)
+        orientation: "landscape", // 'landscape' or 'portrait'
+        columns: 1, // 1 (Continuous roll), 2, 3, 4
+        paperType: "thermal", // 'thermal', 'A4', 'letter'
+        gapH: 0.08, // in inches
+        gapV: 0.12, // in inches
+        pageMargin: 0,
+        padding: 8, // px
         companyName: "",
         showCompany: true,
         showTitle: true,
         showPrice: true,
         showBarcodeNum: true,
         showBorder: true,
+        titleFontSize: 12,
+        priceFontSize: 13,
+        barcodeHeight: 38,
+        barcodeNumFontSize: 11,
+        companyFontSize: 11,
       },
-      // Modal data
+      // Modal Browse Inventory State
       allItems: [],
       categories: [],
-      modalSearchTerm: "",
-      modalCategoryFilter: "",
+      modalLoading: false,
+      showMoreModalFilters: false,
+      modalAddQty: 1,
       selectedModalItemIds: [],
+      modalFilters: {
+        searchTerm: "",
+        categoryId: "",
+        fromBarcode: "",
+        toBarcode: "",
+        dateFilter: "all", // all, today, yesterday, last_7_days, last_30_days, custom
+        fromDate: "",
+        toDate: "",
+        hasBarcode: "all", // all, yes, no
+        minPrice: "",
+        maxPrice: "",
+      },
     };
   },
 
@@ -580,15 +1142,65 @@ export default {
       return null;
     },
 
-    layoutPresetLabel() {
-      const map = {
-        thermal: "Continuous Roll (Thermal 50x30mm)",
-        "2col": "2-Columns Sheet (50x30mm)",
-        "3col": "3-Columns Sheet (38x25mm / 24 per A4)",
-        "4col": "4-Columns Sheet (30x20mm / 40 per A4)",
-        grid: "Compact Grid (Retail)",
+    isPortraitLabel() {
+      const w = parseFloat(this.settings.width) || 4;
+      const h = parseFloat(this.settings.height) || 2;
+      return h > w;
+    },
+
+    formattedDimensionMm() {
+      if (this.settings.unit === "mm") {
+        return `${this.settings.width} × ${this.settings.height} mm`;
+      }
+      const wMm = +(parseFloat(this.settings.width || 0) * 25.4).toFixed(1);
+      const hMm = +(parseFloat(this.settings.height || 0) * 25.4).toFixed(1);
+      return `${wMm} × ${hMm} mm`;
+    },
+
+    formattedDimensionIn() {
+      if (this.settings.unit === "in") {
+        return `${this.settings.width}" × ${this.settings.height}"`;
+      }
+      const wIn = +(parseFloat(this.settings.width || 0) / 25.4).toFixed(2);
+      const hIn = +(parseFloat(this.settings.height || 0) / 25.4).toFixed(2);
+      return `${wIn}" × ${hIn}"`;
+    },
+
+    previewLabelStyle() {
+      const s = this.settings;
+      const w = parseFloat(s.width) || 4;
+      const h = parseFloat(s.height) || 2;
+      const ratio = w / h;
+
+      let targetWidth = 260;
+      let targetHeight = 260 / ratio;
+
+      // Adjust for tall labels (e.g. 2x4 portrait)
+      if (targetHeight > 340) {
+        targetHeight = 340;
+        targetWidth = targetHeight * ratio;
+      }
+      // Adjust for wide labels (e.g. 4x2 landscape)
+      if (targetWidth > 300) {
+        targetWidth = 300;
+        targetHeight = targetWidth / ratio;
+      }
+      if (targetHeight < 110) {
+        targetHeight = 110;
+      }
+      if (targetWidth < 140) {
+        targetWidth = 140;
+      }
+
+      return {
+        width: `${Math.round(targetWidth)}px`,
+        minHeight: `${Math.round(targetHeight)}px`,
+        padding: `${s.padding || 8}px`,
       };
-      return map[this.settings.layout] || this.settings.layout;
+    },
+
+    layoutPresetLabel() {
+      return this.settings.preset === "custom" ? "Custom Size" : "Standard Preset";
     },
 
     previewItem() {
@@ -611,19 +1223,144 @@ export default {
       return stickers;
     },
 
+    hasActiveModalFilters() {
+      const f = this.modalFilters;
+      return (
+        !!f.searchTerm ||
+        !!f.categoryId ||
+        !!f.fromBarcode ||
+        !!f.toBarcode ||
+        f.dateFilter !== "all" ||
+        !!f.fromDate ||
+        !!f.toDate ||
+        f.hasBarcode !== "all" ||
+        !!f.minPrice ||
+        !!f.maxPrice
+      );
+    },
+
     filteredModalItems() {
       let list = this.allItems;
-      if (this.modalCategoryFilter) {
-        list = list.filter((i) => i.category_id == this.modalCategoryFilter);
+      const f = this.modalFilters;
+
+      // Category filter
+      if (f.categoryId) {
+        list = list.filter((i) => i.category_id == f.categoryId);
       }
-      if (this.modalSearchTerm) {
-        const term = this.modalSearchTerm.toLowerCase();
+
+      // Keyword Search (Title or Barcode)
+      if (f.searchTerm) {
+        const term = f.searchTerm.toLowerCase().trim();
         list = list.filter(
           (i) =>
             (i.title && i.title.toLowerCase().includes(term)) ||
-            (i.barcode && i.barcode.toLowerCase().includes(term))
+            (i.barcode && i.barcode.toString().toLowerCase().includes(term))
         );
       }
+
+      // Barcode Range Filter (From Barcode - To Barcode)
+      if (f.fromBarcode && f.toBarcode) {
+        const fromTrim = f.fromBarcode.trim();
+        const toTrim = f.toBarcode.trim();
+        if (!isNaN(fromTrim) && !isNaN(toTrim)) {
+          let minB = parseInt(fromTrim);
+          let maxB = parseInt(toTrim);
+          if (minB > maxB) {
+            const t = minB; minB = maxB; maxB = t;
+          }
+          list = list.filter((i) => {
+            if (!i.barcode || isNaN(i.barcode)) return false;
+            const bNum = parseInt(i.barcode);
+            return bNum >= minB && bNum <= maxB;
+          });
+        } else {
+          list = list.filter((i) => {
+            if (!i.barcode) return false;
+            const bStr = i.barcode.toString();
+            return bStr >= fromTrim && bStr <= toTrim;
+          });
+        }
+      } else if (f.fromBarcode) {
+        const fromTrim = f.fromBarcode.trim();
+        if (!isNaN(fromTrim)) {
+          const minB = parseInt(fromTrim);
+          list = list.filter((i) => i.barcode && !isNaN(i.barcode) && parseInt(i.barcode) >= minB);
+        } else {
+          list = list.filter((i) => i.barcode && i.barcode.toString() >= fromTrim);
+        }
+      } else if (f.toBarcode) {
+        const toTrim = f.toBarcode.trim();
+        if (!isNaN(toTrim)) {
+          const maxB = parseInt(toTrim);
+          list = list.filter((i) => i.barcode && !isNaN(i.barcode) && parseInt(i.barcode) <= maxB);
+        } else {
+          list = list.filter((i) => i.barcode && i.barcode.toString() <= toTrim);
+        }
+      }
+
+      // Date / New Items Filter
+      if (f.dateFilter !== "all") {
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0, 10);
+
+        if (f.dateFilter === "today") {
+          list = list.filter((i) => {
+            if (!i.created_at) return false;
+            return i.created_at.slice(0, 10) === todayStr;
+          });
+        } else if (f.dateFilter === "yesterday") {
+          const yest = new Date(now);
+          yest.setDate(yest.getDate() - 1);
+          const yestStr = yest.toISOString().slice(0, 10);
+          list = list.filter((i) => {
+            if (!i.created_at) return false;
+            return i.created_at.slice(0, 10) === yestStr;
+          });
+        } else if (f.dateFilter === "last_7_days") {
+          const past = new Date(now);
+          past.setDate(past.getDate() - 7);
+          list = list.filter((i) => {
+            if (!i.created_at) return false;
+            return new Date(i.created_at) >= past;
+          });
+        } else if (f.dateFilter === "last_30_days") {
+          const past = new Date(now);
+          past.setDate(past.getDate() - 30);
+          list = list.filter((i) => {
+            if (!i.created_at) return false;
+            return new Date(i.created_at) >= past;
+          });
+        } else if (f.dateFilter === "custom") {
+          if (f.fromDate) {
+            list = list.filter((i) => i.created_at && i.created_at.slice(0, 10) >= f.fromDate);
+          }
+          if (f.toDate) {
+            list = list.filter((i) => i.created_at && i.created_at.slice(0, 10) <= f.toDate);
+          }
+        }
+      }
+
+      // Barcode Status
+      if (f.hasBarcode === "yes") {
+        list = list.filter((i) => !!i.barcode && i.barcode.toString().trim() !== "");
+      } else if (f.hasBarcode === "no") {
+        list = list.filter((i) => !i.barcode || i.barcode.toString().trim() === "");
+      }
+
+      // Price Range
+      if (f.minPrice !== "" && !isNaN(f.minPrice)) {
+        list = list.filter((i) => {
+          const price = parseFloat(i.opening_rate) || (i.item_prices && i.item_prices[0] ? parseFloat(i.item_prices[0].selling_price) : 0);
+          return price >= parseFloat(f.minPrice);
+        });
+      }
+      if (f.maxPrice !== "" && !isNaN(f.maxPrice)) {
+        list = list.filter((i) => {
+          const price = parseFloat(i.opening_rate) || (i.item_prices && i.item_prices[0] ? parseFloat(i.item_prices[0].selling_price) : 0);
+          return price <= parseFloat(f.maxPrice);
+        });
+      }
+
       return list;
     },
 
@@ -634,6 +1371,69 @@ export default {
   },
 
   methods: {
+    // =========================================================
+    // ⚙️ LABEL SIZE PRESET & ROTATION METHODS
+    // =========================================================
+    onPresetChange() {
+      const p = sizePresetMap[this.settings.preset];
+      if (p) {
+        this.settings.unit = p.unit;
+        this.settings.width = p.width;
+        this.settings.height = p.height;
+        this.settings.columns = p.columns || 1;
+        this.settings.paperType = p.paperType || "thermal";
+        this.settings.orientation = p.orientation || (p.width >= p.height ? "landscape" : "portrait");
+        this.$toast(`Applied ${this.settings.preset} label preset (${this.settings.width}${this.settings.unit} × ${this.settings.height}${this.settings.unit})`, "info");
+      }
+    },
+
+    swapDimensions() {
+      const tempW = parseFloat(this.settings.width) || 4;
+      const tempH = parseFloat(this.settings.height) || 2;
+      this.settings.width = tempH;
+      this.settings.height = tempW;
+      this.settings.orientation = this.settings.width >= this.settings.height ? "landscape" : "portrait";
+
+      // Match preset name if standard
+      if (this.settings.unit === "in") {
+        if (this.settings.width === 4 && this.settings.height === 2) this.settings.preset = "4x2";
+        else if (this.settings.width === 2 && this.settings.height === 4) this.settings.preset = "2x4";
+        else if (this.settings.width === 3 && this.settings.height === 2) this.settings.preset = "3x2";
+        else if (this.settings.width === 2 && this.settings.height === 1) this.settings.preset = "2x1";
+        else this.settings.preset = "custom";
+      } else if (this.settings.unit === "mm") {
+        if (this.settings.width === 50 && this.settings.height === 30) this.settings.preset = "50x30";
+        else if (this.settings.width === 30 && this.settings.height === 50) this.settings.preset = "30x50";
+        else if (this.settings.width === 40 && this.settings.height === 25) this.settings.preset = "40x25";
+        else this.settings.preset = "custom";
+      } else {
+        this.settings.preset = "custom";
+      }
+
+      this.$toast(
+        `Rotated label to ${this.settings.width} ${this.settings.unit} × ${this.settings.height} ${this.settings.unit} (${this.settings.orientation.toUpperCase()})`,
+        "success"
+      );
+    },
+
+    changeUnit(newUnit) {
+      if (this.settings.unit === newUnit) return;
+      if (newUnit === "mm" && this.settings.unit === "in") {
+        this.settings.width = +(parseFloat(this.settings.width) * 25.4).toFixed(1);
+        this.settings.height = +(parseFloat(this.settings.height) * 25.4).toFixed(1);
+        this.settings.unit = "mm";
+      } else if (newUnit === "in" && this.settings.unit === "mm") {
+        this.settings.width = +(parseFloat(this.settings.width) / 25.4).toFixed(2);
+        this.settings.height = +(parseFloat(this.settings.height) / 25.4).toFixed(2);
+        this.settings.unit = "in";
+      }
+    },
+
+    onDimensionManualChange() {
+      this.settings.preset = "custom";
+      this.settings.orientation = parseFloat(this.settings.width) >= parseFloat(this.settings.height) ? "landscape" : "portrait";
+    },
+
     onSearchInput: _.debounce(function () {
       if (!this.searchTerm || this.searchTerm.trim().length === 0) {
         this.searchResults = [];
@@ -697,15 +1497,17 @@ export default {
       }
     },
 
-    addItemToQueue(item) {
+    addItemToQueue(item, customQty = null) {
       if (!item.barcode) {
         this.$toast("Item has no barcode generated", "warning");
       }
 
+      const qtyToAdd = customQty ? parseInt(customQty) : 1;
+
       // Check if already in queue
       const existing = this.labelQueue.find((q) => q.id === item.id);
       if (existing) {
-        existing.qty = (parseInt(existing.qty) || 0) + 1;
+        existing.qty = (parseInt(existing.qty) || 0) + qtyToAdd;
         this.$toast(`Updated "${item.title}" label quantity to ${existing.qty}`, "info");
       } else {
         const defaultPrice =
@@ -723,13 +1525,17 @@ export default {
           category: item.category,
           unit: item.unit,
           price: defaultPrice,
-          qty: 1,
+          qty: qtyToAdd,
         });
 
-        this.$toast(`Added "${item.title}" to label queue`, "success");
+        this.$toast(`Added "${item.title}" to label queue (${qtyToAdd} copy)`, "success");
       }
 
       this.clearSearch();
+    },
+
+    addSingleItemToQueue(item) {
+      this.addItemToQueue(item, this.modalAddQty || 1);
     },
 
     removeItem(index) {
@@ -754,34 +1560,148 @@ export default {
       return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
 
-    // Modal Methods
+    // =========================================================
+    // 📦 ADVANCED MODAL BROWSE INVENTORY METHODS
+    // =========================================================
     openBrowseModal() {
-      this.modalSearchTerm = "";
-      this.modalCategoryFilter = "";
-      this.selectedModalItemIds = [];
-
-      // Fetch all items if not loaded
-      if (this.allItems.length === 0) {
-        this.$root.spinner = true;
-        axios
-          .get("item?allData=true")
-          .then((res) => {
-            this.allItems = res.data || [];
-          })
-          .finally(() => {
-            this.$root.spinner = false;
-          });
-      }
-
       const modalEl = document.getElementById("browseItemsModal");
       if (modalEl) {
         const modal = new bootstrap.Modal(modalEl);
         modal.show();
       }
+
+      if (this.allItems.length === 0) {
+        this.fetchModalItems();
+      }
     },
 
-    filterModalItems() {
-      // computed handles filtering
+    fetchModalItems() {
+      this.modalLoading = true;
+      const params = {
+        allData: true,
+        term: this.modalFilters.searchTerm || undefined,
+        category_id: this.modalFilters.categoryId || undefined,
+        from_barcode: this.modalFilters.fromBarcode || undefined,
+        to_barcode: this.modalFilters.toBarcode || undefined,
+        date_filter: this.modalFilters.dateFilter !== "all" && this.modalFilters.dateFilter !== "custom" ? this.modalFilters.dateFilter : undefined,
+        from_date: this.modalFilters.dateFilter === "custom" ? this.modalFilters.fromDate : undefined,
+        to_date: this.modalFilters.dateFilter === "custom" ? this.modalFilters.toDate : undefined,
+        has_barcode: this.modalFilters.hasBarcode !== "all" ? this.modalFilters.hasBarcode : undefined,
+        min_price: this.modalFilters.minPrice || undefined,
+        max_price: this.modalFilters.maxPrice || undefined,
+      };
+
+      axios
+        .get("pos/labelprint", { params: params })
+        .then((res) => {
+          this.allItems = res.data || [];
+        })
+        .catch((err) => {
+          console.error("Fetch modal items error:", err);
+        })
+        .finally(() => {
+          this.modalLoading = false;
+        });
+    },
+
+    onModalFilterChangeDebounced: _.debounce(function () {
+      this.fetchModalItems();
+    }, 350),
+
+    onDateFilterPresetChange() {
+      if (this.modalFilters.dateFilter !== "custom") {
+        this.modalFilters.fromDate = "";
+        this.modalFilters.toDate = "";
+      }
+      this.fetchModalItems();
+    },
+
+    setQuickDatePreset(preset) {
+      this.modalFilters.dateFilter = preset;
+      this.modalFilters.fromDate = "";
+      this.modalFilters.toDate = "";
+      this.fetchModalItems();
+    },
+
+    toggleBarcodeOnlyPreset() {
+      this.modalFilters.hasBarcode = this.modalFilters.hasBarcode === "yes" ? "all" : "yes";
+      this.fetchModalItems();
+    },
+
+    resetModalFilters() {
+      this.modalFilters = {
+        searchTerm: "",
+        categoryId: "",
+        fromBarcode: "",
+        toBarcode: "",
+        dateFilter: "all",
+        fromDate: "",
+        toDate: "",
+        hasBarcode: "all",
+        minPrice: "",
+        maxPrice: "",
+      };
+      this.selectedModalItemIds = [];
+      this.fetchModalItems();
+    },
+
+    getCategoryTitle(catId) {
+      const cat = this.categories.find((c) => c.id == catId);
+      return cat ? cat.title : "Category #" + catId;
+    },
+
+    getDatePresetLabel(preset) {
+      const map = {
+        today: "Today (আজকে)",
+        yesterday: "Yesterday (গতকাল)",
+        last_7_days: "Last 7 Days (৭ দিন)",
+        last_30_days: "Last 30 Days (৩০ দিন)",
+        custom: "Custom Date Range",
+      };
+      return map[preset] || preset;
+    },
+
+    getItemDateBadge(createdAt) {
+      if (!createdAt) return null;
+      try {
+        const itemDate = new Date(createdAt);
+        const today = new Date();
+        
+        const isToday =
+          itemDate.getDate() === today.getDate() &&
+          itemDate.getMonth() === today.getMonth() &&
+          itemDate.getFullYear() === today.getFullYear();
+
+        if (isToday) {
+          return { label: "✨ Added Today", class: "bg-success text-white" };
+        }
+
+        const yest = new Date(today);
+        yest.setDate(yest.getDate() - 1);
+        const isYesterday =
+          itemDate.getDate() === yest.getDate() &&
+          itemDate.getMonth() === yest.getMonth() &&
+          itemDate.getFullYear() === yest.getFullYear();
+
+        if (isYesterday) {
+          return { label: "🕒 Yesterday", class: "bg-info text-white" };
+        }
+
+        const diffTime = Math.abs(today - itemDate);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays <= 7) {
+          return { label: `${diffDays} days ago`, class: "bg-primary text-white" };
+        }
+
+        const formatted = itemDate.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+        return { label: formatted, class: "bg-light text-dark border" };
+      } catch (e) {
+        return null;
+      }
     },
 
     toggleModalItem(item) {
@@ -801,12 +1721,19 @@ export default {
       }
     },
 
+    selectFirstNItems(count) {
+      const ids = this.filteredModalItems.slice(0, count).map((i) => i.id);
+      this.selectedModalItemIds = Array.from(new Set([...this.selectedModalItemIds, ...ids]));
+    },
+
     addSelectedModalItems() {
       const selected = this.allItems.filter((i) => this.selectedModalItemIds.includes(i.id));
+      const qtyToAdd = Math.max(1, parseInt(this.modalAddQty) || 1);
+
       selected.forEach((item) => {
         const existing = this.labelQueue.find((q) => q.id === item.id);
         if (existing) {
-          existing.qty += 1;
+          existing.qty += qtyToAdd;
         } else {
           const defaultPrice =
             parseFloat(item.opening_rate) ||
@@ -823,12 +1750,15 @@ export default {
             category: item.category,
             unit: item.unit,
             price: defaultPrice,
-            qty: 1,
+            qty: qtyToAdd,
           });
         }
       });
 
-      this.$toast(`Added ${selected.length} product(s) to label queue`, "success");
+      const totalStickersAdded = selected.length * qtyToAdd;
+      this.$toast(`Added ${selected.length} product(s) (${totalStickersAdded} stickers) to queue`, "success");
+
+      this.selectedModalItemIds = [];
 
       const modalEl = document.getElementById("browseItemsModal");
       if (modalEl) {
@@ -837,14 +1767,167 @@ export default {
       }
     },
 
+    // =========================================================
+    // 🖨️ CUSTOM PRINT ENGINE WITH EXACT DIMENSIONS & ROTATION
+    // =========================================================
     printLabels() {
       if (this.generatedStickersList.length === 0) {
         this.$toast("Please add at least one product sticker to print", "warning");
         return;
       }
 
-      // Trigger custom print on #labelPrintArea
-      this.print("labelPrintArea", "Barcode Labels (" + this.totalStickersCount + " Stickers)");
+      const s = this.settings;
+      const wVal = `${s.width}${s.unit}`;
+      const hVal = `${s.height}${s.unit}`;
+      const columns = parseInt(s.columns) || 1;
+      const isContinuous = columns === 1 && s.paperType === "thermal";
+
+      const pageSizeRule = isContinuous
+        ? `${wVal} ${hVal}`
+        : s.paperType === "A4"
+        ? "A4 portrait"
+        : s.paperType === "letter"
+        ? "letter portrait"
+        : `${wVal} ${hVal}`;
+
+      const gapHVal = s.unit === "in" ? `${s.gapH || 0.08}in` : `${s.gapH || 2}mm`;
+      const gapVVal = s.unit === "in" ? `${s.gapV || 0.12}in` : `${s.gapV || 3}mm`;
+      const pageMarginVal = isContinuous
+        ? "0mm"
+        : s.unit === "in"
+        ? `${s.pageMargin || 0.2}in`
+        : `${s.pageMargin || 5}mm`;
+
+      const printStyles = `
+        <style>
+          @page {
+            size: ${pageSizeRule};
+            margin: ${pageMarginVal};
+          }
+          * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          html, body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+          }
+          .barcode-print-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+          }
+          .sticker-item {
+            width: ${wVal} !important;
+            height: ${hVal} !important;
+            min-width: ${wVal} !important;
+            min-height: ${hVal} !important;
+            max-width: ${wVal} !important;
+            max-height: ${hVal} !important;
+            box-sizing: border-box !important;
+            margin-right: ${columns > 1 ? gapHVal : "0"};
+            margin-bottom: ${gapVVal};
+            padding: ${s.padding || 6}px !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            overflow: hidden !important;
+            ${s.showBorder ? "border: 1px solid #000000 !important;" : "border: none !important;"}
+          }
+          .sticker-company {
+            font-size: ${s.companyFontSize || 10}px !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            color: #000 !important;
+            margin-bottom: 2px !important;
+            line-height: 1.1 !important;
+            width: 100% !important;
+          }
+          .sticker-title {
+            font-size: ${s.titleFontSize || 11}px !important;
+            font-weight: 700 !important;
+            color: #000 !important;
+            margin-bottom: 2px !important;
+            line-height: 1.2 !important;
+            width: 100% !important;
+            max-height: 28px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            word-break: break-word !important;
+          }
+          .sticker-barcode-box {
+            margin: 2px 0 !important;
+            height: ${s.barcodeHeight || 38}px !important;
+            max-height: ${s.barcodeHeight || 38}px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+          }
+          .sticker-barcode-img {
+            display: block !important;
+            margin: 0 auto !important;
+            height: ${s.barcodeHeight || 38}px !important;
+            max-height: 100% !important;
+            max-width: 96% !important;
+            image-rendering: -webkit-optimize-contrast !important;
+            image-rendering: crisp-edges !important;
+          }
+          .sticker-barcode-num {
+            font-size: ${s.barcodeNumFontSize || 11}px !important;
+            font-weight: 700 !important;
+            font-family: "Courier New", Courier, monospace !important;
+            letter-spacing: 1.5px !important;
+            color: #000 !important;
+            line-height: 1.1 !important;
+            margin-bottom: 2px !important;
+          }
+          .sticker-price {
+            font-size: ${s.priceFontSize || 12}px !important;
+            font-weight: 800 !important;
+            border-top: 1px dashed #000 !important;
+            padding-top: 2px !important;
+            margin-top: 2px !important;
+            width: 100% !important;
+            color: #000 !important;
+            line-height: 1.1 !important;
+          }
+        </style>
+      `;
+
+      const prtHtml = document.getElementById("labelPrintArea").innerHTML;
+      const WinPrint = window.open("", "", "left=0,top=0,width=850,height=950,toolbar=0,scrollbars=1,status=0");
+      WinPrint.document.write(`<!DOCTYPE html>
+        <html>
+        <head>
+          <title>Barcode Labels (${this.totalStickersCount} Stickers - ${wVal} × ${hVal})</title>
+          ${printStyles}
+        </head>
+        <body>
+          <div class="barcode-print-wrapper">
+            ${prtHtml}
+          </div>
+        </body>
+        </html>`);
+      WinPrint.document.close();
+      WinPrint.focus();
+      setTimeout(() => {
+        WinPrint.print();
+      }, 400);
     },
 
     fetchCategories() {
@@ -900,8 +1983,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 180px;
-  padding: 12px 10px;
+  min-height: 200px;
+  padding: 16px 12px;
   background-color: #f1f3f5;
   background-image: radial-gradient(#d1d5db 1px, transparent 1px);
   background-size: 14px 14px;
@@ -914,12 +1997,10 @@ export default {
   border-radius: 6px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
   padding: 10px 14px;
-  width: 245px;
-  min-height: 135px;
   text-align: center;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: #111;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease-in-out;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -930,6 +2011,10 @@ export default {
 
 .thermal-label-box.bordered {
   border: 1.5px solid #111;
+}
+
+.thermal-label-box.is-portrait {
+  justify-content: space-around;
 }
 
 .label-company-name {
@@ -964,7 +2049,7 @@ export default {
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-height: 40px;
+  min-height: 38px;
 }
 
 .label-barcode-img {
@@ -1031,45 +2116,6 @@ export default {
   justify-content: flex-start;
   padding: 0;
   margin: 0;
-}
-
-/* Continuous Thermal Roll (1 column) */
-.layout-thermal {
-  display: block;
-}
-.layout-thermal .sticker-item {
-  width: 190px;
-  min-height: 105px;
-  margin: 0 auto 12px auto;
-  page-break-inside: avoid;
-}
-
-/* 2-Column Sheet */
-.layout-2col .sticker-item {
-  width: 48%;
-  margin: 1%;
-  page-break-inside: avoid;
-}
-
-/* 3-Column Sheet (38x25mm) */
-.layout-3col .sticker-item {
-  width: 31.3%;
-  margin: 1%;
-  page-break-inside: avoid;
-}
-
-/* 4-Column Sheet (30x20mm) */
-.layout-4col .sticker-item {
-  width: 23%;
-  margin: 1%;
-  page-break-inside: avoid;
-}
-
-/* Grid Layout */
-.layout-grid .sticker-item {
-  width: 160px;
-  margin: 5px;
-  page-break-inside: avoid;
 }
 
 /* Sticker Item Base Box */
