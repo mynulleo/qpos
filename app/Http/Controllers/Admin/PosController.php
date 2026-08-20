@@ -642,13 +642,14 @@ class PosController extends BaseController
      */
     public function labelprint(Request $request)
     {
-        if ($request->format() == 'html' || (!$request->ajax() && !$request->wantsJson() && !$request->has('term') && !$request->has('allData'))) {
+        if ($request->format() == 'html' || (!$request->ajax() && !$request->wantsJson() && !$request->has('term') && !$request->has('allData') && !$request->has('from_barcode') && !$request->has('date_filter'))) {
             return view('admin.layouts.admin_app');
         }
 
         $query = Item::where('status', 'active');
 
-        if ($request->has('term') && !empty($request->term)) {
+        // Keyword Search (Barcode or Title)
+        if ($request->filled('term')) {
             $term = trim($request->term);
             $query->where(function ($q) use ($term) {
                 $q->where('barcode', 'like', "%{$term}%")
@@ -656,8 +657,98 @@ class PosController extends BaseController
             });
         }
 
-        if ($request->has('category_id') && !empty($request->category_id)) {
+        // Category Filter
+        if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
+        }
+
+        // Barcode Range Filter (From Barcode - To Barcode)
+        if ($request->filled('from_barcode') && $request->filled('to_barcode')) {
+            $fromBarcode = trim($request->from_barcode);
+            $toBarcode = trim($request->to_barcode);
+            if (is_numeric($fromBarcode) && is_numeric($toBarcode)) {
+                $fromNum = (int)$fromBarcode;
+                $toNum = (int)$toBarcode;
+                if ($fromNum > $toNum) {
+                    $tmp = $fromNum;
+                    $fromNum = $toNum;
+                    $toNum = $tmp;
+                }
+                $query->whereRaw("CAST(barcode AS UNSIGNED) BETWEEN ? AND ?", [$fromNum, $toNum]);
+            } else {
+                $query->whereBetween('barcode', [$fromBarcode, $toBarcode]);
+            }
+        } elseif ($request->filled('from_barcode')) {
+            $fromBarcode = trim($request->from_barcode);
+            if (is_numeric($fromBarcode)) {
+                $query->whereRaw("CAST(barcode AS UNSIGNED) >= ?", [(int)$fromBarcode]);
+            } else {
+                $query->where('barcode', '>=', $fromBarcode);
+            }
+        } elseif ($request->filled('to_barcode')) {
+            $toBarcode = trim($request->to_barcode);
+            if (is_numeric($toBarcode)) {
+                $query->whereRaw("CAST(barcode AS UNSIGNED) <= ?", [(int)$toBarcode]);
+            } else {
+                $query->where('barcode', '<=', $toBarcode);
+            }
+        }
+
+        // New Items / Date Filter Preset
+        if ($request->filled('date_filter')) {
+            $dateFilter = $request->date_filter;
+            if ($dateFilter === 'today') {
+                $query->whereDate('created_at', now()->toDateString());
+            } elseif ($dateFilter === 'yesterday') {
+                $query->whereDate('created_at', now()->subDay()->toDateString());
+            } elseif ($dateFilter === 'this_week' || $dateFilter === 'last_7_days') {
+                $query->whereDate('created_at', '>=', now()->subDays(7)->toDateString());
+            } elseif ($dateFilter === 'this_month' || $dateFilter === 'last_30_days') {
+                $query->whereDate('created_at', '>=', now()->subDays(30)->toDateString());
+            }
+        }
+
+        // Custom Date Range
+        if ($request->filled('from_date') && $request->filled('to_date')) {
+            $fromDate = vue_to_server_date($request->from_date);
+            $toDate = vue_to_server_date($request->to_date);
+            if ($fromDate && $toDate) {
+                $query->whereDate('created_at', '>=', $fromDate)
+                      ->whereDate('created_at', '<=', $toDate);
+            }
+        } elseif ($request->filled('from_date')) {
+            $fromDate = vue_to_server_date($request->from_date);
+            if ($fromDate) {
+                $query->whereDate('created_at', '>=', $fromDate);
+            }
+        } elseif ($request->filled('to_date')) {
+            $toDate = vue_to_server_date($request->to_date);
+            if ($toDate) {
+                $query->whereDate('created_at', '<=', $toDate);
+            }
+        }
+
+        // Has Barcode Filter
+        if ($request->filled('has_barcode')) {
+            if ($request->has_barcode === 'yes') {
+                $query->whereNotNull('barcode')->where('barcode', '!=', '');
+            } elseif ($request->has_barcode === 'no') {
+                $query->where(function ($q) {
+                    $q->whereNull('barcode')->orWhere('barcode', '');
+                });
+            }
+        }
+
+        // Price Filter
+        if ($request->filled('min_price') && is_numeric($request->min_price)) {
+            $query->where('opening_rate', '>=', $request->min_price);
+        }
+        if ($request->filled('max_price') && is_numeric($request->max_price)) {
+            $query->where('opening_rate', '<=', $request->max_price);
+        }
+
+        if ($request->filled('limit') && is_numeric($request->limit)) {
+            $query->limit((int)$request->limit);
         }
 
         $items = $query->with([
@@ -667,7 +758,7 @@ class PosController extends BaseController
             'itemPrices.size:id,title',
             'stockSummaries.color:id,title',
             'stockSummaries.size:id,title',
-        ])->latest()->get();
+        ])->latest('created_at')->get();
 
         return response()->json($items);
     }
