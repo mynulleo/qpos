@@ -14,8 +14,7 @@ use App\Models\Base\BaseModel;
 class MediaValidator extends BaseModel
 {
     protected $guarded = ['id'];
-    protected $connection = 'commondb';
-    protected $table = 'help_infos';
+    protected $table = 'media_validators';
     protected $logName = "MediaValidator";
 
     protected $appends = ['field_type_html', 'resize_value_html'];

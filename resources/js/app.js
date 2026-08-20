@@ -25,6 +25,22 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
+// 🛡️ Zero-Click Event Capture Barrier when Software is Expired
+const blockedEvents = ['click', 'dblclick', 'mousedown', 'mouseup', 'contextmenu', 'keydown', 'keypress', 'keyup', 'touchstart', 'touchend', 'submit'];
+blockedEvents.forEach((eventType) => {
+    window.addEventListener(eventType, (e) => {
+        if (window.__IS_SOFTWARE_EXPIRED__) {
+            const target = e.target;
+            const isInsideLockModal = target && target.closest('#software-lock-overlay');
+            if (!isInsideLockModal) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                return false;
+            }
+        }
+    }, { capture: true, passive: false });
+});
+
 // App Initialize...
 const app = createApp({
     data() {
@@ -59,14 +75,17 @@ const app = createApp({
                 });
         },
         checkPermission(route) {
-            let routeName = !route ? this.$route.name : route;
-            let check = this.permissions.filter
-                ? this.permissions.filter((x) => x == routeName)
-                : [];
-            console.log(
-                "app.js check permission :" + Object.keys(check).length,
-            );
-            return Object.keys(check).length > 0 ? true : false;
+            let routeName = !route ? this.$route?.name : route;
+            if (!routeName) return false;
+            const perms = this.permissions;
+            if (!perms) return false;
+            if (Array.isArray(perms)) {
+                return perms.includes(routeName);
+            }
+            if (typeof perms === "object") {
+                return Object.values(perms).includes(routeName);
+            }
+            return false;
         },
         handleServerUnavailable() {
             if (!this.retried) {

@@ -50,6 +50,21 @@ class InvoiceDetails extends BaseModel
     }
 
     // file image push
+    public function item()
+    {
+        return $this->belongsTo(Item::class, 'item_id');
+    }
+
+    public function color()
+    {
+        return $this->belongsTo(Color::class, 'color_id');
+    }
+
+    public function size()
+    {
+        return $this->belongsTo(Size::class, 'size_id');
+    }
+
     public function account()
     {
         return $this->belongsTo(Account::class, 'account_id');
@@ -62,7 +77,7 @@ class InvoiceDetails extends BaseModel
 
     public function invoice()
     {
-        return $this->belongsTo(Invoice::class, 'currency_id', 'id');
+        return $this->belongsTo(Invoice::class, 'invoice_id', 'id');
     }
 
     public function currency()

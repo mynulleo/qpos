@@ -7,7 +7,6 @@ use App\Models\Area;
 use App\Models\Unit;
 use App\Models\Branch;
 use App\Models\Account;
-use App\Models\Service;
 use App\Models\Category;
 use App\Models\District;
 use App\Models\Employee;
@@ -29,36 +28,48 @@ class LibController extends Controller
 
     private function setTenantDb()
     {
-        if (!Auth::check()) return;
+        $user = Auth::guard('admin')->user() ?? Auth::user();
+        if (!$user) return;
 
-        $user = Auth::user();
-        $residence = Organization::select('db_host', 'db_name', 'db_user', 'db_password')
-            ->where('id', $user->residence_id)
-            ->first();
+        $orgId = $user->organization_id ?? null;
+        if (!$orgId) return;
 
-        if (!$residence || !$residence->db_name) return;
+        try {
+            $residence = Organization::select('db_host', 'db_name', 'db_user', 'db_password')
+                ->where('id', $orgId)
+                ->first();
 
-        Config::set('database.connections.tenant', [
-            'driver' => 'mysql',
-            'host' => $residence->db_host ?? 'localhost',
-            'port' => env('DB_PORT', '3306'),
-            'database' => $residence->db_name,
-            'username' => $residence->db_user,
-            'password' => $residence->db_password,
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => 'InnoDB',
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
-        ]);
+            if (!$residence || !$residence->db_name) return;
 
-        DB::purge('tenant');
-        DB::reconnect('tenant');
-        DB::setDefaultConnection('tenant');
+            $host = !empty($residence->db_host) ? $residence->db_host : env('DB_HOST', '127.0.0.1');
+            if ($host === 'localhost') {
+                $host = '127.0.0.1';
+            }
+
+            Config::set('database.connections.tenant', [
+                'driver' => 'mysql',
+                'host' => $host,
+                'port' => env('DB_PORT', '3306'),
+                'database' => $residence->db_name,
+                'username' => $residence->db_user ?? env('DB_USERNAME', 'root'),
+                'password' => $residence->db_password ?? env('DB_PASSWORD', ''),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'prefix_indexes' => true,
+                'strict' => true,
+                'engine' => 'InnoDB',
+                'options' => extension_loaded('pdo_mysql') ? array_filter([
+                    PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                ]) : [],
+            ]);
+
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+            DB::setDefaultConnection('tenant');
+        } catch (\Exception $e) {
+            DB::setDefaultConnection(config('database.default', 'mysql'));
+        }
     }
 
     private function index()
@@ -68,7 +79,6 @@ class LibController extends Controller
             'app_env' => config("app.env"),
             'profile_menus' => $this->profileMenus(),
             'payment_status' => $this->getPaymentStatus(),
-            'services' => $this->getServices(),
             'modules' => $this->unitModuleNames(),
             'units' => $this->getUnits(),
             'districts' => $this->getDistricts(),
@@ -106,6 +116,56 @@ class LibController extends Controller
      */
     public function systems()
     {
+        $user = auth('admin')->user() ?? auth()->user();
+        $expiredDate = null;
+        $orgName = null;
+        $subscriptionFee = 500;
+        $isExpired = false;
+        $daysOverdue = 0;
+
+        if ($user) {
+            $orgId = $user->organization_id ?? null;
+            if ($orgId) {
+                try {
+                    $org = Organization::select('id', 'organization_name', 'expired_date', 'subscription_fee', 'status', 'block')->find($orgId);
+                    if ($org) {
+                        $expiredDate = $org->expired_date;
+                        $orgName = $org->organization_name;
+                        if (!empty($org->subscription_fee)) {
+                            $subscriptionFee = floatval($org->subscription_fee);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Fallback if accessdb connection not reachable
+                }
+            }
+
+            if (!$expiredDate && isset($user->residence)) {
+                $expiredDate = $user->residence->expired_date ?? null;
+                $orgName = $user->residence->residence_name ?? $orgName;
+            }
+
+            $siteObj = App::make('siteSettingObj');
+            if (empty($orgName) && !empty($siteObj['title'])) {
+                $orgName = $siteObj['title'];
+            }
+            if (!$expiredDate && !empty($siteObj['expired_date'])) {
+                $expiredDate = $siteObj['expired_date'];
+            }
+
+            if (!empty($expiredDate)) {
+                try {
+                    $expCarbon = \Carbon\Carbon::parse($expiredDate)->startOfDay();
+                    $todayCarbon = \Carbon\Carbon::today();
+                    if ($todayCarbon->gt($expCarbon)) {
+                        $isExpired = true;
+                        $daysOverdue = $todayCarbon->diffInDays($expCarbon);
+                    }
+                } catch (\Exception $e) {
+                    $isExpired = false;
+                }
+            }
+        }
 
         return [
             'global' => $this->index(),
@@ -114,12 +174,23 @@ class LibController extends Controller
             'menus' => App::make('sideMenus'),
             'categoriesModuleNames' => $this->categoriesModuleNames(),
             'user' => auth('admin')->user(),
+            'subscription' => [
+                'organization_name' => $orgName ?? 'My Organization',
+                'expired_date' => $expiredDate,
+                'subscription_fee' => $subscriptionFee,
+                'is_expired' => $isExpired,
+                'days_overdue' => $daysOverdue,
+                'today' => date('Y-m-d'),
+            ],
         ];
     }
 
     public function profileMenus()
     {
         return Menu::where('show_profile', 1)
+            ->where(function ($q) {
+                $q->where('status', 'active')->orWhereNull('status');
+            })
             ->oldest('sorting')
             ->get(['icon', 'menu_name', 'route_name', 'params']);
     }
@@ -434,11 +505,6 @@ class LibController extends Controller
     public function getDistricts()
     {
         return District::where('status', 'active')->get(['id', 'district_name']);
-    }
-
-    public function getServices()
-    {
-        return Service::where('status', 'active')->get(['id', 'title']);
     }
 
     public function getcategories($modulename = null)

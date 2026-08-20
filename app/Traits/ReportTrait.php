@@ -943,17 +943,19 @@ trait ReportTrait
 
         if (!$client_id) {
             return response()->json([
-                'status'  => false,
-                'message' => 'Client ID is required'
-            ], 422);
+                'client'          => null,
+                'opening_balance' => 0,
+                'records'         => []
+            ], 200);
         }
 
         $client = Client::find($client_id);
         if (!$client) {
             return response()->json([
-                'status'  => false,
-                'message' => 'Client not found'
-            ], 404);
+                'client'          => null,
+                'opening_balance' => 0,
+                'records'         => []
+            ], 200);
         }
 
         $receivableAccountId = Account::where('system_key_name', 'accounts-receivable')->first()?->id; // Accounts Receivable
@@ -1042,17 +1044,19 @@ trait ReportTrait
 
         if (!$supplier_id) {
             return response()->json([
-                'type'    => 'error',
-                'message' => 'Supplier ID is required'
-            ], 422);
+                'supplier'        => null,
+                'opening_balance' => 0,
+                'records'         => []
+            ], 200);
         }
 
         $supplier = Supplier::find($supplier_id);
         if (!$supplier) {
             return response()->json([
-                'status'  => false,
-                'message' => 'Supplier not found'
-            ], 404);
+                'supplier'        => null,
+                'opening_balance' => 0,
+                'records'         => []
+            ], 200);
         }
 
         $payableAccountId = Account::where('system_key_name', 'accounts-payable')->first()?->id; // Accounts Receivable
@@ -1381,6 +1385,242 @@ trait ReportTrait
             'employee'        => $employee,
             'opening_balance' => $openingBalance,
             'records'         => $ledger
+        ]);
+    }
+
+    public function getSalesReport($searchdata)
+    {
+        $from = !empty($searchdata['from_date'])
+            ? vue_to_server_date($searchdata['from_date'])
+            : date('Y-m-01');
+
+        $to = !empty($searchdata['to_date'])
+            ? vue_to_server_date($searchdata['to_date'])
+            : date('Y-m-t');
+
+        $clientId      = $searchdata['client_id'] ?? null;
+        $categoryId    = $searchdata['category_id'] ?? null;
+        $itemId        = $searchdata['item_id'] ?? null;
+        $invoiceNo     = !empty($searchdata['invoice_no']) ? trim($searchdata['invoice_no']) : null;
+        $paymentStatus = $searchdata['payment_status'] ?? null; // 'all', 'paid', 'due'
+        $saleType      = $searchdata['sale_type'] ?? null; // 'all', 'pos', 'general'
+
+        // 1. Base Query
+        $query = \App\Models\Invoice::query()
+            ->whereNull('deleted_at')
+            ->whereBetween('invoice_date', [$from, $to]);
+
+        // Filter: Client
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        // Filter: Invoice No
+        if ($invoiceNo) {
+            $query->where('invoice_no', 'like', "%{$invoiceNo}%");
+        }
+
+        // Filter: Payment Status
+        if ($paymentStatus === 'paid') {
+            $query->where(function ($q) {
+                $q->where('is_closed', 1)
+                  ->orWhereRaw('COALESCE(paid_amount, 0) >= amount');
+            });
+        } elseif ($paymentStatus === 'due') {
+            $query->where('is_closed', 0)
+                  ->whereRaw('COALESCE(paid_amount, 0) < amount');
+        }
+
+        // Filter: Category
+        if ($categoryId) {
+            $query->whereHas('invoice_details.item', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
+            });
+        }
+
+        // Filter: Item
+        if ($itemId) {
+            $query->whereHas('invoice_details', function ($q) use ($itemId) {
+                $q->where('item_id', $itemId);
+            });
+        }
+
+        // Filter: Sale Type
+        if ($saleType === 'pos') {
+            $query->whereHas('invoice_details', function ($q) {
+                $q->where('reference', 'POS Sale');
+            });
+        } elseif ($saleType === 'general') {
+            $query->whereDoesntHave('invoice_details', function ($q) {
+                $q->where('reference', 'POS Sale');
+            });
+        }
+
+        // Fetch Invoices with Relations
+        $invoices = $query->with([
+            'client:id,clientid,name,mobile,address',
+            'invoice_details' => function ($q) use ($categoryId, $itemId) {
+                $q->with([
+                    'item:id,title,barcode,category_id,unit_id',
+                    'item.category:id,title',
+                    'item.unit:id,title',
+                    'color:id,title',
+                    'size:id,title',
+                ]);
+                if ($itemId) {
+                    $q->where('item_id', $itemId);
+                }
+                if ($categoryId) {
+                    $q->whereHas('item', function ($iq) use ($categoryId) {
+                        $iq->where('category_id', $categoryId);
+                    });
+                }
+            }
+        ])
+        ->orderBy('invoice_date', 'desc')
+        ->orderBy('id', 'desc')
+        ->get();
+
+        // 2. Calculations for Invoices & Summaries
+        $totalInvoices   = $invoices->count();
+        $totalGross      = 0;
+        $totalDiscount   = 0;
+        $totalVat        = 0;
+        $totalNetSales   = 0;
+        $totalPaid       = 0;
+        $totalDue        = 0;
+        $totalQtySold    = 0;
+
+        $itemBreakdownMap = [];
+        $customerBreakdownMap = [];
+        $dailyBreakdownMap = [];
+
+        foreach ($invoices as $inv) {
+            $invAmount     = floatval($inv->amount);
+            $invPaid       = floatval($inv->paid_amount ?? 0);
+            $invDue        = max(0, $invAmount - $invPaid);
+            $invDiscount   = floatval($inv->discount ?? 0);
+            $invVat        = floatval($inv->vat ?? 0);
+            $invGross      = floatval($inv->original_amount ?? ($invAmount + $invDiscount - $invVat));
+
+            $inv->computed_due = $invDue;
+            $inv->computed_status = ($invDue <= 0 || $inv->is_closed) ? 'Paid' : ($invPaid > 0 ? 'Partial' : 'Due');
+
+            $totalGross    += $invGross;
+            $totalDiscount += $invDiscount;
+            $totalVat      += $invVat;
+            $totalNetSales += $invAmount;
+            $totalPaid     += $invPaid;
+            $totalDue      += $invDue;
+
+            // Date-wise breakdown
+            $invDate = $inv->getRawOriginal('invoice_date') ?: date('Y-m-d', strtotime($inv->invoice_date));
+            if (!isset($dailyBreakdownMap[$invDate])) {
+                $dailyBreakdownMap[$invDate] = [
+                    'date'         => $invDate,
+                    'formatted_date' => date('d M, Y', strtotime($invDate)),
+                    'invoices_count' => 0,
+                    'total_qty'    => 0,
+                    'gross_amount' => 0,
+                    'discount'     => 0,
+                    'vat'          => 0,
+                    'net_sales'    => 0,
+                    'paid_amount'  => 0,
+                    'due_amount'   => 0,
+                ];
+            }
+            $dailyBreakdownMap[$invDate]['invoices_count'] += 1;
+            $dailyBreakdownMap[$invDate]['gross_amount']   += $invGross;
+            $dailyBreakdownMap[$invDate]['discount']       += $invDiscount;
+            $dailyBreakdownMap[$invDate]['vat']            += $invVat;
+            $dailyBreakdownMap[$invDate]['net_sales']      += $invAmount;
+            $dailyBreakdownMap[$invDate]['paid_amount']    += $invPaid;
+            $dailyBreakdownMap[$invDate]['due_amount']     += $invDue;
+
+            // Customer-wise breakdown
+            $cId = $inv->client_id ?: 0;
+            $cName = $inv->client ? $inv->client->name : 'Walk-in Customer';
+            $cMobile = $inv->client ? $inv->client->mobile : 'N/A';
+            $cClientId = $inv->client ? $inv->client->clientid : 'WALK-IN';
+
+            if (!isset($customerBreakdownMap[$cId])) {
+                $customerBreakdownMap[$cId] = [
+                    'client_id'      => $cId,
+                    'clientid'       => $cClientId,
+                    'name'           => $cName,
+                    'mobile'         => $cMobile,
+                    'invoices_count' => 0,
+                    'total_purchased'=> 0,
+                    'total_paid'     => 0,
+                    'total_due'      => 0,
+                ];
+            }
+            $customerBreakdownMap[$cId]['invoices_count'] += 1;
+            $customerBreakdownMap[$cId]['total_purchased']+= $invAmount;
+            $customerBreakdownMap[$cId]['total_paid']     += $invPaid;
+            $customerBreakdownMap[$cId]['total_due']      += $invDue;
+
+            // Line items breakdown
+            foreach ($inv->invoice_details as $detail) {
+                $qty = floatval($detail->qty ?? 1);
+                $rate = floatval($detail->amount ?? 0);
+                $lineTotal = floatval($detail->total_amount ?? ($qty * $rate));
+
+                $totalQtySold += $qty;
+                $dailyBreakdownMap[$invDate]['total_qty'] += $qty;
+
+                $itemKey = ($detail->item_id ?? 0) . '_' . ($detail->color_id ?? 0) . '_' . ($detail->size_id ?? 0);
+                if (!isset($itemBreakdownMap[$itemKey])) {
+                    $itemBreakdownMap[$itemKey] = [
+                        'item_id'      => $detail->item_id,
+                        'item_title'   => $detail->item ? $detail->item->title : ($detail->description ?: 'Other Item'),
+                        'barcode'      => $detail->item ? $detail->item->barcode : 'N/A',
+                        'category'     => $detail->item && $detail->item->category ? $detail->item->category->title : 'N/A',
+                        'unit'         => $detail->item && $detail->item->unit ? $detail->item->unit->title : 'Pcs',
+                        'color'        => $detail->color ? $detail->color->title : null,
+                        'size'         => $detail->size ? $detail->size->title : null,
+                        'total_qty'    => 0,
+                        'total_amount' => 0,
+                        'avg_rate'     => 0,
+                        'orders_count' => 0,
+                    ];
+                }
+                $itemBreakdownMap[$itemKey]['total_qty']    += $qty;
+                $itemBreakdownMap[$itemKey]['total_amount'] += $lineTotal;
+                $itemBreakdownMap[$itemKey]['orders_count'] += 1;
+            }
+        }
+
+        // Format item breakdowns avg rate
+        foreach ($itemBreakdownMap as &$ib) {
+            $ib['avg_rate'] = $ib['total_qty'] > 0 ? round($ib['total_amount'] / $ib['total_qty'], 2) : 0;
+            $ib['total_amount'] = round($ib['total_amount'], 2);
+            $ib['total_qty'] = round($ib['total_qty'], 2);
+        }
+        unset($ib);
+
+        // Sort breakdowns
+        $itemBreakdowns = collect(array_values($itemBreakdownMap))->sortByDesc('total_amount')->values();
+        $customerBreakdowns = collect(array_values($customerBreakdownMap))->sortByDesc('total_purchased')->values();
+        $dailyBreakdowns = collect(array_values($dailyBreakdownMap))->sortByDesc('date')->values();
+
+        return response()->json([
+            'from'                 => $from,
+            'to'                   => $to,
+            'summary'              => [
+                'total_invoices'   => $totalInvoices,
+                'total_qty'        => round($totalQtySold, 2),
+                'gross_amount'     => round($totalGross, 2),
+                'total_discount'   => round($totalDiscount, 2),
+                'total_vat'        => round($totalVat, 2),
+                'net_sales'        => round($totalNetSales, 2),
+                'total_paid'       => round($totalPaid, 2),
+                'total_due'        => round($totalDue, 2),
+            ],
+            'invoices'             => $invoices,
+            'item_breakdown'       => $itemBreakdowns,
+            'customer_breakdown'   => $customerBreakdowns,
+            'daily_breakdown'      => $dailyBreakdowns,
         ]);
     }
 }

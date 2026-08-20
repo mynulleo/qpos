@@ -28,8 +28,10 @@
             <ul class="list-unstyled" v-if="filteredMenus && Object.keys(menus).length > 0">
                 <template v-for="(root_menu, index) in filteredMenus">
                     <template v-if="
+                        (root_menu.status === 'active' || !root_menu.status) &&
                         root_menu.child_menus &&
-                        Object.keys(root_menu.child_menus).length > 0
+                        Object.keys(root_menu.child_menus).length > 0 &&
+                        hasChildPermission(root_menu)
                     ">
                         <li class="menu_item" :key="`parent_menu_${index}`">
                             <a href="javascript:void(0)" data-bs-toggle="tooltip" data-bs-placement="right"
@@ -64,7 +66,7 @@
                         </li>
                     </template>
 
-                    <template v-else>
+                    <template v-else-if="root_menu.status === 'active' || !root_menu.status">
                         <li class="menu_item" :key="`parent_menu_${index}`" v-if="
                             root_menu.route_name &&
                             $root.checkPermission(root_menu.route_name)
@@ -182,10 +184,17 @@ export default {
     },
 
     methods: {
+        hasChildPermission(menu) {
+            if (!menu.child_menus || Object.keys(menu.child_menus).length === 0) {
+                return menu.route_name ? this.$root.checkPermission(menu.route_name) : false;
+            }
+            return Object.values(menu.child_menus).some(child => this.hasChildPermission(child));
+        },
+
         isMenuActive(routeName) {
             if (!routeName) return false;
             const prefix = this.activeRouteNamePrefix;
-            if (prefix === "report." || prefix === "bulkdataimport.") return false;
+            if (prefix === "report." || prefix === "bulkdataimport." || prefix === 'pos.') return false;
             return routeName.startsWith(prefix);
         },
 
@@ -225,13 +234,17 @@ export default {
         },
 
         async logout() {
-            this.$root.spinner = true;
-            const res = await this.callApi("post", "logout");
-            if (res.status == 200) {
+            try {
+                this.$root.spinner = true;
+                const res = await this.callApi("post", "logout");
+                if (res && res.data && res.data.message) {
+                    this.$toast(res.data.message, "success");
+                }
+            } catch (e) {
+            } finally {
                 this.$root.spinner = false;
                 this.$store.dispatch("auth/logout");
-                this.$toast(res.data.message, "success");
-                window.location.href = this.$root.baseurl + "/";
+                window.location.href = (this.$root.baseurl ? this.$root.baseurl : '') + "/";
             }
         },
     },

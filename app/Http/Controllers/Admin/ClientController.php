@@ -174,7 +174,16 @@ class ClientController extends BaseController
     {
         $query = Client::where('status', 'active');
 
-        $data = $query->get(['id', 'org_name']);
+        $data = $query->get(['id', 'name', 'org_name', 'clientid', 'mobile'])->map(function ($client) {
+            $displayName = !empty($client->name) ? $client->name : (!empty($client->org_name) ? $client->org_name : 'Client #' . $client->id);
+            return [
+                'id'        => $client->id,
+                'name'      => $displayName,
+                'org_name'  => $displayName,
+                'clientid'  => $client->clientid,
+                'mobile'    => $client->mobile,
+            ];
+        });
         return $data;
     }
 

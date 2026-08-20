@@ -17,7 +17,7 @@ Route::group(['prefix' => 'backend', 'as' => 'backend.'], function () {
 });
 
 // Authorized Route...
-Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
+Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () {
 
     // Support Route...
     Route::get('support/countries', [SupportController::class, 'countries']);
@@ -42,6 +42,7 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
     Route::get('get-permissions', [App\Http\Controllers\Admin\System\RoleController::class, 'getPermissions']);
     Route::get('get-menus/{any?}', [App\Http\Controllers\Admin\System\MenuController::class, 'menus']);
     Route::get('initialize-systems', [App\Http\Controllers\Admin\System\LibController::class, 'systems']);
+    Route::post('subscription/initiate-payment', [App\Http\Controllers\SubscriptionPaymentController::class, 'initiatePayment'])->name('subscription.initiatePayment');
 
     // Category Route...
     Route::get('get-category/{type}', [App\Http\Controllers\Admin\CategoryController::class, 'getCategory']);
@@ -91,10 +92,10 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
     Route::get('clientsforcommissions/{serviceid?}', [App\Http\Controllers\Admin\CommissionController::class, 'getClientsForCommission'])->name('Commission.clientsforcommissions');
     Route::get('/invoice/{invoice}/months', [App\Http\Controllers\Admin\InvoiceController::class, 'months']);
     Route::get('getbanks', [App\Http\Controllers\Admin\BankController::class, 'getBanks']);
-    Route::get('getservices', [App\Http\Controllers\Admin\ServiceController::class, 'getServices']);
+    // Route::get('getservices', [App\Http\Controllers\Admin\ServiceController::class, 'getServices']);
     Route::get('suppliers', [App\Http\Controllers\Admin\SupplierController::class, 'getSuppliers']);
     Route::get('employees', [App\Http\Controllers\Admin\EmployeeController::class, 'getEmployees']);
-    Route::get('getserviceinfo/{serviceid?}', [App\Http\Controllers\Admin\ServiceController::class, 'getServiceInfo']);
+    // Route::get('getserviceinfo/{serviceid?}', [App\Http\Controllers\Admin\ServiceController::class, 'getServiceInfo']);
     Route::get('getfunds/{fund_account_id?}', [App\Http\Controllers\Admin\PaymentController::class, 'getFundData']);
     Route::get('getfundaccounts', [App\Http\Controllers\Admin\AccountController::class, 'getFundAccounts']);
     Route::get('getfundbalance/{account_id?}', [App\Http\Controllers\Admin\AccountController::class, 'getFundBalance']);
@@ -107,6 +108,20 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
     Route::get('getworkorderinfo/{workorderid}', [App\Http\Controllers\Admin\WorkorderController::class, 'getWorkorderInfo']);
     Route::get('getagentinfo/{id?}', [App\Http\Controllers\Admin\AgentController::class, 'getAgentInfo']);
     Route::get('getagents', [App\Http\Controllers\Admin\AgentController::class, 'getAgents']);
+
+    // POS Terminal API Endpoints
+    Route::get('pos/search-items', [App\Http\Controllers\Admin\PosController::class, 'searchItems']);
+    Route::get('pos/search-customer', [App\Http\Controllers\Admin\PosController::class, 'searchCustomer']);
+    Route::get('pos/validate-serial', [App\Http\Controllers\Admin\PosController::class, 'validateSerial']);
+    Route::post('pos/quick-customer', [App\Http\Controllers\Admin\PosController::class, 'quickCustomer']);
+    Route::post('pos/checkout', [App\Http\Controllers\Admin\PosController::class, 'checkout']);
+    Route::get('pos/search-invoices-return', [App\Http\Controllers\Admin\PosController::class, 'searchInvoicesForReturn']);
+    Route::post('pos/process-return', [App\Http\Controllers\Admin\PosController::class, 'processReturn']);
+    Route::post('pos/convert-points', [App\Http\Controllers\Admin\PosController::class, 'convertPoints']);
+    Route::get('report/coupon', [App\Http\Controllers\Admin\ReportController::class, 'coupon']);
+
+    // Label Print & Barcode Utility Routes
+    Route::get('generate-item-barcode', [App\Http\Controllers\Admin\ItemController::class, 'getGeneratedBarcode']);
 
     // User Permission Based Routing...
     Route::middleware('auth.access')->group(function () {
@@ -151,18 +166,21 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
 
         Route::get('bulkdataimport/employee', [App\Http\Controllers\Admin\BulkDataImportController::class, 'employee'])->name('bulkdataimport.employee');
         Route::get('bulkdataimport/client', [App\Http\Controllers\Admin\BulkDataImportController::class, 'client'])->name('bulkdataimport.client');
+        Route::get('bulkdataimport/item', [App\Http\Controllers\Admin\BulkDataImportController::class, 'item'])->name('bulkdataimport.item');
+        Route::get('bulkdataimport/item-sample-csv', [App\Http\Controllers\Admin\BulkDataImportController::class, 'downloadItemSampleCsv'])->name('bulkdataimport.itemSampleCsv');
 
         Route::post('bulkdataimport/empimport', [App\Http\Controllers\Admin\BulkDataImportController::class, 'empimport'])->name('bulkdataimport.empimport');
         Route::post('bulkdataimport/clientimport', [App\Http\Controllers\Admin\BulkDataImportController::class, 'clientimport'])->name('bulkdataimport.clientimport');
+        Route::post('bulkdataimport/itemimport', [App\Http\Controllers\Admin\BulkDataImportController::class, 'itemimport'])->name('bulkdataimport.itemimport');
 
         // invoice extra action
         Route::get('invoice/bill/{id}', [App\Http\Controllers\Admin\InvoiceController::class, 'bill'])->name('invoice.bill');
         Route::get('invoice/moneyreceipt/{id}', [App\Http\Controllers\Admin\InvoiceController::class, 'moneyreceipt'])->name('invoice.moneyreceipt');
-
+        
         Route::resource('category', App\Http\Controllers\Admin\CategoryController::class);
         Route::resource('mediaValidator', App\Http\Controllers\Admin\MediaValidatorController::class);
         Route::resource('helpInfo', App\Http\Controllers\Admin\HelpInfoController::class);
-        Route::resource('service', App\Http\Controllers\Admin\ServiceController::class);
+        // Route::resource('service', App\Http\Controllers\Admin\ServiceController::class);
         Route::resource('invoice', App\Http\Controllers\Admin\InvoiceController::class);
         Route::resource('unit', App\Http\Controllers\Admin\UnitController::class);
         Route::resource('client', App\Http\Controllers\Admin\ClientController::class);
@@ -178,7 +196,7 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
         Route::resource('expense', App\Http\Controllers\Admin\ExpenseController::class);
         Route::resource('purchase', App\Http\Controllers\Admin\PurchaseController::class);
         Route::resource('item', App\Http\Controllers\Admin\ItemController::class);
-        Route::resource('issue', App\Http\Controllers\Admin\IssueController::class);
+        // Route::resource('issue', App\Http\Controllers\Admin\IssueController::class);
         Route::resource('loanInfo', App\Http\Controllers\Admin\LoanInfoController::class);
         Route::resource('salarySheet', App\Http\Controllers\Admin\SalarySheetController::class);
         Route::resource('payment', App\Http\Controllers\Admin\PaymentController::class);
@@ -191,7 +209,19 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
         Route::resource('workorder', App\Http\Controllers\Admin\WorkorderController::class);
         Route::resource('currency', App\Http\Controllers\Admin\CurrencyController::class);
         Route::resource('challan', App\Http\Controllers\Admin\ChallanController::class);
+        Route::resource('color', App\Http\Controllers\Admin\ColorController::class);
+        Route::resource('size', App\Http\Controllers\Admin\SizeController::class);
+        Route::get('warrantyClaim/check-serial', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'checkSerial'])->name('warrantyClaim.checkSerial');
+        Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');
+        Route::resource('warrantyClaim', App\Http\Controllers\Admin\WarrantyClaimController::class);
+
+        // POS Terminal View Routes
+        Route::get('pos', [App\Http\Controllers\Admin\PosController::class, 'index'])->name('pos.index');
+        Route::get('pos/return', [App\Http\Controllers\Admin\PosController::class, 'return'])->name('pos.return');
+        Route::get('pos/labelprint', [App\Http\Controllers\Admin\PosController::class, 'labelprint'])->name('pos.labelprint');
+        
         //Report
+        Route::get('report/sales', [App\Http\Controllers\Admin\ReportController::class, 'sales'])->name('report.sales');
         Route::get('report/itemladger', [App\Http\Controllers\Admin\ReportController::class, 'itemladger'])->name('report.itemladger');
         Route::get('report/availablestock', [App\Http\Controllers\Admin\ReportController::class, 'availablestock'])->name('report.availablestock');
         Route::get('report/incomestatement', [App\Http\Controllers\Admin\ReportController::class, 'incomestatement'])->name('report.incomestatement');
@@ -207,6 +237,10 @@ Route::middleware(['auth:admin', 'tenantDB'])->group(function () {
         Route::get('report/agentledger', [App\Http\Controllers\Admin\ReportController::class, 'agentledger'])->name('report.agentledger');
         Route::get('report/employeeledger', [App\Http\Controllers\Admin\ReportController::class, 'employeeledger'])->name('report.employeeledger');
         Route::get('report/funds', [App\Http\Controllers\Admin\ReportController::class, 'funds'])->name('report.funds');
+        Route::get('report/coupon', [App\Http\Controllers\Admin\ReportController::class, 'coupon'])->name('report.coupon');
+        Route::get('report/serial', [App\Http\Controllers\Admin\ReportController::class, 'serial'])->name('report.serial');
+        Route::get('report/warrantyclaim', [App\Http\Controllers\Admin\ReportController::class, 'warrantyclaim'])->name('report.warrantyclaim');
+        Route::get('report/warrantyClaim', [App\Http\Controllers\Admin\ReportController::class, 'warrantyclaim'])->name('report.warrantyClaim');
 
         Route::post('expense/approved', [App\Http\Controllers\Admin\ExpenseController::class, 'approved'])->name('expense.approved');
         Route::post('expense/approvalcancel', [App\Http\Controllers\Admin\ExpenseController::class, 'approvalcancel'])->name('expense.approvalcancel');

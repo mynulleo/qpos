@@ -17,7 +17,6 @@ class Menu extends Model
 {
     use LogsActivity;
 
-    protected $connection = 'commondb';
     protected $table = 'menus';
     protected $guarded = ['id'];
     protected $logName = "Menu";
@@ -58,23 +57,51 @@ class Menu extends Model
 
     public static function menus()
     {
-        $permittedMenuArr = App::make('permittedMenuArr');
+        try {
+            $permittedMenuArr = App::make('permittedMenuArr');
 
-        return Menu::whereNull('parent_id')
-            ->with(['childMenus' => function ($query) use ($permittedMenuArr) {
-                $query->whereIn('route_name', $permittedMenuArr)
+            return Menu::whereNull('parent_id')
+                ->where(function ($q) {
+                    $q->where('status', 'active')->orWhereNull('status');
+                })
+                ->with(['childMenus' => function ($query) use ($permittedMenuArr) {
+                    $query->where(function ($q) {
+                        $q->where('status', 'active')->orWhereNull('status');
+                    })
+                    ->whereIn('route_name', $permittedMenuArr)
                     ->orderBy('menu_name'); // Sort child menus alphabetically
-            }])
-
-            ->oldest('sorting')
-            ->get()
-            ->toArray();
+                }])
+                ->oldest('sorting')
+                ->get()
+                ->filter(function ($parentMenu) use ($permittedMenuArr) {
+                    if ($parentMenu->childMenus->isNotEmpty()) {
+                        return true;
+                    }
+                    if (!empty($parentMenu->route_name) && in_array($parentMenu->route_name, $permittedMenuArr)) {
+                        return true;
+                    }
+                    return false;
+                })
+                ->values()
+                ->toArray();
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 
     public static function getMenuList()
     {
-        $parent = Menu::with('childs')->where('parent_id', null)
-            ->oldest('sorting')->get();
+        $parent = Menu::with(['childs' => function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('status', 'active')->orWhereNull('status');
+                });
+            }])
+            ->whereNull('parent_id')
+            ->where(function ($q) {
+                $q->where('status', 'active')->orWhereNull('status');
+            })
+            ->oldest('sorting')
+            ->get();
         $menus = Menu::recursiveMenuList($parent);
 
         return $menus;

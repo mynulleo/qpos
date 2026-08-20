@@ -7,7 +7,7 @@
               <div class="row g-3">
                 <Input v-model="data.clientid" field="data.residenceno" title="Client ID" :req="true"
                   :disabled="this.$route.params.id ? true : false" @keyup.enter="fetchClientData" />
-                <Select title='Client' v-model='data.client_id' field='data.client_id' col="6" label='org_name'
+                <Select title='Client' v-model='data.client_id' field='data.client_id' col="6" label='name'
                   :reduce='(obj) => obj.id' :options='clients' placeholder='--Select One--' @change="fetchClientData"
                   :closeOnSelect='true' :required='false' :disabled="this.$route.params.id ? true : false" />
                 <hr class="mt-2" />

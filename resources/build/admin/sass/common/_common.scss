@@ -80,6 +80,35 @@ body {
     }
 }
 
+.btn-primary {
+    background-color: #112C47 !important;
+    border-color: #112C47 !important;
+    color: #ffffff !important;
+
+    &:hover, &:focus, &:active, &.active {
+        background-color: #1a3d61 !important;
+        border-color: #1a3d61 !important;
+        color: #ffffff !important;
+    }
+
+    &:disabled, &.disabled {
+        background-color: #6c8299 !important;
+        border-color: #6c8299 !important;
+        color: #ffffff !important;
+    }
+}
+
+.btn-outline-primary {
+    color: #112C47 !important;
+    border-color: #112C47 !important;
+
+    &:hover, &:focus, &:active, &.active {
+        background-color: #112C47 !important;
+        border-color: #112C47 !important;
+        color: #ffffff !important;
+    }
+}
+
 .p_1 {
     @include font(15px, 400);
     color: $black;

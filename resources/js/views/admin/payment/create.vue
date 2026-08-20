@@ -6,7 +6,7 @@
             off-label='Pay' onValue="Receive" offValue="Pay" col="2" :req='true'>
         </Switch>
         <Select title='Client' v-model='data.client_id' field='data.client_id' v-if="data.payment_type == 'Receive'"
-            label='org_name' :reduce='(obj) => obj.id' :options='clients' @change="onClientChange"
+            label='name' :reduce='(obj) => obj.id' :options='clients' @change="onClientChange"
             placeholder='--Select One--' :readonly="$route.params.id ? true : false" :closeOnSelect='true' col="2"
             :required='false' />
         <Select title='Supplier' v-model='data.supplier_id' field='data.supplier_id' label='org_name'

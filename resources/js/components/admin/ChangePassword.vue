@@ -83,12 +83,14 @@ export default {
         },
 
         async logout() {
-            const res = await this.callApi("post", "logout");
-            if (res.status == 200) {
-                this.$store.dispatch("auth/logout");
-                this.$toast(res.data.message, "success");
-                window.location.href = this.$root.baseurl + "/qpanel";
-            }
+            try {
+                const res = await this.callApi("post", "logout");
+                if (res && res.data && res.data.message) {
+                    this.$toast(res.data.message, "success");
+                }
+            } catch (e) {}
+            this.$store.dispatch("auth/logout");
+            window.location.href = (this.$root.baseurl ? this.$root.baseurl : '') + "/";
         },
     },
     created() {

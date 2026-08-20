@@ -25,17 +25,17 @@
             Object.keys($root.exception_errors).length > 0
           " class="col-12 py-2 mb-3" style="background: #fddede">
             <div class="error p-2">
-              <slot v-if="typeof $root.exception_errors === 'object'">
-                <slot v-for="(err, errIndex) in $root.exception_errors">
-                  <div v-if="typeof err === 'string'" :key="errIndex" class="text-danger">
+              <template v-if="typeof $root.exception_errors === 'object'">
+                <template v-for="(err, errIndex) in $root.exception_errors" :key="errIndex">
+                  <div v-if="typeof err === 'string'" class="text-danger">
                     {{ err }}
                     <br />
                   </div>
-                </slot>
-              </slot>
-              <slot v-else>
+                </template>
+              </template>
+              <template v-else>
                 {{ $root.exception_errors }}
-              </slot>
+              </template>
             </div>
           </div>
         </div>

@@ -31,25 +31,28 @@ class Organization extends Authenticatable
 
     public static function updateOrganizationExpireDate($organization_id, $month_duration)
     {
-        // Organization খুঁজে বের করা
         $organization = self::find($organization_id);
 
         if ($organization) {
-            // যদি expired_date null হয়, তাহলে আজকের তারিখ ধরা হবে
+            $today = new \DateTime();
             $currentExpireDate = $organization->expired_date
                 ? new \DateTime($organization->expired_date)
                 : new \DateTime();
 
-            // মাস যোগ করা
+            // If already expired in the past, renew starting from today
+            if ($currentExpireDate < $today) {
+                $currentExpireDate = new \DateTime();
+            }
+
+            // Add selected month duration
             $currentExpireDate->modify("+{$month_duration} months");
 
-            // আপডেট করা
             $organization->expired_date = $currentExpireDate->format('Y-m-d');
             $organization->save();
 
-            return true;
+            return $organization->expired_date;
         }
 
-        return false; // Organization না পাওয়া গেলে
+        return false;
     }
 }

@@ -51,5 +51,29 @@ export default {
         attach() {
             return `${laravel.baseurl}/images/pdf-cover.png`;
         },
+        subscription() {
+            return this.$store.state.global.subscription || {};
+        },
+        isExpired() {
+            return !!(this.subscription && this.subscription.is_expired);
+        },
+        expiredDate() {
+            return this.subscription ? this.subscription.expired_date : null;
+        },
+    },
+    methods: {
+        checkPermission(route) {
+            let routeName = !route ? this.$route?.name : route;
+            if (!routeName) return false;
+            const perms = this.permissions;
+            if (!perms) return false;
+            if (Array.isArray(perms)) {
+                return perms.includes(routeName);
+            }
+            if (typeof perms === "object") {
+                return Object.values(perms).includes(routeName);
+            }
+            return false;
+        },
     },
 };

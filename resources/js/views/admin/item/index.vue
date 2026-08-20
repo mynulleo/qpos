@@ -1,7 +1,19 @@
 <template>
   <index-page>
+    <template v-slot:button>
+      <div class="d-flex gap-2 align-items-center">
+        <router-link :to="{ name: 'bulkdataimport.item' }" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm fw-semibold">
+          <i class="fas fa-file-import"></i> Bulk Import
+        </router-link>
+        <router-link :to="{ name: 'pos.labelprint' }" class="btn btn-sm btn-info text-white d-inline-flex align-items-center gap-1 shadow-sm">
+          <i class="fas fa-barcode"></i> Label Print
+        </router-link>
+        <AddOrBackButton :route="model + '.create'" :portion="model" :icon="'plus'" />
+      </div>
+    </template>
+
     <template v-slot:search-field>
-      <v-select-container title="Supplier" field="search_data.category_id" col="3">
+      <v-select-container title="Category" field="search_data.category_id" col="3">
         <v-select v-model="search_data.category_id" label="title" :reduce="(obj) => obj.id" :options="categories"
           placeholder="--Select Category--" :closeOnSelect="true"></v-select>
       </v-select-container>
@@ -15,6 +27,7 @@ const model = "item";
 
 const tableColumns = [
   { field: "image", title: "Image", image: true, imgWidth: "30px", align: "center" },
+  { field: "barcode", title: "Barcode" },
   { field: "category_id", title: "Category", subfield: "category.title" },
   { field: "title", title: "Title" },
   { field: "unit_id", title: "Unit", subfield: "unit.title" },
@@ -24,6 +37,7 @@ const tableColumns = [
 ];
 
 const json_fields = {
+  "Barcode": "barcode",
   "Category Id": "category_id",
   "Title": "title",
   "Unit Id": "unit_id",

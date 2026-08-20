@@ -25,6 +25,46 @@ if (token) {
     );
 }
 
+// 🛡️ Global Axios Interceptor for Expired Lockout
+window.axios.interceptors.request.use((config) => {
+    if (window.__IS_SOFTWARE_EXPIRED__) {
+        const url = config.url || '';
+        const isAllowed = url.includes('logout') || url.includes('initialize-systems') || url.includes('loginCheck') || url.includes('subscription/initiate-payment');
+        if (!isAllowed) {
+            return Promise.reject({
+                response: {
+                    status: 403,
+                    data: {
+                        message: 'Software subscription has expired. Access locked.',
+                        is_expired: true,
+                    },
+                },
+            });
+        }
+    }
+    return config;
+}, (error) => Promise.reject(error));
+
+window.axios.interceptors.response.use(
+    (response) => {
+        if (response && response.data && response.data.subscription) {
+            if (response.data.subscription.is_expired) {
+                window.__IS_SOFTWARE_EXPIRED__ = true;
+                window.__EXPIRED_SUBSCRIPTION__ = response.data.subscription;
+                document.body.classList.add('software-locked');
+            }
+        }
+        return response;
+    },
+    (error) => {
+        if (error && error.response && error.response.status === 403 && error.response.data && error.response.data.is_expired) {
+            window.__IS_SOFTWARE_EXPIRED__ = true;
+            document.body.classList.add('software-locked');
+        }
+        return Promise.reject(error);
+    }
+);
+
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting

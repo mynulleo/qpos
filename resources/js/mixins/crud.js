@@ -54,7 +54,7 @@ export default {
          */
         get_data(url, dataVar = null) {
             this.$root.spinner = true;
-            axios
+            return axios
                 .get(url)
                 .then((res) => {
                     if (dataVar) {
@@ -63,6 +63,7 @@ export default {
                         this.data = res.data;
                     }
                     setTimeout(() => (this.$root.spinner = false), 200);
+                    return res;
                 })
                 .catch((error) => (this.$root.spinner = false));
         },

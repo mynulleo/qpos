@@ -79,23 +79,52 @@ class PurchaseController extends BaseController
                 if ($res && !empty($purchasedetails)) {
                     foreach ($purchasedetails as $detail) {
                         $detail['purchase_id'] = $res->id;
+                        $colorId = !empty($detail['color_id']) ? $detail['color_id'] : null;
+                        $sizeId = !empty($detail['size_id']) ? $detail['size_id'] : null;
+                        $purchasePrice = isset($detail['price']) ? floatval($detail['price']) : 0;
+                        $sellingPrice = isset($detail['selling_price']) ? floatval($detail['selling_price']) : 0;
+                        $serialNo = !empty($detail['serial_no']) ? $detail['serial_no'] : null;
+
+                        $detail['color_id'] = $colorId;
+                        $detail['size_id'] = $sizeId;
+                        $detail['serial_no'] = $serialNo;
+                        $detail['selling_price'] = $sellingPrice;
+
                         // remove item object from detail array
-                        unset($detail['item']);
+                        unset($detail['item'], $detail['items']);
                         // insert purchase details
                         PurchaseDetail::create($detail);
-                        $stock_transection =
-                            [
-                                'item_id' => $detail['item_id'],
-                                'transaction_date' => date('Y-m-d', strtotime($data['purchase_date'])),
-                                'transaction_type' => 'Purchase',
-                                'reference_type' => 'Purchase',
-                                'reference_id' => $res->id,
-                                'qty_in' => $detail['qty'],
-                                'qty_out' => 0,
-                                'status' => 'active',
-                            ];
-                        // insert stock transection data    
+
+                        // insert stock transaction data
+                        $stock_transection = [
+                            'item_id' => $detail['item_id'],
+                            'color_id' => $colorId,
+                            'size_id' => $sizeId,
+                            'transaction_date' => date('Y-m-d', strtotime($data['purchase_date'])),
+                            'transaction_type' => 'Purchase',
+                            'reference_type' => 'Purchase',
+                            'reference_id' => $res->id,
+                            'qty_in' => $detail['qty'],
+                            'qty_out' => 0,
+                            'status' => 'active',
+                        ];
                         StockTransaction::create($stock_transection);
+
+                        // update/create item price for color & size variant
+                        if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0) {
+                            \App\Models\ItemPrice::updateOrCreate(
+                                [
+                                    'item_id' => $detail['item_id'],
+                                    'color_id' => $colorId,
+                                    'size_id' => $sizeId,
+                                ],
+                                [
+                                    'purchase_price' => $purchasePrice,
+                                    'selling_price' => $sellingPrice,
+                                    'status' => 'active',
+                                ]
+                            );
+                        }
                     }
                 }
 
@@ -131,7 +160,9 @@ class PurchaseController extends BaseController
             'supplier',
             'purchase_details.item',
             'purchase_details.category',
-            'purchase_details.unit'
+            'purchase_details.unit',
+            'purchase_details.color',
+            'purchase_details.size'
         )->find($id);
 
         // 🔥 each row তে category wise items attach
@@ -178,34 +209,60 @@ class PurchaseController extends BaseController
 
                 // delete existing purchase details
                 PurchaseDetail::where('purchase_id', $purchase->id)->delete();
-                // insert updated purchase details
+                // delete existing stock transections
+                StockTransaction::where('reference_type', 'Purchase')
+                    ->where('reference_id', $purchase->id)
+                    ->delete();
 
                 if ($purchase && !empty($purchasedetails)) {
                     foreach ($purchasedetails as $detail) {
                         $detail['purchase_id'] = $purchase->id;
+                        $colorId = !empty($detail['color_id']) ? $detail['color_id'] : null;
+                        $sizeId = !empty($detail['size_id']) ? $detail['size_id'] : null;
+                        $purchasePrice = isset($detail['price']) ? floatval($detail['price']) : 0;
+                        $sellingPrice = isset($detail['selling_price']) ? floatval($detail['selling_price']) : 0;
+                        $serialNo = !empty($detail['serial_no']) ? $detail['serial_no'] : null;
+
+                        $detail['color_id'] = $colorId;
+                        $detail['size_id'] = $sizeId;
+                        $detail['serial_no'] = $serialNo;
+                        $detail['selling_price'] = $sellingPrice;
+
                         // remove item object from detail array
-                        unset($detail['item']);
+                        unset($detail['item'], $detail['items']);
                         // insert purchase details
                         PurchaseDetail::create($detail);
 
-                        // delete existing stock transection
-                        StockTransaction::where('reference_type', 'Purchase')
-                            ->where('reference_id', $purchase->id)
-                            ->where('item_id', $detail['item_id'])
-                            ->delete();
-
-                        // insert stock transection data
-                        $stock_transection =
-                            [
-                                'item_id' => $detail['item_id'],
-                                'transaction_date' => date('Y-m-d', strtotime($data['purchase_date'])),
-                                'transaction_type' => 'Purchase',
-                                'reference_type' => 'Purchase',
-                                'qty_in' => $detail['qty'],
-                                'qty_out' => 0,
-                                'status' => 'active',
-                            ];
+                        // insert stock transaction data
+                        $stock_transection = [
+                            'item_id' => $detail['item_id'],
+                            'color_id' => $colorId,
+                            'size_id' => $sizeId,
+                            'transaction_date' => date('Y-m-d', strtotime($data['purchase_date'])),
+                            'transaction_type' => 'Purchase',
+                            'reference_type' => 'Purchase',
+                            'reference_id' => $purchase->id,
+                            'qty_in' => $detail['qty'],
+                            'qty_out' => 0,
+                            'status' => 'active',
+                        ];
                         StockTransaction::create($stock_transection);
+
+                        // update/create item price for color & size variant
+                        if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0) {
+                            \App\Models\ItemPrice::updateOrCreate(
+                                [
+                                    'item_id' => $detail['item_id'],
+                                    'color_id' => $colorId,
+                                    'size_id' => $sizeId,
+                                ],
+                                [
+                                    'purchase_price' => $purchasePrice,
+                                    'selling_price' => $sellingPrice,
+                                    'status' => 'active',
+                                ]
+                            );
+                        }
                     }
                 }
 

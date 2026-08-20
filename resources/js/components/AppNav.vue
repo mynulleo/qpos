@@ -166,11 +166,11 @@ export default {
     },
     methods: {
         async logout() {
-            const res = await this.callApi("post", "logout", null, false);
-            if (res.status == 200) {
-                this.$store.dispatch("auth/logout");
-                window.location.href = this.$root.baseurl + "/qpanel";
-            }
+            try {
+                await this.callApi("post", "logout", null, false);
+            } catch (e) {}
+            this.$store.dispatch("auth/logout");
+            window.location.href = (this.$root.baseurl ? this.$root.baseurl : '') + "/";
         },
 
         loggedInfo() {

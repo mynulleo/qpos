@@ -12,7 +12,6 @@ class Role extends Model
 {
     use LogsActivity;
 
-    protected $connection = 'commondb';
     protected $table = 'roles';
     protected $guarded = ['id'];
 

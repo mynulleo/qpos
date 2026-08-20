@@ -493,27 +493,6 @@ const routes = [
                 component: () => import("./../views/admin/theme/create"),
             },
 
-            // ------------------Service PORTION------------------
-            {
-                path: "/service",
-                name: "service.index",
-                component: () => import("./../views/admin/service/index"),
-            },
-            {
-                path: "/service/create",
-                name: "service.create",
-                component: () => import("./../views/admin/service/create"),
-            },
-            {
-                path: "/service/:id",
-                name: "service.show",
-                component: () => import("./../views/admin/service/view"),
-            },
-            {
-                path: "/service/:id/edit",
-                name: "service.edit",
-                component: () => import("./../views/admin/service/create"),
-            },
             // ------------------Invoice PORTION------------------
             {
                 path: "/invoice",
@@ -707,6 +686,12 @@ const routes = [
                 component: () =>
                     import("./../views/admin/bulkdataimport/client"),
             },
+            {
+                path: "bulkdataimport/item",
+                name: "bulkdataimport.item",
+                component: () =>
+                    import("./../views/admin/bulkdataimport/item"),
+            },
 
             // ------------------Account PORTION------------------
             {
@@ -858,26 +843,21 @@ const routes = [
                 name: "item.edit",
                 component: () => import("./../views/admin/item/create"),
             },
-            // ------------------Issue PORTION------------------
+            // ------------------POS PORTION------------------
             {
-                path: "/issue",
-                name: "issue.index",
-                component: () => import("./../views/admin/issue/index"),
+                path: "/pos",
+                name: "pos.index",
+                component: () => import("./../views/admin/pos/index"),
             },
             {
-                path: "/issue/create",
-                name: "issue.create",
-                component: () => import("./../views/admin/issue/create"),
+                path: "/pos/return",
+                name: "pos.return",
+                component: () => import("./../views/admin/pos/return"),
             },
             {
-                path: "/issue/:id",
-                name: "issue.show",
-                component: () => import("./../views/admin/issue/view"),
-            },
-            {
-                path: "/issue/:id/edit",
-                name: "issue.edit",
-                component: () => import("./../views/admin/issue/create"),
+                path: "/pos/labelprint",
+                name: "pos.labelprint",
+                component: () => import("./../views/admin/pos/labelprint"),
             },
             // ------------------LoanInfo PORTION------------------
             {
@@ -1135,8 +1115,77 @@ const routes = [
                 name: "challan.edit",
                 component: () => import("./../views/admin/challan/create"),
             },
+            // ------------------Color PORTION------------------
+            {
+                path: "/color",
+                name: "color.index",
+                component: () => import("./../views/admin/color/index"),
+            },
+            {
+                path: "/color/create",
+                name: "color.create",
+                component: () => import("./../views/admin/color/create"),
+            },
+            {
+                path: "/color/:id",
+                name: "color.show",
+                component: () => import("./../views/admin/color/view"),
+            },
+            {
+                path: "/color/:id/edit",
+                name: "color.edit",
+                component: () => import("./../views/admin/color/create"),
+            },
+            // ------------------Size PORTION------------------
+            {
+                path: "/size",
+                name: "size.index",
+                component: () => import("./../views/admin/size/index"),
+            },
+            {
+                path: "/size/create",
+                name: "size.create",
+                component: () => import("./../views/admin/size/create"),
+            },
+            {
+                path: "/size/:id",
+                name: "size.show",
+                component: () => import("./../views/admin/size/view"),
+            },
+            {
+                path: "/size/:id/edit",
+                name: "size.edit",
+                component: () => import("./../views/admin/size/create"),
+            },
+
+            // ------------------Warranty Claim PORTION------------------
+            {
+                path: "/warrantyClaim",
+                name: "warrantyClaim.index",
+                component: () => import("./../views/admin/warrantyClaim/index"),
+            },
+            {
+                path: "/warrantyClaim/create",
+                name: "warrantyClaim.create",
+                component: () => import("./../views/admin/warrantyClaim/create"),
+            },
+            {
+                path: "/warrantyClaim/:id",
+                name: "warrantyClaim.show",
+                component: () => import("./../views/admin/warrantyClaim/view"),
+            },
+            {
+                path: "/warrantyClaim/:id/edit",
+                name: "warrantyClaim.edit",
+                component: () => import("./../views/admin/warrantyClaim/create"),
+            },
 
             // ------------------Report PORTION------------------
+            {
+                path: "/report/sales",
+                name: "report.sales",
+                component: () => import("./../views/admin/report/sales"),
+            },
             {
                 path: "/report/itemladger",
                 name: "report.itemladger",
@@ -1204,8 +1253,7 @@ const routes = [
             {
                 path: "/report/agentledger",
                 name: "report.agentledger",
-                component: () =>
-                    import("./../views/admin/report/agentledger"),
+                component: () => import("./../views/admin/report/agentledger"),
             },
             {
                 path: "/report/employeeledger",
@@ -1218,6 +1266,28 @@ const routes = [
                 name: "report.funds",
                 component: () => import("./../views/admin/report/funds"),
             },
+            {
+                path: "/report/coupon",
+                name: "report.coupon",
+                component: () => import("./../views/admin/report/coupon"),
+            },
+            {
+                path: "/report/serial",
+                name: "report.serial",
+                component: () => import("./../views/admin/report/serial"),
+            },
+            {
+                path: "/report/warrantyclaim",
+                name: "report.warrantyclaim",
+                component: () =>
+                    import("./../views/admin/report/warrantyclaim"),
+            },
+            {
+                path: "/report/warrantyClaim",
+                name: "report.warrantyClaim",
+                component: () =>
+                    import("./../views/admin/report/warrantyclaim"),
+            },
         ],
     },
 ];
@@ -1226,7 +1296,7 @@ const routes = [
 function checkAuth(to, from, next) {
     let role = localStorage.getItem("role");
     let user = localStorage.getItem("user");
-    if (role && user) {
+    if ((user && user !== "undefined" && user !== "null") || role) {
         next();
     } else {
         window.location.href = "/";

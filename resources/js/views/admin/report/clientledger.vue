@@ -2,7 +2,7 @@
     <index-page :defaultTable="false" :show_status="false">
         <template v-slot:search-field>
             <v-select-container title="Select Client" field="search_data.client_id" col="3">
-                <v-select v-model="search_data.client_id" label="org_name" :reduce="(obj) => obj.id" :options="clients"
+                <v-select v-model="search_data.client_id" label="name" :reduce="(obj) => obj.id" :options="clients"
                     placeholder="--Select Client--" :closeOnSelect="true">
                 </v-select>
             </v-select-container>
@@ -33,7 +33,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <h5 class="fw-bold mb-1">Client Ledger</h5>
-                        <small class="text-muted">Name: <strong>{{ datas.client?.name }}</strong></small><br>
+                        <small class="text-muted">Name: <strong>{{ datas.client?.name || datas.client?.org_name }}</strong></small><br>
                         <small class="text-muted">Mobile: <strong>{{ datas.client?.mobile }}</strong></small><br>
                         <small class="text-muted">Address: <strong>{{ datas.client?.address }}</strong></small><br>
                         <small class="text-muted">Report Date: <strong>{{ reportDate }}</strong></small>
@@ -170,11 +170,19 @@ export default {
                 });
         },
         getClientLedger() {
+            this.$root.tableSpinner = true;
             axios
                 .get(`report/clientledger/`, { params: this.search_data })
                 .then((res) => {
-                    this.datas = res.data
+                    this.datas = res.data || { client: null, opening_balance: 0, records: [] };
                 })
+                .catch((error) => {
+                    console.error(error);
+                })
+                .finally(() => {
+                    this.$root.tableSpinner = false;
+                    this.$root.spinner = false;
+                });
         },
         // Capitalize the first letter of a string
         ucfirst(str) {

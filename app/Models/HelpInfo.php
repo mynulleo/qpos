@@ -11,7 +11,6 @@ use App\Models\Base\BaseModel;
 class HelpInfo extends BaseModel
 {
     protected $guarded = ['id'];
-    protected $connection = 'commondb';
     protected $table = 'help_infos';
     protected $logName = "HelpInfo";
     protected $appends = ['plain_description'];
