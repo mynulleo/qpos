@@ -446,97 +446,465 @@
       </div>
     </div>
 
-    <!-- Hidden Printable POS Money Receipt -->
+    <!-- Hidden Printable POS Sales Receipt / Invoice (Dynamic Formats based on Site Settings) -->
     <div id="posInvoicePrintArea" class="d-none" v-if="completedInvoice">
-      <div style="width: 80mm; font-family: monospace; font-size: 11px; line-height: 1.3; padding: 5px; margin: 0 auto; color: #000;">
+      <!-- 1. 🖨️ Thermal 80mm Layout (Standard 3-Inch POS Receipt) -->
+      <div v-if="effectivePrintFormat === 'thermal-80mm'" class="thermal-80mm-receipt" style="width: 78mm; font-family: 'Courier New', Courier, monospace, Arial; font-size: 11px; line-height: 1.35; padding: 4px; margin: 0 auto; color: #000;">
         <div style="text-align: center; margin-bottom: 8px;">
-          <h2 style="font-size: 16px; font-weight: bold; margin: 0 0 3px 0;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
-          <div style="font-size: 10px;">{{ $root.site?.address || '' }}</div>
-          <div style="font-size: 10px;">Mob: {{ $root.site?.mobile1 || '' }}</div>
-          <div style="font-size: 11px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2px 0;">
+          <h2 style="font-size: 16px; font-weight: bold; margin: 0 0 2px 0; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
+          <div style="font-size: 10px; line-height: 1.2;">{{ $root.site?.address || '' }}</div>
+          <div style="font-size: 10px;">Phone: {{ $root.site?.mobile1 || '' }} <span v-if="$root.site?.mobile2">/ {{ $root.site?.mobile2 }}</span></div>
+          <div style="font-size: 10px;" v-if="$root.site?.vat_no">VAT Reg: {{ $root.site?.vat_no }}</div>
+          <div style="font-size: 12px; font-weight: bold; margin-top: 5px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 3px 0; letter-spacing: 1px;">
             SALES RECEIPT
           </div>
         </div>
 
-        <div style="margin-bottom: 6px; font-size: 10px;">
-          <div><strong>Inv #:</strong> {{ completedInvoice.invoice_no }}</div>
-          <div><strong>Date:</strong> {{ completedInvoice.invoice_date }}</div>
+        <div style="margin-bottom: 6px; font-size: 10px; line-height: 1.3;">
+          <div style="display: flex; justify-content: space-between;">
+            <span><strong>Inv #:</strong> {{ completedInvoice.invoice_no }}</span>
+            <span><strong>Date:</strong> {{ completedInvoice.invoice_date }}</span>
+          </div>
           <div><strong>Customer:</strong> {{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
           <div v-if="completedInvoice.client && completedInvoice.client.mobile"><strong>Mobile:</strong> {{ completedInvoice.client.mobile }}</div>
+          <div><strong>Payment:</strong> {{ completedInvoice.payment_method || 'Cash' }} <span v-if="completedInvoice.trxid">(Trx: {{ completedInvoice.trxid }})</span></div>
         </div>
 
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
           <thead>
             <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
-              <th style="text-align: left; padding: 3px 0;">Item</th>
-              <th style="text-align: center; padding: 3px 0;">Qty</th>
-              <th style="text-align: right; padding: 3px 0;">Price</th>
-              <th style="text-align: right; padding: 3px 0;">Total</th>
+              <th style="text-align: left; padding: 4px 0;">Item Description</th>
+              <th style="text-align: center; padding: 4px 0; width: 30px;">Qty</th>
+              <th style="text-align: right; padding: 4px 0; width: 48px;">Rate</th>
+              <th style="text-align: right; padding: 4px 0; width: 55px;">Total</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="d in completedInvoice.details" :key="d.id" style="border-bottom: 1px dashed #ccc;">
+            <tr v-for="d in completedInvoice.details" :key="d.id" style="border-bottom: 1px dashed #ddd;">
               <td style="padding: 3px 0;">
-                <div>{{ d.item ? d.item.title : 'Item' }}</div>
-                <div style="font-size: 9px; color: #444;" v-if="d.color || d.size">
+                <div style="font-weight: 600;">{{ d.item ? d.item.title : 'Item' }}</div>
+                <div style="font-size: 9px; color: #333;" v-if="d.color || d.size">
                   {{ d.color ? d.color.title : '' }} {{ d.size ? '/' + d.size.title : '' }}
                 </div>
-                <div style="font-size: 9px; color: #444;" v-if="d.serial_no">
+                <div style="font-size: 9px; color: #222; font-family: monospace;" v-if="d.serial_no">
                   S/N: {{ d.serial_no }}
                 </div>
-                <div style="font-size: 9px; color: #2e7d32; font-weight: bold;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
-                  {{ d.item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}: {{ d.item.warranty_period }}
+                <div style="font-size: 9px; color: #000; font-weight: bold;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
+                  [{{ d.item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}: {{ d.item.warranty_period }}]
                 </div>
               </td>
-              <td style="text-align: center; padding: 3px 0;">{{ d.qty }}</td>
-              <td style="text-align: right; padding: 3px 0;">{{ formatPrice(d.amount) }}</td>
-              <td style="text-align: right; padding: 3px 0;">{{ formatPrice(d.total_amount) }}</td>
+              <td style="text-align: center; padding: 3px 0; vertical-align: top;">{{ d.qty }}</td>
+              <td style="text-align: right; padding: 3px 0; vertical-align: top;">{{ formatPrice(d.amount) }}</td>
+              <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: 600;">{{ formatPrice(d.total_amount) }}</td>
             </tr>
           </tbody>
         </table>
 
-        <div style="border-top: 1px solid #000; padding-top: 4px; font-size: 10px;">
+        <div style="border-top: 1px solid #000; padding-top: 4px; font-size: 10.5px; line-height: 1.4;">
           <div style="display: flex; justify-content: space-between;">
             <span>Subtotal:</span>
             <span>Tk. {{ formatPrice(completedInvoice.original_amount) }}</span>
           </div>
           <div style="display: flex; justify-content: space-between;" v-if="completedInvoice.discount > 0">
-            <span>Discount:</span>
+            <span>Special Discount:</span>
             <span>- Tk. {{ formatPrice(completedInvoice.discount) }}</span>
           </div>
           <div style="display: flex; justify-content: space-between;" v-if="completedInvoice.vat > 0">
-            <span>VAT:</span>
+            <span>VAT / Tax:</span>
             <span>+ Tk. {{ formatPrice(completedInvoice.vat) }}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-top: 4px; border-top: 1px dashed #000; padding-top: 3px;">
-            <span>Net Payable:</span>
+            <span>NET PAYABLE:</span>
             <span>Tk. {{ formatPrice(completedInvoice.amount) }}</span>
           </div>
           <div style="display: flex; justify-content: space-between;">
             <span>Paid Amount:</span>
             <span>Tk. {{ formatPrice(completedInvoice.paid_amount) }}</span>
           </div>
+          <div style="display: flex; justify-content: space-between;" v-if="(completedInvoice.paid_amount - completedInvoice.amount) > 0">
+            <span>Change / Return:</span>
+            <span>Tk. {{ formatPrice(completedInvoice.paid_amount - completedInvoice.amount) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;" v-if="(completedInvoice.amount - completedInvoice.paid_amount) > 0">
+            <span style="font-weight: bold; color: red;">Balance Due:</span>
+            <span style="font-weight: bold;">Tk. {{ formatPrice(completedInvoice.amount - completedInvoice.paid_amount) }}</span>
+          </div>
 
-          <!-- ⭐️ Points in Receipt -->
-          <div v-if="completedInvoice.coupon_enabled" style="margin-top: 4px; border-top: 1px dashed #000; padding-top: 3px; font-size: 9px;">
+          <!-- ⭐️ Customer Loyalty Points in Receipt -->
+          <div v-if="completedInvoice.coupon_enabled" style="margin-top: 5px; border-top: 1px dashed #000; padding-top: 4px; font-size: 9.5px;">
             <div style="display: flex; justify-content: space-between;" v-if="completedInvoice.points_redeemed > 0">
               <span>Points Redeemed:</span>
               <span>- {{ completedInvoice.points_redeemed }} Pts</span>
             </div>
             <div style="display: flex; justify-content: space-between;" v-if="completedInvoice.points_earned > 0">
-              <span>Points Earned:</span>
+              <span>Points Earned Today:</span>
               <span>+ {{ completedInvoice.points_earned }} Pts</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: bold;">
-              <span>Points Balance:</span>
+              <span>Total Points Balance:</span>
               <span>{{ formatPrice(completedInvoice.points_balance) }} Pts</span>
             </div>
           </div>
         </div>
 
-        <div style="text-align: center; margin-top: 12px; border-top: 1px dashed #000; padding-top: 6px; font-size: 9px;">
-          <div>Thank you for shopping with us!</div>
-          <div>Please preserve this receipt for returns within 7 days.</div>
+        <div style="text-align: center; margin-top: 12px; border-top: 1px dashed #000; padding-top: 6px; font-size: 9.5px; line-height: 1.3;">
+          <div style="font-weight: bold;">Thank you for shopping with us!</div>
+          <div>Please preserve this receipt for warranty and returns within 7 days.</div>
+          <div style="font-size: 8.5px; color: #555; margin-top: 3px;">Software by QPOS</div>
+        </div>
+      </div>
+
+      <!-- 2. 🖨️ Thermal 60mm / 58mm Layout (Compact 2-Inch POS Receipt) -->
+      <div v-else-if="effectivePrintFormat === 'thermal-60mm'" class="thermal-60mm-receipt" style="width: 56mm; font-family: monospace, Arial; font-size: 9.5px; line-height: 1.25; padding: 2px; margin: 0 auto; color: #000;">
+        <div style="text-align: center; margin-bottom: 5px;">
+          <h2 style="font-size: 13px; font-weight: bold; margin: 0 0 1px 0; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
+          <div style="font-size: 8.5px; line-height: 1.1;">{{ $root.site?.address || '' }}</div>
+          <div style="font-size: 8.5px;">Mob: {{ $root.site?.mobile1 || '' }}</div>
+          <div style="font-size: 10px; font-weight: bold; margin-top: 3px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2px 0;">
+            SALES RECEIPT
+          </div>
+        </div>
+
+        <div style="margin-bottom: 4px; font-size: 8.5px; line-height: 1.2;">
+          <div><strong>Inv:</strong> {{ completedInvoice.invoice_no }}</div>
+          <div><strong>Date:</strong> {{ completedInvoice.invoice_date }}</div>
+          <div><strong>Cust:</strong> {{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in' }}</div>
+          <div v-if="completedInvoice.client && completedInvoice.client.mobile"><strong>Ph:</strong> {{ completedInvoice.client.mobile }}</div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px; font-size: 8.5px;">
+          <thead>
+            <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
+              <th style="text-align: left; padding: 2px 0;">Item</th>
+              <th style="text-align: center; padding: 2px 0; width: 18px;">Q</th>
+              <th style="text-align: right; padding: 2px 0; width: 40px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="d in completedInvoice.details" :key="d.id" style="border-bottom: 1px dashed #eee;">
+              <td style="padding: 2px 0;">
+                <div style="font-weight: 600;">{{ d.item ? d.item.title : 'Item' }}</div>
+                <div style="font-size: 8px; color: #333;" v-if="d.color || d.size">
+                  {{ d.color ? d.color.title : '' }}{{ d.size ? '/' + d.size.title : '' }}
+                </div>
+                <div style="font-size: 8px; color: #222;" v-if="d.serial_no">
+                  S/N: {{ d.serial_no }}
+                </div>
+                <div style="font-size: 8px;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
+                  W: {{ d.item.warranty_period }}
+                </div>
+              </td>
+              <td style="text-align: center; padding: 2px 0; vertical-align: top;">{{ d.qty }}</td>
+              <td style="text-align: right; padding: 2px 0; vertical-align: top; font-weight: 600;">{{ formatPrice(d.total_amount) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="border-top: 1px solid #000; padding-top: 3px; font-size: 9px; line-height: 1.3;">
+          <div style="display: flex; justify-content: space-between;">
+            <span>Subtotal:</span>
+            <span>{{ formatPrice(completedInvoice.original_amount) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;" v-if="completedInvoice.discount > 0">
+            <span>Discount:</span>
+            <span>-{{ formatPrice(completedInvoice.discount) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;" v-if="completedInvoice.vat > 0">
+            <span>VAT:</span>
+            <span>+{{ formatPrice(completedInvoice.vat) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 10.5px; border-top: 1px dashed #000; padding-top: 2px; margin-top: 2px;">
+            <span>NET TOTAL:</span>
+            <span>Tk. {{ formatPrice(completedInvoice.amount) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Paid:</span>
+            <span>Tk. {{ formatPrice(completedInvoice.paid_amount) }}</span>
+          </div>
+
+          <div v-if="completedInvoice.coupon_enabled" style="margin-top: 3px; border-top: 1px dashed #000; padding-top: 2px; font-size: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>Points Earned:</span>
+              <span>+{{ completedInvoice.points_earned }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+              <span>Points Balance:</span>
+              <span>{{ formatPrice(completedInvoice.points_balance) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 4px; font-size: 8px;">
+          <div>Thanks for visiting!</div>
+          <div>Preserve receipt for returns.</div>
+        </div>
+      </div>
+
+      <!-- 3. 🖨️ Normal Printer A5 Layout (Compact Half-Page Invoice) -->
+      <div v-else-if="effectivePrintFormat === 'normal-a5'" class="normal-a5-invoice" style="width: 100%; max-width: 140mm; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; line-height: 1.3; color: #111; margin: 0 auto; padding: 5px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #112C47; padding-bottom: 8px; margin-bottom: 8px;">
+          <div>
+            <h2 style="font-size: 17px; font-weight: bold; margin: 0; color: #112C47;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
+            <div style="font-size: 10px; color: #444;">{{ $root.site?.address || '' }}</div>
+            <div style="font-size: 10px; color: #444;">Phone: {{ $root.site?.mobile1 || '' }} | Email: {{ $root.site?.contact_email || '' }}</div>
+            <div style="font-size: 9.5px; color: #555;" v-if="$root.site?.vat_no">VAT/BIN: {{ $root.site?.vat_no }}</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="display: inline-block; background: #112C47; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 3px; letter-spacing: 0.5px;">
+              SALES INVOICE
+            </div>
+            <div style="font-size: 10.5px; font-weight: bold; margin-top: 4px; font-family: monospace;">#{{ completedInvoice.invoice_no }}</div>
+            <div style="font-size: 9.5px; color: #555;">Date: {{ completedInvoice.invoice_date }}</div>
+          </div>
+        </div>
+
+        <!-- Bill To / Customer Details -->
+        <div style="display: flex; justify-content: space-between; background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; font-size: 10px;">
+          <div>
+            <strong>Bill To (গ্রাহক):</strong>
+            <div style="font-weight: 600; font-size: 11px;">{{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
+            <div v-if="completedInvoice.client?.mobile">Mobile: {{ completedInvoice.client.mobile }}</div>
+            <div v-if="completedInvoice.client?.address">Address: {{ completedInvoice.client.address }}</div>
+          </div>
+          <div style="text-align: right;">
+            <div><strong>Payment Method:</strong> {{ completedInvoice.payment_method || 'Cash' }}</div>
+            <div v-if="completedInvoice.trxid"><strong>TrxID:</strong> {{ completedInvoice.trxid }}</div>
+            <div><strong>Status:</strong> <span style="font-weight: bold; color: green;">PAID</span></div>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
+          <thead>
+            <tr style="background: #112C47; color: #fff;">
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: center; width: 25px;">#</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: left;">Item Description & Details</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: center; width: 35px;">Qty</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: right; width: 55px;">Rate (৳)</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: right; width: 65px;">Total (৳)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(d, idx) in completedInvoice.details" :key="d.id">
+              <td style="border: 1px solid #cbd5e1; padding: 4px; text-align: center;">{{ idx + 1 }}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px;">
+                <div style="font-weight: 600;">{{ d.item ? d.item.title : 'Item' }}</div>
+                <div style="font-size: 9px; color: #475569;" v-if="d.color || d.size">
+                  Variant: {{ d.color ? d.color.title : '' }} {{ d.size ? '/' + d.size.title : '' }}
+                </div>
+                <div style="font-size: 9px; color: #0284c7; font-family: monospace;" v-if="d.serial_no">
+                  S/N: {{ d.serial_no }}
+                </div>
+                <div style="font-size: 9px; color: #16a34a; font-weight: 600;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
+                  {{ d.item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}: {{ d.item.warranty_period }}
+                </div>
+              </td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px; text-align: center; font-weight: bold;">{{ d.qty }}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: right; font-family: monospace;">{{ formatPrice(d.amount) }}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: right; font-weight: bold; font-family: monospace;">{{ formatPrice(d.total_amount) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Summary & Totals -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; font-size: 10px;">
+          <!-- Left Notes & Loyalty Points -->
+          <div style="width: 52%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;">
+            <div v-if="completedInvoice.coupon_enabled" style="margin-bottom: 4px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
+              <strong style="color: #d97706;">Loyalty Points:</strong>
+              Earned: <strong>+{{ completedInvoice.points_earned }}</strong> | Balance: <strong>{{ formatPrice(completedInvoice.points_balance) }} Pts</strong>
+            </div>
+            <div style="font-size: 8.5px; color: #64748b; line-height: 1.2;">
+              <div>* Goods once sold cannot be returned without original cash memo within 7 days.</div>
+              <div>* Physical and liquid damage will void any item warranty.</div>
+            </div>
+          </div>
+
+          <!-- Right Calculation Box -->
+          <div style="width: 44%;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+              <tbody>
+                <tr>
+                  <td style="padding: 2px 4px;">Subtotal:</td>
+                  <td style="padding: 2px 4px; text-align: right; font-family: monospace;">৳ {{ formatPrice(completedInvoice.original_amount) }}</td>
+                </tr>
+                <tr v-if="completedInvoice.discount > 0">
+                  <td style="padding: 2px 4px; color: #dc2626;">Discount:</td>
+                  <td style="padding: 2px 4px; text-align: right; color: #dc2626; font-family: monospace;">- ৳ {{ formatPrice(completedInvoice.discount) }}</td>
+                </tr>
+                <tr v-if="completedInvoice.vat > 0">
+                  <td style="padding: 2px 4px;">VAT / Tax:</td>
+                  <td style="padding: 2px 4px; text-align: right; font-family: monospace;">+ ৳ {{ formatPrice(completedInvoice.vat) }}</td>
+                </tr>
+                <tr style="border-top: 1px solid #112C47; font-weight: bold; background: #f1f5f9; font-size: 11px;">
+                  <td style="padding: 4px;">Net Payable:</td>
+                  <td style="padding: 4px; text-align: right; color: #112C47; font-family: monospace;">৳ {{ formatPrice(completedInvoice.amount) }}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 2px 4px;">Paid Amount:</td>
+                  <td style="padding: 2px 4px; text-align: right; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(completedInvoice.paid_amount) }}</td>
+                </tr>
+                <tr v-if="(completedInvoice.amount - completedInvoice.paid_amount) > 0">
+                  <td style="padding: 2px 4px; color: #dc2626; font-weight: bold;">Due Amount:</td>
+                  <td style="padding: 2px 4px; text-align: right; color: #dc2626; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(completedInvoice.amount - completedInvoice.paid_amount) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Signatures -->
+        <div style="display: flex; justify-content: space-between; margin-top: 25px; padding-top: 5px; font-size: 9px; color: #333;">
+          <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Customer's Signature</div>
+          <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Authorized Signature & Seal</div>
+        </div>
+      </div>
+
+      <!-- 4. 🖨️ Normal Printer A4 Layout (Full Professional A4 Corporate Invoice) -->
+      <div v-else class="normal-a4-invoice" style="width: 100%; max-width: 190mm; font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; line-height: 1.4; color: #111; margin: 0 auto; padding: 10px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #112C47; padding-bottom: 12px; margin-bottom: 12px;">
+          <div>
+            <h1 style="font-size: 22px; font-weight: bold; margin: 0 0 4px 0; color: #112C47; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h1>
+            <div style="font-size: 11px; color: #475569; max-width: 380px;">{{ $root.site?.address || '' }}</div>
+            <div style="font-size: 11px; color: #475569; margin-top: 2px;">
+              <span><strong>Mobile:</strong> {{ $root.site?.mobile1 || '' }} <span v-if="$root.site?.mobile2">/ {{ $root.site?.mobile2 }}</span></span>
+              <span v-if="$root.site?.contact_email" style="margin-left: 8px;"><strong>Email:</strong> {{ $root.site?.contact_email }}</span>
+            </div>
+            <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;" v-if="$root.site?.vat_no || $root.site?.hs_code">
+              <span v-if="$root.site?.vat_no"><strong>VAT / BIN:</strong> {{ $root.site?.vat_no }}</span>
+              <span v-if="$root.site?.hs_code" style="margin-left: 8px;"><strong>HS Code:</strong> {{ $root.site?.hs_code }}</span>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="display: inline-block; background: #112C47; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 14px; border-radius: 4px; letter-spacing: 1px;">
+              RETAIL SALES INVOICE
+            </div>
+            <div style="font-size: 14px; font-weight: bold; margin-top: 6px; font-family: monospace; color: #112C47;">#{{ completedInvoice.invoice_no }}</div>
+            <div style="font-size: 11px; color: #64748b;"><strong>Invoice Date:</strong> {{ completedInvoice.invoice_date }}</div>
+            <div style="font-size: 11px; color: #64748b;"><strong>Payment Mode:</strong> {{ completedInvoice.payment_method || 'Cash' }}</div>
+          </div>
+        </div>
+
+        <!-- Customer & Bill To Box -->
+        <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px;">
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Bill To (ক্রেতার তথ্য):</div>
+            <div style="font-size: 13px; font-weight: bold; color: #0f172a;">{{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
+            <div style="font-size: 11px; color: #475569;" v-if="completedInvoice.client?.mobile"><strong>Mobile:</strong> {{ completedInvoice.client.mobile }}</div>
+            <div style="font-size: 11px; color: #475569;" v-if="completedInvoice.client?.address"><strong>Address:</strong> {{ completedInvoice.client.address }}</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Transaction Status:</div>
+            <span style="display: inline-block; background: #dcfce7; color: #166534; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; border: 1px solid #bbf7d0;">
+              PAID & COMPLETED
+            </span>
+            <div style="font-size: 11px; color: #475569; margin-top: 4px;" v-if="completedInvoice.trxid"><strong>TrxID:</strong> {{ completedInvoice.trxid }}</div>
+          </div>
+        </div>
+
+        <!-- Line Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px;">
+          <thead>
+            <tr style="background: #112C47; color: #fff;">
+              <th style="border: 1px solid #112C47; padding: 6px 8px; text-align: center; width: 30px;">#</th>
+              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: left;">Item Description & Specifications</th>
+              <th style="border: 1px solid #112C47; padding: 6px 8px; text-align: center; width: 50px;">Qty</th>
+              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: right; width: 85px;">Unit Price (৳)</th>
+              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: right; width: 95px;">Total Amount (৳)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(d, idx) in completedInvoice.details" :key="d.id">
+              <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #64748b;">{{ idx + 1 }}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 6px 10px;">
+                <div style="font-weight: 600; font-size: 12px; color: #0f172a;">{{ d.item ? d.item.title : 'Item' }}</div>
+                <div style="font-size: 10.5px; color: #475569;" v-if="d.color || d.size">
+                  <span v-if="d.color">Color: <strong>{{ d.color.title }}</strong></span>
+                  <span v-if="d.size" style="margin-left: 8px;">Size: <strong>{{ d.size.title }}</strong></span>
+                </div>
+                <div style="font-size: 10px; color: #0284c7; font-family: monospace; margin-top: 1px;" v-if="d.serial_no">
+                  Serial Number: <strong>{{ d.serial_no }}</strong>
+                </div>
+                <div style="font-size: 10.5px; color: #16a34a; font-weight: 600; margin-top: 1px;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
+                  <i class="fas fa-shield-alt"></i> Coverage: {{ d.item.warranty_type === 'guarantee' ? 'Replacement Guarantee' : 'Official Warranty' }} ({{ d.item.warranty_period }})
+                </div>
+              </td>
+              <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-weight: bold; font-size: 12px;">{{ d.qty }}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 6px 10px; text-align: right; font-family: monospace;">{{ formatPrice(d.amount) }}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 6px 10px; text-align: right; font-weight: bold; font-family: monospace; font-size: 12px;">{{ formatPrice(d.total_amount) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Summary & Banking / Terms Section -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+          <!-- Left: Terms & Customer Points -->
+          <div style="width: 54%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; font-size: 10.5px;">
+            <div v-if="completedInvoice.coupon_enabled" style="margin-bottom: 8px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;">
+              <strong style="color: #d97706;"><i class="fas fa-gift me-1"></i> Customer Loyalty Rewards:</strong>
+              <div style="margin-top: 2px;">
+                <span>Points Earned: <strong class="text-success">+{{ completedInvoice.points_earned }} Pts</strong></span>
+                <span v-if="completedInvoice.points_redeemed > 0" style="margin-left: 10px;">Redeemed: <strong class="text-danger">-{{ completedInvoice.points_redeemed }} Pts</strong></span>
+                <span style="margin-left: 10px;">Available Balance: <strong>{{ formatPrice(completedInvoice.points_balance) }} Pts</strong></span>
+              </div>
+            </div>
+
+            <div style="font-weight: bold; color: #334155; margin-bottom: 2px;">Terms & Conditions:</div>
+            <div style="color: #64748b; font-size: 9.5px; line-height: 1.35;">
+              <div>1. Please preserve this invoice for any warranty claims and exchange within 7 days.</div>
+              <div>2. Warranty does not cover physical damage, burn, liquid ingress, or broken warranty seals.</div>
+              <div>3. Disputed items will be inspected according to company service policy.</div>
+            </div>
+
+            <div v-if="$root.site?.bank_name" style="margin-top: 6px; font-size: 9.5px; color: #475569; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+              <strong>Bank Info:</strong> {{ $root.site?.bank_name }} | A/C: {{ $root.site?.account_number }} | Branch: {{ $root.site?.branch_name }}
+            </div>
+          </div>
+
+          <!-- Right: Totals Table -->
+          <div style="width: 42%;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+              <tbody>
+                <tr>
+                  <td style="padding: 4px 6px; color: #475569;">Gross Subtotal:</td>
+                  <td style="padding: 4px 6px; text-align: right; font-family: monospace;">৳ {{ formatPrice(completedInvoice.original_amount) }}</td>
+                </tr>
+                <tr v-if="completedInvoice.discount > 0">
+                  <td style="padding: 4px 6px; color: #dc2626;">Special Discount:</td>
+                  <td style="padding: 4px 6px; text-align: right; color: #dc2626; font-family: monospace;">- ৳ {{ formatPrice(completedInvoice.discount) }}</td>
+                </tr>
+                <tr v-if="completedInvoice.vat > 0">
+                  <td style="padding: 4px 6px; color: #475569;">VAT / Tax:</td>
+                  <td style="padding: 4px 6px; text-align: right; font-family: monospace;">+ ৳ {{ formatPrice(completedInvoice.vat) }}</td>
+                </tr>
+                <tr style="border-top: 2px solid #112C47; font-weight: bold; background: #f1f5f9; font-size: 13px;">
+                  <td style="padding: 6px 8px; color: #112C47;">TOTAL PAYABLE:</td>
+                  <td style="padding: 6px 8px; text-align: right; color: #112C47; font-family: monospace;">৳ {{ formatPrice(completedInvoice.amount) }}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 6px; color: #166534; font-weight: bold;">Paid Amount:</td>
+                  <td style="padding: 4px 6px; text-align: right; color: #166534; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(completedInvoice.paid_amount) }}</td>
+                </tr>
+                <tr v-if="(completedInvoice.paid_amount - completedInvoice.amount) > 0">
+                  <td style="padding: 4px 6px; color: #475569;">Change Return:</td>
+                  <td style="padding: 4px 6px; text-align: right; font-family: monospace;">৳ {{ formatPrice(completedInvoice.paid_amount - completedInvoice.amount) }}</td>
+                </tr>
+                <tr v-if="(completedInvoice.amount - completedInvoice.paid_amount) > 0">
+                  <td style="padding: 4px 6px; color: #dc2626; font-weight: bold;">Balance Due:</td>
+                  <td style="padding: 4px 6px; text-align: right; color: #dc2626; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(completedInvoice.amount - completedInvoice.paid_amount) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Formal Signature Blocks -->
+        <div style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 8px; font-size: 10.5px; color: #334155;">
+          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Customer's Acceptance</div>
+          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Prepared By (Cashier)</div>
+          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Authorized Signature & Seal</div>
         </div>
       </div>
     </div>
@@ -642,6 +1010,25 @@ export default {
       const shopType = this.$root.site?.shop_type;
       return !shopType || shopType === 'electronics';
     },
+    printerType() {
+      return this.$root.site?.printer_type || 'thermal';
+    },
+    normalPaperSize() {
+      return this.$root.site?.normal_paper_size || 'A4';
+    },
+    thermalPaperSize() {
+      return this.$root.site?.thermal_paper_size || '80mm';
+    },
+    effectivePrintFormat() {
+      const type = (this.printerType || 'thermal').toString().toLowerCase();
+      if (type === 'normal') {
+        const size = (this.normalPaperSize || 'A4').toString().toUpperCase();
+        return size === 'A5' ? 'normal-a5' : 'normal-a4';
+      } else {
+        const size = (this.thermalPaperSize || '80mm').toString().toLowerCase();
+        return size === '60mm' ? 'thermal-60mm' : 'thermal-80mm';
+      }
+    },
   },
   watch: {
     netPayable(val) {
@@ -651,6 +1038,67 @@ export default {
   methods: {
     formatPrice(val) {
       return floatval(val).toFixed(2);
+    },
+    printPOSInvoice() {
+      if (!this.completedInvoice) return;
+      const format = this.effectivePrintFormat;
+      const invoiceNo = this.completedInvoice.invoice_no || 'POS-Invoice';
+
+      let pageStyles = '';
+      if (format === 'thermal-80mm') {
+        pageStyles = `
+          @page { size: 80mm auto; margin: 2mm 3mm; }
+          html, body { margin: 0; padding: 0; width: 80mm; background: #fff; font-family: 'Courier New', Courier, monospace, Arial; font-size: 11px; color: #000; }
+          .pos-print-wrapper { width: 78mm; margin: 0 auto; padding: 2px 0; }
+        `;
+      } else if (format === 'thermal-60mm') {
+        pageStyles = `
+          @page { size: 58mm auto; margin: 1mm 1mm; }
+          html, body { margin: 0; padding: 0; width: 58mm; background: #fff; font-family: 'Courier New', Courier, monospace, Arial; font-size: 9.5px; color: #000; }
+          .pos-print-wrapper { width: 56mm; margin: 0 auto; padding: 1px 0; }
+        `;
+      } else if (format === 'normal-a5') {
+        pageStyles = `
+          @page { size: 148mm 210mm; margin: 5mm 6mm; }
+          html, body { margin: 0; padding: 0; width: 148mm; background: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10.5px; color: #111; }
+          .pos-print-wrapper { width: 138mm; max-width: 138mm; margin: 0 auto; }
+        `;
+      } else { // normal-a4
+        pageStyles = `
+          @page { size: 210mm 297mm; margin: 10mm 12mm; }
+          html, body { margin: 0; padding: 0; width: 210mm; background: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #111; }
+          .pos-print-wrapper { width: 190mm; max-width: 190mm; margin: 0 auto; }
+        `;
+      }
+
+      const printContents = document.getElementById('posInvoicePrintArea');
+      if (!printContents) return;
+
+      const WinPrint = window.open('', '', 'left=0,top=0,width=850,height=900,toolbar=0,scrollbars=1,status=0');
+      WinPrint.document.write(`<!DOCTYPE html>
+      <html>
+      <head>
+        <title>Sales Invoice - ${invoiceNo}</title>
+        <meta charset="utf-8">
+        <style>
+          * { box-sizing: border-box; }
+          ${pageStyles}
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="pos-print-wrapper">
+          ${printContents.innerHTML}
+        </div>
+      </body>
+      </html>`);
+      WinPrint.document.close();
+      WinPrint.focus();
+      setTimeout(() => {
+        WinPrint.print();
+      }, 350);
     },
     searchCustomer() {
       if (!this.client.mobile || this.client.mobile.trim() === '') return;
@@ -1018,7 +1466,7 @@ export default {
 
             // Trigger POS Print
             this.$nextTick(() => {
-              this.print('posInvoicePrintArea', 'POS Invoice - ' + this.completedInvoice.invoice_no);
+              this.printPOSInvoice();
               this.resetPOS();
             });
           }

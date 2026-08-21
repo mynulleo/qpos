@@ -28,10 +28,8 @@ class DatabaseServiceProvider extends ServiceProvider
             $organizationId = $user->organization_id ?? null;
             $this->switchTenantDB($organizationId);
 
-            return Cache::rememberForever('site_setting_cache_' . $organizationId, function () {
-                $site = SiteSetting::first();
-                return $site ? $site->toArray() : [];
-            });
+            $site = SiteSetting::first();
+            return $site ? $site->toArray() : [];
         });
 
         /*----- LEFT MENUS (Tenant Aware) -----*/

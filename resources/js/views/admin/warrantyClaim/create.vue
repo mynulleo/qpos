@@ -474,7 +474,11 @@ export default {
         .then(res => {
           const claimId = this.isEdit ? this.form.id : (res.data.data ? res.data.data.id : res.data.id);
           this.$toast(`Warranty Claim ${this.isEdit ? 'updated' : 'registered'} successfully!`, 'success');
-          this.$router.push({ name: 'warrantyClaim.show', params: { id: claimId } });
+          if (!this.isEdit) {
+            this.$router.push({ name: 'warrantyClaim.show', params: { id: claimId }, query: { autoPrint: 1 } });
+          } else {
+            this.$router.push({ name: 'warrantyClaim.show', params: { id: claimId } });
+          }
         })
         .catch(err => {
           this.$toast(err.response?.data?.message || err.response?.data?.exception || 'Failed to save warranty claim', 'error');

@@ -1782,6 +1782,51 @@ export default {
       const columns = parseInt(s.columns) || 1;
       const isContinuous = columns === 1 && s.paperType === "thermal";
 
+      // Convert width and height to mm for accurate proportional scaling
+      const hMm = s.unit === "in" ? (parseFloat(s.height) || 1) * 25.4 : parseFloat(s.height) || 25.4;
+      const wMm = s.unit === "in" ? (parseFloat(s.width) || 2) * 25.4 : parseFloat(s.width) || 50.8;
+
+      let padVal = "3px 4px";
+      let companyFs = 10;
+      let titleFs = 10.5;
+      let barcodeH = 30;
+      let barcodeNumFs = 10;
+      let priceFs = 11.5;
+
+      if (hMm <= 26) {
+        // Very compact tags (e.g. 2" x 1", 50x25mm, 40x25mm, 30x20mm)
+        padVal = "1.5px 3px";
+        companyFs = 8.5;
+        titleFs = 8.5;
+        barcodeH = 20;
+        barcodeNumFs = 8;
+        priceFs = 9.5;
+      } else if (hMm <= 38) {
+        // Compact medium tags (e.g. 50x30mm, 40x30mm)
+        padVal = "2px 4px";
+        companyFs = 9.5;
+        titleFs = 9.5;
+        barcodeH = 26;
+        barcodeNumFs = 9;
+        priceFs = 10.5;
+      } else if (hMm <= 55) {
+        // Standard tags (e.g. 4" x 2", 3" x 2")
+        padVal = "4px 6px";
+        companyFs = 11;
+        titleFs = 11.5;
+        barcodeH = 34;
+        barcodeNumFs = 10.5;
+        priceFs = 12.5;
+      } else {
+        // Large tags (e.g. 4" x 6")
+        padVal = "6px 8px";
+        companyFs = 13;
+        titleFs = 13;
+        barcodeH = 48;
+        barcodeNumFs = 12;
+        priceFs = 14;
+      }
+
       const pageSizeRule = isContinuous
         ? `${wVal} ${hVal}`
         : s.paperType === "A4"
@@ -1805,24 +1850,24 @@ export default {
             margin: ${pageMarginVal};
           }
           * {
-            box-sizing: border-box;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            box-sizing: border-box !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           html, body {
-            margin: 0;
-            padding: 0;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: ${isContinuous ? wVal : "100%"} !important;
+            height: auto !important;
             background: #ffffff !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
           }
           .barcode-print-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: flex-start;
-            justify-content: flex-start;
-            padding: 0;
-            margin: 0;
-            width: 100%;
+            ${
+              isContinuous
+                ? `display: block !important; width: ${wVal} !important; margin: 0 !important; padding: 0 !important;`
+                : `display: flex !important; flex-wrap: wrap !important; align-items: flex-start !important; justify-content: flex-start !important; width: 100% !important; padding: 0 !important; margin: 0 !important;`
+            }
           }
           .sticker-item {
             width: ${wVal} !important;
@@ -1832,79 +1877,93 @@ export default {
             max-width: ${wVal} !important;
             max-height: ${hVal} !important;
             box-sizing: border-box !important;
-            margin-right: ${columns > 1 ? gapHVal : "0"};
-            margin-bottom: ${gapVVal};
-            padding: ${s.padding || 6}px !important;
+            ${isContinuous ? "margin: 0 !important;" : `margin-right: ${columns > 1 ? gapHVal : "0"} !important; margin-bottom: ${gapVVal} !important;`}
+            padding: ${padVal} !important;
             background: #ffffff !important;
             color: #000000 !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
-            justify-content: center !important;
+            justify-content: space-between !important;
             text-align: center !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+            ${isContinuous ? "page-break-after: always !important; break-after: page !important;" : ""}
             overflow: hidden !important;
             ${s.showBorder ? "border: 1px solid #000000 !important;" : "border: none !important;"}
           }
+          ${isContinuous ? ".sticker-item:last-child { page-break-after: auto !important; break-after: auto !important; }" : ""}
           .sticker-company {
-            font-size: ${s.companyFontSize || 10}px !important;
+            font-size: ${companyFs}px !important;
             font-weight: 800 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
-            color: #000 !important;
-            margin-bottom: 2px !important;
-            line-height: 1.1 !important;
+            letter-spacing: 0.3px !important;
+            color: #000000 !important;
+            margin: 0 0 1px 0 !important;
+            line-height: 1.05 !important;
             width: 100% !important;
-          }
-          .sticker-title {
-            font-size: ${s.titleFontSize || 11}px !important;
-            font-weight: 700 !important;
-            color: #000 !important;
-            margin-bottom: 2px !important;
-            line-height: 1.2 !important;
-            width: 100% !important;
-            max-height: 28px !important;
+            white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            word-break: break-word !important;
+            flex-shrink: 0 !important;
+          }
+          .sticker-title {
+            font-size: ${titleFs}px !important;
+            font-weight: 700 !important;
+            color: #000000 !important;
+            margin: 0 0 1px 0 !important;
+            line-height: 1.1 !important;
+            width: 100% !important;
+            max-height: ${titleFs * 1.3}px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
           }
           .sticker-barcode-box {
-            margin: 2px 0 !important;
-            height: ${s.barcodeHeight || 38}px !important;
-            max-height: ${s.barcodeHeight || 38}px !important;
+            margin: 1px 0 !important;
+            height: ${barcodeH}px !important;
+            max-height: ${barcodeH}px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             width: 100% !important;
+            flex-grow: 1 !important;
+            flex-shrink: 1 !important;
+            overflow: hidden !important;
           }
           .sticker-barcode-img {
             display: block !important;
             margin: 0 auto !important;
-            height: ${s.barcodeHeight || 38}px !important;
+            height: ${barcodeH}px !important;
             max-height: 100% !important;
             max-width: 96% !important;
+            object-fit: contain !important;
             image-rendering: -webkit-optimize-contrast !important;
             image-rendering: crisp-edges !important;
           }
           .sticker-barcode-num {
-            font-size: ${s.barcodeNumFontSize || 11}px !important;
+            font-size: ${barcodeNumFs}px !important;
             font-weight: 700 !important;
             font-family: "Courier New", Courier, monospace !important;
-            letter-spacing: 1.5px !important;
-            color: #000 !important;
-            line-height: 1.1 !important;
-            margin-bottom: 2px !important;
+            letter-spacing: 1px !important;
+            color: #000000 !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
           }
           .sticker-price {
-            font-size: ${s.priceFontSize || 12}px !important;
+            font-size: ${priceFs}px !important;
             font-weight: 800 !important;
-            border-top: 1px dashed #000 !important;
-            padding-top: 2px !important;
-            margin-top: 2px !important;
+            border-top: 1px dashed #000000 !important;
+            padding-top: 1.5px !important;
+            margin-top: 1px !important;
             width: 100% !important;
-            color: #000 !important;
-            line-height: 1.1 !important;
+            color: #000000 !important;
+            line-height: 1.05 !important;
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
           }
         </style>
       `;
@@ -1918,9 +1977,7 @@ export default {
           ${printStyles}
         </head>
         <body>
-          <div class="barcode-print-wrapper">
-            ${prtHtml}
-          </div>
+          ${prtHtml}
         </body>
         </html>`);
       WinPrint.document.close();

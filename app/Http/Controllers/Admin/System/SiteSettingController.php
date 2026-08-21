@@ -15,8 +15,36 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Base\BaseController;
 use Illuminate\Validation\Rule;
 
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+
 class SiteSettingController extends BaseController
 {
+    /**
+     * Ensure printer columns exist in database
+     */
+    private function ensurePrinterColumns()
+    {
+        try {
+            if (Schema::hasTable('site_settings')) {
+                Schema::table('site_settings', function (Blueprint $table) {
+                    if (!Schema::hasColumn('site_settings', 'printer_type')) {
+                        $table->string('printer_type', 50)->default('thermal')->nullable();
+                    }
+                    if (!Schema::hasColumn('site_settings', 'normal_paper_size')) {
+                        $table->string('normal_paper_size', 50)->default('A4')->nullable();
+                    }
+                    if (!Schema::hasColumn('site_settings', 'thermal_paper_size')) {
+                        $table->string('thermal_paper_size', 50)->default('80mm')->nullable();
+                    }
+                });
+            }
+        } catch (\Exception $e) {
+            // Ignore if columns exist or connection issue
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -24,7 +52,7 @@ class SiteSettingController extends BaseController
      */
     public function index(Request $request)
     {
-
+        $this->ensurePrinterColumns();
         return response()->json(SiteSetting::first());
     }
 
@@ -45,7 +73,9 @@ class SiteSettingController extends BaseController
      */
     public function store(Request $request)
     {
+        $this->ensurePrinterColumns();
         Artisan::call('optimize:clear');
+        Cache::flush();
 
         $conf = SiteSetting::first();
         $data = $request->all();
@@ -107,6 +137,7 @@ class SiteSettingController extends BaseController
             return view('layouts.admin_app');
         }
 
+        $this->ensurePrinterColumns();
         $siteSetting = SiteSetting::with('currency:id,title,short_name')->first();
 
         return response()->json($siteSetting);
@@ -175,6 +206,9 @@ class SiteSettingController extends BaseController
         return $request->validate([
             'title' => 'required|string|min:0|max:191',
             'short_title' => 'required|string|min:0|max:191',
+            'printer_type' => ['nullable', 'string'],
+            'normal_paper_size' => ['nullable', 'string'],
+            'thermal_paper_size' => ['nullable', 'string'],
             'logo_base64' => ['nullable', 'string', new Base64Image()],
             'logo_resize_value' => ['nullable', 'string'],
             'logo_small_base64' => ['nullable', 'string', new Base64Image()],
