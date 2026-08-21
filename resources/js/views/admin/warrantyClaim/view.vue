@@ -426,40 +426,256 @@
         </div>
       </div>
 
-      <!-- Hidden Printable Customer Claim Receipt Slip -->
+      <!-- Hidden Printable Customer Claim Receipt Slip (Dynamic Formats based on Site Settings) -->
       <div id="warranty-claim-print-slip" class="d-none">
-        <div style="width: 80mm; font-family: monospace, Arial; font-size: 11px; line-height: 1.3; padding: 5px; margin: 0 auto; color: #000;">
+        <!-- 1. 🖨️ Thermal 80mm Layout (Standard 3-Inch Warranty Claim Slip) -->
+        <div v-if="effectivePrintFormat === 'thermal-80mm'" class="thermal-80mm-slip" style="width: 78mm; font-family: 'Courier New', Courier, monospace, Arial; font-size: 11px; line-height: 1.35; padding: 4px; margin: 0 auto; color: #000;">
           <div style="text-align: center; margin-bottom: 8px;">
-            <h2 style="font-size: 15px; font-weight: bold; margin: 0 0 2px 0;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
-            <div style="font-size: 10px;">{{ $root.site?.address || '' }} | Mob: {{ $root.site?.mobile1 || '' }}</div>
-            <div style="font-size: 12px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 3px 0;">
-              WARRANTY CLAIM SLIP
+            <h2 style="font-size: 15px; font-weight: bold; margin: 0 0 2px 0; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
+            <div style="font-size: 10px;">{{ $root.site?.address || '' }}</div>
+            <div style="font-size: 10px;">Mob: {{ $root.site?.mobile1 || '' }} <span v-if="$root.site?.mobile2">/ {{ $root.site?.mobile2 }}</span></div>
+            <div style="font-size: 12px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 3px 0; letter-spacing: 1px;">
+              WARRANTY CLAIM TICKET
             </div>
           </div>
 
-          <div style="margin-bottom: 6px; font-size: 10px;">
-            <div><strong>Claim No:</strong> {{ claim.claim_no }}</div>
-            <div><strong>Date:</strong> {{ claim.claim_date }}</div>
+          <div style="margin-bottom: 6px; font-size: 10px; line-height: 1.3;">
+            <div style="display: flex; justify-content: space-between;">
+              <span><strong>Claim No:</strong> {{ claim.claim_no }}</span>
+              <span><strong>Date:</strong> {{ claim.claim_date }}</span>
+            </div>
             <div><strong>Customer:</strong> {{ claim.customer_name }}</div>
             <div><strong>Mobile:</strong> {{ claim.customer_mobile }}</div>
+            <div v-if="claim.customer_address"><strong>Address:</strong> {{ claim.customer_address }}</div>
+            <div><strong>Status:</strong> {{ formatStatusLabel(claim.current_status) }}</div>
           </div>
 
-          <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0; margin-bottom: 6px; font-size: 10px;">
+          <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0; margin-bottom: 6px; font-size: 10px; line-height: 1.35;">
             <div><strong>Item:</strong> {{ claim.item ? claim.item.title : 'Item' }}</div>
-            <div><strong>Serial No:</strong> {{ claim.serial_no || 'N/A' }}</div>
-            <div><strong>Coverage:</strong> {{ claim.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }} ({{ claim.warranty_period }})</div>
-            <div><strong>Exp. Delivery:</strong> {{ claim.expected_delivery_date || 'TBD' }}</div>
+            <div v-if="claim.serial_no"><strong>Serial No:</strong> {{ claim.serial_no }}</div>
+            <div v-if="claim.invoice_no"><strong>Inv Ref:</strong> {{ claim.invoice_no }}</div>
+            <div><strong>Coverage:</strong> {{ claim.warranty_type === 'guarantee' ? 'Replacement Guarantee' : 'Official Warranty' }} ({{ claim.warranty_period }})</div>
+            <div v-if="claim.warranty_expiry_date"><strong>Expiry Date:</strong> {{ claim.warranty_expiry_date }}</div>
+            <div v-if="claim.expected_delivery_date"><strong>Exp. Delivery:</strong> {{ claim.expected_delivery_date }}</div>
           </div>
 
-          <div style="margin-bottom: 6px; font-size: 10px;">
-            <div><strong>Problem:</strong> {{ claim.problem_description }}</div>
-            <div v-if="claim.accessories_received"><strong>Accessories:</strong> {{ claim.accessories_received }}</div>
-            <div v-if="claim.customer_charge > 0"><strong>Charge:</strong> Tk. {{ formatPrice(claim.customer_charge) }}</div>
+          <div style="margin-bottom: 6px; font-size: 10px; line-height: 1.35;">
+            <div><strong>Reported Problem:</strong></div>
+            <div style="padding-left: 5px; color: #222;">{{ claim.problem_description }}</div>
+            <div v-if="claim.accessories_received" style="margin-top: 2px;">
+              <strong>Accessories Received:</strong> {{ claim.accessories_received }}
+            </div>
+            <div v-if="claim.customer_charge > 0" style="margin-top: 2px; font-weight: bold;">
+              <strong>Estimated Charge:</strong> Tk. {{ formatPrice(claim.customer_charge) }}
+            </div>
+          </div>
+
+          <div style="border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; font-size: 9px; line-height: 1.25;">
+            <div>* Please preserve this ticket for product collection.</div>
+            <div>* Service turnaround subject to spare parts availability.</div>
           </div>
 
           <div style="border-top: 1px dashed #000; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; font-size: 9px;">
             <div style="border-top: 1px solid #000; width: 45%; text-align: center;">Customer Sign</div>
             <div style="border-top: 1px solid #000; width: 45%; text-align: center;">Authorized Sign</div>
+          </div>
+        </div>
+
+        <!-- 2. 🖨️ Thermal 60mm / 58mm Layout (Compact 2-Inch Warranty Claim Slip) -->
+        <div v-else-if="effectivePrintFormat === 'thermal-60mm'" class="thermal-60mm-slip" style="width: 56mm; font-family: monospace, Arial; font-size: 9.5px; line-height: 1.25; padding: 2px; margin: 0 auto; color: #000;">
+          <div style="text-align: center; margin-bottom: 5px;">
+            <h2 style="font-size: 13px; font-weight: bold; margin: 0 0 1px 0; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
+            <div style="font-size: 8.5px;">{{ $root.site?.address || '' }}</div>
+            <div style="font-size: 8.5px;">Mob: {{ $root.site?.mobile1 || '' }}</div>
+            <div style="font-size: 10.5px; font-weight: bold; margin-top: 3px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2px 0;">
+              WARRANTY CLAIM SLIP
+            </div>
+          </div>
+
+          <div style="margin-bottom: 4px; font-size: 8.5px; line-height: 1.2;">
+            <div><strong>Ticket:</strong> {{ claim.claim_no }}</div>
+            <div><strong>Date:</strong> {{ claim.claim_date }}</div>
+            <div><strong>Cust:</strong> {{ claim.customer_name }}</div>
+            <div><strong>Ph:</strong> {{ claim.customer_mobile }}</div>
+          </div>
+
+          <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 3px 0; margin-bottom: 4px; font-size: 8.5px;">
+            <div><strong>Item:</strong> {{ claim.item ? claim.item.title : 'Item' }}</div>
+            <div v-if="claim.serial_no"><strong>S/N:</strong> {{ claim.serial_no }}</div>
+            <div><strong>Type:</strong> {{ claim.warranty_type }} ({{ claim.warranty_period }})</div>
+            <div v-if="claim.expected_delivery_date"><strong>Delivery:</strong> {{ claim.expected_delivery_date }}</div>
+          </div>
+
+          <div style="margin-bottom: 4px; font-size: 8.5px;">
+            <div><strong>Problem:</strong> {{ claim.problem_description }}</div>
+            <div v-if="claim.accessories_received"><strong>Acc:</strong> {{ claim.accessories_received }}</div>
+            <div v-if="claim.customer_charge > 0"><strong>Charge:</strong> Tk. {{ formatPrice(claim.customer_charge) }}</div>
+          </div>
+
+          <div style="border-top: 1px dashed #000; padding-top: 12px; margin-top: 10px; display: flex; justify-content: space-between; font-size: 8px;">
+            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">Customer</div>
+            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">Authorized</div>
+          </div>
+        </div>
+
+        <!-- 3. 🖨️ Normal Printer A5 Layout (Compact Half-Page Claim Slip) -->
+        <div v-else-if="effectivePrintFormat === 'normal-a5'" class="normal-a5-slip" style="width: 100%; max-width: 140mm; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; line-height: 1.35; color: #111; margin: 0 auto; padding: 6px;">
+          <!-- Header -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #112C47; padding-bottom: 8px; margin-bottom: 8px;">
+            <div>
+              <h2 style="font-size: 16px; font-weight: bold; margin: 0; color: #112C47;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
+              <div style="font-size: 10px; color: #444;">{{ $root.site?.address || '' }}</div>
+              <div style="font-size: 10px; color: #444;">Phone: {{ $root.site?.mobile1 || '' }} | Email: {{ $root.site?.contact_email || '' }}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="display: inline-block; background: #112C47; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 3px;">
+                WARRANTY CLAIM TICKET
+              </div>
+              <div style="font-size: 12px; font-weight: bold; margin-top: 4px; font-family: monospace; color: #112C47;">#{{ claim.claim_no }}</div>
+              <div style="font-size: 9.5px; color: #555;">Date: {{ claim.claim_date }}</div>
+            </div>
+          </div>
+
+          <!-- Customer & Product Grid -->
+          <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+            <div style="width: 48%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px; font-size: 10px;">
+              <strong style="color: #112C47; text-transform: uppercase; font-size: 9.5px;">Customer Details (গ্রাহকের তথ্য):</strong>
+              <div style="font-weight: bold; font-size: 11px; margin-top: 2px;">{{ claim.customer_name }}</div>
+              <div>Mobile: <strong>{{ claim.customer_mobile }}</strong></div>
+              <div v-if="claim.customer_address">Address: {{ claim.customer_address }}</div>
+            </div>
+            <div style="width: 48%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px; font-size: 10px;">
+              <strong style="color: #112C47; text-transform: uppercase; font-size: 9.5px;">Item & Policy Coverage:</strong>
+              <div style="font-weight: bold; font-size: 11px; margin-top: 2px;">{{ claim.item ? claim.item.title : 'Item' }}</div>
+              <div v-if="claim.serial_no">S/N: <strong style="font-family: monospace; color: #0284c7;">{{ claim.serial_no }}</strong></div>
+              <div>Coverage: <span style="font-weight: bold; color: #16a34a;">{{ claim.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }} ({{ claim.warranty_period }})</span></div>
+              <div v-if="claim.expected_delivery_date">Exp. Delivery: <strong>{{ claim.expected_delivery_date }}</strong></div>
+            </div>
+          </div>
+
+          <!-- Issue & Accessories Table -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
+            <tbody>
+              <tr style="background: #f1f5f9;">
+                <th style="border: 1px solid #cbd5e1; padding: 4px 6px; width: 35%; text-align: left;">Reported Defect / Issue:</th>
+                <td style="border: 1px solid #cbd5e1; padding: 4px 6px; font-weight: 500;">{{ claim.problem_description }}</td>
+              </tr>
+              <tr v-if="claim.accessories_received">
+                <th style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: left;">Accessories Received:</th>
+                <td style="border: 1px solid #cbd5e1; padding: 4px 6px;">{{ claim.accessories_received }}</td>
+              </tr>
+              <tr v-if="claim.customer_charge > 0">
+                <th style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: left;">Estimated Service Charge:</th>
+                <td style="border: 1px solid #cbd5e1; padding: 4px 6px; font-weight: bold; color: #112C47;">৳ {{ formatPrice(claim.customer_charge) }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Terms -->
+          <div style="background: #fafafa; border: 1px solid #e2e8f0; border-radius: 4px; padding: 5px 8px; font-size: 9px; color: #64748b; margin-bottom: 20px; line-height: 1.3;">
+            <div>1. Original claim ticket must be presented when collecting the serviced product.</div>
+            <div>2. Products not collected within 30 days of readiness notification will not be store responsibility.</div>
+          </div>
+
+          <!-- Signatures -->
+          <div style="display: flex; justify-content: space-between; font-size: 9px; color: #333;">
+            <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Customer's Signature</div>
+            <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Authorized Service Engineer</div>
+          </div>
+        </div>
+
+        <!-- 4. 🖨️ Normal Printer A4 Layout (Formal Corporate Service Claim Acknowledgement) -->
+        <div v-else class="normal-a4-slip" style="width: 100%; max-width: 190mm; font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; line-height: 1.4; color: #111; margin: 0 auto; padding: 10px;">
+          <!-- Header -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #112C47; padding-bottom: 12px; margin-bottom: 14px;">
+            <div>
+              <h1 style="font-size: 22px; font-weight: bold; margin: 0 0 4px 0; color: #112C47; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h1>
+              <div style="font-size: 11px; color: #475569; max-width: 380px;">{{ $root.site?.address || '' }}</div>
+              <div style="font-size: 11px; color: #475569; margin-top: 2px;">
+                <span><strong>Phone:</strong> {{ $root.site?.mobile1 || '' }} <span v-if="$root.site?.mobile2">/ {{ $root.site?.mobile2 }}</span></span>
+                <span v-if="$root.site?.contact_email" style="margin-left: 10px;"><strong>Email:</strong> {{ $root.site?.contact_email }}</span>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="display: inline-block; background: #112C47; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 14px; border-radius: 4px; letter-spacing: 0.5px;">
+                WARRANTY CLAIM ACKNOWLEDGEMENT
+              </div>
+              <div style="font-size: 15px; font-weight: bold; margin-top: 6px; font-family: monospace; color: #112C47;">#{{ claim.claim_no }}</div>
+              <div style="font-size: 11px; color: #64748b;"><strong>Received Date:</strong> {{ claim.claim_date }}</div>
+              <div style="font-size: 11px; color: #64748b;"><strong>Status:</strong> {{ formatStatusLabel(claim.current_status) }}</div>
+            </div>
+          </div>
+
+          <!-- Section 1 & 2: 2 Column Box (Customer Details + Product Specifications) -->
+          <div style="display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+            <!-- Customer Box -->
+            <div style="width: 48%; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #112C47; margin-bottom: 4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
+                1. Customer & Contact Information
+              </div>
+              <div style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 4px;">{{ claim.customer_name }}</div>
+              <div style="font-size: 11.5px; color: #334155; margin-top: 2px;"><strong>Mobile:</strong> {{ claim.customer_mobile }}</div>
+              <div style="font-size: 11px; color: #475569; margin-top: 2px;" v-if="claim.customer_address"><strong>Address:</strong> {{ claim.customer_address }}</div>
+            </div>
+
+            <!-- Product Box -->
+            <div style="width: 48%; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #112C47; margin-bottom: 4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
+                2. Product & Warranty Verification
+              </div>
+              <div style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 4px;">{{ claim.item ? claim.item.title : 'Item' }}</div>
+              <div style="font-size: 11.5px; color: #334155; margin-top: 2px;" v-if="claim.serial_no">
+                Serial No (S/N): <strong style="font-family: monospace; color: #0284c7;">{{ claim.serial_no }}</strong>
+              </div>
+              <div style="font-size: 11px; color: #475569; margin-top: 2px;" v-if="claim.invoice_no">
+                Original Invoice Ref: <strong>#{{ claim.invoice_no }}</strong>
+              </div>
+              <div style="font-size: 11px; color: #16a34a; font-weight: 600; margin-top: 2px;">
+                Policy Coverage: {{ claim.warranty_type === 'guarantee' ? 'Replacement Guarantee' : 'Official Warranty' }} ({{ claim.warranty_period }})
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Technical Defect & Inspection Details -->
+          <div style="background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 14px; overflow: hidden;">
+            <div style="background: #f1f5f9; padding: 6px 12px; font-size: 11px; font-weight: bold; color: #112C47; text-transform: uppercase;">
+              3. Claim Inspection, Fault Description & Handover Check
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+              <tbody>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <th style="padding: 8px 12px; width: 30%; text-align: left; background: #fafafa; color: #475569;">Reported Fault / Symptoms:</th>
+                  <td style="padding: 8px 12px; font-weight: 500;">{{ claim.problem_description }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <th style="padding: 8px 12px; text-align: left; background: #fafafa; color: #475569;">Received Accessories:</th>
+                  <td style="padding: 8px 12px;">{{ claim.accessories_received || 'Main Unit Only' }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <th style="padding: 8px 12px; text-align: left; background: #fafafa; color: #475569;">Estimated Delivery Date:</th>
+                  <td style="padding: 8px 12px; font-weight: bold; color: #0284c7;">{{ claim.expected_delivery_date || 'Within 7-14 Business Days' }}</td>
+                </tr>
+                <tr v-if="claim.customer_charge > 0">
+                  <th style="padding: 8px 12px; text-align: left; background: #fafafa; color: #475569;">Customer Payable / Service Charge:</th>
+                  <td style="padding: 8px 12px; font-weight: bold; color: #166534; font-family: monospace;">৳ {{ formatPrice(claim.customer_charge) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 4: Terms & Service Agreement -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; font-size: 10px; color: #64748b; line-height: 1.4; margin-bottom: 30px;">
+            <div style="font-weight: bold; color: #334155; margin-bottom: 2px;">Service Terms & Customer Notice:</div>
+            <div>1. Customers must present this original acknowledgement slip when collecting the serviced product.</div>
+            <div>2. Any physical burn, water ingress, or unauthorized repair attempts found during lab inspection will void the warranty.</div>
+            <div>3. Unclaimed items after 30 days from final notification date may incur storage charges or be disposed of according to policy.</div>
+          </div>
+
+          <!-- Signatures -->
+          <div style="display: flex; justify-content: space-between; margin-top: 40px; font-size: 11px; color: #334155;">
+            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Customer's Signature</div>
+            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Received By (Staff)</div>
+            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Authorized Service Seal</div>
           </div>
         </div>
       </div>
@@ -488,6 +704,25 @@ export default {
     };
   },
   computed: {
+    printerType() {
+      return this.$root.site?.printer_type || 'thermal';
+    },
+    normalPaperSize() {
+      return this.$root.site?.normal_paper_size || 'A4';
+    },
+    thermalPaperSize() {
+      return this.$root.site?.thermal_paper_size || '80mm';
+    },
+    effectivePrintFormat() {
+      const type = (this.printerType || 'thermal').toString().toLowerCase();
+      if (type === 'normal') {
+        const size = (this.normalPaperSize || 'A4').toString().toUpperCase();
+        return size === 'A5' ? 'normal-a5' : 'normal-a4';
+      } else {
+        const size = (this.thermalPaperSize || '80mm').toString().toLowerCase();
+        return size === '60mm' ? 'thermal-60mm' : 'thermal-80mm';
+      }
+    },
     pipelineProgress() {
       if (!this.claim) return 0;
       const statusMap = {
@@ -512,6 +747,15 @@ export default {
           this.logForm.status = this.claim.current_status;
           this.logForm.service_cost = this.claim.service_cost;
           this.logForm.customer_charge = this.claim.customer_charge;
+
+          // Auto-print receipt if query param autoPrint=1 was passed from create
+          if (this.$route.query.autoPrint) {
+            this.$nextTick(() => {
+              setTimeout(() => {
+                this.printClaimSlip();
+              }, 400);
+            });
+          }
         })
         .catch(err => {
           this.$toast('Failed to load claim details', 'error');
@@ -614,19 +858,61 @@ export default {
     },
     printClaimSlip() {
       const printContents = document.getElementById('warranty-claim-print-slip');
-      if (!printContents) return;
+      if (!printContents || !this.claim) return;
+      const format = this.effectivePrintFormat;
+      const claimNo = this.claim.claim_no || 'Claim-Slip';
 
-      const printWindow = window.open('', '', 'width=400,height=600');
-      printWindow.document.write('<html><head><title>Warranty Claim Slip</title>');
-      printWindow.document.write('<style>body { font-family: monospace; font-size: 11px; margin: 0; padding: 10px; color: #000; }</style>');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write(printContents.innerHTML);
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      printWindow.focus();
+      let pageStyles = '';
+      if (format === 'thermal-80mm') {
+        pageStyles = `
+          @page { size: 80mm auto; margin: 2mm 3mm; }
+          html, body { margin: 0; padding: 0; width: 80mm; background: #fff; font-family: 'Courier New', Courier, monospace, Arial; font-size: 11px; color: #000; }
+          .claim-print-wrapper { width: 78mm; margin: 0 auto; padding: 2px 0; }
+        `;
+      } else if (format === 'thermal-60mm') {
+        pageStyles = `
+          @page { size: 58mm auto; margin: 1mm 1mm; }
+          html, body { margin: 0; padding: 0; width: 58mm; background: #fff; font-family: 'Courier New', Courier, monospace, Arial; font-size: 9.5px; color: #000; }
+          .claim-print-wrapper { width: 56mm; margin: 0 auto; padding: 1px 0; }
+        `;
+      } else if (format === 'normal-a5') {
+        pageStyles = `
+          @page { size: 148mm 210mm; margin: 5mm 6mm; }
+          html, body { margin: 0; padding: 0; width: 148mm; background: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10.5px; color: #111; }
+          .claim-print-wrapper { width: 138mm; max-width: 138mm; margin: 0 auto; }
+        `;
+      } else { // normal-a4
+        pageStyles = `
+          @page { size: 210mm 297mm; margin: 10mm 12mm; }
+          html, body { margin: 0; padding: 0; width: 210mm; background: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #111; }
+          .claim-print-wrapper { width: 190mm; max-width: 190mm; margin: 0 auto; }
+        `;
+      }
+
+      const WinPrint = window.open('', '', 'left=0,top=0,width=850,height=900,toolbar=0,scrollbars=1,status=0');
+      WinPrint.document.write(`<!DOCTYPE html>
+      <html>
+      <head>
+        <title>Warranty Claim - ${claimNo}</title>
+        <meta charset="utf-8">
+        <style>
+          * { box-sizing: border-box; }
+          ${pageStyles}
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="claim-print-wrapper">
+          ${printContents.innerHTML}
+        </div>
+      </body>
+      </html>`);
+      WinPrint.document.close();
+      WinPrint.focus();
       setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
+        WinPrint.print();
       }, 350);
     },
   },
@@ -684,7 +970,7 @@ export default {
 }
 
 .info-table th {
-  color: rgb(17, 44, 70) !important;
+  color: rgb(255, 255, 255) !important;
   font-weight: 700 !important;
   font-size: 13px !important;
   padding-left: 0;

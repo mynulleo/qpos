@@ -31,6 +31,14 @@
                                         <i class="fas fa-boxes me-1"></i> {{ data?.shop_type || 'General Retail' }}
                                     </span>
 
+                                    <!-- Printer Badge -->
+                                    <span class="badge bg-light bg-opacity-25 text-white" v-if="data?.printer_type === 'normal'">
+                                        <i class="fas fa-print me-1"></i> Normal Printer ({{ data?.normal_paper_size || 'A4' }})
+                                    </span>
+                                    <span class="badge bg-light bg-opacity-25 text-white" v-else>
+                                        <i class="fas fa-receipt me-1"></i> Thermal Roll ({{ data?.thermal_paper_size || '80mm' }})
+                                    </span>
+
                                     <!-- Currency Badge -->
                                     <span class="badge bg-light bg-opacity-25 text-white">
                                         <i class="fas fa-money-bill-wave me-1"></i> {{ data?.currency?.title || 'BDT' }} ({{ data?.currency?.short_name || '৳' }})
@@ -246,7 +254,76 @@
                     </div>
                 </div>
 
-                <!-- 💳 4. Banking, Invoicing & Tax Details -->
+                <!-- 🖨️ 4. Printer & Print Layout Setup -->
+                <div class="col-xl-6 col-lg-12">
+                    <div class="card border-0 shadow-sm h-100 section-card">
+                        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="section-icon-box bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-print"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">Printer & Paper Size Setup</h6>
+                                    <small class="text-muted" style="font-size: 11px;">Default hardware print format for POS & warranty tickets</small>
+                                </div>
+                            </div>
+                            <span class="badge" :class="data?.printer_type === 'normal' ? 'bg-primary' : 'bg-success'">
+                                <i :class="data?.printer_type === 'normal' ? 'fas fa-print me-1' : 'fas fa-receipt me-1'"></i>
+                                {{ data?.printer_type === 'normal' ? 'Normal Printer (' + (data?.normal_paper_size || 'A4') + ')' : 'Thermal Printer (' + (data?.thermal_paper_size || '80mm') + ')' }}
+                            </span>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0 custom-spec-table">
+                                <tbody>
+                                    <tr>
+                                        <td class="spec-label"><i class="fas fa-cog me-2 text-muted"></i>Hardware Printer Type</td>
+                                        <td class="spec-value">
+                                            <span class="badge" :class="data?.printer_type === 'normal' ? 'bg-primary' : 'bg-success'">
+                                                {{ data?.printer_type === 'normal' ? 'Normal Printer (Laser / Inkjet)' : 'Thermal Receipt Printer (POS Roll)' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="data?.printer_type === 'normal'">
+                                        <td class="spec-label"><i class="fas fa-file-alt me-2 text-muted"></i>Configured Paper Size</td>
+                                        <td class="spec-value font-monospace fw-bold text-primary">
+                                            {{ data?.normal_paper_size || 'A4' }} Paper ({{ data?.normal_paper_size === 'A5' ? '148mm × 210mm / Half Page' : '210mm × 297mm / Full Page' }})
+                                        </td>
+                                    </tr>
+                                    <tr v-else>
+                                        <td class="spec-label"><i class="fas fa-scroll me-2 text-muted"></i>Thermal Roll Width</td>
+                                        <td class="spec-value font-monospace fw-bold text-success">
+                                            {{ data?.thermal_paper_size || '80mm' }} ({{ data?.thermal_paper_size === '60mm' ? '2.5" / 58-60mm Compact Roll' : '3" / 80mm Standard POS Roll' }})
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="spec-label"><i class="fas fa-check-double me-2 text-muted"></i>Application Targets</td>
+                                        <td class="spec-value">
+                                            <span class="badge bg-light text-dark border me-1">POS Sales Checkout</span>
+                                            <span class="badge bg-light text-dark border">Warranty Claim Slips</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="p-3 bg-light m-3 rounded border">
+                                <div class="small text-muted d-flex align-items-center gap-2">
+                                    <i class="fas fa-info-circle text-primary fs-5"></i>
+                                    <div>
+                                        <strong>Auto Print Behavior:</strong> Completing a POS sale or printing a Warranty Claim slip will automatically render using
+                                        <strong class="text-dark" v-if="data?.printer_type === 'normal'">
+                                            {{ data?.normal_paper_size || 'A4' }} Invoice Layout
+                                        </strong>
+                                        <strong class="text-dark" v-else>
+                                            {{ data?.thermal_paper_size || '80mm' }} Thermal Receipt
+                                        </strong>.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 💳 5. Banking, Invoicing & Tax Details -->
                 <div class="col-xl-6 col-lg-12">
                     <div class="card border-0 shadow-sm h-100 section-card">
                         <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">

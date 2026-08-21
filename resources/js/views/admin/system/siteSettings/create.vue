@@ -121,7 +121,181 @@
                 </div>
             </div>
 
-            <!-- 🎁 3. Customer Loyalty & Coupon Reward Points -->
+            <!-- 🖨️ 3. Printer & Print Paper Size Configuration -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm form-section-card">
+                    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="section-icon-box bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center">
+                                <i class="fas fa-print"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">Printer & Paper Size Setup (প্রিন্টার ও পেপার সাইজ)</h6>
+                                <small class="text-muted" style="font-size: 11px;">Configure whether sales and warranty claims print on Thermal POS rolls or Normal (A4/A5) sheets</small>
+                            </div>
+                        </div>
+                        <span class="badge font-monospace" :class="data.printer_type === 'thermal' ? 'bg-success' : 'bg-primary'">
+                            <i class="fas fa-check-circle me-1"></i>
+                            {{ data.printer_type === 'thermal' ? 'Thermal Receipt (' + (data.thermal_paper_size || '80mm') + ')' : 'Normal Printer (' + (data.normal_paper_size || 'A4') + ')' }}
+                        </span>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-3">
+                            <!-- 1. Select Printer Type -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-dark mb-2">
+                                    <i class="fas fa-cog text-theme me-1"></i> Printer Type (প্রিন্টারের ধরণ):
+                                </label>
+                                <div class="row g-2">
+                                    <!-- Thermal Printer -->
+                                    <div class="col-6">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': data.printer_type === 'thermal' }"
+                                            @click="data.printer_type = 'thermal'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="printerThermal" value="thermal" v-model="data.printer_type">
+                                                <label class="form-check-label cursor-pointer text-dark w-100" for="printerThermal">
+                                                    <div class="fw-bold small text-success">
+                                                        <i class="fas fa-receipt me-1"></i> Thermal Printer
+                                                    </div>
+                                                    <div class="text-muted" style="font-size: 11px;">POS Receipt Roll (থার্মাল প্রিন্টার)</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Normal Printer -->
+                                    <div class="col-6">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': data.printer_type === 'normal' }"
+                                            @click="data.printer_type = 'normal'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="printerNormal" value="normal" v-model="data.printer_type">
+                                                <label class="form-check-label cursor-pointer text-dark w-100" for="printerNormal">
+                                                    <div class="fw-bold small text-primary">
+                                                        <i class="fas fa-print me-1"></i> Normal Printer
+                                                    </div>
+                                                    <div class="text-muted" style="font-size: 11px;">Laser / Inkjet (সাধারণ প্রিন্টার)</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Select Paper Size based on selected printer type -->
+                            <div class="col-md-6">
+                                <!-- When Thermal is Selected -->
+                                <div v-if="data.printer_type === 'thermal'">
+                                    <label class="form-label fw-bold small text-dark mb-2">
+                                        <i class="fas fa-scroll text-success me-1"></i> Thermal Paper Width (রোল সাইজ):
+                                    </label>
+                                    <div class="row g-2">
+                                        <!-- 80mm -->
+                                        <div class="col-6">
+                                            <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                                :class="{ 'active-shop-type': data.thermal_paper_size === '80mm' }"
+                                                @click="data.thermal_paper_size = '80mm'">
+                                                <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                    <input class="form-check-input ms-1 mt-1" type="radio" id="paper80mm" value="80mm" v-model="data.thermal_paper_size">
+                                                    <label class="form-check-label cursor-pointer text-dark w-100" for="paper80mm">
+                                                        <div class="fw-bold small text-dark">
+                                                            <i class="fas fa-file-invoice text-success me-1"></i> 80mm Roll (3")
+                                                        </div>
+                                                        <div class="text-muted" style="font-size: 11px;">Standard POS (৩ ইঞ্চি স্ট্যান্ডার্ড)</div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 60mm -->
+                                        <div class="col-6">
+                                            <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                                :class="{ 'active-shop-type': data.thermal_paper_size === '60mm' }"
+                                                @click="data.thermal_paper_size = '60mm'">
+                                                <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                    <input class="form-check-input ms-1 mt-1" type="radio" id="paper60mm" value="60mm" v-model="data.thermal_paper_size">
+                                                    <label class="form-check-label cursor-pointer text-dark w-100" for="paper60mm">
+                                                        <div class="fw-bold small text-dark">
+                                                            <i class="fas fa-receipt text-info me-1"></i> 60mm / 58mm (2")
+                                                        </div>
+                                                        <div class="text-muted" style="font-size: 11px;">Compact POS (ছোট থার্মাল রোল)</div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- When Normal Printer is Selected -->
+                                <div v-else>
+                                    <label class="form-label fw-bold small text-dark mb-2">
+                                        <i class="fas fa-file-alt text-primary me-1"></i> Invoice Paper Size (কাগজের সাইজ):
+                                    </label>
+                                    <div class="row g-2">
+                                        <!-- A4 -->
+                                        <div class="col-6">
+                                            <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                                :class="{ 'active-shop-type': data.normal_paper_size === 'A4' }"
+                                                @click="data.normal_paper_size = 'A4'">
+                                                <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                    <input class="form-check-input ms-1 mt-1" type="radio" id="paperA4" value="A4" v-model="data.normal_paper_size">
+                                                    <label class="form-check-label cursor-pointer text-dark w-100" for="paperA4">
+                                                        <div class="fw-bold small text-dark">
+                                                            <i class="fas fa-file-alt text-primary me-1"></i> A4 Size Paper
+                                                        </div>
+                                                        <div class="text-muted" style="font-size: 11px;">Full Page (ফুল সাইজ ইনভয়েস)</div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- A5 -->
+                                        <div class="col-6">
+                                            <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                                :class="{ 'active-shop-type': data.normal_paper_size === 'A5' }"
+                                                @click="data.normal_paper_size = 'A5'">
+                                                <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                    <input class="form-check-input ms-1 mt-1" type="radio" id="paperA5" value="A5" v-model="data.normal_paper_size">
+                                                    <label class="form-check-label cursor-pointer text-dark w-100" for="paperA5">
+                                                        <div class="fw-bold small text-dark">
+                                                            <i class="fas fa-file text-warning me-1"></i> A5 Size Paper
+                                                        </div>
+                                                        <div class="text-muted" style="font-size: 11px;">Half Page (হাফ সাইজ ইনভয়েস)</div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Live preview summary banner -->
+                            <div class="col-12">
+                                <div class="alert alert-light border py-2 px-3 mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2" style="font-size: 12px;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-info-circle text-primary fs-5"></i>
+                                        <div>
+                                            <strong>Active Print Workflow:</strong>
+                                            POS Sales & Warranty Claims will automatically print in
+                                            <strong class="text-primary font-monospace" v-if="data.printer_type === 'thermal'">
+                                                Thermal Receipt ({{ data.thermal_paper_size || '80mm' }})
+                                            </strong>
+                                            <strong class="text-primary font-monospace" v-else>
+                                                Normal Invoice ({{ data.normal_paper_size || 'A4' }})
+                                            </strong>
+                                            format after submission.
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-secondary font-monospace">Auto Applied to POS & Warranty</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🎁 4. Customer Loyalty & Coupon Reward Points -->
             <div class="col-12">
                 <div class="card border-0 shadow-sm form-section-card">
                     <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
@@ -341,6 +515,9 @@ export default {
                 favicon: "",
                 default_currency_id: 1,
                 shop_type: "clothing",
+                printer_type: "thermal",
+                normal_paper_size: "A4",
+                thermal_paper_size: "80mm",
                 coupon_enabled: 0,
                 point_earn_rate: 1,
                 point_redeem_rate: 10,
@@ -379,6 +556,9 @@ export default {
                     formData.append("logo_base64", this.data.original_logo || "");
                     formData.append("system_mode", this.data.system_mode || "live");
                     formData.append("shop_type", this.data.shop_type || "clothing");
+                    formData.append("printer_type", this.data.printer_type || "thermal");
+                    formData.append("normal_paper_size", this.data.normal_paper_size || "A4");
+                    formData.append("thermal_paper_size", this.data.thermal_paper_size || "80mm");
                     formData.append("default_currency_id", this.data.default_currency_id);
                     formData.append("coupon_enabled", this.data.coupon_enabled ? 1 : 0);
                     formData.append("point_earn_rate", this.data.point_earn_rate ?? 1);
@@ -406,7 +586,10 @@ export default {
             axios
                 .get(`${this.model}`)
                 .then((res) => {
-                    this.data = res.data;
+                    this.data = res.data || {};
+                    if (!this.data.printer_type) this.data.printer_type = "thermal";
+                    if (!this.data.normal_paper_size) this.data.normal_paper_size = "A4";
+                    if (!this.data.thermal_paper_size) this.data.thermal_paper_size = "80mm";
                 })
                 .catch((error) => {
                     this.$toast(
@@ -426,6 +609,9 @@ export default {
                 .post(`/${model}`, formData)
                 .then((response) => {
                     this.$toast("Site Settings updated successfully", "success");
+                    if (this.$root.getInitializeSystems) {
+                        this.$root.getInitializeSystems();
+                    }
                     this.$router.push({ name: "siteSetting.show" });
                 })
                 .catch((error) => {
