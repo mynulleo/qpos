@@ -8,7 +8,7 @@
 
         <template v-else>
             <!-- ⚡ Quick Action & POS Shortcut Bar -->
-            <div class="col-12">
+            <div class="col-12" v-if="hasAnyQuickShortcut">
                 <div class="card border-0 shadow-sm quick-action-card">
                     <div class="card-body p-3">
                         <div class="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
@@ -21,7 +21,7 @@
 
                         <div class="row g-2 quick-links-grid">
                             <!-- 1. New Sale (POS) -->
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6" v-if="$root.checkPermission('pos.index')">
                                 <router-link to="/pos" class="quick-btn btn-pos-primary d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
                                     <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
                                         <i class="fas fa-cash-register text-white fs-5"></i>
@@ -34,7 +34,7 @@
                             </div>
 
                             <!-- 2. Available Stock -->
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6" v-if="$root.checkPermission('report.availablestock')">
                                 <router-link to="/report/availablestock" class="quick-btn btn-pos-emerald d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
                                     <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
                                         <i class="fas fa-boxes text-white fs-5"></i>
@@ -47,7 +47,7 @@
                             </div>
 
                             <!-- 3. Sales Return -->
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6" v-if="$root.checkPermission('pos.return')">
                                 <router-link to="/pos/return" class="quick-btn btn-pos-amber d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
                                     <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
                                         <i class="fas fa-undo-alt text-white fs-5"></i>
@@ -60,7 +60,7 @@
                             </div>
 
                             <!-- 4. Barcode / Label Print -->
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6" v-if="$root.checkPermission('pos.labelprint')">
                                 <router-link to="/pos/labelprint" class="quick-btn btn-pos-purple d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
                                     <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
                                         <i class="fas fa-barcode text-white fs-5"></i>
@@ -74,7 +74,7 @@
 
                             <!-- Secondary Shortcuts -->
                             <!-- 5. Invoices -->
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6" v-if="$root.checkPermission('invoice.index')">
                                 <router-link to="/invoice" class="quick-btn btn-pos-blue d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
                                     <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
                                         <i class="fas fa-file-invoice-dollar text-white fs-5"></i>
@@ -87,7 +87,7 @@
                             </div>
 
                             <!-- 6. New Purchase -->
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6" v-if="$root.checkPermission('purchase.create') || $root.checkPermission('purchase.index')">
                                 <router-link to="/purchase/create" class="quick-btn btn-pos-teal d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
                                     <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
                                         <i class="fas fa-cart-plus text-white fs-5"></i>
@@ -100,7 +100,7 @@
                             </div>
 
                             <!-- 7. Warranty Claims -->
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6" v-if="$root.checkPermission('warrantyClaim.index')">
                                 <router-link to="/warrantyClaim" class="quick-btn btn-pos-rose d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
                                     <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
                                         <i class="fas fa-shield-alt text-white fs-5"></i>
@@ -113,7 +113,7 @@
                             </div>
 
                             <!-- 8. Sales Report -->
-                            <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-6" v-if="$root.checkPermission('report.sales')">
                                 <router-link to="/report/sales" class="quick-btn btn-pos-indigo d-flex align-items-center gap-2 p-2 rounded text-decoration-none">
                                     <div class="quick-icon-box bg-white bg-opacity-25 rounded d-flex align-items-center justify-content-center">
                                         <i class="fas fa-chart-line text-white fs-5"></i>
@@ -183,7 +183,7 @@
                                 <h3 class="fw-bold mb-1 text-danger">৳ {{ formatNum(clientSummary.total_outstanding) }}</h3>
                                 <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
                                     <span>This Month Due: ৳ {{ formatNum(clientSummary.cm_due) }}</span>
-                                    <router-link to="/report/receivable" class="text-decoration-none small text-danger fw-semibold">Details &rarr;</router-link>
+                                    <router-link v-if="$root.checkPermission('report.receivable')" to="/report/receivable" class="text-decoration-none small text-danger fw-semibold">Details &rarr;</router-link>
                                 </div>
                             </div>
                         </div>
@@ -202,7 +202,7 @@
                                 <h3 class="fw-bold mb-1 text-dark">{{ stats.total_items || 0 }}</h3>
                                 <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
                                     <span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle me-1"></i>{{ zeroStockList.length }} Zero Stock</span>
-                                    <router-link to="/report/availablestock" class="text-decoration-none small text-muted">Stock Report &rarr;</router-link>
+                                    <router-link v-if="$root.checkPermission('report.availablestock')" to="/report/availablestock" class="text-decoration-none small text-muted">Stock Report &rarr;</router-link>
                                 </div>
                             </div>
                         </div>
@@ -323,7 +323,7 @@
                                     <small class="text-muted" style="font-size: 11px;">Most sold items currently at 0 stock (Priority Restock)</small>
                                 </div>
                             </div>
-                            <router-link to="/report/availablestock" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
+                            <router-link v-if="$root.checkPermission('report.availablestock')" to="/report/availablestock" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
                                 Stock Report
                             </router-link>
                         </div>
@@ -356,7 +356,7 @@
                                             </span>
                                         </td>
                                         <td class="text-end">
-                                            <router-link to="/purchase/create" class="btn btn-xs btn-outline-danger" title="Purchase Reorder">
+                                            <router-link v-if="$root.checkPermission('purchase.create') || $root.checkPermission('purchase.index')" to="/purchase/create" class="btn btn-xs btn-outline-danger" title="Purchase Reorder">
                                                 <i class="fas fa-cart-plus"></i> Restock
                                             </router-link>
                                         </td>
@@ -385,7 +385,7 @@
                                     <small class="text-muted" style="font-size: 11px;">Latest completed sales orders</small>
                                 </div>
                             </div>
-                            <router-link to="/invoice" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
+                            <router-link v-if="$root.checkPermission('invoice.index')" to="/invoice" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
                                 View All
                             </router-link>
                         </div>
@@ -417,7 +417,7 @@
                                             </span>
                                         </td>
                                         <td class="text-end">
-                                            <router-link :to="'/invoice/' + inv.id" class="btn btn-xs btn-light border" title="View Invoice">
+                                            <router-link v-if="$root.checkPermission('invoice.show')" :to="'/invoice/' + inv.id" class="btn btn-xs btn-light border" title="View Invoice">
                                                 <i class="fas fa-eye text-muted"></i>
                                             </router-link>
                                         </td>
@@ -531,6 +531,19 @@ export default {
         },
         totalMonthDue() {
             return this.data?.dashboard?.barData?.total_due || 0;
+        },
+        hasAnyQuickShortcut() {
+            return (
+                this.$root.checkPermission('pos.index') ||
+                this.$root.checkPermission('report.availablestock') ||
+                this.$root.checkPermission('pos.return') ||
+                this.$root.checkPermission('pos.labelprint') ||
+                this.$root.checkPermission('invoice.index') ||
+                this.$root.checkPermission('purchase.create') ||
+                this.$root.checkPermission('purchase.index') ||
+                this.$root.checkPermission('warrantyClaim.index') ||
+                this.$root.checkPermission('report.sales')
+            );
         }
     },
     watch: {

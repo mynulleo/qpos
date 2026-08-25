@@ -107,6 +107,10 @@ trait ReportTrait
                     $join->on('i.id', '=', 'st.reference_id')
                         ->where('st.reference_type', 'Issue');
                 })
+                ->leftJoin('wastages as w', function ($join) {
+                    $join->on('w.id', '=', 'st.reference_id')
+                        ->where('st.reference_type', 'Wastage');
+                })
                 ->select(
                     'st.transaction_date',
                     'st.transaction_type',
@@ -115,6 +119,7 @@ trait ReportTrait
                         CASE
                             WHEN st.reference_type = 'Purchase' THEN p.invoiceno
                             WHEN st.reference_type = 'Issue' THEN i.issueno
+                            WHEN st.reference_type = 'Wastage' THEN w.audit_number
                             ELSE NULL
                         END AS reference_no
                     "),
@@ -159,6 +164,10 @@ trait ReportTrait
                 $join->on('i.id', '=', 'st.reference_id')
                     ->where('st.reference_type', 'Issue');
             })
+            ->leftJoin('wastages as w', function ($join) {
+                $join->on('w.id', '=', 'st.reference_id')
+                    ->where('st.reference_type', 'Wastage');
+            })
             ->select(
                 'st.transaction_date',
                 'st.transaction_type',
@@ -167,6 +176,7 @@ trait ReportTrait
                     CASE
                         WHEN st.reference_type = 'Purchase' THEN p.invoiceno
                         WHEN st.reference_type = 'Issue' THEN i.issueno
+                        WHEN st.reference_type = 'Wastage' THEN w.audit_number
                         ELSE NULL
                     END AS reference_no
                 "),

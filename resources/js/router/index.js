@@ -1180,6 +1180,28 @@ const routes = [
                 component: () => import("./../views/admin/warrantyClaim/create"),
             },
 
+            // ------------------Wastage PORTION------------------
+            {
+                path: "/wastage",
+                name: "wastage.index",
+                component: () => import("./../views/admin/wastage/index"),
+            },
+            {
+                path: "/wastage/create",
+                name: "wastage.create",
+                component: () => import("./../views/admin/wastage/create"),
+            },
+            {
+                path: "/wastage/:id",
+                name: "wastage.show",
+                component: () => import("./../views/admin/wastage/view"),
+            },
+            {
+                path: "/wastage/:id/edit",
+                name: "wastage.edit",
+                component: () => import("./../views/admin/wastage/create"),
+            },
+
             // ------------------Report PORTION------------------
             {
                 path: "/report/sales",
