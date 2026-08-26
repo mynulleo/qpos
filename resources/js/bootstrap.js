@@ -57,6 +57,12 @@ window.axios.interceptors.response.use(
         return response;
     },
     (error) => {
+        if (error && error.response && error.response.status === 401) {
+            const baseUrlMeta = document.head.querySelector('meta[name="base-url"]');
+            const baseUrl = baseUrlMeta ? baseUrlMeta.content : '';
+            window.location.href = baseUrl + '/qpanel';
+            return Promise.reject(error);
+        }
         if (error && error.response && error.response.status === 403 && error.response.data && error.response.data.is_expired) {
             window.__IS_SOFTWARE_EXPIRED__ = true;
             document.body.classList.add('software-locked');

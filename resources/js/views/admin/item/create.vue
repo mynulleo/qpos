@@ -50,6 +50,20 @@
             600
           "
         ></GlobalCrop>
+
+        <!-- Barcode Preview below Image -->
+        <div class="col-12" v-if="data.barcode">
+          <div class="p-2 border rounded bg-light text-center shadow-sm">
+            <small class="text-muted d-block fw-bold mb-1">Barcode Preview:</small>
+            <div class="d-flex justify-content-center my-1">
+              <img v-if="data.barcode_image" :src="data.barcode_image" alt="Barcode Preview" style="height: 45px; max-width: 100%;" />
+            </div>
+            <div class="fw-bold font-monospace fs-6 text-dark">{{ data.barcode }}</div>
+            <button type="button" class="btn btn-xs btn-outline-secondary mt-2 w-100" @click="fetchGeneratedBarcode" title="Regenerate Next Barcode">
+              <i class="fas fa-sync-alt me-1"></i> Auto Barcode
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="col-lg-9">
@@ -61,29 +75,16 @@
         <Input v-model='data.barcode' field='data.barcode' title='Barcode' col="4 col-md-3" placeholder="Auto-generated" :req='false' />
         <Select title='Unit' v-model='data.unit_id' field='data.unit_id' label='title' :reduce='(obj) => obj.id' col="4 col-md-3"
           :options='units' placeholder='--Select One--' :closeOnSelect='true' :required='true' />
-        <Input v-model='data.opening_rate' col="4 col-md-3" field='data.opening_rate' title='Default Opening Rate' :req='false' />
-        <Input v-model='data.opening_qty' col="4 col-md-3" field='data.opening_qty' title='Default Opening Qty' :req='false' />
+        <Input v-model='data.purchase_price' col="4 col-md-3" field='data.purchase_price' title='Purchase Price (ক্রয় মূল্য)' type="number" step="0.01" :req='false' />
+        <Input v-model='data.selling_price' col="4 col-md-3" field='data.selling_price' title='Selling Price (বিক্রয় মূল্য)' type="number" step="0.01" :req='false' />
         <Textarea v-model='data.description' field='data.description' :required='false' title="Description" col="12" />
-
-        <div class="col-md-6" v-if="data.barcode">
-          <div class="p-2 border rounded bg-light d-flex align-items-center gap-3">
-            <div>
-              <small class="text-muted d-block fw-bold mb-1">Barcode Preview:</small>
-              <img v-if="data.barcode_image" :src="data.barcode_image" alt="Barcode Preview" style="height: 45px;" />
-              <div class="fw-bold font-monospace mt-1 fs-6 text-dark">{{ data.barcode }}</div>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" @click="fetchGeneratedBarcode" title="Regenerate Next Barcode">
-              <i class="fas fa-sync-alt me-1"></i> Auto Barcode
-            </button>
-          </div>
-        </div>
 
         <!-- 🛡️ Warranty / Guarantee Section (Display when site_setting shop_type is electronics) -->
         <div class="col-12" v-if="isElectronicsShop">
           <div class="card border border-primary-subtle shadow-sm rounded-3">
             <div class="card-header bg-primary bg-opacity-10 py-2 border-bottom">
               <span class="fw-bold text-primary small d-flex align-items-center gap-2">
-                <i class="fas fa-shield-alt"></i> Warranty / Guarantee Management (ওয়ারেন্টি / গ্যারান্টি সেটিংস)
+                <i class="fas fa-shield-alt"></i> Warranty / Guarantee Management (ওয়ারেন্টি / গ্যারান্টি সেটিংস)
               </span>
             </div>
             <div class="card-body p-3">
@@ -99,7 +100,7 @@
                     <div class="form-check form-check-inline">
                       <input class="form-check-input" type="radio" id="warrantyType" value="warranty" v-model="data.warranty_type">
                       <label class="form-check-label small fw-bold text-primary cursor-pointer" for="warrantyType">
-                        <i class="fas fa-tools me-1"></i> Warranty (ওয়ারেন্টি)
+                        <i class="fas fa-tools me-1"></i> Warranty (ওয়ারেন্টি)
                       </label>
                     </div>
                     <div class="form-check form-check-inline">
@@ -239,6 +240,8 @@ export default {
       data: {
         original_image: '',
         barcode: '',
+        purchase_price: '',
+        selling_price: '',
         status: 'active',
         warranty_type: 'none',
         warranty_period: '',
@@ -257,6 +260,19 @@ export default {
     };
   },
 
+  watch: {
+    'data.purchase_price'(newVal) {
+      if (this.variants.length === 1 && (!this.variants[0].purchase_price || this.variants[0].purchase_price == 0)) {
+        this.variants[0].purchase_price = newVal ? Number(newVal) : 0;
+      }
+    },
+    'data.selling_price'(newVal) {
+      if (this.variants.length === 1 && (!this.variants[0].selling_price || this.variants[0].selling_price == 0)) {
+        this.variants[0].selling_price = newVal ? Number(newVal) : 0;
+      }
+    },
+  },
+
   provide() {
     return {
       validate: this.validation,
@@ -266,7 +282,15 @@ export default {
   },
   methods: {
     addVariantRow() {
-      this.variants.push({ color_id: null, size_id: null, purchase_price: 0, selling_price: 0, qty: 0 });
+      const defPurchase = this.data.purchase_price ? Number(this.data.purchase_price) : 0;
+      const defSelling = this.data.selling_price ? Number(this.data.selling_price) : 0;
+      this.variants.push({
+        color_id: null,
+        size_id: null,
+        purchase_price: defPurchase,
+        selling_price: defSelling,
+        qty: 0
+      });
     },
     removeVariantRow(index) {
       if (this.variants.length > 1) {
@@ -292,6 +316,8 @@ export default {
           formData.append('description', this.data.description || '');
           formData.append('category_id', this.data.category_id || '');
           formData.append('unit_id', this.data.unit_id || '');
+          formData.append('purchase_price', this.data.purchase_price || 0);
+          formData.append('selling_price', this.data.selling_price || 0);
           formData.append('status', this.data.status || 'active');
           formData.append('barcode', this.data.barcode || '');
           formData.append('warranty_type', this.data.warranty_type || 'none');
@@ -354,6 +380,12 @@ export default {
             selling_price: p.selling_price,
             qty: 0,
           }));
+          if (!this.data.purchase_price && this.data.item_prices[0]) {
+            this.data.purchase_price = this.data.item_prices[0].purchase_price;
+          }
+          if (!this.data.selling_price && this.data.item_prices[0]) {
+            this.data.selling_price = this.data.item_prices[0].selling_price;
+          }
         }
       });
     } else {

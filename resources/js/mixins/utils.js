@@ -2,6 +2,24 @@ export default {
     methods: {
         /**
          *
+         * @param {string|number} amount
+         * @returns
+         */
+        currency(amount) {
+            return this.$filter ? this.$filter.formatBDT(amount) : amount;
+        },
+
+        /**
+         *
+         * @param {string|number} amount
+         * @returns
+         */
+        formatCurrency(amount) {
+            return this.$filter ? this.$filter.formatBDT(amount) : amount;
+        },
+
+        /**
+         *
          * @param {string} value
          * @param {string} format
          * @returns

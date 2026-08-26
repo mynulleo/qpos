@@ -25,70 +25,24 @@ class WastageController extends BaseController
      */
     public function index(Request $request)
     {
-        $query = Wastage::with([
-            'auditor:id,full_name',
-            'approved_admin:id,full_name',
-            'branch:id,title',
-            'creator:id,name'
-        ])
-        ->withCount('wastage_details')
-        ->latest('id');
+        $query = Wastage::with(['auditor:id,full_name'])->latest('id');
+        $query->whereLike($request->field_name, $request->value);
+        $query->whereAny('status', $request->status);
+        $query->whereLike('audit_number', $request->audit_number);
+        $query->whereAny('auditor_id', $request->auditor_id);
 
-        if ($request->filled('keyword')) {
-            $keyword = trim($request->keyword);
-            $query->where(function ($q) use ($keyword) {
-                $q->where('audit_number', 'like', "%{$keyword}%")
-                  ->orWhere('audited_by', 'like', "%{$keyword}%")
-                  ->orWhere('note', 'like', "%{$keyword}%");
-            });
+        if (!empty($request->from_date) && !empty($request->to_date)) {
+            $query->whereDates('audit_date', $request->from_date, $request->to_date);
         }
 
-        if ($request->has('field_name') && $request->has('value') && !empty($request->value)) {
-            $query->whereLike($request->field_name, $request->value);
-        }
-
-        if ($request->filled('audit_number')) {
-            $query->where('audit_number', 'like', '%' . trim($request->audit_number) . '%');
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('auditor_id')) {
-            $query->where('auditor_id', $request->auditor_id);
-        }
-
-        if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
-        }
-
-        if ($request->filled('item_id')) {
-            $itemId = $request->item_id;
-            $query->whereHas('wastage_details', function ($q) use ($itemId) {
-                $q->where('item_id', $itemId);
-            });
-        }
-
-        $fromDate = $request->from_date ?: $request->from_audit_date;
-        $toDate   = $request->to_date ?: $request->to_audit_date;
-
-        if (!empty($fromDate) && !empty($toDate)) {
-            $date_from = function_exists('vue_to_server_date') ? vue_to_server_date($fromDate) : $fromDate;
-            $date_to   = function_exists('vue_to_server_date') ? vue_to_server_date($toDate) : $toDate;
-            $query->whereBetween('audit_date', [$date_from, $date_to]);
-        } elseif (!empty($fromDate)) {
-            $date_from = function_exists('vue_to_server_date') ? vue_to_server_date($fromDate) : $fromDate;
-            $query->where('audit_date', '>=', $date_from);
-        } elseif (!empty($toDate)) {
-            $date_to = function_exists('vue_to_server_date') ? vue_to_server_date($toDate) : $toDate;
-            $query->where('audit_date', '<=', $date_to);
+        if (!empty($request->item_id)) {
+            $query->whereSub('wastage_details', 'item_id', $request->item_id);
         }
 
         if ($request->allData) {
             return $query->get();
         } else {
-            $datas = $query->paginate($request->pagination ?? 15);
+            $datas = $query->paginate($request->pagination);
             return new Resource($datas);
         }
     }
@@ -130,6 +84,36 @@ class WastageController extends BaseController
 
             $wastage_details = $data['wastage_details'] ?? [];
             unset($data['wastage_details']);
+
+            // Validate that no serials are currently sold in active invoices
+            foreach ($wastage_details as $detail) {
+                if (!empty($detail['serial_no'])) {
+                    $sList = preg_split('/[\r\n,]+/', $detail['serial_no'], -1, PREG_SPLIT_NO_EMPTY);
+                    foreach ($sList as $s) {
+                        $sn = trim($s);
+                        if (empty($sn)) continue;
+
+                        $isSold = \App\Models\InvoiceDetails::where('item_id', $detail['item_id'])
+                            ->whereNotNull('serial_no')
+                            ->where('serial_no', '!=', '')
+                            ->where('status', 'active')
+                            ->get()
+                            ->contains(function ($invd) use ($sn) {
+                                $serials = preg_split('/[\r\n,]+/', $invd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                                foreach ($serials as $soldSn) {
+                                    if (strcasecmp(trim($soldSn), $sn) === 0) return true;
+                                }
+                                return false;
+                            });
+
+                        if ($isSold) {
+                            return response()->json([
+                                'message' => "Serial '{$sn}' is currently sold in an active invoice and has not been returned. It cannot be added to wastage."
+                            ], 422);
+                        }
+                    }
+                }
+            }
 
             $totalQty = 0;
             $totalLoss = 0;
@@ -204,21 +188,17 @@ class WastageController extends BaseController
         }
 
         $wastage = Wastage::with([
-            'wastage_details.item:id,title,barcode,category_id,unit_id',
-            'wastage_details.item.unit:id,title',
-            'wastage_details.category:id,title',
-            'wastage_details.color:id,title',
-            'wastage_details.size:id,title',
-            'wastage_details.unit:id,title',
-            'auditor:id,full_name,mobile',
-            'approved_admin:id,full_name,email',
-            'creator:id,name',
-            'branch:id,title',
+            'wastage_details.item',
+            'wastage_details.item.unit',
+            'wastage_details.category',
+            'wastage_details.color',
+            'wastage_details.size',
+            'wastage_details.unit',
+            'auditor',
+            'approved_admin',
+            'creator',
+            'branch',
         ])->find($id);
-
-        if (!$wastage) {
-            return response()->json(['message' => 'Wastage record not found'], 404);
-        }
 
         return $wastage;
     }
@@ -267,6 +247,36 @@ class WastageController extends BaseController
 
             $wastage_details = $data['wastage_details'] ?? [];
             unset($data['wastage_details']);
+
+            // Validate that no serials are currently sold in active invoices
+            foreach ($wastage_details as $detail) {
+                if (!empty($detail['serial_no'])) {
+                    $sList = preg_split('/[\r\n,]+/', $detail['serial_no'], -1, PREG_SPLIT_NO_EMPTY);
+                    foreach ($sList as $s) {
+                        $sn = trim($s);
+                        if (empty($sn)) continue;
+
+                        $isSold = \App\Models\InvoiceDetails::where('item_id', $detail['item_id'])
+                            ->whereNotNull('serial_no')
+                            ->where('serial_no', '!=', '')
+                            ->where('status', 'active')
+                            ->get()
+                            ->contains(function ($invd) use ($sn) {
+                                $serials = preg_split('/[\r\n,]+/', $invd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                                foreach ($serials as $soldSn) {
+                                    if (strcasecmp(trim($soldSn), $sn) === 0) return true;
+                                }
+                                return false;
+                            });
+
+                        if ($isSold) {
+                            return response()->json([
+                                'message' => "Serial '{$sn}' is currently sold in an active invoice and has not been returned. It cannot be added to wastage."
+                            ], 422);
+                        }
+                    }
+                }
+            }
 
             $totalQty = 0;
             $totalLoss = 0;
@@ -499,6 +509,99 @@ class WastageController extends BaseController
                 'error'   => $ex->getMessage()
             ], 422);
         }
+    }
+
+    /**
+     * Check if a serial number is valid for wastage.
+     * Must be purchased, and NOT currently sold (invoice_details active).
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function checkSerial(Request $request)
+    {
+        $itemId = $request->input('item_id');
+        $serialNo = trim($request->input('serial_no'));
+
+        if (empty($itemId) || empty($serialNo)) {
+            return response()->json(['valid' => false, 'message' => 'Item ID and Serial number are required.'], 422);
+        }
+
+        // 1. Check if serial number exists in Purchase records for this item
+        $purchaseExists = \App\Models\PurchaseDetail::where('item_id', $itemId)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->get()
+            ->contains(function ($pd) use ($serialNo) {
+                $serials = preg_split('/[\r\n,]+/', $pd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($serials as $s) {
+                    if (strcasecmp(trim($s), $serialNo) === 0) return true;
+                }
+                return false;
+            });
+
+        if (!$purchaseExists) {
+            return response()->json([
+                'valid' => false,
+                'status' => 'not_purchased',
+                'message' => "Serial '{$serialNo}' was not found in purchase records for this item!"
+            ]);
+        }
+
+        // 2. Check if serial number is currently SOLD in Invoice Details (active sales)
+        // If status == 'active', it's sold and NOT returned.
+        // If the item was returned / deactivated, status is not 'active'.
+        $soldDetail = \App\Models\InvoiceDetails::where('item_id', $itemId)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->where('status', 'active')
+            ->get()
+            ->first(function ($invd) use ($serialNo) {
+                $serials = preg_split('/[\r\n,]+/', $invd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($serials as $s) {
+                    if (strcasecmp(trim($s), $serialNo) === 0) return true;
+                }
+                return false;
+            });
+
+        if ($soldDetail) {
+            return response()->json([
+                'valid' => false,
+                'status' => 'sold',
+                'message' => "Serial '{$serialNo}' is currently SOLD in Invoice #{$soldDetail->invoice_id} (not returned)! Sold items cannot be added to wastage."
+            ]);
+        }
+
+        // 3. Check if serial is already in another wastage record
+        $currentWastageId = $request->input('wastage_id');
+        $wastedQuery = \App\Models\WastageDetail::where('item_id', $itemId)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '');
+
+        if ($currentWastageId) {
+            $wastedQuery->where('wastage_id', '!=', $currentWastageId);
+        }
+
+        $wastedDetail = $wastedQuery->get()->first(function ($wd) use ($serialNo) {
+            $serials = preg_split('/[\r\n,]+/', $wd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                if (strcasecmp(trim($s), $serialNo) === 0) return true;
+            }
+            return false;
+        });
+
+        if ($wastedDetail) {
+            return response()->json([
+                'valid' => false,
+                'status' => 'wasted',
+                'message' => "Serial '{$serialNo}' is already recorded in Wastage Audit #{$wastedDetail->wastage_id}!"
+            ]);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => "Serial '{$serialNo}' is valid and available in inventory."
+        ]);
     }
 
     /**

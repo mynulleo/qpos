@@ -466,12 +466,12 @@
                 
                 <!-- Store Name -->
                 <div v-if="settings.showCompany" class="label-company-name">
-                  {{ settings.companyName || $root.site.title || 'QPOS STORE' }}
+                  {{ settings.companyName || $root.site.title || 'DHRUPODI FASHION' }}
                 </div>
 
                 <!-- Product Title -->
-                <div v-if="settings.showTitle" class="label-product-title" :title="activePreviewItem ? activePreviewItem.title : 'Sample Product Title'">
-                  {{ activePreviewItem ? activePreviewItem.title : 'SAMPLE PRODUCT TITLE' }}
+                <div v-if="settings.showTitle" class="label-product-title" :title="activePreviewItem ? activePreviewItem.title : 'Smart Digital Wrist Watch'">
+                  {{ activePreviewItem ? activePreviewItem.title : 'Smart Digital Wrist Watch' }}
                 </div>
 
                 <!-- Barcode Image -->
@@ -489,13 +489,12 @@
 
                 <!-- Barcode Text -->
                 <div v-if="settings.showBarcodeNum" class="label-barcode-digits">
-                  {{ activePreviewItem ? activePreviewItem.barcode : '1002001' }}
+                  {{ activePreviewItem ? activePreviewItem.barcode : '1002003' }}
                 </div>
 
                 <!-- Price Box -->
                 <div v-if="settings.showPrice" class="label-price-tag">
-                  <span class="price-currency">Price: Tk.</span>
-                  <span class="price-val">{{ formatMoney(activePreviewItem ? activePreviewItem.price : 450) }}</span>
+                  Tk. {{ formatMoney(activePreviewItem ? activePreviewItem.price : 1200) }}
                 </div>
               </div>
             </div>
@@ -1017,33 +1016,35 @@
 
     <!-- 🖨️ Hidden Master Printable Area (#labelPrintArea) -->
     <div id="labelPrintArea" style="display: none;">
-      <div :class="['barcode-print-wrapper', 'layout-' + settings.layout]">
+      <div class="barcode-print-wrapper">
         <div
           v-for="(sticker, sIdx) in generatedStickersList"
           :key="sIdx"
-          :class="['sticker-item', 'layout-' + settings.layout, { 'with-border': settings.showBorder }]">
+          class="thermal-label-box sticker-item"
+          :class="[{ 'bordered': settings.showBorder, 'is-portrait': isPortraitLabel }]">
           
-          <div v-if="settings.showCompany" class="sticker-company">
-            {{ settings.companyName || $root.site.title || 'QPOS' }}
+          <div v-if="settings.showCompany" class="label-company-name">
+            {{ settings.companyName || $root.site.title || 'DHRUPODI FASHION' }}
           </div>
 
-          <div v-if="settings.showTitle" class="sticker-title">
+          <div v-if="settings.showTitle" class="label-product-title">
             {{ sticker.title }}
           </div>
 
-          <div class="sticker-barcode-box">
+          <div class="label-barcode-image-wrapper">
             <img
               v-if="sticker.barcode_image"
               :src="sticker.barcode_image"
-              class="sticker-barcode-img"
+              class="label-barcode-img"
+              alt="Barcode"
             />
           </div>
 
-          <div v-if="settings.showBarcodeNum" class="sticker-barcode-num">
+          <div v-if="settings.showBarcodeNum" class="label-barcode-digits">
             {{ sticker.barcode }}
           </div>
 
-          <div v-if="settings.showPrice" class="sticker-price">
+          <div v-if="settings.showPrice" class="label-price-tag">
             Tk. {{ formatMoney(sticker.price) }}
           </div>
         </div>
@@ -1786,45 +1787,61 @@ export default {
       const hMm = s.unit === "in" ? (parseFloat(s.height) || 1) * 25.4 : parseFloat(s.height) || 25.4;
       const wMm = s.unit === "in" ? (parseFloat(s.width) || 2) * 25.4 : parseFloat(s.width) || 50.8;
 
-      let padVal = "3px 4px";
-      let companyFs = 10;
-      let titleFs = 10.5;
-      let barcodeH = 30;
-      let barcodeNumFs = 10;
-      let priceFs = 11.5;
+      let padVal = "4px 6px";
+      let companyFs = 11.5;
+      let titleFs = 12;
+      let barcodeH = 34;
+      let barcodeNumFs = 11.5;
+      let priceFs = 13.5;
 
-      if (hMm <= 26) {
-        // Very compact tags (e.g. 2" x 1", 50x25mm, 40x25mm, 30x20mm)
+      if (hMm <= 22) {
+        // Ultra compact (e.g. 30x20mm)
         padVal = "1.5px 3px";
-        companyFs = 8.5;
+        companyFs = 8;
         titleFs = 8.5;
-        barcodeH = 20;
-        barcodeNumFs = 8;
-        priceFs = 9.5;
-      } else if (hMm <= 38) {
-        // Compact medium tags (e.g. 50x30mm, 40x30mm)
+        barcodeH = 18;
+        barcodeNumFs = 7.5;
+        priceFs = 9;
+      } else if (hMm <= 28) {
+        // Compact (e.g. 2"x1", 40x25mm, 38x25mm)
         padVal = "2px 4px";
-        companyFs = 9.5;
+        companyFs = 9;
         titleFs = 9.5;
-        barcodeH = 26;
-        barcodeNumFs = 9;
+        barcodeH = 22;
+        barcodeNumFs = 8.5;
         priceFs = 10.5;
+      } else if (hMm <= 36) {
+        // Compact medium (e.g. 50x30mm)
+        padVal = "3px 5px";
+        companyFs = 10;
+        titleFs = 10.5;
+        barcodeH = 28;
+        barcodeNumFs = 9.5;
+        priceFs = 12;
       } else if (hMm <= 55) {
-        // Standard tags (e.g. 4" x 2", 3" x 2")
-        padVal = "4px 6px";
-        companyFs = 11;
-        titleFs = 11.5;
+        // Standard (e.g. 4"x2", 3"x2", 30x50mm)
+        padVal = "4px 8px";
+        companyFs = 11.5;
+        titleFs = 12;
         barcodeH = 34;
-        barcodeNumFs = 10.5;
-        priceFs = 12.5;
-      } else {
-        // Large tags (e.g. 4" x 6")
-        padVal = "6px 8px";
+        barcodeNumFs = 11.5;
+        priceFs = 13.5;
+      } else if (hMm <= 110) {
+        // Tall / Large (e.g. 2"x4")
+        padVal = "6px 10px";
         companyFs = 13;
-        titleFs = 13;
-        barcodeH = 48;
-        barcodeNumFs = 12;
-        priceFs = 14;
+        titleFs = 13.5;
+        barcodeH = 44;
+        barcodeNumFs = 12.5;
+        priceFs = 15;
+      } else {
+        // Very large (e.g. 4"x6")
+        padVal = "10px 14px";
+        companyFs = 15;
+        titleFs = 16;
+        barcodeH = 60;
+        barcodeNumFs = 14;
+        priceFs = 18;
       }
 
       const pageSizeRule = isContinuous
@@ -1849,7 +1866,7 @@ export default {
             size: ${pageSizeRule};
             margin: ${pageMarginVal};
           }
-          * {
+          *, *::before, *::after {
             box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -1857,19 +1874,22 @@ export default {
           html, body {
             margin: 0 !important;
             padding: 0 !important;
-            width: ${isContinuous ? wVal : "100%"} !important;
+            width: 100% !important;
             height: auto !important;
             background: #ffffff !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
           }
           .barcode-print-wrapper {
+            margin: 0 !important;
+            padding: 0 !important;
             ${
               isContinuous
-                ? `display: block !important; width: ${wVal} !important; margin: 0 !important; padding: 0 !important;`
-                : `display: flex !important; flex-wrap: wrap !important; align-items: flex-start !important; justify-content: flex-start !important; width: 100% !important; padding: 0 !important; margin: 0 !important;`
+                ? `display: block !important; width: 100% !important;`
+                : `display: flex !important; flex-wrap: wrap !important; align-items: flex-start !important; justify-content: flex-start !important; width: 100% !important;`
             }
           }
-          .sticker-item {
+          .thermal-label-box {
             width: ${wVal} !important;
             height: ${hVal} !important;
             min-width: ${wVal} !important;
@@ -1877,91 +1897,94 @@ export default {
             max-width: ${wVal} !important;
             max-height: ${hVal} !important;
             box-sizing: border-box !important;
-            ${isContinuous ? "margin: 0 !important;" : `margin-right: ${columns > 1 ? gapHVal : "0"} !important; margin-bottom: ${gapVVal} !important;`}
             padding: ${padVal} !important;
             background: #ffffff !important;
             color: #000000 !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
-            justify-content: space-between !important;
+            justify-content: center !important;
             text-align: center !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
-            ${isContinuous ? "page-break-after: always !important; break-after: page !important;" : ""}
             overflow: hidden !important;
+            ${isContinuous ? "margin: 0 auto !important; page-break-after: always !important; break-after: page !important;" : `margin-right: ${columns > 1 ? gapHVal : "0"} !important; margin-bottom: ${gapVVal} !important;`}
             ${s.showBorder ? "border: 1px solid #000000 !important;" : "border: none !important;"}
           }
-          ${isContinuous ? ".sticker-item:last-child { page-break-after: auto !important; break-after: auto !important; }" : ""}
-          .sticker-company {
+          ${isContinuous ? ".thermal-label-box:last-child { page-break-after: auto !important; break-after: auto !important; }" : ""}
+          
+          .label-company-name {
             font-size: ${companyFs}px !important;
             font-weight: 800 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.3px !important;
+            letter-spacing: 0.5px !important;
             color: #000000 !important;
-            margin: 0 0 1px 0 !important;
-            line-height: 1.05 !important;
+            margin: 0 0 2px 0 !important;
+            line-height: 1.15 !important;
             width: 100% !important;
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
+            text-align: center !important;
             flex-shrink: 0 !important;
           }
-          .sticker-title {
+          .label-product-title {
             font-size: ${titleFs}px !important;
             font-weight: 700 !important;
             color: #000000 !important;
-            margin: 0 0 1px 0 !important;
-            line-height: 1.1 !important;
+            margin: 0 0 2px 0 !important;
+            line-height: 1.2 !important;
             width: 100% !important;
-            max-height: ${titleFs * 1.3}px !important;
+            white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            white-space: nowrap !important;
+            text-align: center !important;
             flex-shrink: 0 !important;
           }
-          .sticker-barcode-box {
-            margin: 1px 0 !important;
+          .label-barcode-image-wrapper {
+            margin: 2px 0 !important;
             height: ${barcodeH}px !important;
             max-height: ${barcodeH}px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             width: 100% !important;
-            flex-grow: 1 !important;
-            flex-shrink: 1 !important;
+            flex-shrink: 0 !important;
             overflow: hidden !important;
           }
-          .sticker-barcode-img {
+          .label-barcode-img {
             display: block !important;
             margin: 0 auto !important;
             height: ${barcodeH}px !important;
             max-height: 100% !important;
-            max-width: 96% !important;
+            max-width: 95% !important;
             object-fit: contain !important;
             image-rendering: -webkit-optimize-contrast !important;
-            image-rendering: crisp-edges !important;
+            image-rendering: pixelated !important;
           }
-          .sticker-barcode-num {
+          .label-barcode-digits {
             font-size: ${barcodeNumFs}px !important;
             font-weight: 700 !important;
             font-family: "Courier New", Courier, monospace !important;
-            letter-spacing: 1px !important;
+            letter-spacing: 1.8px !important;
             color: #000000 !important;
-            line-height: 1 !important;
-            margin: 0 !important;
+            line-height: 1.1 !important;
+            margin: 0 0 2px 0 !important;
+            text-align: center !important;
+            width: 100% !important;
             flex-shrink: 0 !important;
             white-space: nowrap !important;
           }
-          .sticker-price {
+          .label-price-tag {
             font-size: ${priceFs}px !important;
             font-weight: 800 !important;
             border-top: 1px dashed #000000 !important;
-            padding-top: 1.5px !important;
-            margin-top: 1px !important;
+            padding-top: 2.5px !important;
+            margin-top: 1.5px !important;
             width: 100% !important;
             color: #000000 !important;
-            line-height: 1.05 !important;
+            line-height: 1.15 !important;
+            text-align: center !important;
             flex-shrink: 0 !important;
             white-space: nowrap !important;
           }
@@ -1970,10 +1993,16 @@ export default {
 
       const prtHtml = document.getElementById("labelPrintArea").innerHTML;
       const WinPrint = window.open("", "", "left=0,top=0,width=850,height=950,toolbar=0,scrollbars=1,status=0");
+      if (!WinPrint) {
+        this.$toast("Please allow popups in your browser to print barcode labels", "warning");
+        return;
+      }
       WinPrint.document.write(`<!DOCTYPE html>
         <html>
         <head>
           <title>Barcode Labels (${this.totalStickersCount} Stickers - ${wVal} × ${hVal})</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           ${printStyles}
         </head>
         <body>
@@ -1982,9 +2011,36 @@ export default {
         </html>`);
       WinPrint.document.close();
       WinPrint.focus();
-      setTimeout(() => {
-        WinPrint.print();
-      }, 400);
+
+      // Ensure images are fully loaded before calling print
+      const imgs = WinPrint.document.querySelectorAll("img");
+      if (imgs.length > 0) {
+        let loaded = 0;
+        const total = imgs.length;
+        const triggerPrint = () => {
+          setTimeout(() => {
+            WinPrint.print();
+          }, 200);
+        };
+        imgs.forEach((img) => {
+          if (img.complete) {
+            loaded++;
+            if (loaded >= total) triggerPrint();
+          } else {
+            img.onload = img.onerror = () => {
+              loaded++;
+              if (loaded >= total) triggerPrint();
+            };
+          }
+        });
+        setTimeout(() => {
+          WinPrint.print();
+        }, 600);
+      } else {
+        setTimeout(() => {
+          WinPrint.print();
+        }, 300);
+      }
     },
 
     fetchCategories() {
@@ -2051,62 +2107,64 @@ export default {
 
 .thermal-label-box {
   background: #ffffff;
-  border-radius: 6px;
+  border-radius: 0px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
-  padding: 10px 14px;
+  padding: 8px 12px;
   text-align: center;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color: #111;
+  color: #000;
   transition: all 0.25s ease-in-out;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #000;
 }
 
 .thermal-label-box.bordered {
-  border: 1.5px solid #111;
+  border: 1px solid #000;
 }
 
 .thermal-label-box.is-portrait {
-  justify-content: space-around;
+  justify-content: center;
 }
 
 .label-company-name {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: #222;
+  letter-spacing: 0.6px;
+  color: #000;
   margin-bottom: 2px;
-  line-height: 1.2;
+  line-height: 1.15;
   width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .label-product-title {
   font-size: 12px;
   font-weight: 700;
   color: #000;
-  margin-bottom: 4px;
-  line-height: 1.3;
+  margin-bottom: 3px;
+  line-height: 1.2;
   width: 100%;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  word-break: break-word;
+  text-align: center;
 }
 
 .label-barcode-image-wrapper {
-  margin: 3px 0 2px 0;
+  margin: 2px 0 2px 0;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-height: 38px;
+  min-height: 36px;
 }
 
 .label-barcode-img {
@@ -2114,14 +2172,14 @@ export default {
   max-width: 95%;
   display: block;
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 
 .barcode-placeholder {
   font-size: 12px;
   letter-spacing: -1px;
   color: #666;
-  padding: 6px;
+  padding: 4px;
   background: #f8f9fa;
   border-radius: 3px;
   width: 90%;
@@ -2131,144 +2189,25 @@ export default {
   font-size: 12px;
   font-weight: 700;
   font-family: "Courier New", Courier, monospace;
-  letter-spacing: 2px;
+  letter-spacing: 1.8px;
   color: #000;
-  margin-bottom: 3px;
-  line-height: 1;
+  margin-bottom: 2px;
+  line-height: 1.1;
+  width: 100%;
+  text-align: center;
 }
 
 .label-price-tag {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  border-top: 1px dashed #333;
-  padding-top: 4px;
-  margin-top: 2px;
-  width: 100%;
-  font-weight: 800;
-  font-size: 13px;
-  color: #000;
-  line-height: 1.2;
-}
-
-.label-price-tag .price-currency {
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.label-price-tag .price-val {
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-
-/* ========================================================= */
-/* 🖨️ PRINT STYLES FOR LABEL PRINTING (#labelPrintArea)     */
-/* ========================================================= */
-.barcode-print-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 0;
-  margin: 0;
-}
-
-/* Sticker Item Base Box */
-.sticker-item {
-  padding: 6px 8px;
-  text-align: center;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #fff;
-  color: #000;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.sticker-item.with-border {
-  border: 1px solid #333;
-}
-
-.sticker-company {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #000;
-  margin-bottom: 2px;
-  line-height: 1.1;
-  width: 100%;
-}
-
-.sticker-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: #000;
-  margin-bottom: 2px;
-  line-height: 1.2;
-  width: 100%;
-  max-height: 26px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sticker-barcode-box {
-  margin: 2px 0;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-.sticker-barcode-img {
   display: block;
-  margin: 0 auto;
-  height: 38px;
-  max-width: 100%;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-.sticker-barcode-num {
-  font-size: 11px;
-  font-weight: 700;
-  font-family: "Courier New", Courier, monospace;
-  letter-spacing: 1.5px;
-  color: #000;
-  line-height: 1.1;
-}
-
-.sticker-price {
-  font-size: 12px;
-  font-weight: 800;
-  border-top: 1px dashed #333;
-  padding-top: 2px;
+  text-align: center;
+  border-top: 1px dashed #000;
+  padding-top: 3px;
   margin-top: 2px;
   width: 100%;
+  font-weight: 800;
+  font-size: 13.5px;
   color: #000;
-  line-height: 1.1;
-}
-
-@media print {
-  @page {
-    margin: 3mm;
-    size: auto;
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-    background: #fff !important;
-  }
-
-  .sticker-item {
-    page-break-inside: avoid !important;
-  }
+  line-height: 1.15;
+  white-space: nowrap;
 }
 </style>

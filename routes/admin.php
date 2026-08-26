@@ -211,6 +211,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('challan', App\Http\Controllers\Admin\ChallanController::class);
         Route::resource('color', App\Http\Controllers\Admin\ColorController::class);
         Route::resource('size', App\Http\Controllers\Admin\SizeController::class);
+        Route::resource('wastage', App\Http\Controllers\Admin\WastageController::class);
         Route::get('warrantyClaim/check-serial', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'checkSerial'])->name('warrantyClaim.checkSerial');
         Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');
         Route::resource('warrantyClaim', App\Http\Controllers\Admin\WarrantyClaimController::class);
@@ -242,11 +243,10 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::get('report/warrantyclaim', [App\Http\Controllers\Admin\ReportController::class, 'warrantyclaim'])->name('report.warrantyclaim');
         Route::get('report/warrantyClaim', [App\Http\Controllers\Admin\ReportController::class, 'warrantyclaim'])->name('report.warrantyClaim');
 
-        Route::resource('wastage', App\Http\Controllers\Admin\WastageController::class);
-
         Route::post('expense/approved', [App\Http\Controllers\Admin\ExpenseController::class, 'approved'])->name('expense.approved');
         Route::post('expense/approvalcancel', [App\Http\Controllers\Admin\ExpenseController::class, 'approvalcancel'])->name('expense.approvalcancel');
 
+        Route::post('wastage/check-serial', [App\Http\Controllers\Admin\WastageController::class, 'checkSerial'])->name('wastage.check-serial');
         Route::post('wastage/approved', [App\Http\Controllers\Admin\WastageController::class, 'approved'])->name('wastage.approved');
         Route::post('wastage/approvalcancel', [App\Http\Controllers\Admin\WastageController::class, 'approvalcancel'])->name('wastage.approvalcancel');
 

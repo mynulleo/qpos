@@ -1,5 +1,5 @@
 <template>
-  <index-page>
+  <index-page :show_status="false">
     <template v-slot:search-field>
       <Input v-model="search_data.audit_number" field="search_data.audit_number" title="Audit Number" placeholder="e.g. WST-..." col="3" />
 
@@ -13,6 +13,8 @@
           :options="items" placeholder="-- Select Item --" :closeOnSelect="true"></v-select>
       </v-select-container>
 
+      <StatusDropDown col="3"></StatusDropDown>
+
       <date-picker id='searchfromauditdate' v-model='search_data.from_date'
         field='search_data.from_date' title='From Audit Date' placeholder='From Date' col='3'
         :req='false'></date-picker>
@@ -20,82 +22,6 @@
       <date-picker id='searchtoauditdate' v-model='search_data.to_date' field='search_data.to_date'
         title='To Audit Date' placeholder='To Date' col='3' :req='false'
         :disablePastDates="search_data.from_date"></date-picker>
-    </template>
-
-    <template v-slot:summary-page>
-      <div class="row mb-3 mt-3">
-        <div class="col-12">
-          <div class="row g-3">
-            <!-- Total Audits -->
-            <div class="col-xl-3 col-md-6 col-6">
-              <div class="card shadow-sm border-0 bg-white border-start border-primary border-4">
-                <div class="card-body p-3">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <p class="text-muted small text-uppercase mb-1 fw-bold">Total Audits</p>
-                      <h4 class="mb-0 fw-bold text-primary">{{ table.datas ? table.datas.length : 0 }}</h4>
-                    </div>
-                    <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle d-none d-sm-block">
-                      <i class="fas fa-clipboard-list fa-lg"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Total Quantity Wasted -->
-            <div class="col-xl-3 col-md-6 col-6">
-              <div class="card shadow-sm border-0 bg-white border-start border-warning border-4">
-                <div class="card-body p-3">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <p class="text-muted small text-uppercase mb-1 fw-bold">Total Wasted Qty</p>
-                      <h4 class="mb-0 fw-bold text-warning">{{ totalWastageQty }}</h4>
-                    </div>
-                    <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle d-none d-sm-block">
-                      <i class="fas fa-boxes fa-lg"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Total Loss Amount -->
-            <div class="col-xl-3 col-md-6 col-6">
-              <div class="card shadow-sm border-0 bg-white border-start border-danger border-4">
-                <div class="card-body p-3">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <p class="text-muted small text-uppercase mb-1 fw-bold">Total Loss Value</p>
-                      <h4 class="mb-0 fw-bold text-danger">{{ $root.currency(totalLossAmount) }}</h4>
-                    </div>
-                    <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-circle d-none d-sm-block">
-                      <i class="fas fa-money-bill-wave fa-lg"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Pending Approvals -->
-            <div class="col-xl-3 col-md-6 col-6">
-              <div class="card shadow-sm border-0 bg-white border-start border-info border-4">
-                <div class="card-body p-3">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <p class="text-muted small text-uppercase mb-1 fw-bold">Pending Approval</p>
-                      <h4 class="mb-0 fw-bold text-info">{{ pendingCount }}</h4>
-                    </div>
-                    <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle d-none d-sm-block">
-                      <i class="fas fa-clock fa-lg"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </template>
   </index-page>
 </template>
@@ -106,33 +32,26 @@ const model = "wastage";
 const tableColumns = [
   { field: "audit_number", title: "Audit No" },
   { field: "audit_date", title: "Audit Date" },
-  { field: "audited_by", title: "Auditor(s)" },
-  { field: "auditor_id", title: "Lead Auditor", subfield: "auditor.full_name" },
-  { field: "wastage_details_count", title: "Items Count", align: "center" },
+  { field: "audited_by", title: "Auditor" },
   { field: "total_qty", title: "Total Qty", align: "right" },
   { field: "total_loss_amount", title: "Loss Value", align: "right" },
   { field: "status", title: "Status", align: "center" },
-  { field: "approved_by", title: "Approved By", subfield: "approved_admin.full_name" },
-  { field: "approved_date", title: "Approved Date" },
 ];
 
 const json_fields = {
   "Audit No": "audit_number",
   "Audit Date": "audit_date",
-  "Auditor(s)": "audited_by",
-  "Lead Auditor": "auditor.full_name",
+  "Auditor": "audited_by",
   "Total Qty": "total_qty",
   "Total Loss Amount": "total_loss_amount",
   "Status": "status",
-  "Approved By": "approved_admin.full_name",
-  "Approved Date": "approved_date",
 };
 
 export default {
   data() {
     return {
+      page_title: "Wastage List",
       model: model,
-      page_title: "",
       json_fields: json_fields,
       fields_name: {
         default: "Select One",
@@ -163,27 +82,6 @@ export default {
     };
   },
 
-  computed: {
-    totalWastageQty() {
-      if (!this.table.datas || !this.table.datas.length) return 0;
-      return this.table.datas.reduce((sum, row) => {
-        return sum + Number(row.total_qty || 0);
-      }, 0).toFixed(2);
-    },
-
-    totalLossAmount() {
-      if (!this.table.datas || !this.table.datas.length) return 0;
-      return this.table.datas.reduce((sum, row) => {
-        return sum + Number(row.total_loss_amount || 0);
-      }, 0);
-    },
-
-    pendingCount() {
-      if (!this.table.datas || !this.table.datas.length) return 0;
-      return this.table.datas.filter(row => !row.approved_by || row.status === 'pending').length;
-    }
-  },
-
   provide() {
     return {
       validate: this.validation,
@@ -199,6 +97,10 @@ export default {
 
   methods: {
     search() {
+      this.$router.push({
+        name: this.model + ".index",
+        query: { ...this.search_data },
+      });
       this.get_paginate(this.model, this.search_data);
     },
 
@@ -228,11 +130,15 @@ export default {
 
   created() {
     this.getRouteName(this.model);
-    this.page_title = `${this.headline(this.model)} List`;
+    this.setBreadcrumbs(this.model, "index");
     this.search();
     this.getItems();
   },
 
-  validators: {},
+  validators: {
+    "search_data.status": function (value = null) {
+      return Validator.value(value);
+    },
+  },
 };
 </script>

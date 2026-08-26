@@ -96,6 +96,19 @@ const app = createApp({
                 console.log("Whoopsie! Server Unavailable.");
             }
         },
+        currency(amount) {
+            if (!amount || isNaN(amount)) return "৳ 0.00";
+            return (
+                "৳ " +
+                Number(amount).toLocaleString("en-BD", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                })
+            );
+        },
+        formatCurrency(amount) {
+            return this.currency(amount);
+        },
     },
     mounted() {
         if (this.loggedIn) {
