@@ -69,12 +69,17 @@
     <div class="col-lg-9">
       <div class="row g-3">
         <Select title='Category' v-model='data.category_id' field='data.category_id' label='title'
-          :reduce='(obj) => obj.id' col="4 col-md-3" :options='categories' placeholder='--Select One--' :closeOnSelect='true'
+          :reduce='(obj) => obj.id' col="4 col-md-3" :options='categories' placeholder='--Select Category--' :closeOnSelect='true'
           :required='true' />
+        <Select title='Brand' v-model='data.brand_id' field='data.brand_id' label='title'
+          :reduce='(obj) => obj.id' col="4 col-md-3" :options='brands'
+          :placeholder="data.category_id ? (brands.length ? '--Select Brand--' : 'No Brand in Category') : '--Select Category First--'"
+          :closeOnSelect='true'
+          :required='false' />
         <Input v-model='data.title' field='data.title' title='Title' col="4 col-md-3" :req='true' />
         <Input v-model='data.barcode' field='data.barcode' title='Barcode' col="4 col-md-3" placeholder="Auto-generated" :req='false' />
         <Select title='Unit' v-model='data.unit_id' field='data.unit_id' label='title' :reduce='(obj) => obj.id' col="4 col-md-3"
-          :options='units' placeholder='--Select One--' :closeOnSelect='true' :required='true' />
+          :options='units' placeholder='--Select Unit--' :closeOnSelect='true' :required='true' />
         <Input v-model='data.purchase_price' col="4 col-md-3" field='data.purchase_price' title='Purchase Price (ক্রয় মূল্য)' type="number" step="0.01" :req='false' />
         <Input v-model='data.selling_price' col="4 col-md-3" field='data.selling_price' title='Selling Price (বিক্রয় মূল্য)' type="number" step="0.01" :req='false' />
         <Textarea v-model='data.description' field='data.description' :required='false' title="Description" col="12" />
@@ -160,7 +165,9 @@
         <div class="col-12 mt-3" v-if="!data.id || is_price_modification">
           <div class="card border shadow-sm">
             <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-2">
-              <span class="fw-bold fs-6"><i class="fas fa-tags me-2"></i>Color & Size Wise Price & Stock Matrix</span>
+              <span class="fw-bold fs-6">
+                <i class="fas fa-tags me-2"></i>{{ isElectronicsShop ? 'Color Wise Price & Stock Matrix' : 'Color & Size Wise Price & Stock Matrix' }}
+              </span>
               <button type="button" class="btn btn-sm btn-success px-3" @click="addVariantRow">
                 <i class="fas fa-plus me-1"></i> Add Variant Row
               </button>
@@ -169,12 +176,12 @@
               <table class="table table-bordered table-striped mb-0 align-middle">
                 <thead class="table-light text-center">
                   <tr>
-                    <th width="22%">Color (রং)</th>
-                    <th width="22%">Size (সাইজ)</th>
-                    <th width="18%">Purchase Price (ক্রয় মূল্য)</th>
-                    <th width="18%">Selling Price (বিক্রয় মূল্য)</th>
-                    <th width="12%">Qty (পরিমাণ)</th>
-                    <th width="8%">Action</th>
+                    <th :width="isElectronicsShop ? '28%' : '20%'">Color (রং)</th>
+                    <th width="20%" v-if="!isElectronicsShop">Size (সাইজ)</th>
+                    <th :width="isElectronicsShop ? '24%' : '18%'">Purchase Price (ক্রয় মূল্য)</th>
+                    <th :width="isElectronicsShop ? '24%' : '18%'">Selling Price (বিক্রয় মূল্য)</th>
+                    <th :width="isElectronicsShop ? '14%' : '14%'">Qty (পরিমাণ)</th>
+                    <th width="10%">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -185,7 +192,7 @@
                         <option v-for="c in colors" :key="c.id" :value="c.id">{{ c.title }}</option>
                       </select>
                     </td>
-                    <td>
+                    <td v-if="!isElectronicsShop">
                       <select class="form-select form-select-sm" v-model="v.size_id">
                         <option :value="null">-- Select Size --</option>
                         <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.title }}</option>
@@ -229,8 +236,8 @@ export default {
   components: { Editor },
   computed: {
     isElectronicsShop() {
-      const shopType = this.$root.site?.shop_type;
-      return !shopType || shopType === 'electronics';
+      const shopType = this.site?.shop_type || this.$root.site?.shop_type;
+      return shopType === 'electronics';
     },
   },
   data() {
@@ -240,6 +247,9 @@ export default {
       data: {
         original_image: '',
         barcode: '',
+        category_id: null,
+        brand_id: null,
+        unit_id: null,
         purchase_price: '',
         selling_price: '',
         status: 'active',
@@ -250,6 +260,7 @@ export default {
         original_image: '',
       },
       categories: [],
+      brands: [],
       units: [],
       colors: [],
       sizes: [],
@@ -261,6 +272,12 @@ export default {
   },
 
   watch: {
+    'data.category_id'(newVal, oldVal) {
+      this.getBrands(newVal);
+      if (oldVal && newVal !== oldVal) {
+        this.data.brand_id = null;
+      }
+    },
     'data.purchase_price'(newVal) {
       if (this.variants.length === 1 && (!this.variants[0].purchase_price || this.variants[0].purchase_price == 0)) {
         this.variants[0].purchase_price = newVal ? Number(newVal) : 0;
@@ -315,6 +332,7 @@ export default {
           var formData = new FormData(form);
           formData.append('description', this.data.description || '');
           formData.append('category_id', this.data.category_id || '');
+          formData.append('brand_id', this.data.brand_id || '');
           formData.append('unit_id', this.data.unit_id || '');
           formData.append('purchase_price', this.data.purchase_price || 0);
           formData.append('selling_price', this.data.selling_price || 0);
@@ -323,7 +341,11 @@ export default {
           formData.append('warranty_type', this.data.warranty_type || 'none');
           formData.append('warranty_period', this.data.warranty_period || '');
           formData.append('is_price_modification', this.is_price_modification ? '1' : '0');
-          formData.append('variants', JSON.stringify(this.variants));
+          const cleanedVariants = this.variants.map(v => ({
+            ...v,
+            size_id: this.isElectronicsShop ? null : v.size_id
+          }));
+          formData.append('variants', JSON.stringify(cleanedVariants));
           formData.append('image_base64', this.data.original_image ?? '');
           formData.append(
             'image_resize_value',
@@ -345,6 +367,17 @@ export default {
       axios.get(`getcategories/${module}`)
         .then((response) => {
           this.categories = response.data;
+        });
+    },
+    getBrands(categoryId = null) {
+      const catId = categoryId || this.data.category_id;
+      if (!catId) {
+        this.brands = [];
+        return;
+      }
+      axios.get(`getbrands/${catId}`)
+        .then((response) => {
+          this.brands = response.data;
         });
     },
     getUnits() {
@@ -372,6 +405,9 @@ export default {
     if (this.$route.params.id) {
       this.page_title = this.headline(this.model) + ' Edit';
       this.get_data(`${this.model}/${this.$route.params.id}`).then(() => {
+        if (this.data.category_id) {
+          this.getBrands(this.data.category_id);
+        }
         if (this.data.item_prices && this.data.item_prices.length > 0) {
           this.variants = this.data.item_prices.map(p => ({
             color_id: p.color_id,
