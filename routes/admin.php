@@ -68,6 +68,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('backend-parent-menus', [App\Http\Controllers\Admin\System\MenuController::class, 'getParentMenu'])->name('backendParentMenu');
     Route::get('getcategories/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getcategories'])->name('getcategories');
     Route::get('getunits/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getunits'])->name('getunits');
+    Route::get('getlabelpresets', [App\Http\Controllers\Admin\System\LibController::class, 'getLabelPresets'])->name('getlabelpresets');
     Route::get('getpackages/{serviceid?}', [App\Http\Controllers\Admin\System\LibController::class, 'getPackages'])->name('getpackages');
     Route::get('getpackagebyid/{packageid}', [App\Http\Controllers\Admin\System\LibController::class, 'getPackageByID'])->name('getpackagebyid');
     Route::get('getareas/{districtid?}', [App\Http\Controllers\Admin\System\LibController::class, 'getAreas'])->name('getAreas');
@@ -211,6 +212,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('challan', App\Http\Controllers\Admin\ChallanController::class);
         Route::resource('color', App\Http\Controllers\Admin\ColorController::class);
         Route::resource('size', App\Http\Controllers\Admin\SizeController::class);
+        Route::resource('wastage', App\Http\Controllers\Admin\WastageController::class);
         Route::get('warrantyClaim/check-serial', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'checkSerial'])->name('warrantyClaim.checkSerial');
         Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');
         Route::resource('warrantyClaim', App\Http\Controllers\Admin\WarrantyClaimController::class);
@@ -244,6 +246,10 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
 
         Route::post('expense/approved', [App\Http\Controllers\Admin\ExpenseController::class, 'approved'])->name('expense.approved');
         Route::post('expense/approvalcancel', [App\Http\Controllers\Admin\ExpenseController::class, 'approvalcancel'])->name('expense.approvalcancel');
+
+        Route::post('wastage/check-serial', [App\Http\Controllers\Admin\WastageController::class, 'checkSerial'])->name('wastage.check-serial');
+        Route::post('wastage/approved', [App\Http\Controllers\Admin\WastageController::class, 'approved'])->name('wastage.approved');
+        Route::post('wastage/approvalcancel', [App\Http\Controllers\Admin\WastageController::class, 'approvalcancel'])->name('wastage.approvalcancel');
 
         Route::post('salarySheet/approved', [App\Http\Controllers\Admin\SalarySheetController::class, 'approved'])->name('salarySheet.approved');
         Route::post('salarySheet/approvalcancel', [App\Http\Controllers\Admin\SalarySheetController::class, 'approvalcancel'])->name('salarySheet.approvalcancel');

@@ -42,6 +42,14 @@ let filters = {
         return Number(val || 0).toFixed(2);
     },
 
+    currency(amount) {
+        return this.formatBDT(amount);
+    },
+
+    formatCurrency(amount) {
+        return this.formatBDT(amount);
+    },
+
     formatBDT(amount) {
         if (!amount || isNaN(amount)) return "৳ 0.00";
 

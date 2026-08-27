@@ -349,6 +349,20 @@
                                                 item,
                                                 column.field,
                                                 column.subfield
+                                            ) == 'approved'
+                                        ">APPROVED</span>
+                                        <span class="status cancel" v-if="
+                                            itemValue(
+                                                item,
+                                                column.field,
+                                                column.subfield
+                                            ) == 'rejected'
+                                        ">REJECTED</span>
+                                        <span class="status approved" v-if="
+                                            itemValue(
+                                                item,
+                                                column.field,
+                                                column.subfield
                                             ) == 'success'
                                         ">SUCCESS</span>
                                     </span>

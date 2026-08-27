@@ -270,6 +270,27 @@
                                 </div>
                             </div>
 
+                            <!-- 3. Default Barcode Label Size Preset -->
+                            <div class="col-12 border-top pt-3 mt-3">
+                                <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
+                                    <i class="fas fa-barcode text-theme"></i> Default Barcode Label Size Preset (ডিফল্ট বারকোড লেবেল সাইজ):
+                                </label>
+                                <Select
+                                    title="Default Label Preset"
+                                    v-model="data.label_preset"
+                                    field="data.label_preset"
+                                    col="12"
+                                    label="name"
+                                    :reduce="(obj) => obj.value"
+                                    :options="$root.global.label_presets || []"
+                                    placeholder="--Select Default Barcode Label Size--"
+                                    :closeOnSelect="true"
+                                />
+                                <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                    <i class="fas fa-info-circle text-primary me-1"></i> This preset will be selected automatically as the default size on the <strong>Barcode Label Printing</strong> page.
+                                </small>
+                            </div>
+
                             <!-- Live preview summary banner -->
                             <div class="col-12">
                                 <div class="alert alert-light border py-2 px-3 mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2" style="font-size: 12px;">
@@ -518,6 +539,7 @@ export default {
                 printer_type: "thermal",
                 normal_paper_size: "A4",
                 thermal_paper_size: "80mm",
+                label_preset: "4x2",
                 coupon_enabled: 0,
                 point_earn_rate: 1,
                 point_redeem_rate: 10,
@@ -559,6 +581,7 @@ export default {
                     formData.append("printer_type", this.data.printer_type || "thermal");
                     formData.append("normal_paper_size", this.data.normal_paper_size || "A4");
                     formData.append("thermal_paper_size", this.data.thermal_paper_size || "80mm");
+                    formData.append("label_preset", this.data.label_preset || "4x2");
                     formData.append("default_currency_id", this.data.default_currency_id);
                     formData.append("coupon_enabled", this.data.coupon_enabled ? 1 : 0);
                     formData.append("point_earn_rate", this.data.point_earn_rate ?? 1);
@@ -590,6 +613,7 @@ export default {
                     if (!this.data.printer_type) this.data.printer_type = "thermal";
                     if (!this.data.normal_paper_size) this.data.normal_paper_size = "A4";
                     if (!this.data.thermal_paper_size) this.data.thermal_paper_size = "80mm";
+                    if (!this.data.label_preset) this.data.label_preset = "4x2";
                 })
                 .catch((error) => {
                     this.$toast(

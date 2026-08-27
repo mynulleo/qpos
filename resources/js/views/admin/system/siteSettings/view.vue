@@ -296,10 +296,17 @@
                                         </td>
                                     </tr>
                                     <tr>
+                                        <td class="spec-label"><i class="fas fa-barcode me-2 text-muted"></i>Default Barcode Label Preset</td>
+                                        <td class="spec-value font-monospace fw-bold text-dark">
+                                            {{ $root.global?.label_presets?.find(p => p.value === (data?.label_preset || '4x2'))?.name || data?.label_preset || '4" × 2" (Standard Barcode Tag)' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <td class="spec-label"><i class="fas fa-check-double me-2 text-muted"></i>Application Targets</td>
                                         <td class="spec-value">
                                             <span class="badge bg-light text-dark border me-1">POS Sales Checkout</span>
-                                            <span class="badge bg-light text-dark border">Warranty Claim Slips</span>
+                                            <span class="badge bg-light text-dark border me-1">Warranty Claim Slips</span>
+                                            <span class="badge bg-light text-dark border">Barcode Label Printing</span>
                                         </td>
                                     </tr>
                                 </tbody>
