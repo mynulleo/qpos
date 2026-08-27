@@ -48,18 +48,10 @@
             <label class="form-label fw-bold small text-secondary">
               <i class="fas fa-ruler-combined me-1 text-primary"></i> Label Size Preset (সাইজ প্রিসেট):
             </label>
-            <select class="form-select form-select-sm fw-semibold" v-model="settings.preset" @change="onPresetChange">
-              <option value="4x2">4" × 2" (101.6 × 50.8 mm) - Standard Barcode Tag (Landscape)</option>
-              <option value="2x4">2" × 4" (50.8 × 101.6 mm) - Rotated / Tall Tag (Portrait)</option>
-              <option value="3x2">3" × 2" (76.2 × 50.8 mm) - Retail Label (Landscape)</option>
-              <option value="2x1">2" × 1" (50.8 × 25.4 mm) - Compact Price Tag (Landscape)</option>
-              <option value="4x6">4" × 6" (101.6 × 152.4 mm) - Shipping & Box Label (Portrait)</option>
-              <option value="50x30">50 × 30 mm (2.0" × 1.2") - Standard Thermal Roll</option>
-              <option value="30x50">30 × 50 mm (1.2" × 2.0") - Rotated 30x50mm Thermal Tag</option>
-              <option value="40x25">40 × 25 mm (1.6" × 1.0") - Jewelry & Small Sticker</option>
-              <option value="38x25">38 × 25 mm - 3 Columns A4 Sheet (24 per page)</option>
-              <option value="30x20">30 × 20 mm - 4 Columns A4 Sheet (40 per page)</option>
-              <option value="custom">Custom Size (কাস্টম সাইজ)</option>
+            <select class="form-select form-select-sm fw-semibold" v-model="settings.preset" @change="onPresetChange(true)">
+              <option v-for="preset in labelPresetOptions" :key="preset.value" :value="preset.value">
+                {{ preset.name }}
+              </option>
             </select>
           </div>
 
@@ -1060,18 +1052,19 @@ import bootstrap from "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const model = "pos";
 
-const sizePresetMap = {
-  "4x2": { unit: "in", width: 4, height: 2, columns: 1, paperType: "thermal", orientation: "landscape" },
-  "2x4": { unit: "in", width: 2, height: 4, columns: 1, paperType: "thermal", orientation: "portrait" },
-  "3x2": { unit: "in", width: 3, height: 2, columns: 1, paperType: "thermal", orientation: "landscape" },
-  "2x1": { unit: "in", width: 2, height: 1, columns: 1, paperType: "thermal", orientation: "landscape" },
-  "4x6": { unit: "in", width: 4, height: 6, columns: 1, paperType: "thermal", orientation: "portrait" },
-  "50x30": { unit: "mm", width: 50, height: 30, columns: 1, paperType: "thermal", orientation: "landscape" },
-  "30x50": { unit: "mm", width: 30, height: 50, columns: 1, paperType: "thermal", orientation: "portrait" },
-  "40x25": { unit: "mm", width: 40, height: 25, columns: 1, paperType: "thermal", orientation: "landscape" },
-  "38x25": { unit: "mm", width: 38, height: 25, columns: 3, paperType: "A4", orientation: "landscape" },
-  "30x20": { unit: "mm", width: 30, height: 20, columns: 4, paperType: "A4", orientation: "landscape" },
-};
+const defaultLabelPresets = [
+  { value: "4x2", name: '4" × 2" (101.6 × 50.8 mm) - Standard Barcode Tag (Landscape)', unit: "in", width: 4, height: 2, columns: 1, paperType: "thermal", orientation: "landscape" },
+  { value: "2x4", name: '2" × 4" (50.8 × 101.6 mm) - Rotated / Tall Tag (Portrait)', unit: "in", width: 2, height: 4, columns: 1, paperType: "thermal", orientation: "portrait" },
+  { value: "3x2", name: '3" × 2" (76.2 × 50.8 mm) - Retail Label (Landscape)', unit: "in", width: 3, height: 2, columns: 1, paperType: "thermal", orientation: "landscape" },
+  { value: "2x1", name: '2" × 1" (50.8 × 25.4 mm) - Compact Price Tag (Landscape)', unit: "in", width: 2, height: 1, columns: 1, paperType: "thermal", orientation: "landscape" },
+  { value: "4x6", name: '4" × 6" (101.6 × 152.4 mm) - Shipping & Box Label (Portrait)', unit: "in", width: 4, height: 6, columns: 1, paperType: "thermal", orientation: "portrait" },
+  { value: "50x30", name: '50 × 30 mm (2.0" × 1.2") - Standard Thermal Roll', unit: "mm", width: 50, height: 30, columns: 1, paperType: "thermal", orientation: "landscape" },
+  { value: "30x50", name: '30 × 50 mm (1.2" × 2.0") - Rotated 30x50mm Thermal Tag', unit: "mm", width: 30, height: 50, columns: 1, paperType: "thermal", orientation: "portrait" },
+  { value: "40x25", name: '40 × 25 mm (1.6" × 1.0") - Jewelry & Small Sticker', unit: "mm", width: 40, height: 25, columns: 1, paperType: "thermal", orientation: "landscape" },
+  { value: "38x25", name: '38 × 25 mm - 3 Columns A4 Sheet (24 per page)', unit: "mm", width: 38, height: 25, columns: 3, paperType: "A4", orientation: "landscape" },
+  { value: "30x20", name: '30 × 20 mm - 4 Columns A4 Sheet (40 per page)', unit: "mm", width: 30, height: 20, columns: 4, paperType: "A4", orientation: "landscape" },
+  { value: "custom", name: 'Custom Size (কাস্টম সাইজ)', unit: "in", width: 4, height: 2, columns: 1, paperType: "thermal", orientation: "landscape" },
+];
 
 export default {
   data() {
@@ -1131,6 +1124,13 @@ export default {
   },
 
   computed: {
+    labelPresetOptions() {
+      if (this.$root.global && this.$root.global.label_presets && this.$root.global.label_presets.length > 0) {
+        return this.$root.global.label_presets;
+      }
+      return defaultLabelPresets;
+    },
+
     totalStickersCount() {
       return this.labelQueue.reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
     },
@@ -1375,16 +1375,18 @@ export default {
     // =========================================================
     // ⚙️ LABEL SIZE PRESET & ROTATION METHODS
     // =========================================================
-    onPresetChange() {
-      const p = sizePresetMap[this.settings.preset];
-      if (p) {
-        this.settings.unit = p.unit;
-        this.settings.width = p.width;
-        this.settings.height = p.height;
+    onPresetChange(showToast = true) {
+      const p = this.labelPresetOptions.find((item) => item.value === this.settings.preset);
+      if (p && p.value !== "custom") {
+        this.settings.unit = p.unit || "in";
+        this.settings.width = parseFloat(p.width) || 4;
+        this.settings.height = parseFloat(p.height) || 2;
         this.settings.columns = p.columns || 1;
         this.settings.paperType = p.paperType || "thermal";
         this.settings.orientation = p.orientation || (p.width >= p.height ? "landscape" : "portrait");
-        this.$toast(`Applied ${this.settings.preset} label preset (${this.settings.width}${this.settings.unit} × ${this.settings.height}${this.settings.unit})`, "info");
+        if (showToast) {
+          this.$toast(`Applied ${this.settings.preset} label preset (${this.settings.width}${this.settings.unit} × ${this.settings.height}${this.settings.unit})`, "info");
+        }
       }
     },
 
@@ -2050,6 +2052,34 @@ export default {
     },
   },
 
+  watch: {
+    "$root.site": {
+      immediate: true,
+      deep: true,
+      handler(site) {
+        if (site) {
+          if (site.title && !this.settings.companyName) {
+            this.settings.companyName = site.title;
+          }
+          if (site.label_preset && (!this._presetApplied || this.settings.preset === "4x2")) {
+            this.settings.preset = site.label_preset;
+            this.onPresetChange(false);
+            this._presetApplied = true;
+          }
+        }
+      },
+    },
+    "$root.global.label_presets": {
+      immediate: true,
+      handler(presets) {
+        if (presets && presets.length > 0 && this.$root.site && this.$root.site.label_preset) {
+          this.settings.preset = this.$root.site.label_preset;
+          this.onPresetChange(false);
+        }
+      },
+    },
+  },
+
   created() {
     this.page_title = "Barcode Label Printing";
     this.fetchCategories();
@@ -2058,6 +2088,10 @@ export default {
   mounted() {
     if (this.$root.site && this.$root.site.title) {
       this.settings.companyName = this.$root.site.title;
+    }
+    if (this.$root.site && this.$root.site.label_preset) {
+      this.settings.preset = this.$root.site.label_preset;
+      this.onPresetChange(false);
     }
     if (this.$refs.barcodeSearchInput) {
       this.$refs.barcodeSearchInput.focus();

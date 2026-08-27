@@ -106,6 +106,7 @@ class LibController extends Controller
             'service_modules' => $this->getServiceModule(),
             'currencies' => $this->getCurrencies(),
             'systemmodes' => $this->getSystemModes(),
+            'label_presets' => $this->getLabelPresets(),
         ];
     }
 
@@ -521,5 +522,121 @@ class LibController extends Controller
     public function getActiveAgents()
     {
         return Agent::where('status', 'active')->get(['id', 'full_name', 'mobile', 'organization', 'designation', 'address']);
+    }
+
+    public function getLabelPresets()
+    {
+        return [
+            [
+                'value' => '4x2',
+                'name' => '4" × 2" (101.6 × 50.8 mm) - Standard Barcode Tag (Landscape)',
+                'unit' => 'in',
+                'width' => 4,
+                'height' => 2,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'landscape',
+            ],
+            [
+                'value' => '2x4',
+                'name' => '2" × 4" (50.8 × 101.6 mm) - Rotated / Tall Tag (Portrait)',
+                'unit' => 'in',
+                'width' => 2,
+                'height' => 4,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'portrait',
+            ],
+            [
+                'value' => '3x2',
+                'name' => '3" × 2" (76.2 × 50.8 mm) - Retail Label (Landscape)',
+                'unit' => 'in',
+                'width' => 3,
+                'height' => 2,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'landscape',
+            ],
+            [
+                'value' => '2x1',
+                'name' => '2" × 1" (50.8 × 25.4 mm) - Compact Price Tag (Landscape)',
+                'unit' => 'in',
+                'width' => 2,
+                'height' => 1,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'landscape',
+            ],
+            [
+                'value' => '4x6',
+                'name' => '4" × 6" (101.6 × 152.4 mm) - Shipping & Box Label (Portrait)',
+                'unit' => 'in',
+                'width' => 4,
+                'height' => 6,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'portrait',
+            ],
+            [
+                'value' => '50x30',
+                'name' => '50 × 30 mm (2.0" × 1.2") - Standard Thermal Roll',
+                'unit' => 'mm',
+                'width' => 50,
+                'height' => 30,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'landscape',
+            ],
+            [
+                'value' => '30x50',
+                'name' => '30 × 50 mm (1.2" × 2.0") - Rotated 30x50mm Thermal Tag',
+                'unit' => 'mm',
+                'width' => 30,
+                'height' => 50,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'portrait',
+            ],
+            [
+                'value' => '40x25',
+                'name' => '40 × 25 mm (1.6" × 1.0") - Jewelry & Small Sticker',
+                'unit' => 'mm',
+                'width' => 40,
+                'height' => 25,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'landscape',
+            ],
+            [
+                'value' => '38x25',
+                'name' => '38 × 25 mm - 3 Columns A4 Sheet (24 per page)',
+                'unit' => 'mm',
+                'width' => 38,
+                'height' => 25,
+                'columns' => 3,
+                'paperType' => 'A4',
+                'orientation' => 'landscape',
+            ],
+            [
+                'value' => '30x20',
+                'name' => '30 × 20 mm - 4 Columns A4 Sheet (40 per page)',
+                'unit' => 'mm',
+                'width' => 30,
+                'height' => 20,
+                'columns' => 4,
+                'paperType' => 'A4',
+                'orientation' => 'landscape',
+            ],
+            [
+                'value' => 'custom',
+                'name' => 'Custom Size (কাস্টম সাইজ)',
+                'unit' => 'in',
+                'width' => 4,
+                'height' => 2,
+                'columns' => 1,
+                'paperType' => 'thermal',
+                'orientation' => 'landscape',
+            ],
+        ];
     }
 }

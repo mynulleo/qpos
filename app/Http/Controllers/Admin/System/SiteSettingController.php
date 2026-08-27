@@ -28,17 +28,26 @@ class SiteSettingController extends BaseController
     {
         try {
             if (Schema::hasTable('site_settings')) {
-                Schema::table('site_settings', function (Blueprint $table) {
-                    if (!Schema::hasColumn('site_settings', 'printer_type')) {
+                if (!Schema::hasColumn('site_settings', 'printer_type')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
                         $table->string('printer_type', 50)->default('thermal')->nullable();
-                    }
-                    if (!Schema::hasColumn('site_settings', 'normal_paper_size')) {
+                    });
+                }
+                if (!Schema::hasColumn('site_settings', 'normal_paper_size')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
                         $table->string('normal_paper_size', 50)->default('A4')->nullable();
-                    }
-                    if (!Schema::hasColumn('site_settings', 'thermal_paper_size')) {
+                    });
+                }
+                if (!Schema::hasColumn('site_settings', 'thermal_paper_size')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
                         $table->string('thermal_paper_size', 50)->default('80mm')->nullable();
-                    }
-                });
+                    });
+                }
+                if (!Schema::hasColumn('site_settings', 'label_preset')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->string('label_preset', 50)->default('4x2')->nullable();
+                    });
+                }
             }
         } catch (\Exception $e) {
             // Ignore if columns exist or connection issue
@@ -209,6 +218,7 @@ class SiteSettingController extends BaseController
             'printer_type' => ['nullable', 'string'],
             'normal_paper_size' => ['nullable', 'string'],
             'thermal_paper_size' => ['nullable', 'string'],
+            'label_preset' => ['nullable', 'string'],
             'logo_base64' => ['nullable', 'string', new Base64Image()],
             'logo_resize_value' => ['nullable', 'string'],
             'logo_small_base64' => ['nullable', 'string', new Base64Image()],

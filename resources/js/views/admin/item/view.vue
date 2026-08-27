@@ -183,42 +183,17 @@
               </div>
             </div>
           </div>
-
-          <!-- Warranty & Guarantee Card (If Electronics or enabled) -->
-          <div class="card border border-primary-subtle shadow-sm mb-3" v-if="isElectronicsShop || data.warranty_type !== 'none'">
-            <div class="card-header bg-primary bg-opacity-10 py-2">
-              <span class="fw-bold text-primary small d-flex align-items-center gap-2">
-                <i class="fas fa-shield-alt"></i> Warranty & Guarantee Info (ওয়ারেন্টি তথ্য)
-              </span>
-            </div>
-            <div class="card-body p-3">
-              <div class="d-flex align-items-center gap-3">
-                <div class="p-3 rounded-circle" :class="data.warranty_type === 'guarantee' ? 'bg-success bg-opacity-10 text-success' : (data.warranty_type === 'warranty' ? 'bg-primary bg-opacity-10 text-primary' : 'bg-secondary bg-opacity-10 text-muted')">
-                  <i :class="data.warranty_type === 'guarantee' ? 'fas fa-certificate fa-2x' : (data.warranty_type === 'warranty' ? 'fas fa-tools fa-2x' : 'fas fa-shield-alt fa-2x')"></i>
-                </div>
-                <div>
-                  <div class="small text-muted text-uppercase fw-bold">Coverage Type:</div>
-                  <h6 class="mb-0 fw-bold text-capitalize" :class="data.warranty_type === 'guarantee' ? 'text-success' : (data.warranty_type === 'warranty' ? 'text-primary' : 'text-muted')">
-                    {{ data.warranty_type === 'guarantee' ? 'Replacement Guarantee' : (data.warranty_type === 'warranty' ? 'Service Warranty' : 'No Warranty') }}
-                  </h6>
-                  <div class="small fw-semibold mt-1" v-if="data.warranty_period">
-                    <i class="fas fa-clock text-warning me-1"></i> Period: <span class="badge bg-light text-dark border">{{ data.warranty_period }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <!-- Right Side: Master Specifications & Details -->
+        <!-- Right Side: Master Specifications & Details + Warranty Info -->
         <div class="col-lg-8 col-md-7">
-          <div class="card border-0 shadow-sm h-100">
+          <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-light py-2 fw-bold text-dark d-flex justify-content-between align-items-center">
               <span><i class="fas fa-info-circle me-1 text-primary"></i> Master Specifications</span>
               <span class="badge bg-secondary font-monospace">Item #{{ data.id }}</span>
             </div>
             <div class="card-body p-3">
-              <table class="table table-striped table-bordered align-middle mb-3">
+              <table class="table table-striped table-bordered align-middle mb-0">
                 <tbody>
                   <tr>
                     <th width="30%">Item Title (নাম):</th>
@@ -234,7 +209,15 @@
                   </tr>
                   <tr>
                     <th>Barcode (বারকোড):</th>
-                    <td><span class="badge bg-dark font-monospace fs-6 px-3 py-1">{{ data.barcode || 'N/A' }}</span></td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-dark font-monospace fs-6 px-3 py-1">{{ data.barcode || 'N/A' }}</span>
+                        <img v-if="data.barcode_image" :src="data.barcode_image" alt="Barcode" style="height: 34px; max-width: 140px; background: #fff; padding: 2px; border: 1px solid #ddd; border-radius: 4px;" />
+                        <button type="button" class="btn btn-sm btn-outline-primary px-2 py-0 fw-semibold" @click="printSingleBarcode" title="Print Barcode">
+                          <i class="fas fa-print me-1"></i> Print
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                   <tr>
                     <th>Primary Purchase Price:</th>
@@ -265,6 +248,31 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Warranty & Guarantee Card (Moved to Right Side) -->
+          <div class="card border border-primary-subtle shadow-sm mb-3" v-if="isElectronicsShop || data.warranty_type !== 'none'">
+            <div class="card-header bg-primary bg-opacity-10 py-2">
+              <span class="fw-bold text-primary small d-flex align-items-center gap-2">
+                <i class="fas fa-shield-alt"></i> Warranty & Guarantee Info (ওয়ারেন্টি তথ্য)
+              </span>
+            </div>
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-circle" :class="data.warranty_type === 'guarantee' ? 'bg-success bg-opacity-10 text-success' : (data.warranty_type === 'warranty' ? 'bg-primary bg-opacity-10 text-primary' : 'bg-secondary bg-opacity-10 text-muted')">
+                  <i :class="data.warranty_type === 'guarantee' ? 'fas fa-certificate fa-2x' : (data.warranty_type === 'warranty' ? 'fas fa-tools fa-2x' : 'fas fa-shield-alt fa-2x')"></i>
+                </div>
+                <div>
+                  <div class="small text-muted text-uppercase fw-bold">Coverage Type:</div>
+                  <h6 class="mb-0 fw-bold text-capitalize" :class="data.warranty_type === 'guarantee' ? 'text-success' : (data.warranty_type === 'warranty' ? 'text-primary' : 'text-muted')">
+                    {{ data.warranty_type === 'guarantee' ? 'Replacement Guarantee' : (data.warranty_type === 'warranty' ? 'Service Warranty' : 'No Warranty') }}
+                  </h6>
+                  <div class="small fw-semibold mt-1" v-if="data.warranty_period">
+                    <i class="fas fa-clock text-warning me-1"></i> Period: <span class="badge bg-light text-dark border">{{ data.warranty_period }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -562,6 +570,9 @@ export default {
 </script>
 
 <style scoped>
+.card {
+  height: auto;
+}
 .nav-pills .nav-link {
   color: #495057;
   border-radius: 6px;
