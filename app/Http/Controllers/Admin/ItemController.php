@@ -26,7 +26,7 @@ class ItemController extends BaseController
      */
     public function index(Request $request)
     {
-        $query  = Item::with('category:id,title', 'unit:id,title')->latest();
+        $query  = Item::with('category:id,title', 'brand:id,title', 'unit:id,title')->latest();
 
         if ($request->field_name && $request->value) {
             $query->whereLike($request->field_name, $request->value);
@@ -34,6 +34,22 @@ class ItemController extends BaseController
 
         if (!empty($request->category_id)) {
             $query->where('category_id', $request->category_id);
+        }
+
+        if (!empty($request->brand_id)) {
+            $query->where('brand_id', $request->brand_id);
+        }
+
+        if (!empty($request->color_id)) {
+            $query->whereHas('itemPrices', function ($q) use ($request) {
+                $q->where('color_id', $request->color_id);
+            });
+        }
+
+        if (!empty($request->size_id)) {
+            $query->whereHas('itemPrices', function ($q) use ($request) {
+                $q->where('size_id', $request->size_id);
+            });
         }
 
 
@@ -174,6 +190,7 @@ class ItemController extends BaseController
 
         $item = Item::with([
             'category:id,title',
+            'brand:id,title',
             'unit:id,title',
             'itemPrices.color:id,title',
             'itemPrices.size:id,title',

@@ -67,6 +67,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
 
     Route::get('backend-parent-menus', [App\Http\Controllers\Admin\System\MenuController::class, 'getParentMenu'])->name('backendParentMenu');
     Route::get('getcategories/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getcategories'])->name('getcategories');
+    Route::get('getbrands/{category_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getbrands'])->name('getbrands');
     Route::get('getunits/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getunits'])->name('getunits');
     Route::get('getlabelpresets', [App\Http\Controllers\Admin\System\LibController::class, 'getLabelPresets'])->name('getlabelpresets');
     Route::get('getpackages/{serviceid?}', [App\Http\Controllers\Admin\System\LibController::class, 'getPackages'])->name('getpackages');
@@ -212,6 +213,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('challan', App\Http\Controllers\Admin\ChallanController::class);
         Route::resource('color', App\Http\Controllers\Admin\ColorController::class);
         Route::resource('size', App\Http\Controllers\Admin\SizeController::class);
+        Route::resource('brand', App\Http\Controllers\Admin\BrandController::class);
         Route::resource('wastage', App\Http\Controllers\Admin\WastageController::class);
         Route::get('warrantyClaim/check-serial', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'checkSerial'])->name('warrantyClaim.checkSerial');
         Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');

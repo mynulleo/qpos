@@ -17,6 +17,18 @@
         <v-select v-model="search_data.category_id" label="title" :reduce="(obj) => obj.id" :options="categories"
           placeholder="--Select Category--" :closeOnSelect="true"></v-select>
       </v-select-container>
+      <v-select-container title="Brand" field="search_data.brand_id" col="3">
+        <v-select v-model="search_data.brand_id" label="title" :reduce="(obj) => obj.id" :options="brands"
+          :placeholder="search_data.category_id ? '--Select Brand--' : '--All Brands--'" :closeOnSelect="true"></v-select>
+      </v-select-container>
+      <v-select-container title="Color" field="search_data.color_id" col="3">
+        <v-select v-model="search_data.color_id" label="title" :reduce="(obj) => obj.id" :options="colors"
+          placeholder="--Select Color--" :closeOnSelect="true"></v-select>
+      </v-select-container>
+      <v-select-container title="Size" field="search_data.size_id" col="3" v-if="!isElectronicsShop">
+        <v-select v-model="search_data.size_id" label="title" :reduce="(obj) => obj.id" :options="sizes"
+          placeholder="--Select Size--" :closeOnSelect="true"></v-select>
+      </v-select-container>
     </template>
   </index-page>
 </template>
@@ -29,6 +41,7 @@ const tableColumns = [
   { field: "image", title: "Image", image: true, imgWidth: "30px", align: "center" },
   { field: "barcode", title: "Barcode" },
   { field: "category_id", title: "Category", subfield: "category.title" },
+  { field: "brand_id", title: "Brand", subfield: "brand.title" },
   { field: "title", title: "Title" },
   { field: "unit_id", title: "Unit", subfield: "unit.title" },
   { field: "opening_qty", title: "Opening Qty" },
@@ -47,7 +60,12 @@ const json_fields = {
 };
 
 export default {
-
+  computed: {
+    isElectronicsShop() {
+      const shopType = this.site?.shop_type || this.$root.site?.shop_type;
+      return shopType === 'electronics';
+    },
+  },
   data() {
     return {
       model: model,
@@ -60,6 +78,10 @@ export default {
         field_name: this.$route.query.field_name ?? "",
         value: this.$route.query.value ?? "",
         status: this.$route.query.status ?? "",
+        category_id: this.$route.query.category_id ?? "",
+        brand_id: this.$route.query.brand_id ?? "",
+        color_id: this.$route.query.color_id ?? "",
+        size_id: this.$route.query.size_id ?? "",
       },
       table: {
         columns: tableColumns,
@@ -69,7 +91,19 @@ export default {
         links: []
       },
       categories: [],
+      brands: [],
+      colors: [],
+      sizes: [],
     };
+  },
+
+  watch: {
+    'search_data.category_id'(newVal, oldVal) {
+      this.getBrands(newVal);
+      if (oldVal && newVal !== oldVal) {
+        this.search_data.brand_id = "";
+      }
+    },
   },
 
   provide() {
@@ -96,6 +130,11 @@ export default {
       this.search_data.field_name = "";
       this.search_data.value = "";
       this.search_data.status = "";
+      this.search_data.category_id = "";
+      this.search_data.brand_id = "";
+      this.search_data.color_id = "";
+      this.search_data.size_id = "";
+      this.getBrands();
     },
     getCategories() {
       let module = 'Item';
@@ -104,6 +143,20 @@ export default {
           this.categories = response.data;
         });
     },
+    getBrands(categoryId = null) {
+      const catId = categoryId || this.search_data.category_id;
+      const url = catId ? `getbrands/${catId}` : 'getbrands';
+      axios.get(url)
+        .then((response) => {
+          this.brands = response.data;
+        });
+    },
+    getColorsAndSizes() {
+      axios.get('color?allData=true').then(res => { this.colors = res.data; });
+      if (!this.isElectronicsShop) {
+        axios.get('size?allData=true').then(res => { this.sizes = res.data; });
+      }
+    },
   },
 
   created() {
@@ -111,6 +164,8 @@ export default {
     this.page_title = `${this.headline(this.model)} List`;
     this.search();
     this.getCategories();
+    this.getBrands(this.search_data.category_id);
+    this.getColorsAndSizes();
   },
 
   validators: {},

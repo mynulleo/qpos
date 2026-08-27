@@ -204,6 +204,10 @@
                     <td class="fw-semibold">{{ data.category ? data.category.title : 'N/A' }}</td>
                   </tr>
                   <tr>
+                    <th>Brand (ব্র্যান্ড):</th>
+                    <td class="fw-semibold">{{ data.brand ? data.brand.title : 'N/A' }}</td>
+                  </tr>
+                  <tr>
                     <th>Unit (পরিমাপ একক):</th>
                     <td><span class="badge bg-info bg-opacity-10 text-info border border-info fw-bold">{{ data.unit ? data.unit.title : 'Piece / Unit' }}</span></td>
                   </tr>
@@ -293,8 +297,8 @@
                 <thead class="table-light text-center" style="font-size: 13px;">
                   <tr>
                     <th width="4%">#</th>
-                    <th width="12%">Color (রং)</th>
-                    <th width="12%">Size (সাইজ)</th>
+                    <th :width="isElectronicsShop ? '16%' : '12%'">Color (রং)</th>
+                    <th width="12%" v-if="!isElectronicsShop">Size (সাইজ)</th>
                     <th width="12%">Purchase Price</th>
                     <th width="12%">Selling Price</th>
                     <th width="14%">Profit Margin</th>
@@ -313,7 +317,7 @@
                       </span>
                       <span class="text-muted small" v-else>Standard</span>
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" v-if="!isElectronicsShop">
                       <span class="badge bg-light text-dark border px-2 py-1" v-if="v.size_title">
                         <i class="fas fa-ruler me-1 text-secondary"></i>{{ v.size_title }}
                       </span>
@@ -336,7 +340,7 @@
                     </td>
                   </tr>
                   <tr v-if="!data.variants_breakdown || data.variants_breakdown.length === 0">
-                    <td colspan="10" class="text-center text-muted py-3">No variant details found for this item.</td>
+                    <td :colspan="isElectronicsShop ? 9 : 10" class="text-center text-muted py-3">No variant details found for this item.</td>
                   </tr>
                 </tbody>
               </table>
@@ -530,8 +534,8 @@ export default {
 
   computed: {
     isElectronicsShop() {
-      const shopType = this.$root.site?.shop_type;
-      return !shopType || shopType === 'electronics';
+      const shopType = this.site?.shop_type || this.$root.site?.shop_type;
+      return shopType === 'electronics';
     },
 
     primaryPurchasePrice() {

@@ -8,6 +8,7 @@ use App\Models\Unit;
 use App\Models\Branch;
 use App\Models\Account;
 use App\Models\Category;
+use App\Models\Brand;
 use App\Models\District;
 use App\Models\Employee;
 use App\Models\Supplier;
@@ -517,6 +518,16 @@ class LibController extends Controller
 
         $categories = $query->get(['id', 'title']);
         return $categories;
+    }
+
+    public function getbrands($category_id = null)
+    {
+        $catId = $category_id ?: request('category_id');
+        $query = Brand::where('status', 'active')->orderBy('sorting', 'asc');
+        if (!empty($catId)) {
+            $query->where('category_id', $catId);
+        }
+        return $query->get(['id', 'title', 'category_id']);
     }
 
     public function getActiveAgents()

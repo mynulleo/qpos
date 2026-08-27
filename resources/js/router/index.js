@@ -1157,6 +1157,27 @@ const routes = [
                 name: "size.edit",
                 component: () => import("./../views/admin/size/create"),
             },
+            // ------------------Brand PORTION------------------
+            {
+                path: "/brand",
+                name: "brand.index",
+                component: () => import("./../views/admin/brand/index"),
+            },
+            {
+                path: "/brand/create",
+                name: "brand.create",
+                component: () => import("./../views/admin/brand/create"),
+            },
+            {
+                path: "/brand/:id",
+                name: "brand.show",
+                component: () => import("./../views/admin/brand/view"),
+            },
+            {
+                path: "/brand/:id/edit",
+                name: "brand.edit",
+                component: () => import("./../views/admin/brand/create"),
+            },
 
             // ------------------Warranty Claim PORTION------------------
             {

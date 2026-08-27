@@ -18,4 +18,9 @@ class Category extends BaseModel
     {
         return $this->hasMany(Project::class);
     }
+
+    public function brands()
+    {
+        return $this->hasMany(Brand::class, 'category_id', 'id');
+    }
 }
