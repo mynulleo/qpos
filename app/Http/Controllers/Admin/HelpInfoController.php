@@ -160,6 +160,9 @@ class HelpInfoController extends BaseController
     public function getHelpInfo($modelName, $pageType)
     {
         $data = HelpInfo::active()->where('model_name', $modelName)->where('page_type', $pageType)->first();
+        if (!$data && strtolower($pageType) === 'edit') {
+            $data = HelpInfo::active()->where('model_name', $modelName)->where('page_type', 'create')->first();
+        }
         return $data;
     }
 }
