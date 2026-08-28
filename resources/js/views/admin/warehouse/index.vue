@@ -1,62 +1,75 @@
 <template>
   <index-page>
     <template v-slot:search-field>
-      <v-select-container title="Supplier" field="search_data.supplier_id" col="3">
-        <v-select v-model="search_data.supplier_id" label="org_name" :reduce="(obj) => obj.id"
-          :options="$root.global.suppliers" placeholder="--Select Supplier--" :closeOnSelect="true"></v-select>
+      <v-select-container title="Branch" field="search_data.branch_id" col="3">
+        <v-select v-model="search_data.branch_id" label="title" :reduce="(obj) => obj.id"
+          :options="$root.global.branches" placeholder="--Select Branch--" :closeOnSelect="true"></v-select>
       </v-select-container>
     </template>
   </index-page>
 </template>
 
 <script>
-
-const model = "purchase";
+const model = "warehouse";
 
 const tableColumns = [
-  { field: "invoiceno", title: "Invoiceno" },
-  { field: "purchase_date", title: "Purchase Date" },
-  { field: "supplier_id", title: "Supplier", subfield: "supplier.org_name" },
-  { field: "amount", title: "Amount" },
-  { field: "discount", title: "Discount" },
-  { field: "tax", title: "Tax" },
-  { field: "total_amount", title: "Total Amount" },
-  { field: "receive_status", title: "Receive Status", align: "center" },
+  { field: "name", title: "Warehouse Name" },
+  { field: "code", title: "Code", align: "center" },
+  { field: "contact_person", title: "Contact Person" },
+  { field: "contact_person_phone", title: "Mobile" },
+  { field: "branch_id", title: "Branch", subfield: "branch.title" },
+  { field: "capacity", title: "Capacity" },
+  {
+    field: "sorting",
+    title: "Sorting",
+    sorting: true,
+    namespace: "Warehouse",
+    auto: "",
+    align: "center",
+  },
   { field: "status", title: "Status", align: "center" },
 ];
 
 const json_fields = {
-  "Invoiceno": "invoiceno",
-  "Purchase Date": "purchase_date",
-  "Supplier Id": "supplier_id",
-  "Amount": "amount",
-  "Discount": "discount",
-  "Tax": "tax",
-  "Total Amount": "total_amount",
+  "Warehouse Name": "name",
+  "Code": "code",
+  "Contact Person": "contact_person",
+  "Mobile": "contact_person_phone",
+  "Phone": "phone",
+  "Email": "email",
+  "Address": "address",
+  "Capacity": "capacity",
+  "Status": "status",
 };
 
 export default {
-
   data() {
     return {
       model: model,
       page_title: "",
       json_fields: json_fields,
-      fields_name: { default: "Select One", invoiceno: "Invoice No" },
+      fields_name: {
+        default: "Select One",
+        name: "Warehouse Name",
+        code: "Code",
+        contact_person: "Contact Person",
+        phone: "Phone",
+      },
       search_data: {
         pagination: this.$route.query.pagination ?? 10,
         page: this.$route.query.page ?? 1,
         field_name: this.$route.query.field_name ?? "",
         value: this.$route.query.value ?? "",
         status: this.$route.query.status ?? "",
+        branch_id: this.$route.query.branch_id ?? "",
       },
       table: {
         columns: tableColumns,
         routes: {},
         datas: [],
         meta: [],
-        links: []
-      }
+        links: [],
+      },
     };
   },
 
@@ -84,6 +97,7 @@ export default {
       this.search_data.field_name = "";
       this.search_data.value = "";
       this.search_data.status = "";
+      this.search_data.branch_id = "";
     },
   },
 

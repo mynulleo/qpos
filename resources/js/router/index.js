@@ -631,6 +631,27 @@ const routes = [
                 name: "branch.edit",
                 component: () => import("./../views/admin/branch/create"),
             },
+            // ------------------Warehouse PORTION------------------
+            {
+                path: "/warehouse",
+                name: "warehouse.index",
+                component: () => import("./../views/admin/warehouse/index"),
+            },
+            {
+                path: "/warehouse/create",
+                name: "warehouse.create",
+                component: () => import("./../views/admin/warehouse/create"),
+            },
+            {
+                path: "/warehouse/:id",
+                name: "warehouse.show",
+                component: () => import("./../views/admin/warehouse/view"),
+            },
+            {
+                path: "/warehouse/:id/edit",
+                name: "warehouse.edit",
+                component: () => import("./../views/admin/warehouse/create"),
+            },
             // ------------------Designation PORTION------------------
             {
                 path: "/designation",
@@ -821,6 +842,27 @@ const routes = [
                 path: "/purchase/:id/edit",
                 name: "purchase.edit",
                 component: () => import("./../views/admin/purchase/create"),
+            },
+            // ------------------GRN PORTION------------------
+            {
+                path: "/grn",
+                name: "grn.index",
+                component: () => import("./../views/admin/grn/index"),
+            },
+            {
+                path: "/grn/create",
+                name: "grn.create",
+                component: () => import("./../views/admin/grn/create"),
+            },
+            {
+                path: "/grn/:id",
+                name: "grn.show",
+                component: () => import("./../views/admin/grn/view"),
+            },
+            {
+                path: "/grn/:id/edit",
+                name: "grn.edit",
+                component: () => import("./../views/admin/grn/create"),
             },
             // ------------------Item PORTION------------------
             {

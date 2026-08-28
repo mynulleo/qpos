@@ -12,6 +12,7 @@ use App\Models\Brand;
 use App\Models\District;
 use App\Models\Employee;
 use App\Models\Supplier;
+use App\Models\Warehouse;
 use App\Models\Designation;
 use App\Models\Currency;
 use App\Models\Agent;
@@ -95,6 +96,7 @@ class LibController extends Controller
             'voucher_types' => $this->getVoucherTypes(),
             'voucher_reference_types' => $this->getVoucherReferenceTypes(),
             'suppliers' => $this->getActiveSuppliers(),
+            'warehouses' => $this->getActiveWarehouses(),
             'loaninfotypes' => $this->getLoanInfoTypes(),
             'scheduledays' => $this->getScheduleDays(),
             'installments' => $this->getInstallments(),
@@ -414,6 +416,11 @@ class LibController extends Controller
     public function getActiveSuppliers()
     {
         return Supplier::where('status', 'active')->get(['id', 'org_name']);
+    }
+
+    public function getActiveWarehouses()
+    {
+        return Warehouse::where('status', 'active')->orderBy('sorting', 'asc')->get(['id', 'name', 'code']);
     }
 
     public function getAllAccounts()

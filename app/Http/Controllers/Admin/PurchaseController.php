@@ -73,6 +73,7 @@ class PurchaseController extends BaseController
                 $purchasedetails = $data['purchase_details'];
                 $data['purchase_date'] = date('Y-m-d', strtotime($data['purchase_date']));
                 unset($data['purchase_details']);
+                $data['receive_status'] = 'Pending';
                 // push the insert text
                 $res = Purchase::create($data);
 
@@ -95,21 +96,6 @@ class PurchaseController extends BaseController
                         // insert purchase details
                         PurchaseDetail::create($detail);
 
-                        // insert stock transaction data
-                        $stock_transection = [
-                            'item_id' => $detail['item_id'],
-                            'color_id' => $colorId,
-                            'size_id' => $sizeId,
-                            'transaction_date' => date('Y-m-d', strtotime($data['purchase_date'])),
-                            'transaction_type' => 'Purchase',
-                            'reference_type' => 'Purchase',
-                            'reference_id' => $res->id,
-                            'qty_in' => $detail['qty'],
-                            'qty_out' => 0,
-                            'status' => 'active',
-                        ];
-                        StockTransaction::create($stock_transection);
-
                         // update/create item price for color & size variant
                         if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0) {
                             \App\Models\ItemPrice::updateOrCreate(
@@ -127,16 +113,6 @@ class PurchaseController extends BaseController
                         }
                     }
                 }
-
-                // create payable voucher
-                $vdata = [
-                    'module'    => 'Purchase',
-                    'date'      => $res->purchase_date,
-                    'amount'    => $res->total_amount,
-                    'source_id' => $res->id,
-                    'ref_id'    => $res->supplier_id
-                ];
-                $this->createPayableVoucher($vdata);
 
                 return $this->responseReturn("create", $res);
             } catch (Exception $ex) {
@@ -209,10 +185,6 @@ class PurchaseController extends BaseController
 
                 // delete existing purchase details
                 PurchaseDetail::where('purchase_id', $purchase->id)->delete();
-                // delete existing stock transections
-                StockTransaction::where('reference_type', 'Purchase')
-                    ->where('reference_id', $purchase->id)
-                    ->delete();
 
                 if ($purchase && !empty($purchasedetails)) {
                     foreach ($purchasedetails as $detail) {
@@ -233,21 +205,6 @@ class PurchaseController extends BaseController
                         // insert purchase details
                         PurchaseDetail::create($detail);
 
-                        // insert stock transaction data
-                        $stock_transection = [
-                            'item_id' => $detail['item_id'],
-                            'color_id' => $colorId,
-                            'size_id' => $sizeId,
-                            'transaction_date' => date('Y-m-d', strtotime($data['purchase_date'])),
-                            'transaction_type' => 'Purchase',
-                            'reference_type' => 'Purchase',
-                            'reference_id' => $purchase->id,
-                            'qty_in' => $detail['qty'],
-                            'qty_out' => 0,
-                            'status' => 'active',
-                        ];
-                        StockTransaction::create($stock_transection);
-
                         // update/create item price for color & size variant
                         if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0) {
                             \App\Models\ItemPrice::updateOrCreate(
@@ -265,25 +222,6 @@ class PurchaseController extends BaseController
                         }
                     }
                 }
-
-                // for update remove voucher and voucher details first 
-                $source = [
-                    'source' => 'Purchase',
-                    'source_id' => $purchase->id
-                ];
-                $this->removeVoucherBySourceInfo($source);
-
-                // create payable voucher
-                $vdata = [
-                    'module'    => 'Purchase',
-                    'date'      => $purchase->purchase_date,
-                    'amount'    => $purchase->total_amount,
-                    'source_id' => $purchase->id,
-                    'ref_id'    => $purchase->supplier_id
-                ];
-                $this->createPayableVoucher($vdata);
-
-
 
                 return $this->responseReturn("update", $purchase);
             } catch (Exception $ex) {
@@ -304,8 +242,19 @@ class PurchaseController extends BaseController
 
         try {
             $purchase = Purchase::find($id);
+
             // =========================
-            // 1️⃣ Eligibility check (payment/receive হয়েছে কিনা)
+            // 1️⃣ Check if GRN exists
+            // =========================
+            $hasGrn = \App\Models\Grn::where('purchase_id', $purchase->id)->exists();
+            if ($hasGrn) {
+                return response()->json([
+                    'message' => 'This Purchase has Goods Receive Notes (GRN). Delete is not allowed.'
+                ], 422);
+            }
+
+            // =========================
+            // 2️⃣ Eligibility check (payment/receive হয়েছে কিনা)
             // =========================
             $hasPayment = PaymentDetail::where('reference_type', 'Purchase')
                 ->where('reference_id', $purchase->id)
@@ -319,7 +268,7 @@ class PurchaseController extends BaseController
             }
 
             // =========================
-            // 2️⃣ Delete related vouchers
+            // 3️⃣ Delete related vouchers (if legacy purchase had vouchers)
             // =========================
             $vouchers = Voucher::where('source', 'Purchase')
                 ->where('source_id', $purchase->id)
@@ -331,7 +280,7 @@ class PurchaseController extends BaseController
             }
 
             // =========================
-            // 3️⃣ Delete purchase details (if exists)
+            // 4️⃣ Delete purchase details (if exists)
             // =========================
             if (method_exists($purchase, 'purchase_details')) {
                 $purchase->purchase_details()->delete(); // soft delete
@@ -341,7 +290,7 @@ class PurchaseController extends BaseController
             }
 
             // =========================
-            // 4️⃣ Delete purchase (soft)
+            // 5️⃣ Delete purchase (soft)
             // =========================
             $purchase->delete(); // soft delete
 

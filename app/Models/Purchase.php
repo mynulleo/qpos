@@ -37,6 +37,11 @@ class Purchase extends BaseModel
     }
 
 
+    public function grns()
+    {
+        return $this->hasMany(Grn::class, 'purchase_id', 'id');
+    }
+
     // file image push
 
     // date format

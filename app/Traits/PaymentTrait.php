@@ -12,6 +12,7 @@ use App\Models\LoanInstallment;
 use App\Models\Payment;
 use App\Models\PaymentDetail;
 use App\Models\Purchase;
+use App\Models\Grn;
 use App\Models\SalarySheetDetail;
 
 trait PaymentTrait
@@ -97,27 +98,59 @@ trait PaymentTrait
     public function supplierPurchaseInvoices($supid)
     {
         $datas = [];
-        $pinvoices = Purchase::where('supplier_id', $supid)->where('is_closed', 0)->get();
 
-        if ($pinvoices) {
-            foreach ($pinvoices as $idata) {
+        // 1. Primary: Fetch unclosed GRNs for this supplier (pay for received goods)
+        $grns = Grn::with('purchase:id,invoiceno')
+            ->where('supplier_id', $supid)
+            ->where('is_closed', 0)
+            ->where('status', 'active')
+            ->get();
 
-                $paid_amount = $this->getRefPaidAmount('Purchase', $idata->id);
+        if ($grns && count($grns) > 0) {
+            foreach ($grns as $grn) {
+                $paid_amount = (float) $this->getRefPaidAmount('GRN', $grn->id);
+                $due_amount = (float) ($grn->total_amount - $paid_amount);
 
-                $due_amount = $idata->amount - $paid_amount;
-
-                $data = [
-                    'reference_type'    => 'Purchase',
-                    'reference_id'      => $idata->id,
-                    'account_id'        => $this->getExpenseAccount('Purchase'),
-                    'reference_info'    => $idata->invoiceno . '-' . date('d M, Y', strtotime($idata->purchase_date)),
-                    'amount'            => $idata->total_amount,
-                    'paid_amount'       => $paid_amount,
-                    'due_amount'        => $due_amount
-                ];
-                $datas[] = $data;
+                if ($due_amount > 0) {
+                    $poInfo = $grn->purchase ? ' (PO: ' . $grn->purchase->invoiceno . ')' : '';
+                    $datas[] = [
+                        'reference_type'    => 'GRN',
+                        'reference_id'      => $grn->id,
+                        'account_id'        => $this->getExpenseAccount('Purchase'),
+                        'reference_info'    => 'GRN: ' . $grn->grn_no . $poInfo . ' - ' . $grn->grn_date,
+                        'amount'            => (float) $grn->total_amount,
+                        'paid_amount'       => $paid_amount,
+                        'due_amount'        => $due_amount,
+                    ];
+                }
             }
         }
+
+        // 2. Fallback: Legacy purchases without GRN
+        $pinvoices = Purchase::where('supplier_id', $supid)
+            ->where('is_closed', 0)
+            ->whereDoesntHave('grns')
+            ->get();
+
+        if ($pinvoices && count($pinvoices) > 0) {
+            foreach ($pinvoices as $idata) {
+                $paid_amount = (float) $this->getRefPaidAmount('Purchase', $idata->id);
+                $due_amount = (float) ($idata->total_amount - $paid_amount);
+
+                if ($due_amount > 0) {
+                    $datas[] = [
+                        'reference_type'    => 'Purchase',
+                        'reference_id'      => $idata->id,
+                        'account_id'        => $this->getExpenseAccount('Purchase'),
+                        'reference_info'    => 'PO: ' . $idata->invoiceno . ' - ' . $idata->purchase_date,
+                        'amount'            => (float) $idata->total_amount,
+                        'paid_amount'       => $paid_amount,
+                        'due_amount'        => $due_amount,
+                    ];
+                }
+            }
+        }
+
         return $datas;
     }
 
@@ -353,11 +386,56 @@ trait PaymentTrait
             return $this->updateExpenseDetail($ref);
         }
 
+        if ($ref['reference_type'] === 'GRN') {
+            return $this->updateGrnInfo($ref);
+        }
+
+        if ($ref['reference_type'] === 'Purchase') {
+            return $this->updatePurchaseInfo($ref);
+        }
+
         if ($ref['reference_type'] == 'LoanInstallment' && $payment_type == 'Receive') {
             return $this->updateLoanInstallment($ref);
         }
 
         return true; // other reference types ignored intentionally
+    }
+
+    public function updateGrnInfo(array $ref): bool
+    {
+        $grn = Grn::find($ref['reference_id']);
+
+        if (!$grn) {
+            return false;
+        }
+
+        $paid_amount = $this->getRefPaidAmount('GRN', $grn->id);
+        $isClosed = ($paid_amount >= (float) $grn->total_amount) || (!empty($ref['is_closed']));
+
+        $grn->update([
+            'paid_amount' => $paid_amount,
+            'is_closed'   => $isClosed ? 1 : 0
+        ]);
+
+        return true;
+    }
+
+    public function updatePurchaseInfo(array $ref): bool
+    {
+        $purchase = Purchase::find($ref['reference_id']);
+
+        if (!$purchase) {
+            return false;
+        }
+
+        $paid_amount = $this->getRefPaidAmount('Purchase', $purchase->id);
+        $isClosed = ($paid_amount >= (float) $purchase->total_amount) || (!empty($ref['is_closed']));
+
+        $purchase->update([
+            'is_closed' => $isClosed ? 1 : 0
+        ]);
+
+        return true;
     }
 
     public function updateExpenseDetail(array $ref): bool
