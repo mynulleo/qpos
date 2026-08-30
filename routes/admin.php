@@ -268,6 +268,10 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('loanInfo/approved', [App\Http\Controllers\Admin\LoanInfoController::class, 'approved'])->name('loanInfo.approved');
         Route::post('loanInfo/approvalcancel', [App\Http\Controllers\Admin\LoanInfoController::class, 'approvalcancel'])->name('loanInfo.approvalcancel');
 
+        // Software / Database Update Routes
+        Route::get('software-update/status', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'status'])->name('software.update.status');
+        Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('software.update.run');
+
         // Resident Approval & Actions Start
 
     });

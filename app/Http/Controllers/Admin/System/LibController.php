@@ -110,6 +110,9 @@ class LibController extends Controller
             'currencies' => $this->getCurrencies(),
             'systemmodes' => $this->getSystemModes(),
             'label_presets' => $this->getLabelPresets(),
+            'update_status' => $this->getUpdateStatus(),
+            'db_update_needed' => $this->getUpdateStatus()['is_update_needed'] ?? false,
+            'pending_updates_count' => $this->getUpdateStatus()['pending_count'] ?? 0,
         ];
     }
 
@@ -656,5 +659,24 @@ class LibController extends Controller
                 'orientation' => 'landscape',
             ],
         ];
+    }
+
+    /**
+     * Get database update status via SoftwareUpdateService.
+     *
+     * @return array
+     */
+    public function getUpdateStatus(): array
+    {
+        try {
+            return app(\App\Services\SoftwareUpdateService::class)->getUpdateStatus();
+        } catch (\Throwable $e) {
+            return [
+                'is_update_needed' => false,
+                'pending_count' => 0,
+                'pending_migrations' => [],
+                'pending_sql_patches' => [],
+            ];
+        }
     }
 }

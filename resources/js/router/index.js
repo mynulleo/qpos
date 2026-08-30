@@ -1373,6 +1373,13 @@ const routes = [
                 component: () =>
                     import("./../views/admin/report/warrantyclaim"),
             },
+            // ------------------SOFTWARE UPDATE PORTION------------------
+            {
+                path: "/system-update",
+                name: "software.update",
+                component: () =>
+                    import("./../views/admin/system/update/index"),
+            },
         ],
     },
 ];
