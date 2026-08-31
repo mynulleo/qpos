@@ -5,58 +5,68 @@
         <v-select v-model="search_data.supplier_id" label="org_name" :reduce="(obj) => obj.id"
           :options="$root.global.suppliers" placeholder="--Select Supplier--" :closeOnSelect="true"></v-select>
       </v-select-container>
+      <v-select-container title="Warehouse" field="search_data.warehouse_id" col="3">
+        <v-select v-model="search_data.warehouse_id" label="name" :reduce="(obj) => obj.id"
+          :options="$root.global.warehouses" placeholder="--Select Warehouse--" :closeOnSelect="true"></v-select>
+      </v-select-container>
     </template>
   </index-page>
 </template>
 
 <script>
-
-const model = "purchase";
+const model = "grn";
 
 const tableColumns = [
-  { field: "invoiceno", title: "Invoiceno" },
-  { field: "purchase_date", title: "Purchase Date" },
+  { field: "grn_no", title: "GRN No" },
+  { field: "grn_date", title: "GRN Date" },
+  { field: "purchase_id", title: "PO Invoice", subfield: "purchase.invoiceno" },
   { field: "supplier_id", title: "Supplier", subfield: "supplier.org_name" },
-  { field: "amount", title: "Amount" },
-  { field: "discount", title: "Discount" },
-  { field: "tax", title: "Tax" },
+  { field: "warehouse_id", title: "Warehouse", subfield: "warehouse.name" },
+  { field: "total_qty", title: "Received Qty", align: "center" },
   { field: "total_amount", title: "Total Amount" },
-  { field: "receive_status", title: "Receive Status", align: "center" },
+  { field: "paid_amount", title: "Paid Amount" },
   { field: "status", title: "Status", align: "center" },
 ];
 
 const json_fields = {
-  "Invoiceno": "invoiceno",
-  "Purchase Date": "purchase_date",
-  "Supplier Id": "supplier_id",
-  "Amount": "amount",
-  "Discount": "discount",
-  "Tax": "tax",
+  "GRN No": "grn_no",
+  "GRN Date": "grn_date",
+  "PO Invoice": "purchase.invoiceno",
+  "Supplier": "supplier.org_name",
+  "Warehouse": "warehouse.name",
+  "Received Qty": "total_qty",
   "Total Amount": "total_amount",
+  "Paid Amount": "paid_amount",
+  "Status": "status",
 };
 
 export default {
-
   data() {
     return {
       model: model,
       page_title: "",
       json_fields: json_fields,
-      fields_name: { default: "Select One", invoiceno: "Invoice No" },
+      fields_name: {
+        default: "Select One",
+        grn_no: "GRN No",
+        challan_no: "Challan No",
+      },
       search_data: {
         pagination: this.$route.query.pagination ?? 10,
         page: this.$route.query.page ?? 1,
         field_name: this.$route.query.field_name ?? "",
         value: this.$route.query.value ?? "",
         status: this.$route.query.status ?? "",
+        supplier_id: this.$route.query.supplier_id ?? "",
+        warehouse_id: this.$route.query.warehouse_id ?? "",
       },
       table: {
         columns: tableColumns,
         routes: {},
         datas: [],
         meta: [],
-        links: []
-      }
+        links: [],
+      },
     };
   },
 
@@ -84,12 +94,14 @@ export default {
       this.search_data.field_name = "";
       this.search_data.value = "";
       this.search_data.status = "";
+      this.search_data.supplier_id = "";
+      this.search_data.warehouse_id = "";
     },
   },
 
   created() {
     this.getRouteName(this.model);
-    this.page_title = `${this.headline(this.model)} List`;
+    this.page_title = `Goods Receive (GRN) List`;
     this.search();
   },
 

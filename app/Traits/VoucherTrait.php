@@ -152,7 +152,7 @@ trait VoucherTrait
                     $module_id = null;
                     $payable_account_id = $this->getAccountID('accounts-payable');
 
-                    if ($detail['reference_type'] == 'Purchase') {
+                    if ($detail['reference_type'] == 'Purchase' || $detail['reference_type'] == 'GRN') {
                         $payable_account_id = $this->getAccountID('accounts-payable');
                         $module = 'Supplier';
                         $module_id = $payment->supplier_id;
@@ -483,7 +483,7 @@ trait VoucherTrait
                 $ref_id = $vdata['ref_id'] ?? null;
             }
 
-            if ($module == 'Purchase') {
+            if ($module == 'Purchase' || $module == 'GRN') {
                 $account_id = $this->getExpenseAccount('Purchase');
                 $payable_account_id = $this->getAccountID('accounts-payable');
                 $ref_type = 'Supplier';

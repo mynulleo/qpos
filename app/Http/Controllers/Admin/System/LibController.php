@@ -12,6 +12,7 @@ use App\Models\Brand;
 use App\Models\District;
 use App\Models\Employee;
 use App\Models\Supplier;
+use App\Models\Warehouse;
 use App\Models\Designation;
 use App\Models\Currency;
 use App\Models\Agent;
@@ -95,6 +96,7 @@ class LibController extends Controller
             'voucher_types' => $this->getVoucherTypes(),
             'voucher_reference_types' => $this->getVoucherReferenceTypes(),
             'suppliers' => $this->getActiveSuppliers(),
+            'warehouses' => $this->getActiveWarehouses(),
             'loaninfotypes' => $this->getLoanInfoTypes(),
             'scheduledays' => $this->getScheduleDays(),
             'installments' => $this->getInstallments(),
@@ -108,6 +110,9 @@ class LibController extends Controller
             'currencies' => $this->getCurrencies(),
             'systemmodes' => $this->getSystemModes(),
             'label_presets' => $this->getLabelPresets(),
+            'update_status' => $this->getUpdateStatus(),
+            'db_update_needed' => $this->getUpdateStatus()['is_update_needed'] ?? false,
+            'pending_updates_count' => $this->getUpdateStatus()['pending_count'] ?? 0,
         ];
     }
 
@@ -416,6 +421,11 @@ class LibController extends Controller
         return Supplier::where('status', 'active')->get(['id', 'org_name']);
     }
 
+    public function getActiveWarehouses()
+    {
+        return Warehouse::where('status', 'active')->orderBy('sorting', 'asc')->get(['id', 'name', 'code']);
+    }
+
     public function getAllAccounts()
     {
         return Account::where('status', 'active')
@@ -649,5 +659,24 @@ class LibController extends Controller
                 'orientation' => 'landscape',
             ],
         ];
+    }
+
+    /**
+     * Get database update status via SoftwareUpdateService.
+     *
+     * @return array
+     */
+    public function getUpdateStatus(): array
+    {
+        try {
+            return app(\App\Services\SoftwareUpdateService::class)->getUpdateStatus();
+        } catch (\Throwable $e) {
+            return [
+                'is_update_needed' => false,
+                'pending_count' => 0,
+                'pending_migrations' => [],
+                'pending_sql_patches' => [],
+            ];
+        }
     }
 }

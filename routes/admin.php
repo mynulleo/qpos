@@ -218,6 +218,10 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::get('warrantyClaim/check-serial', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'checkSerial'])->name('warrantyClaim.checkSerial');
         Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');
         Route::resource('warrantyClaim', App\Http\Controllers\Admin\WarrantyClaimController::class);
+        Route::resource('warehouse', App\Http\Controllers\Admin\WarehouseController::class);
+        Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'getPendingPurchases'])->name('grn.pendingPurchases');
+        Route::get('grn/get-purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'getPurchaseItems'])->name('grn.purchaseItems');
+        Route::resource('grn', App\Http\Controllers\Admin\GrnController::class);
 
         // POS Terminal View Routes
         Route::get('pos', [App\Http\Controllers\Admin\PosController::class, 'index'])->name('pos.index');
@@ -263,6 +267,10 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
 
         Route::post('loanInfo/approved', [App\Http\Controllers\Admin\LoanInfoController::class, 'approved'])->name('loanInfo.approved');
         Route::post('loanInfo/approvalcancel', [App\Http\Controllers\Admin\LoanInfoController::class, 'approvalcancel'])->name('loanInfo.approvalcancel');
+
+        // Software / Database Update Routes
+        Route::get('software-update/status', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'status'])->name('software.update.status');
+        Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('software.update.run');
 
         // Resident Approval & Actions Start
 

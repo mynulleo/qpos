@@ -22,8 +22,16 @@ class Payment extends BaseModel
         $slipno = 111;
         $payment = Payment::latest()->first(['id', 'payslipno']);
 
-        if ($payment) {
-            $slipno = $payment->payslipno + 1;
+        if ($payment && $payment->payslipno) {
+            if (is_numeric($payment->payslipno)) {
+                $slipno = intval($payment->payslipno) + 1;
+            } elseif (preg_match('/(\d+)$/', $payment->payslipno, $matches)) {
+                $num = intval($matches[1]) + 1;
+                $prefix = preg_replace('/\d+$/', '', $payment->payslipno);
+                $slipno = $prefix . str_pad($num, strlen($matches[1]), '0', STR_PAD_LEFT);
+            } else {
+                $slipno = (intval($payment->id) + 111);
+            }
         }
         return $slipno;
     }

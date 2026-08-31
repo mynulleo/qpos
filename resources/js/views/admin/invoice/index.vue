@@ -47,6 +47,16 @@
               </span>
             </button>
 
+            <!-- Help Info Button -->
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm"
+              @click="openHelpModal"
+              title="Help Manual (সহায়িকা)"
+            >
+              <i class="fas fa-question-circle"></i> Help
+            </button>
+
             <!-- Export & Print Dropdown / Buttons -->
             <download-excel
               v-if="invoices.length > 0"
@@ -687,6 +697,25 @@
         </div>
       </div>
     </div>
+
+    <!-- ℹ️ Invoice Bengali Help Info Modal -->
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1060;" v-if="showHelpModal">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-dark text-white py-2">
+            <h5 class="modal-title fs-6 text-white"><i class="fas fa-file-invoice me-2 text-warning"></i>বিক্রয় ইনভয়েস তালিকা সহায়িকা</h5>
+            <button type="button" class="btn-close btn-close-white" @click="showHelpModal = false"></button>
+          </div>
+          <div class="modal-body p-3">
+            <div v-if="helpContent" v-html="helpContent"></div>
+            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> সহায়িকা লোড হচ্ছে...</div>
+          </div>
+          <div class="modal-footer py-1">
+            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">বন্ধ করুন</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -696,6 +725,8 @@ import axios from 'axios';
 export default {
   data() {
     return {
+      showHelpModal: false,
+      helpContent: '',
       invoices: [],
       clients: [],
       loading: false,
@@ -835,6 +866,14 @@ export default {
         .then(res => {
           this.clients = res.data || [];
         });
+    },
+    openHelpModal() {
+      this.showHelpModal = true;
+      if (!this.helpContent) {
+        axios.get('helpInfo/Invoice/index').then(res => {
+          this.helpContent = res.data?.description || '';
+        });
+      }
     },
     resetFilter() {
       this.filter = {

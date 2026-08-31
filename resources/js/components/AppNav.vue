@@ -26,7 +26,23 @@
                     <div class="date_time position-relative">
                         <p id="currentDateTime"></p>
                     </div>
-                    <div class="action_info d-flex gap-4 align-items-center">
+                    <div class="action_info d-flex gap-3 align-items-center">
+                        <!-- 🔄 SaaS Database Update Available Indicator -->
+                        <router-link
+                            v-if="$root.global?.db_update_needed"
+                            :to="{ name: 'software.update' }"
+                            class="btn btn-sm btn-warning text-dark fw-bold d-flex align-items-center gap-1 shadow-sm px-2 py-1 pulse-update-btn text-decoration-none rounded-pill"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            title="Database Update Available"
+                        >
+                            <i class="fas fa-rotate fa-spin-pulse"></i>
+                            <span class="d-none d-md-inline" style="font-size: 11px;">Update DB</span>
+                            <span class="badge bg-danger rounded-pill text-white ms-1" style="font-size: 10px;">
+                                {{ $root.global?.pending_updates_count }}
+                            </span>
+                        </router-link>
+
                         <div class="icon_box position-relative">
                             <button type="button"
                                 class="icon_btn dropdown_menu bg-transparent border-0 position-relative"
@@ -251,5 +267,19 @@ export default {
 <style scoped>
 .margin-top-10 {
     margin-top: 10px !important;
+}
+.pulse-update-btn {
+    animation: pulse-border 2s infinite;
+}
+@keyframes pulse-border {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
 }
 </style>

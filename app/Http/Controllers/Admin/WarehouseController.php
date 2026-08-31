@@ -6,14 +6,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Base\BaseController;
-use App\Http\Resources\Resource;
-use App\Models\HelpInfo;
 use Exception;
+use App\Models\Warehouse;
+use App\Models\Grn;
+use App\Models\StockTransaction;
 use Illuminate\Http\Request;
-use Storage;
+use App\Http\Resources\Resource;
+use App\Http\Controllers\Base\BaseController;
 
-class HelpInfoController extends BaseController
+class WarehouseController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -22,15 +23,24 @@ class HelpInfoController extends BaseController
      */
     public function index(Request $request)
     {
-        $query = HelpInfo::select('id', 'model_name', 'page_type', 'description', 'sorting', 'status')->latest();
-        $query->whereLike($request->field_name, $request->value);
-        $query->whereAny('status', $request->status);
-        $query->whereLike('page_type', $request->page_type);
+        $query = Warehouse::with('branch:id,title')->orderBy('sorting', 'asc')->latest('id');
+
+        if ($request->field_name && $request->value) {
+            $query->whereLike($request->field_name, $request->value);
+        }
+
+        if ($request->branch_id) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
 
         if ($request->allData) {
             return $query->get();
         } else {
-            $datas = $query->paginate($request->pagination);
+            $datas = $query->paginate($request->pagination ?? 10);
             return new Resource($datas);
         }
     }
@@ -51,19 +61,12 @@ class HelpInfoController extends BaseController
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-
     public function store(Request $request)
     {
         if ($this->validateCheck($request)) {
             try {
                 $data = $request->all();
-                $data['model_name'] = ucfirst(string: $data['model_name']);
-                HelpInfo::where('model_name', $data['model_name'])
-                    ->where('page_type', $data['page_type'])
-                    ->update(['status' => 'deactive']);
-                $data['status'] = 'active';
-                $res = HelpInfo::create($data);
-
+                $res = Warehouse::create($data);
                 return $this->responseReturn("create", $res);
             } catch (Exception $ex) {
                 return response()->json(['exception' => $ex->errorInfo ?? $ex->getMessage()], 422);
@@ -74,7 +77,7 @@ class HelpInfoController extends BaseController
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\HelpInfo  $helpInfo
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function show(Request $request, $id)
@@ -82,14 +85,14 @@ class HelpInfoController extends BaseController
         if ($request->format() == 'html') {
             return view('layouts.backend_app');
         }
-        $helpInfo = HelpInfo::find($id);
-        return $helpInfo;
+        $warehouse = Warehouse::with('branch:id,title')->find($id);
+        return $warehouse;
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\HelpInfo  $helpInfo
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
@@ -101,28 +104,18 @@ class HelpInfoController extends BaseController
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\HelpInfo  $helpInfo
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-
     public function update(Request $request, $id)
     {
-        $helpInfo = HelpInfo::find($id);
-        if ($this->validateCheck($request, $helpInfo->id)) {
+        $warehouse = Warehouse::find($id);
+        if ($this->validateCheck($request, $warehouse->id)) {
             try {
                 $data = $request->all();
-                $data['model_name'] = ucfirst(string: $data['model_name']);
-                if ($data['status'] == 'active') {
-                    HelpInfo::where('model_name', $data['model_name'])
-                        ->where('page_type', $data['page_type'])
-                        ->where('id', '!=', $helpInfo->id)
-                        ->update(['status' => 'deactive']);
-                    $data['status'] = 'active';
-                }
+                $warehouse->fill($data)->save();
 
-                $helpInfo->fill($data)->save();
-
-                return $this->responseReturn("update", $helpInfo);
+                return $this->responseReturn("update", $warehouse);
             } catch (Exception $ex) {
                 return response()->json(['exception' => $ex->errorInfo ?? $ex->getMessage()], 422);
             }
@@ -132,14 +125,32 @@ class HelpInfoController extends BaseController
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\HelpInfo  $helpInfo
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        // delete
-        $helpInfo = HelpInfo::find($id);
-        $res = $helpInfo->delete();
+        $warehouse = Warehouse::find($id);
+        if (!$warehouse) {
+            return response()->json(['message' => 'Warehouse not found.'], 404);
+        }
+
+        // Safety check: is this warehouse used in GRN or Stock Transactions?
+        $hasGrn = Grn::where('warehouse_id', $warehouse->id)->exists();
+        if ($hasGrn) {
+            return response()->json([
+                'message' => 'Cannot delete warehouse. Goods Receive Notes (GRN) are associated with this warehouse.'
+            ], 422);
+        }
+
+        $hasStock = StockTransaction::where('warehouse_id', $warehouse->id)->exists();
+        if ($hasStock) {
+            return response()->json([
+                'message' => 'Cannot delete warehouse. Inventory transactions exist in this warehouse.'
+            ], 422);
+        }
+
+        $res = $warehouse->delete();
         return $this->responseReturn("delete", $res);
     }
 
@@ -150,19 +161,6 @@ class HelpInfoController extends BaseController
      */
     public function validateCheck($request, $id = null)
     {
-
-        return $request->validate([
-            'model_name' => 'required|string|max:191',
-            'page_type' => 'required|string|max:191',
-        ], []);
-    }
-
-    public function getHelpInfo($modelName, $pageType)
-    {
-        $data = HelpInfo::active()->where('model_name', $modelName)->where('page_type', $pageType)->first();
-        if (!$data && strtolower($pageType) === 'edit') {
-            $data = HelpInfo::active()->where('model_name', $modelName)->where('page_type', 'create')->first();
-        }
-        return $data;
+        return true;
     }
 }

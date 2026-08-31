@@ -1,168 +1,154 @@
 <template>
   <view-page :defaultTable="false" :showCreateRoute="false" :showDeleteButton="false">
-    <div class="purchase-view-wrapper">
-      <!-- 🌟 Top Hero / Purchase Header Banner -->
-      <div class="card border-0 shadow-sm mb-4 purchase-hero-banner">
+    <div class="grn-view-wrapper">
+      <!-- 🌟 Top Hero / GRN Header Banner -->
+      <div class="card border-0 shadow-sm mb-4 grn-hero-banner">
         <div class="card-body p-4">
           <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-3">
               <div class="hero-icon-box bg-white bg-opacity-20 text-white rounded d-flex align-items-center justify-content-center">
-                <i class="fas fa-truck-loading fs-3"></i>
+                <i class="fas fa-clipboard-check fs-3"></i>
               </div>
               <div>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <h4 class="fw-bold mb-0 text-white">Purchase #{{ data.invoiceno || data.id || 'N/A' }}</h4>
-                  <span class="badge" :class="data.is_closed ? 'bg-success text-white' : 'bg-danger text-white'">
+                  <h4 class="fw-bold mb-0 text-white">Goods Receive Note #{{ data.grn_no || 'N/A' }}</h4>
+                  <span class="badge" :class="data.is_closed ? 'bg-success text-white' : 'bg-warning text-dark'">
                     <i :class="data.is_closed ? 'fas fa-check-circle me-1' : 'fas fa-clock me-1'"></i>
-                    {{ data.is_closed ? 'Closed / Settled' : 'Open / Due' }}
+                    {{ data.is_closed ? 'Fully Paid / Settled' : 'Payment Due' }}
                   </span>
                   <span class="badge bg-light bg-opacity-25 text-white" v-if="hasAnySerials">
-                    <i class="fas fa-microchip me-1"></i> Serialized Stock
+                    <i class="fas fa-barcode me-1"></i> Serialized Stock
                   </span>
                 </div>
                 <div class="d-flex align-items-center gap-3 mt-2 text-white-50 small flex-wrap font-monospace">
-                  <span><i class="far fa-calendar-alt me-1"></i>Date: <strong class="text-white">{{ data.purchase_date || 'N/A' }}</strong></span>
-                  <span><i class="fas fa-store me-1"></i>Supplier: <strong class="text-white">{{ data.supplier?.org_name || data.supplier?.name || 'N/A' }}</strong></span>
-                  <span><i class="fas fa-boxes me-1"></i>Total Items: <strong class="text-white">{{ data.purchase_details?.length || 0 }}</strong></span>
+                  <span><i class="far fa-calendar-alt me-1"></i>Receive Date: <strong class="text-white">{{ data.grn_date || 'N/A' }}</strong></span>
+                  <span><i class="fas fa-file-invoice me-1"></i>PO: <strong class="text-white">{{ data.purchase?.invoiceno || 'N/A' }}</strong></span>
+                  <span><i class="fas fa-warehouse me-1"></i>Warehouse: <strong class="text-white">{{ data.warehouse?.name || 'N/A' }}</strong></span>
+                  <span><i class="fas fa-user-tag me-1"></i>Supplier: <strong class="text-white">{{ data.supplier?.org_name || 'N/A' }}</strong></span>
                 </div>
               </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="d-flex align-items-center gap-2">
-              <router-link :to="{ name: 'purchase.index' }" class="btn btn-outline-light btn-sm px-3 fw-semibold">
+              <router-link :to="{ name: 'grn.index' }" class="btn btn-outline-light btn-sm px-3 fw-semibold">
                 <i class="fas fa-arrow-left me-1"></i> Back to List
               </router-link>
-              <router-link
-                v-if="data.receive_status !== 'Received'"
-                :to="{ name: 'grn.create', query: { purchase_id: data.id } }"
-                class="btn btn-success btn-sm fw-bold px-3 shadow-sm"
-              >
-                <i class="fas fa-clipboard-check me-1"></i> Receive Goods (GRN)
-              </router-link>
-              <button type="button" class="btn btn-light btn-sm text-theme fw-bold px-3 shadow-sm" @click="printPurchaseVoucher">
-                <i class="fas fa-print me-1"></i> Print Bill
+              <button type="button" class="btn btn-light btn-sm text-theme fw-bold px-3 shadow-sm" @click="printGrnVoucher">
+                <i class="fas fa-print me-1"></i> Print GRN Note
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 📊 Top Metric KPI Summary Cards -->
+      <!-- 📊 KPI Metric Cards -->
       <div class="row g-3 mb-4">
-        <!-- Sub Total Amount -->
-        <div class="col-xl-3 col-lg-6 col-md-6 col-6">
+        <!-- Total Received Qty -->
+        <div class="col-xl-4 col-md-4 col-12">
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Sub Total</span>
+                <span class="text-muted fw-bold small text-uppercase">Total Received Quantity</span>
                 <div class="stat-icon theme-bg-soft text-theme rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="fas fa-calculator"></i>
+                  <i class="fas fa-boxes"></i>
                 </div>
               </div>
-              <h4 class="fw-bold mb-0 text-dark font-monospace">৳ {{ formatNum(data.amount) }}</h4>
+              <h4 class="fw-bold mb-0 text-dark font-monospace">{{ data.total_qty || 0 }} Units</h4>
             </div>
           </div>
         </div>
 
-        <!-- Discount -->
-        <div class="col-xl-3 col-lg-6 col-md-6 col-6">
+        <!-- Total Received Value -->
+        <div class="col-xl-4 col-md-4 col-12">
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Discount</span>
+                <span class="text-muted fw-bold small text-uppercase">Total Received Value</span>
+                <div class="stat-icon bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+              </div>
+              <h4 class="fw-bold mb-0 text-success font-monospace">৳ {{ formatNum(data.total_amount) }}</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paid / Due Value -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <div class="card stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-muted fw-bold small text-uppercase">Paid / Outstanding Due</span>
                 <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="fas fa-percentage"></i>
+                  <i class="fas fa-balance-scale"></i>
                 </div>
               </div>
-              <h4 class="fw-bold mb-0 text-warning font-monospace">৳ {{ formatNum(data.discount) }}</h4>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tax / VAT -->
-        <div class="col-xl-3 col-lg-6 col-md-6 col-6">
-          <div class="card stat-card border-0 shadow-sm h-100">
-            <div class="card-body p-3">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">VAT / Tax</span>
-                <div class="stat-icon bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="fas fa-receipt"></i>
-                </div>
+              <div class="d-flex align-items-baseline gap-2">
+                <h4 class="fw-bold mb-0 text-primary font-monospace">৳ {{ formatNum(data.paid_amount) }}</h4>
+                <small class="text-danger fw-bold font-monospace">(Due: ৳ {{ formatNum(data.total_amount - (data.paid_amount || 0)) }})</small>
               </div>
-              <h4 class="fw-bold mb-0 text-info font-monospace">৳ {{ formatNum(data.tax) }}</h4>
-            </div>
-          </div>
-        </div>
-
-        <!-- Net Payable Amount -->
-        <div class="col-xl-3 col-lg-6 col-md-6 col-6">
-          <div class="card stat-card border-0 shadow-sm h-100" style="border-left: 4px solid rgb(17, 44, 70) !important;">
-            <div class="card-body p-3">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Net Total Amount</span>
-                <div class="stat-icon theme-bg-soft text-theme rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="fas fa-coins"></i>
-                </div>
-              </div>
-              <h4 class="fw-bold mb-0 text-theme font-monospace">৳ {{ formatNum(data.total_amount) }}</h4>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 📋 Main Content: Supplier Info (4-col) & Purchased Items Table (8-col) -->
+      <!-- 📋 Main Content: Meta Info (4-col) & Received Line Items Table (8-col) -->
       <div class="row g-3">
-        <!-- Supplier & Metadata Card (4-col) -->
+        <!-- Details Card (4-col) -->
         <div class="col-xl-4 col-lg-12">
           <div class="card border-0 shadow-sm h-100 info-card">
             <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
               <div class="section-icon theme-bg-soft text-theme rounded d-flex align-items-center justify-content-center">
-                <i class="fas fa-truck"></i>
+                <i class="fas fa-info-circle"></i>
               </div>
               <div>
-                <h6 class="fw-bold mb-0 text-dark">Supplier & Order Details</h6>
-                <small class="text-muted" style="font-size: 11px;">Vendor credentials and purchase metadata</small>
+                <h6 class="fw-bold mb-0 text-dark">Receiving Metadata</h6>
+                <small class="text-muted" style="font-size: 11px;">Warehouse, supplier and challan details</small>
               </div>
             </div>
             <div class="card-body p-0">
               <table class="table table-hover align-middle mb-0 custom-spec-table">
                 <tbody>
                   <tr>
+                    <td class="spec-label"><i class="fas fa-warehouse me-2 text-muted"></i>Destination Warehouse</td>
+                    <td class="spec-value fw-bold text-dark">{{ data.warehouse?.name || 'N/A' }}</td>
+                  </tr>
+                  <tr>
+                    <td class="spec-label"><i class="fas fa-barcode me-2 text-muted"></i>Warehouse Code</td>
+                    <td class="spec-value font-monospace">{{ data.warehouse?.code || 'N/A' }}</td>
+                  </tr>
+                  <tr>
                     <td class="spec-label"><i class="fas fa-building me-2 text-muted"></i>Supplier / Vendor</td>
                     <td class="spec-value fw-bold text-dark">{{ data.supplier?.org_name || data.supplier?.name || 'N/A' }}</td>
                   </tr>
                   <tr>
-                    <td class="spec-label"><i class="fas fa-phone-alt me-2 text-muted"></i>Contact Phone</td>
-                    <td class="spec-value font-monospace">{{ data.supplier?.mobile || data.supplier?.phone || 'N/A' }}</td>
+                    <td class="spec-label"><i class="fas fa-phone me-2 text-muted"></i>Supplier Mobile</td>
+                    <td class="spec-value font-monospace">{{ data.supplier?.mobile || 'N/A' }}</td>
                   </tr>
                   <tr>
-                    <td class="spec-label"><i class="fas fa-envelope me-2 text-muted"></i>Email</td>
-                    <td class="spec-value font-monospace">{{ data.supplier?.email || 'N/A' }}</td>
+                    <td class="spec-label"><i class="fas fa-file-invoice me-2 text-muted"></i>PO Invoice</td>
+                    <td class="spec-value font-monospace fw-bold text-dark">{{ data.purchase?.invoiceno || 'N/A' }}</td>
                   </tr>
                   <tr>
-                    <td class="spec-label"><i class="fas fa-map-marker-alt me-2 text-muted"></i>Address</td>
-                    <td class="spec-value">{{ data.supplier?.address || 'N/A' }}</td>
+                    <td class="spec-label"><i class="far fa-calendar-check me-2 text-muted"></i>PO Date</td>
+                    <td class="spec-value font-monospace">{{ data.purchase?.purchase_date || 'N/A' }}</td>
                   </tr>
                   <tr>
-                    <td class="spec-label"><i class="fas fa-file-invoice me-2 text-muted"></i>Challan / Invoice No</td>
-                    <td class="spec-value font-monospace fw-bold text-dark">{{ data.invoiceno || 'N/A' }}</td>
+                    <td class="spec-label"><i class="fas fa-truck-loading me-2 text-muted"></i>Supplier Challan No</td>
+                    <td class="spec-value font-monospace fw-bold text-dark">{{ data.challan_no || 'N/A' }}</td>
                   </tr>
                   <tr>
-                    <td class="spec-label"><i class="far fa-calendar-check me-2 text-muted"></i>Purchase Date</td>
-                    <td class="spec-value font-monospace">{{ data.purchase_date || 'N/A' }}</td>
+                    <td class="spec-label"><i class="far fa-calendar-alt me-2 text-muted"></i>Challan Date</td>
+                    <td class="spec-value font-monospace">{{ data.challan_date || 'N/A' }}</td>
                   </tr>
                   <tr>
-                    <td class="spec-label"><i class="fas fa-toggle-on me-2 text-muted"></i>Payment Status</td>
-                    <td class="spec-value">
-                      <span class="badge" :class="data.is_closed ? 'bg-success' : 'bg-danger'">
-                        {{ data.is_closed ? 'Settled / Closed' : 'Open / Due' }}
-                      </span>
-                    </td>
+                    <td class="spec-label"><i class="fas fa-user-check me-2 text-muted"></i>Received By</td>
+                    <td class="spec-value">{{ data.received_by || 'Store Keeper' }}</td>
                   </tr>
                   <tr>
-                    <td class="spec-label"><i class="far fa-clock me-2 text-muted"></i>Created At</td>
-                    <td class="spec-value font-monospace">{{ enFormat(data.created_at) || 'N/A' }}</td>
+                    <td class="spec-label"><i class="fas fa-sticky-note me-2 text-muted"></i>Note</td>
+                    <td class="spec-value">{{ data.note || '-' }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -170,7 +156,7 @@
           </div>
         </div>
 
-        <!-- Purchased Items & Serial Numbers Table (8-col) -->
+        <!-- Received Line Items Table (8-col) -->
         <div class="col-xl-8 col-lg-12">
           <div class="card border-0 shadow-sm h-100 table-card">
             <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
@@ -179,12 +165,12 @@
                   <i class="fas fa-boxes"></i>
                 </div>
                 <div>
-                  <h6 class="fw-bold mb-0 text-dark">Purchased Products & Line Items</h6>
-                  <small class="text-muted" style="font-size: 11px;">Breakdown of quantities, unit costs, selling prices and serial numbers</small>
+                  <h6 class="fw-bold mb-0 text-dark">Received Product Lines</h6>
+                  <small class="text-muted" style="font-size: 11px;">Quantities received into stock and verified</small>
                 </div>
               </div>
               <span class="badge theme-bg text-white font-monospace">
-                {{ data.purchase_details?.length || 0 }} Line Items
+                {{ data.grn_details?.length || 0 }} Items Received
               </span>
             </div>
             <div class="card-body p-0">
@@ -196,51 +182,51 @@
                       <th>Product Details</th>
                       <th>Category</th>
                       <th v-if="hasAnyVariants">Variant</th>
-                      <th class="text-center">Qty</th>
-                      <th class="text-end">Cost Price</th>
-                      <th class="text-end">Selling Price</th>
+                      <th class="text-center">Ordered</th>
+                      <th class="text-center">Received Qty</th>
+                      <th class="text-end">Unit Cost</th>
                       <th class="text-center" v-if="isElectronicsShop || hasAnySerials">Serial Numbers</th>
-                      <th class="text-end" style="width: 120px;">Total Amount</th>
+                      <th class="text-end" style="width: 120px;">Total Value</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(pdetail, index) in data.purchase_details" :key="index">
+                    <tr v-for="(gdetail, index) in data.grn_details" :key="index">
                       <td class="text-center font-monospace text-muted">{{ index + 1 }}</td>
                       <td>
-                        <div class="fw-bold text-dark">{{ pdetail.item?.title || 'Unknown Product' }}</div>
-                        <small class="text-muted font-monospace" style="font-size: 11px;">{{ pdetail.item?.barcode || '' }}</small>
+                        <div class="fw-bold text-dark">{{ gdetail.item?.title || 'Item #' + gdetail.item_id }}</div>
+                        <small class="text-muted font-monospace" style="font-size: 11px;">{{ gdetail.item?.barcode || '' }}</small>
                       </td>
                       <td>
-                        <span class="badge bg-light text-dark border">{{ pdetail.category?.title || pdetail.item?.category?.title || 'General' }}</span>
+                        <span class="badge bg-light text-dark border">{{ gdetail.category?.title || gdetail.item?.category?.title || 'General' }}</span>
                       </td>
                       <td v-if="hasAnyVariants">
                         <div class="d-flex align-items-center gap-1 flex-wrap">
-                          <span class="badge bg-secondary" v-if="pdetail.color?.title">{{ pdetail.color?.title }}</span>
-                          <span class="badge bg-info text-dark" v-if="pdetail.size?.title">{{ pdetail.size?.title }}</span>
-                          <span class="text-muted small" v-if="!pdetail.color?.title && !pdetail.size?.title">-</span>
+                          <span class="badge bg-secondary" v-if="gdetail.color?.title">{{ gdetail.color?.title }}</span>
+                          <span class="badge bg-info text-dark" v-if="gdetail.size?.title">{{ gdetail.size?.title }}</span>
+                          <span class="text-muted small" v-if="!gdetail.color?.title && !gdetail.size?.title">-</span>
                         </div>
                       </td>
-                      <td class="text-center font-monospace fw-bold">
-                        {{ pdetail.qty }} <small class="text-muted fw-normal">{{ pdetail.unit?.title || 'Pcs' }}</small>
+                      <td class="text-center font-monospace text-secondary">
+                        {{ gdetail.ordered_qty }}
+                      </td>
+                      <td class="text-center font-monospace fw-bold text-primary">
+                        {{ gdetail.received_qty }} <small class="text-muted fw-normal">{{ gdetail.unit?.title || 'Pcs' }}</small>
                       </td>
                       <td class="text-end font-monospace text-muted">
-                        ৳ {{ formatNum(pdetail.price) }}
-                      </td>
-                      <td class="text-end font-monospace text-success fw-semibold">
-                        ৳ {{ formatNum(pdetail.selling_price) }}
+                        ৳ {{ formatNum(gdetail.unit_price) }}
                       </td>
 
                       <!-- Serial Number Action / Badge -->
                       <td class="text-center" v-if="isElectronicsShop || hasAnySerials">
-                        <template v-if="getSerialsList(pdetail.serial_no).length > 0">
+                        <template v-if="getSerialsList(gdetail.serial_no).length > 0">
                           <button
                             type="button"
                             class="btn btn-xs btn-outline-theme d-inline-flex align-items-center gap-1 shadow-sm font-monospace"
-                            @click="openSerialModal(pdetail)"
+                            @click="openSerialModal(gdetail)"
                             title="Click to view all Serial Numbers"
                           >
                             <i class="fas fa-barcode"></i>
-                            <strong>{{ getSerialsList(pdetail.serial_no).length }}</strong> Serials
+                            <strong>{{ getSerialsList(gdetail.serial_no).length }}</strong> Serials
                           </button>
                         </template>
                         <template v-else>
@@ -249,20 +235,20 @@
                       </td>
 
                       <td class="text-end font-monospace fw-bold text-theme">
-                        ৳ {{ formatNum(pdetail.total_amount) }}
+                        ৳ {{ formatNum(gdetail.total_amount) }}
                       </td>
                     </tr>
 
-                    <tr v-if="!data.purchase_details || data.purchase_details.length === 0">
+                    <tr v-if="!data.grn_details || data.grn_details.length === 0">
                       <td :colspan="hasAnyVariants ? 9 : 8" class="text-center py-4 text-muted">
-                        No purchase items recorded in this voucher.
+                        No goods receive items found.
                       </td>
                     </tr>
                   </tbody>
                   <tfoot class="table-light fw-bold">
                     <tr>
-                      <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">Summary Totals:</td>
-                      <td class="text-center font-monospace">{{ totalQty }}</td>
+                      <td :colspan="hasAnyVariants ? 5 : 4" class="text-end">Summary Totals:</td>
+                      <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
                       <td colspan="2" v-if="!isElectronicsShop && !hasAnySerials"></td>
                       <td colspan="3" v-else></td>
                       <td class="text-end font-monospace text-theme fs-6">৳ {{ formatNum(data.total_amount) }}</td>
@@ -271,6 +257,24 @@
                 </table>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Printable Voucher Signatures Section -->
+      <div class="print-signatures mt-5 pt-4 border-top d-none d-print-block">
+        <div class="row text-center">
+          <div class="col-3">
+            <div class="border-top border-dark pt-2 fw-bold">Prepared By</div>
+          </div>
+          <div class="col-3">
+            <div class="border-top border-dark pt-2 fw-bold">Received By / Store Keeper</div>
+          </div>
+          <div class="col-3">
+            <div class="border-top border-dark pt-2 fw-bold">Verified / Quality Check</div>
+          </div>
+          <div class="col-3">
+            <div class="border-top border-dark pt-2 fw-bold">Authorized Approval</div>
           </div>
         </div>
       </div>
@@ -284,7 +288,7 @@
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-barcode fs-5"></i>
               <div>
-                <h6 class="modal-title fw-bold mb-0 text-white">Serial Numbers & IMEI Tracking</h6>
+                <h6 class="modal-title fw-bold mb-0 text-white">Received Serial Numbers & IMEI</h6>
                 <small class="text-white-50" style="font-size: 11px;">{{ activeSerialItem.item?.title || 'Product Serials' }}</small>
               </div>
             </div>
@@ -293,7 +297,7 @@
           <div class="modal-body p-4">
             <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border">
               <span class="small fw-semibold text-dark">
-                Total Registered Serials: <strong class="theme-text font-monospace fs-6">{{ modalSerialsList.length }}</strong>
+                Total Serials Received: <strong class="theme-text font-monospace fs-6">{{ modalSerialsList.length }}</strong>
               </span>
               <button type="button" class="btn btn-xs btn-outline-secondary" @click="copyAllSerials">
                 <i class="fas fa-copy me-1"></i> Copy All
@@ -327,13 +331,13 @@
 </template>
 
 <script>
-const model = "purchase";
+const model = "grn";
 
 export default {
-  name: "PurchaseView",
+  name: "GrnView",
   data() {
     return {
-      page_title: "Purchase Details",
+      page_title: "Goods Receive Note Details",
       model: model,
       data: {},
       activeSerialItem: null,
@@ -345,14 +349,10 @@ export default {
       return this.$root.site_setting?.shop_type === 'electronics' || this.data?.shop_type === 'electronics';
     },
     hasAnyVariants() {
-      return this.data.purchase_details?.some(d => d.color_id || d.size_id || d.color?.title || d.size?.title);
+      return this.data.grn_details?.some(d => d.color_id || d.size_id || d.color?.title || d.size?.title);
     },
     hasAnySerials() {
-      return this.data.purchase_details?.some(d => Boolean(d.serial_no && String(d.serial_no).trim()));
-    },
-    totalQty() {
-      if (!this.data.purchase_details) return 0;
-      return this.data.purchase_details.reduce((sum, d) => sum + (parseFloat(d.qty) || 0), 0);
+      return this.data.grn_details?.some(d => Boolean(d.serial_no && String(d.serial_no).trim()));
     },
     modalSerialsList() {
       if (!this.activeSerialItem) return [];
@@ -392,19 +392,19 @@ export default {
         this.$toast(`Copied: ${sn}`, "success");
       });
     },
-    printPurchaseVoucher() {
+    printGrnVoucher() {
       window.print();
     }
   },
   created() {
-    this.page_title = "Purchase Details";
+    this.page_title = "Goods Receive Note Details";
     this.get_data(`${this.model}/${this.$route.params.id}`);
   },
 };
 </script>
 
 <style scoped>
-.purchase-view-wrapper {
+.grn-view-wrapper {
   font-family: inherit;
 }
 
@@ -435,7 +435,7 @@ export default {
 }
 
 /* Hero Banner */
-.purchase-hero-banner {
+.grn-hero-banner {
   background: linear-gradient(135deg, rgb(17, 44, 70) 0%, #1e3a5f 100%);
   border-radius: 8px;
 }
@@ -513,10 +513,13 @@ export default {
 }
 
 @media print {
-  .purchase-hero-banner,
+  .grn-hero-banner,
   .btn,
   .modal {
     display: none !important;
+  }
+  .d-print-block {
+    display: block !important;
   }
 }
 </style>

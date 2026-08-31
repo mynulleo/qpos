@@ -69,6 +69,16 @@
             >
               <i class="fas fa-print"></i> Print
             </button>
+
+            <!-- Help Info Button -->
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-sm"
+              @click="openHelpModal"
+              title="Help Manual (সহায়িকা)"
+            >
+              <i class="fas fa-question-circle"></i> Help
+            </button>
           </div>
         </div>
 
@@ -583,6 +593,25 @@
         </div>
       </div>
     </div>
+
+    <!-- ℹ️ Warranty Claim Report Bengali Help Info Modal -->
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1060;" v-if="showHelpModal">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-dark text-white py-2">
+            <h5 class="modal-title fs-6 text-white"><i class="fas fa-tools me-2 text-warning"></i>ওয়ারেন্টি ও গ্যারান্টি ক্লেইম অডিট রিপোর্ট সহায়িকা</h5>
+            <button type="button" class="btn-close btn-close-white" @click="showHelpModal = false"></button>
+          </div>
+          <div class="modal-body p-3">
+            <div v-if="helpContent" v-html="helpContent"></div>
+            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> সহায়িকা লোড হচ্ছে...</div>
+          </div>
+          <div class="modal-footer py-1">
+            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">বন্ধ করুন</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -591,6 +620,8 @@ export default {
   name: 'WarrantyClaimAuditReport',
   data() {
     return {
+      showHelpModal: false,
+      helpContent: '',
       model: 'Warranty & Guarantee Claims Audit Report',
       loading: false,
       showAdvanced: false,
@@ -682,6 +713,14 @@ export default {
     },
   },
   methods: {
+    openHelpModal() {
+      this.showHelpModal = true;
+      if (!this.helpContent) {
+        axios.get('helpInfo/WarrantyClaimReport/index').then(res => {
+          this.helpContent = res.data?.description || '';
+        });
+      }
+    },
     fetchReport(page = 1) {
       this.loading = true;
       this.search_data.page = page;

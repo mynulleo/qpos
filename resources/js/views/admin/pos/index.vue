@@ -8,6 +8,9 @@
           <span class="badge bg-secondary font-monospace">{{ currentDate }}</span>
         </div>
         <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-sm btn-outline-info text-white d-flex align-items-center gap-1 font-monospace" @click="openHelpModal">
+            <i class="fas fa-question-circle"></i> Help
+          </button>
           <router-link to="/invoice" class="btn btn-sm btn-outline-light d-flex align-items-center gap-1 font-monospace">
             <i class="fas fa-file-invoice"></i> Invoices
           </router-link>
@@ -908,6 +911,25 @@
         </div>
       </div>
     </div>
+
+    <!-- ℹ️ POS Bengali Help Info Modal -->
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1060;" v-if="showHelpModal">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-dark text-white py-2">
+            <h5 class="modal-title fs-6 text-white"><i class="fas fa-cash-register me-2 text-warning"></i>ক্যাশ কাউন্টার / পিওএস টার্মিনাল সহায়িকা</h5>
+            <button type="button" class="btn-close btn-close-white" @click="showHelpModal = false"></button>
+          </div>
+          <div class="modal-body p-3">
+            <div v-if="posHelpContent" v-html="posHelpContent"></div>
+            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> সহায়িকা লোড হচ্ছে...</div>
+          </div>
+          <div class="modal-footer py-1">
+            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">বন্ধ করুন</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -917,6 +939,8 @@ import axios from "axios";
 export default {
   data() {
     return {
+      showHelpModal: false,
+      posHelpContent: '',
       currentDate: new Date().toLocaleDateString('en-GB'),
       client: { id: null, name: '', mobile: '', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 },
       showNewClientForm: false,
@@ -1036,6 +1060,14 @@ export default {
     }
   },
   methods: {
+    openHelpModal() {
+      this.showHelpModal = true;
+      if (!this.posHelpContent) {
+        axios.get('helpInfo/Pos/index').then(res => {
+          this.posHelpContent = res.data?.description || '';
+        });
+      }
+    },
     formatPrice(val) {
       return floatval(val).toFixed(2);
     },
