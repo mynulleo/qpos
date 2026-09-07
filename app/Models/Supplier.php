@@ -20,9 +20,15 @@ class Supplier extends BaseModel
     public static function generateSupID()
     {
         $supid = 111;
-        $lastsupplier = Supplier::latest()->first(['id', 'supid']);
-        if ($lastsupplier) {
-            $supid = $lastsupplier->supid + 1;
+        $lastsupplier = Supplier::latest('id')->first(['id', 'supid']);
+        if ($lastsupplier && !empty($lastsupplier->supid)) {
+            if (is_numeric($lastsupplier->supid)) {
+                $supid = intval($lastsupplier->supid) + 1;
+            } elseif (preg_match('/^(.*?)(\d+)$/', $lastsupplier->supid, $matches)) {
+                $prefix = $matches[1];
+                $num = intval($matches[2]) + 1;
+                $supid = $prefix . str_pad($num, strlen($matches[2]), '0', STR_PAD_LEFT);
+            }
         }
         return $supid;
     }

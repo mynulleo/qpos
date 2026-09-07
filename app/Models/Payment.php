@@ -56,19 +56,29 @@ class Payment extends BaseModel
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
 
-    public function supplier()
-    {
-        return $this->belongsTo(Supplier::class, 'supplier_id', 'id');
-    }
-
     public function client()
     {
         return $this->belongsTo(Client::class, 'client_id', 'id');
     }
 
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id', 'id');
+    }
+
     public function agent()
     {
         return $this->belongsTo(Agent::class, 'agent_id', 'id');
+    }
+
+    public function fund_account()
+    {
+        return $this->belongsTo(Account::class, 'fund_account_id', 'id');
+    }
+
+    public function bank()
+    {
+        return $this->belongsTo(Bank::class, 'bank_id', 'id');
     }
 
     // file image push

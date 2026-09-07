@@ -30,50 +30,134 @@ class PaymentController extends BaseController
     public function index(Request $request)
     {
         $query = Payment::with([
-            'client:id,name',
-            'supplier:id,org_name',
-            'employee:id,full_name',
-            'agent:id,full_name'
+            'client:id,name,mobile,clientid',
+            'supplier:id,org_name,mobile,supid',
+            'employee:id,full_name,mobile',
+            'agent:id,full_name,mobile',
+            'fund_account:id,account_name,account_code',
+            'bank:id,bank_name'
         ])->latest();
 
-        // Client filter
-        if ($request->client_id) {
+        // 1. Text / Keyword Search (Global or Specific Field)
+        if ($request->filled('value')) {
+            $val = trim($request->value);
+            if ($request->filled('field_name')) {
+                $field = $request->field_name;
+                if (in_array($field, ['payslipno', 'trxid', 'chequeno', 'branch', 'account_name', 'accountno', 'status', 'payment_type', 'payment_method', 'mbanking_type'])) {
+                    $query->where($field, 'like', "%{$val}%");
+                } elseif ($field === 'client') {
+                    $query->whereHas('client', function ($q) use ($val) {
+                        $q->where('name', 'like', "%{$val}%")->orWhere('clientid', 'like', "%{$val}%")->orWhere('mobile', 'like', "%{$val}%");
+                    });
+                } elseif ($field === 'supplier') {
+                    $query->whereHas('supplier', function ($q) use ($val) {
+                        $q->where('org_name', 'like', "%{$val}%")->orWhere('supid', 'like', "%{$val}%")->orWhere('mobile', 'like', "%{$val}%");
+                    });
+                } elseif ($field === 'employee') {
+                    $query->whereHas('employee', function ($q) use ($val) {
+                        $q->where('full_name', 'like', "%{$val}%")->orWhere('mobile', 'like', "%{$val}%");
+                    });
+                } elseif ($field === 'agent') {
+                    $query->whereHas('agent', function ($q) use ($val) {
+                        $q->where('full_name', 'like', "%{$val}%")->orWhere('mobile', 'like', "%{$val}%");
+                    });
+                }
+            } else {
+                // Global Multi-field Search
+                $query->where(function ($q) use ($val) {
+                    $q->where('payslipno', 'like', "%{$val}%")
+                        ->orWhere('trxid', 'like', "%{$val}%")
+                        ->orWhere('chequeno', 'like', "%{$val}%")
+                        ->orWhere('branch', 'like', "%{$val}%")
+                        ->orWhere('account_name', 'like', "%{$val}%")
+                        ->orWhere('accountno', 'like', "%{$val}%")
+                        ->orWhere('amount', 'like', "%{$val}%")
+                        ->orWhereHas('client', function ($cq) use ($val) {
+                            $cq->where('name', 'like', "%{$val}%")
+                                ->orWhere('clientid', 'like', "%{$val}%")
+                                ->orWhere('mobile', 'like', "%{$val}%");
+                        })
+                        ->orWhereHas('supplier', function ($sq) use ($val) {
+                            $sq->where('org_name', 'like', "%{$val}%")
+                                ->orWhere('supid', 'like', "%{$val}%")
+                                ->orWhere('mobile', 'like', "%{$val}%");
+                        })
+                        ->orWhereHas('employee', function ($eq) use ($val) {
+                            $eq->where('full_name', 'like', "%{$val}%")
+                                ->orWhere('mobile', 'like', "%{$val}%");
+                        })
+                        ->orWhereHas('agent', function ($aq) use ($val) {
+                            $aq->where('full_name', 'like', "%{$val}%")
+                                ->orWhere('mobile', 'like', "%{$val}%");
+                        });
+                });
+            }
+        }
+
+        // 2. Transaction Type Filter (Receive / Pay)
+        if ($request->filled('payment_type')) {
+            $query->where('payment_type', $request->payment_type);
+        }
+
+        // 3. Entity Filters
+        if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);
         }
-
-        // Supplier filter
-        if ($request->supplier_id) {
+        if ($request->filled('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
         }
-
-        // Employee filter
-        if ($request->employee_id) {
+        if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->employee_id);
         }
-
-        // Agent filter
-        if ($request->agent_id) {
+        if ($request->filled('agent_id')) {
             $query->where('agent_id', $request->agent_id);
         }
 
-        // Payment Method filter
-        if ($request->payment_method) {
+        // 4. Payment Method & Channels
+        if ($request->filled('payment_method')) {
             $query->where('payment_method', $request->payment_method);
         }
-
-        // From payment date
-        if ($request->from_payment_date) {
-            $query->whereDate('payment_date', '>=', $request->from_payment_date);
+        if ($request->filled('mbanking_type')) {
+            $query->where('mbanking_type', $request->mbanking_type);
+        }
+        if ($request->filled('bank_id')) {
+            $query->where('bank_id', $request->bank_id);
         }
 
-        // To payment date
-        if ($request->to_payment_date) {
-            $query->whereDate('payment_date', '<=', $request->to_payment_date);
+        // 5. Fund Account
+        if ($request->filled('fund_account_id')) {
+            $query->where('fund_account_id', $request->fund_account_id);
         }
 
-        // Office expense yes/no switch
-        if ($request->office_expense == 1) {
+        // 6. Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // 7. Office expense yes/no switch
+        if ($request->filled('office_expense')) {
             $query->where('office_expense', $request->office_expense);
+        }
+
+        // 8. Amount Range Filters
+        if ($request->filled('min_amount')) {
+            $query->where('amount', '>=', (float) $request->min_amount);
+        }
+        if ($request->filled('max_amount')) {
+            $query->where('amount', '<=', (float) $request->max_amount);
+        }
+
+        // 9. Date Range Filter with vue_to_server_date conversion
+        if ($request->filled('from_payment_date') && !$request->filled('to_payment_date')) {
+            $from = vue_to_server_date($request->from_payment_date);
+            $query->whereDate('payment_date', '>=', $from);
+        } elseif (!$request->filled('from_payment_date') && $request->filled('to_payment_date')) {
+            $to = vue_to_server_date($request->to_payment_date);
+            $query->whereDate('payment_date', '<=', $to);
+        } elseif ($request->filled('from_payment_date') && $request->filled('to_payment_date')) {
+            $from = vue_to_server_date($request->from_payment_date);
+            $to = vue_to_server_date($request->to_payment_date);
+            $query->whereBetween('payment_date', [$from, $to]);
         }
 
         if ($request->allData) {

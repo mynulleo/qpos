@@ -19,9 +19,15 @@ class Expense extends BaseModel
     public static function generateExpenseID()
     {
         $number = 111;
-        $last = Expense::latest()->first();
-        if ($last) {
-            $number = $last->expenseid + 1;
+        $last = Expense::latest('id')->first(['id', 'expenseid']);
+        if ($last && !empty($last->expenseid)) {
+            if (is_numeric($last->expenseid)) {
+                $number = intval($last->expenseid) + 1;
+            } elseif (preg_match('/^(.*?)(\d+)$/', $last->expenseid, $matches)) {
+                $prefix = $matches[1];
+                $num = intval($matches[2]) + 1;
+                $number = $prefix . str_pad($num, strlen($matches[2]), '0', STR_PAD_LEFT);
+            }
         }
         return $number;
     }

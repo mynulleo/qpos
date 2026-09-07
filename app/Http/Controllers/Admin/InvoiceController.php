@@ -38,26 +38,41 @@ class InvoiceController extends BaseController
                 $q->with('item:id,title,barcode', 'color:id,title', 'size:id,title');
             },
             'payment_details:id,payment_id,reference_type,reference_id,amount,is_closed'
-        ])->latest('id');
+        ]);
 
-        // ✅ Filter by Client
-        if (!empty($request->client_id)) {
-            $query->where('client_id', $request->client_id);
-        }
-
-        // ✅ Filter by Keyword (Invoice No, Client Mobile, Client Name)
+        // ✅ 1. Keyword Filter (Invoice No, Customer Name, Mobile, Org Name, Product Title, Barcode, Serial)
         if (!empty($request->keyword)) {
             $kw = trim($request->keyword);
             $query->where(function ($q) use ($kw) {
                 $q->where('invoice_no', 'like', "%{$kw}%")
                   ->orWhereHas('client', function ($cq) use ($kw) {
                       $cq->where('mobile', 'like', "%{$kw}%")
-                         ->orWhere('name', 'like', "%{$kw}%");
+                         ->orWhere('name', 'like', "%{$kw}%")
+                         ->orWhere('org_name', 'like', "%{$kw}%")
+                         ->orWhere('clientid', 'like', "%{$kw}%");
+                  })
+                  ->orWhereHas('details.item', function ($iq) use ($kw) {
+                      $iq->where('title', 'like', "%{$kw}%")
+                         ->orWhere('barcode', 'like', "%{$kw}%");
                   });
             });
         }
 
-        // ✅ Filter by Invoice Date Range
+        // ✅ 2. Client Filter
+        if (!empty($request->client_id)) {
+            $query->where('client_id', $request->client_id);
+        }
+
+        // ✅ 3. Walk-in Customer Filter
+        if (isset($request->customer_type) && $request->customer_type !== '') {
+            if ($request->customer_type === 'walkin') {
+                $query->whereNull('client_id');
+            } elseif ($request->customer_type === 'registered') {
+                $query->whereNotNull('client_id');
+            }
+        }
+
+        // ✅ 4. Invoice Date Range Filter
         if (!empty($request->from_invoice_date) && !empty($request->to_invoice_date)) {
             $query->whereBetween('invoice_date', [
                 date('Y-m-d', strtotime($request->from_invoice_date)),
@@ -69,37 +84,101 @@ class InvoiceController extends BaseController
             $query->whereDate('invoice_date', '<=', date('Y-m-d', strtotime($request->to_invoice_date)));
         }
 
-        // ✅ Filter by Payment Status (Paid, Partial, Due)
+        // ✅ 5. Payment Status Filter (Paid, Partial, Due, Unpaid)
         if (!empty($request->payment_status)) {
             if ($request->payment_status === 'paid') {
                 $query->whereRaw('paid_amount >= amount');
             } elseif ($request->payment_status === 'partial') {
                 $query->whereRaw('paid_amount > 0 AND paid_amount < amount');
             } elseif ($request->payment_status === 'due') {
-                $query->whereRaw('paid_amount = 0 OR paid_amount IS NULL');
+                $query->whereRaw('(paid_amount < amount OR paid_amount IS NULL)');
+            } elseif ($request->payment_status === 'unpaid') {
+                $query->whereRaw('(paid_amount = 0 OR paid_amount IS NULL)');
             }
         }
 
-        // ✅ Filter by is_closed
+        // ✅ 6. Amount Range Filter
+        if (!empty($request->min_amount)) {
+            $query->where('amount', '>=', (float)$request->min_amount);
+        }
+        if (!empty($request->max_amount)) {
+            $query->where('amount', '<=', (float)$request->max_amount);
+        }
+
+        // ✅ 7. Due Amount Range Filter
+        if (!empty($request->min_due)) {
+            $query->whereRaw('(amount - COALESCE(paid_amount, 0)) >= ?', [(float)$request->min_due]);
+        }
+        if (!empty($request->max_due)) {
+            $query->whereRaw('(amount - COALESCE(paid_amount, 0)) <= ?', [(float)$request->max_due]);
+        }
+        if (!empty($request->has_due) && $request->has_due == '1') {
+            $query->whereRaw('(amount - COALESCE(paid_amount, 0)) > 0');
+        }
+
+        // ✅ 8. Created By / Cashier Filter
+        if (!empty($request->created_by)) {
+            $query->where('created_by', $request->created_by);
+        }
+
+        // ✅ 9. Product / Item Filter
+        if (!empty($request->item_id)) {
+            $query->whereHas('details', function ($q) use ($request) {
+                $q->where('item_id', $request->item_id);
+            });
+        }
+
+        // ✅ 10. Barcode Filter
+        if (!empty($request->barcode)) {
+            $barcode = trim($request->barcode);
+            $query->whereHas('details.item', function ($q) use ($barcode) {
+                $q->where('barcode', 'like', "%{$barcode}%");
+            });
+        }
+
+        // ✅ 11. Closed / Active Status
         if (isset($request->is_closed) && $request->is_closed !== '') {
             $query->where('is_closed', $request->is_closed);
         }
+        if (!empty($request->status)) {
+            $query->where('status', $request->status);
+        }
 
-        // ✅ Generic field search
+        // ✅ 12. Generic field search
         if (!empty($request->field_name) && !empty($request->value)) {
             $query->whereLike($request->field_name, $request->value);
         }
 
-        // Summary KPI Metrics for the list page
+        // Calculate KPI Metrics for current filtered dataset
         $totalInvoicesCount = (clone $query)->count();
         $totalSalesAmount = (clone $query)->sum('amount');
         $totalPaidAmount = (clone $query)->sum('paid_amount');
         $totalDueAmount = max(0, $totalSalesAmount - $totalPaidAmount);
 
+        // ✅ 13. Dynamic Sorting
+        $sortBy = $request->sort_by ?? 'id';
+        $sortOrder = strtolower($request->sort_order ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy === 'invoice_date') {
+            $query->orderBy('invoice_date', $sortOrder)->orderBy('id', $sortOrder);
+        } elseif ($sortBy === 'amount') {
+            $query->orderBy('amount', $sortOrder);
+        } elseif ($sortBy === 'paid_amount') {
+            $query->orderBy('paid_amount', $sortOrder);
+        } elseif ($sortBy === 'due_amount') {
+            $query->orderByRaw("(amount - COALESCE(paid_amount, 0)) {$sortOrder}");
+        } elseif ($sortBy === 'invoice_no') {
+            $query->orderBy('invoice_no', $sortOrder);
+        } else {
+            $query->orderBy('id', $sortOrder);
+        }
+
         if ($request->allData) {
             return $query->get();
         } else {
-            $datas = $query->paginate($request->pagination ?? 15);
+            $perPage = (int)($request->pagination ?? 15);
+            $currentPage = (int)($request->page ?? 1);
+            $datas = $query->paginate($perPage, ['*'], 'page', $currentPage);
             $resource = new Resource($datas);
             $resource->additional([
                 'kpi' => [

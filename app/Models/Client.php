@@ -21,9 +21,15 @@ class Client extends BaseModel
     public static function generateClientID()
     {
         $clientid = 111;
-        $client = Client::latest()->first(['id', 'clientid']);
-        if ($client) {
-            $clientid = $client->clientid + 1;
+        $client = Client::latest('id')->first(['id', 'clientid']);
+        if ($client && !empty($client->clientid)) {
+            if (is_numeric($client->clientid)) {
+                $clientid = intval($client->clientid) + 1;
+            } elseif (preg_match('/^(.*?)(\d+)$/', $client->clientid, $matches)) {
+                $prefix = $matches[1];
+                $num = intval($matches[2]) + 1;
+                $clientid = $prefix . str_pad($num, strlen($matches[2]), '0', STR_PAD_LEFT);
+            }
         }
         return $clientid;
     }

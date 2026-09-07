@@ -191,7 +191,7 @@
             <div class="position-relative">
               <div class="input-group input-group-lg shadow-sm rounded-3">
                 <span class="input-group-text bg-white border-end-0 text-primary">
-                  <i class="fas fa-barcode fa-lg"></i>
+                  <i class="fa-lg" :class="searchLoading ? 'fas fa-spinner fa-spin text-primary' : 'fas fa-barcode'"></i>
                 </span>
                 <input
                   ref="barcodeSearchInput"
@@ -206,7 +206,7 @@
                 <button
                   type="button"
                   class="btn btn-outline-secondary border-start-0"
-                  v-if="searchTerm"
+                  v-show="searchTerm"
                   @click="clearSearch">
                   <i class="fas fa-times"></i>
                 </button>
@@ -214,7 +214,7 @@
 
               <!-- Search Results Dropdown -->
               <div
-                v-if="searchResults.length > 0"
+                v-show="searchResults.length > 0"
                 class="position-absolute w-100 bg-white border rounded-3 shadow-lg mt-1 search-results-dropdown"
                 style="max-height: 380px; overflow-y: auto; z-index: 9999;">
                 <div
@@ -278,10 +278,16 @@
                   type="number"
                   min="1"
                   class="form-control form-control-sm text-center font-monospace fw-bold"
-                  style="width: 55px;"
+                  style="width: 50px;"
                   v-model.number="bulkQty"
                   @change="applyBulkQuantity"
                 />
+                <div class="d-flex gap-1 ms-1">
+                  <span class="badge bg-white text-dark border cursor-pointer hover-shadow" @click="bulkQty = 1; applyBulkQuantity()">1</span>
+                  <span class="badge bg-white text-dark border cursor-pointer hover-shadow" @click="bulkQty = 2; applyBulkQuantity()">2</span>
+                  <span class="badge bg-white text-dark border cursor-pointer hover-shadow" @click="bulkQty = 5; applyBulkQuantity()">5</span>
+                  <span class="badge bg-white text-dark border cursor-pointer hover-shadow" @click="bulkQty = 10; applyBulkQuantity()">10</span>
+                </div>
               </div>
               <button
                 type="button"
@@ -363,6 +369,7 @@
                     <!-- Quick Set Pills -->
                     <div class="d-flex justify-content-center gap-1 mt-1">
                       <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="item.qty = 1">1</span>
+                      <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="item.qty = 2">2</span>
                       <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="item.qty = 5">5</span>
                       <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="item.qty = 10">10</span>
                       <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="item.qty = 20">20</span>
@@ -553,7 +560,7 @@
                     <button
                       type="button"
                       class="btn btn-outline-secondary"
-                      v-if="modalFilters.searchTerm"
+                      v-show="modalFilters.searchTerm"
                       @click="modalFilters.searchTerm = ''; fetchModalItems();">
                       <i class="fas fa-times"></i>
                     </button>
@@ -981,6 +988,7 @@
                 <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalAddQty = 2">2</span>
                 <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalAddQty = 5">5</span>
                 <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalAddQty = 10">10</span>
+                <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalAddQty = 20">20</span>
               </div>
             </div>
 
@@ -1072,6 +1080,7 @@ export default {
       model: model,
       page_title: "Barcode Label Print",
       searchTerm: "",
+      searchLoading: false,
       searchResults: [],
       labelQueue: [],
       bulkQty: 1,
@@ -1440,10 +1449,12 @@ export default {
     onSearchInput: _.debounce(function () {
       if (!this.searchTerm || this.searchTerm.trim().length === 0) {
         this.searchResults = [];
+        this.searchLoading = false;
         return;
       }
 
       const term = this.searchTerm.trim();
+      this.searchLoading = true;
       axios
         .get("pos/labelprint", { params: { term: term } })
         .then((res) => {
@@ -1451,8 +1462,11 @@ export default {
         })
         .catch((err) => {
           console.error("Search error:", err);
+        })
+        .finally(() => {
+          this.searchLoading = false;
         });
-    }, 250),
+    }, 200),
 
     handleSearchEnter() {
       if (!this.searchTerm) return;

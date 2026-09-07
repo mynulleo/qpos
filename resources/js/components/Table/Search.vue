@@ -8,7 +8,7 @@
         </select>
     </div>
     <div class="search_box position-relative">
-        <input type="text" placeholder="Search..." />
+        <input type="search" name="qpos_search_filter" autocomplete="off" placeholder="Search..." />
         <button
             class="search_btn position-absolute top-50 translate-middle-y bg-transparent border-0"
             data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Search" v-x-tooltip

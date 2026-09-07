@@ -25,6 +25,7 @@
                     :class="{ 'border-red': has_error, 'readonly-select': readonly }" ref="vselect_wrapper">
                     <v-select v-model="selected_value" :label="label" :reduce="reduce" :options="options"
                         :placeholder="placeholder" :closeOnSelect="closeOnSelect" :field="field"
+                        :appendToBody="appendToBody"
                         @update:modelValue="onChange" />
                 </div>
             </div>
@@ -102,6 +103,10 @@ export default {
         closeOnSelect: {
             type: Boolean,
             default: true,
+        },
+        appendToBody: {
+            type: Boolean,
+            default: false,
         },
     },
 

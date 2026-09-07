@@ -9,7 +9,7 @@
             <h5 class="mb-0 fw-bold text-dark text-nowrap">
               <i class="fas fa-file-invoice-dollar text-primary me-1"></i> Invoices (ইনভয়েস)
             </h5>
-            <span class="badge bg-secondary font-monospace">{{ pagination.total }}</span>
+            <span class="badge bg-secondary font-monospace" v-if="pagination.total > 0">{{ pagination.total }}</span>
           </div>
 
           <!-- Center: Default Quick Search Bar -->
@@ -72,7 +72,7 @@
             <button
               type="button"
               class="btn btn-sm btn-outline-dark"
-              @click="print('invoiceTablePrintArea', 'Invoice List')"
+              @click="printTable"
               title="Print Table"
             >
               <i class="fas fa-print"></i>
@@ -191,7 +191,7 @@
                   {{ getPaymentStatusText(inv) }}
                 </span>
 
-                <!-- ⭐️ Floating Hover Action Buttons on this specific row (No Action Column Header) -->
+                <!-- ⭐️ Floating Hover Action Buttons on this specific row -->
                 <div class="hover-floating-actions">
                   <div class="btn-group btn-group-sm shadow-sm bg-white border rounded px-1 py-1">
                     <!-- View Details (Icon only) -->
@@ -283,9 +283,21 @@
               >
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <span class="small text-dark font-monospace px-1">
-                {{ pagination.current_page }}/{{ pagination.last_page }}
-              </span>
+
+              <!-- Page numbers -->
+              <template v-for="(p, idx) in pageNumbers" :key="idx">
+                <span v-if="p === '...'" class="px-1 text-muted small">...</span>
+                <button
+                  v-else
+                  type="button"
+                  class="btn btn-xs py-1 px-2 font-monospace"
+                  :class="p === pagination.current_page ? 'btn-primary text-white fw-bold' : 'btn-outline-secondary'"
+                  @click="fetchInvoices(p)"
+                >
+                  {{ p }}
+                </button>
+              </template>
+
               <button
                 type="button"
                 class="btn btn-xs btn-outline-secondary py-1 px-2"
@@ -297,7 +309,12 @@
               </button>
             </div>
 
-            <select class="form-select form-select-sm py-0 font-monospace" style="width: 70px; height: 28px; font-size: 11px;" v-model.number="pagination.per_page" @change="fetchInvoices(1)">
+            <select
+              class="form-select form-select-sm py-0 font-monospace cursor-pointer"
+              style="width: 70px; height: 28px; font-size: 11px;"
+              v-model.number="pagination.per_page"
+              @change="fetchInvoices(1)"
+            >
               <option :value="15">15</option>
               <option :value="30">30</option>
               <option :value="50">50</option>
@@ -349,21 +366,15 @@
                 <div style="font-size: 9px; color: #444;" v-if="d.color || d.size">
                   {{ d.color ? d.color.title : '' }} {{ d.size ? '/' + d.size.title : '' }}
                 </div>
-                <div style="font-size: 9px; color: #333;" v-if="d.serial_no">
-                  S/N: {{ d.serial_no }}
-                </div>
-                <div style="font-size: 8.5px; color: #16a34a;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
-                  * {{ d.item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}: {{ d.item.warranty_period }}
-                </div>
               </td>
-              <td style="text-align: center; padding: 3px 0; vertical-align: top;">{{ d.qty }}</td>
-              <td style="text-align: right; padding: 3px 0; vertical-align: top;">{{ formatPrice(d.amount) }}</td>
-              <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold;">{{ formatPrice(d.total_amount) }}</td>
+              <td style="text-align: center; padding: 3px 0;">{{ d.qty }}</td>
+              <td style="text-align: right; padding: 3px 0;">{{ formatPrice(d.amount) }}</td>
+              <td style="text-align: right; padding: 3px 0; font-weight: bold;">{{ formatPrice(d.total_amount) }}</td>
             </tr>
           </tbody>
         </table>
 
-        <div style="border-top: 1px solid #000; padding-top: 4px; font-size: 10px; line-height: 1.35;">
+        <div style="border-top: 1px solid #000; padding-top: 4px; font-size: 10px; line-height: 1.4;">
           <div style="display: flex; justify-content: space-between;">
             <span>Subtotal:</span>
             <span>Tk. {{ formatPrice(selectedPrintInvoice.original_amount) }}</span>
@@ -373,327 +384,106 @@
             <span>- Tk. {{ formatPrice(selectedPrintInvoice.discount) }}</span>
           </div>
           <div style="display: flex; justify-content: space-between;" v-if="selectedPrintInvoice.vat > 0">
-            <span>VAT/Tax:</span>
+            <span>VAT:</span>
             <span>+ Tk. {{ formatPrice(selectedPrintInvoice.vat) }}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-top: 3px; border-top: 1px dashed #000; padding-top: 3px;">
-            <span>Net Payable:</span>
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 3px 0; margin-top: 2px;">
+            <span>NET TOTAL:</span>
             <span>Tk. {{ formatPrice(selectedPrintInvoice.amount) }}</span>
           </div>
-          <div style="display: flex; justify-content: space-between;">
-            <span>Paid Amount:</span>
+          <div style="display: flex; justify-content: space-between; font-weight: bold;">
+            <span>PAID AMOUNT:</span>
             <span>Tk. {{ formatPrice(selectedPrintInvoice.paid_amount) }}</span>
           </div>
-          <div style="display: flex; justify-content: space-between;" v-if="(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) > 0">
-            <span>Due Amount:</span>
+          <div style="display: flex; justify-content: space-between; font-weight: bold;" v-if="(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) > 0">
+            <span>DUE BALANCE:</span>
             <span>Tk. {{ formatPrice(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) }}</span>
           </div>
         </div>
 
-        <div style="text-align: center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 6px; font-size: 9px; line-height: 1.25;">
+        <div style="text-align: center; margin-top: 12px; font-size: 9px; border-top: 1px dashed #000; padding-top: 6px;">
           <div>Thank you for shopping with us!</div>
-          <div>Please keep this invoice for warranty and returns.</div>
+          <div>Software by Quill Information Technology</div>
         </div>
       </div>
 
-      <!-- 2. 🖨️ Thermal 60mm Layout (Compact 2-Inch Mini Receipt) -->
-      <div v-else-if="effectivePrintFormat === 'thermal-60mm'" class="thermal-60mm-invoice" style="width: 56mm; font-family: monospace, Arial; font-size: 9.5px; line-height: 1.25; padding: 2px; margin: 0 auto; color: #000;">
-        <div style="text-align: center; margin-bottom: 5px;">
-          <h2 style="font-size: 13px; font-weight: bold; margin: 0 0 1px 0; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
-          <div style="font-size: 8.5px;">{{ $root.site?.address || '' }}</div>
-          <div style="font-size: 8.5px;">Mob: {{ $root.site?.mobile1 || '' }}</div>
-          <div style="font-size: 10px; font-weight: bold; margin-top: 3px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2px 0;">
-            SALES RECEIPT
-          </div>
-        </div>
-
-        <div style="margin-bottom: 4px; font-size: 8.5px; line-height: 1.2;">
-          <div><strong>Inv:</strong> #{{ selectedPrintInvoice.invoice_no }}</div>
-          <div><strong>Date:</strong> {{ selectedPrintInvoice.invoice_date }}</div>
-          <div><strong>Cust:</strong> {{ selectedPrintInvoice.client ? selectedPrintInvoice.client.name : 'Walk-in' }}</div>
-          <div v-if="selectedPrintInvoice.client?.mobile"><strong>Ph:</strong> {{ selectedPrintInvoice.client.mobile }}</div>
-        </div>
-
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 8.5px;">
-          <thead>
-            <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
-              <th style="text-align: left; padding: 2px 0;">Item</th>
-              <th style="text-align: center; padding: 2px 0;">Qty</th>
-              <th style="text-align: right; padding: 2px 0;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="d in selectedPrintInvoice.details" :key="d.id" style="border-bottom: 1px dashed #ddd;">
-              <td style="padding: 2px 0;">
-                <div>{{ d.item ? d.item.title : 'Item' }}</div>
-                <div style="font-size: 8px; color: #555;" v-if="d.serial_no">S/N: {{ d.serial_no }}</div>
-              </td>
-              <td style="text-align: center; padding: 2px 0; vertical-align: top;">{{ d.qty }}</td>
-              <td style="text-align: right; padding: 2px 0; vertical-align: top;">{{ formatPrice(d.total_amount) }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div style="border-top: 1px solid #000; padding-top: 3px; font-size: 8.5px; line-height: 1.2;">
-          <div style="display: flex; justify-content: space-between;">
-            <span>Subtotal:</span>
-            <span>{{ formatPrice(selectedPrintInvoice.original_amount) }}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between;" v-if="selectedPrintInvoice.discount > 0">
-            <span>Discount:</span>
-            <span>-{{ formatPrice(selectedPrintInvoice.discount) }}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 10px; margin-top: 2px; border-top: 1px dashed #000; padding-top: 2px;">
-            <span>Payable:</span>
-            <span>Tk. {{ formatPrice(selectedPrintInvoice.amount) }}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between;">
-            <span>Paid:</span>
-            <span>{{ formatPrice(selectedPrintInvoice.paid_amount) }}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between;" v-if="(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) > 0">
-            <span>Due:</span>
-            <span>{{ formatPrice(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) }}</span>
-          </div>
-        </div>
-
-        <div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 4px; font-size: 8px;">
-          <div>Thanks for visiting!</div>
-        </div>
-      </div>
-
-      <!-- 3. 🖨️ Normal Printer A5 Layout (Compact Half-Page Invoice) -->
-      <div v-else-if="effectivePrintFormat === 'normal-a5'" class="normal-a5-invoice" style="width: 100%; max-width: 138mm; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5px; line-height: 1.35; color: #111; margin: 0 auto; padding: 6px;">
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #112C47; padding-bottom: 8px; margin-bottom: 8px;">
+      <!-- 2. 🖨️ Normal A4/A5 Layout -->
+      <div v-else class="normal-a4-invoice" style="width: 100%; font-family: Arial, sans-serif; font-size: 12px; color: #111; padding: 15px;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #112C47; padding-bottom: 10px; margin-bottom: 15px;">
           <div>
-            <h2 style="font-size: 16px; font-weight: bold; margin: 0; color: #112C47;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
-            <div style="font-size: 10px; color: #444;">{{ $root.site?.address || '' }}</div>
-            <div style="font-size: 10px; color: #444;">Phone: {{ $root.site?.mobile1 || '' }} | Email: {{ $root.site?.contact_email || '' }}</div>
+            <h2 style="margin: 0; color: #112C47; font-size: 22px;">{{ $root.site?.title || 'QPOS' }}</h2>
+            <div>{{ $root.site?.address }}</div>
+            <div>Phone: {{ $root.site?.mobile1 }}</div>
           </div>
           <div style="text-align: right;">
-            <div style="display: inline-block; background: #112C47; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 3px;">
-              SALES INVOICE
-            </div>
-            <div style="font-size: 11px; font-weight: bold; margin-top: 4px; font-family: monospace;">#{{ selectedPrintInvoice.invoice_no }}</div>
-            <div style="font-size: 9.5px; color: #555;">Date: {{ selectedPrintInvoice.invoice_date }}</div>
+            <h3 style="margin: 0; color: #112C47;">INVOICE</h3>
+            <div><strong>Invoice #:</strong> {{ selectedPrintInvoice.invoice_no }}</div>
+            <div><strong>Date:</strong> {{ selectedPrintInvoice.invoice_date }}</div>
           </div>
         </div>
 
-        <!-- Customer Box -->
-        <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px; margin-bottom: 8px; font-size: 10px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
           <div>
-            <strong>Bill To (গ্রাহক):</strong>
-            <div style="font-weight: 600; font-size: 11px;">{{ selectedPrintInvoice.client ? selectedPrintInvoice.client.name : 'Walk-in Customer' }}</div>
-            <div v-if="selectedPrintInvoice.client?.mobile">Mobile: {{ selectedPrintInvoice.client.mobile }}</div>
-            <div v-if="selectedPrintInvoice.client?.address">Address: {{ selectedPrintInvoice.client.address }}</div>
+            <strong>Billed To:</strong>
+            <div>{{ selectedPrintInvoice.client ? selectedPrintInvoice.client.name : 'Walk-in Customer' }}</div>
+            <div v-if="selectedPrintInvoice.client?.mobile">Phone: {{ selectedPrintInvoice.client.mobile }}</div>
           </div>
           <div style="text-align: right;">
-            <div><strong>Payment Mode:</strong> {{ selectedPrintInvoice.payment_method || 'Cash' }}</div>
-            <div><strong>Status:</strong> <span style="font-weight: bold; color: #16a34a;">PAID</span></div>
+            <div><strong>Status:</strong> {{ getPaymentStatusText(selectedPrintInvoice) }}</div>
           </div>
         </div>
 
-        <!-- Items Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
           <thead>
             <tr style="background: #112C47; color: #fff;">
-              <th style="padding: 4px 6px; text-align: center; width: 25px;">#</th>
-              <th style="padding: 4px 6px; text-align: left;">Item Description</th>
-              <th style="padding: 4px 6px; text-align: center; width: 35px;">Qty</th>
-              <th style="padding: 4px 6px; text-align: right; width: 55px;">Rate</th>
-              <th style="padding: 4px 6px; text-align: right; width: 65px;">Total (৳)</th>
+              <th style="padding: 6px; text-align: center; width: 5%;">#</th>
+              <th style="padding: 6px; text-align: left;">Item Description</th>
+              <th style="padding: 6px; text-align: center; width: 12%;">Qty</th>
+              <th style="padding: 6px; text-align: right; width: 18%;">Unit Price</th>
+              <th style="padding: 6px; text-align: right; width: 20%;">Total (৳)</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(d, idx) in selectedPrintInvoice.details" :key="d.id" style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 4px; text-align: center;">{{ idx + 1 }}</td>
-              <td style="padding: 4px 6px;">
-                <div style="font-weight: 600;">{{ d.item ? d.item.title : 'Item' }}</div>
-                <div style="font-size: 9px; color: #475569;" v-if="d.color || d.size">
-                  Variant: {{ d.color ? d.color.title : '' }} {{ d.size ? '/' + d.size.title : '' }}
-                </div>
-                <div style="font-size: 9px; color: #0284c7; font-family: monospace;" v-if="d.serial_no">
-                  S/N: {{ d.serial_no }}
-                </div>
-                <div style="font-size: 9px; color: #16a34a;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
-                  Warranty: {{ d.item.warranty_period }}
+            <tr v-for="(item, idx) in selectedPrintInvoice.details" :key="item.id" style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 6px; text-align: center;">{{ idx + 1 }}</td>
+              <td style="padding: 6px;">
+                <strong>{{ item.item ? item.item.title : 'Product' }}</strong>
+                <div style="font-size: 10px; color: #666;" v-if="item.color || item.size">
+                  {{ item.color ? item.color.title : '' }} {{ item.size ? '/' + item.size.title : '' }}
                 </div>
               </td>
-              <td style="padding: 4px; text-align: center; font-weight: bold;">{{ d.qty }}</td>
-              <td style="padding: 4px 6px; text-align: right; font-family: monospace;">{{ formatPrice(d.amount) }}</td>
-              <td style="padding: 4px 6px; text-align: right; font-weight: bold; font-family: monospace;">{{ formatPrice(d.total_amount) }}</td>
+              <td style="padding: 6px; text-align: center;">{{ item.qty }}</td>
+              <td style="padding: 6px; text-align: right;">{{ formatPrice(item.amount) }}</td>
+              <td style="padding: 6px; text-align: right; font-weight: bold;">{{ formatPrice(item.total_amount) }}</td>
             </tr>
           </tbody>
         </table>
 
-        <!-- Totals & Terms -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-          <div style="width: 52%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px; font-size: 8.5px; color: #64748b;">
-            <div>* Goods once sold cannot be returned without original invoice.</div>
-            <div>* Physical or liquid damage voids all warranty policies.</div>
-          </div>
-
-          <div style="width: 44%;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-              <tbody>
-                <tr>
-                  <td style="padding: 2px 4px;">Subtotal:</td>
-                  <td style="padding: 2px 4px; text-align: right; font-family: monospace;">৳ {{ formatPrice(selectedPrintInvoice.original_amount) }}</td>
-                </tr>
-                <tr v-if="selectedPrintInvoice.discount > 0">
-                  <td style="padding: 2px 4px; color: #dc2626;">Discount:</td>
-                  <td style="padding: 2px 4px; text-align: right; color: #dc2626; font-family: monospace;">- ৳ {{ formatPrice(selectedPrintInvoice.discount) }}</td>
-                </tr>
-                <tr style="border-top: 1px solid #112C47; font-weight: bold; background: #f1f5f9; font-size: 11px;">
-                  <td style="padding: 4px;">Net Payable:</td>
-                  <td style="padding: 4px; text-align: right; color: #112C47; font-family: monospace;">৳ {{ formatPrice(selectedPrintInvoice.amount) }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 2px 4px;">Paid Amount:</td>
-                  <td style="padding: 2px 4px; text-align: right; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(selectedPrintInvoice.paid_amount) }}</td>
-                </tr>
-                <tr v-if="(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) > 0">
-                  <td style="padding: 2px 4px; color: #dc2626; font-weight: bold;">Due Amount:</td>
-                  <td style="padding: 2px 4px; text-align: right; color: #dc2626; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 9px; color: #333;">
-          <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Customer's Signature</div>
-          <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Authorized Signature</div>
-        </div>
-      </div>
-
-      <!-- 4. 🖨️ Normal Printer A4 Layout (Full Corporate Tax Invoice) -->
-      <div v-else class="normal-a4-invoice" style="width: 100%; max-width: 190mm; font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; line-height: 1.4; color: #111; margin: 0 auto; padding: 10px;">
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #112C47; padding-bottom: 12px; margin-bottom: 14px;">
-          <div>
-            <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 4px 0; color: #112C47; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h1>
-            <div style="font-size: 11px; color: #475569; max-width: 380px;">{{ $root.site?.address || '' }}</div>
-            <div style="font-size: 11px; color: #475569; margin-top: 2px;">
-              <span><strong>Phone:</strong> {{ $root.site?.mobile1 || '' }} <span v-if="$root.site?.mobile2">/ {{ $root.site?.mobile2 }}</span></span>
-              <span v-if="$root.site?.contact_email" style="margin-left: 10px;"><strong>Email:</strong> {{ $root.site?.contact_email }}</span>
-            </div>
-            <div style="font-size: 11px; color: #475569; margin-top: 2px;" v-if="$root.site?.bin_no">
-              <strong>BIN / VAT Reg:</strong> {{ $root.site?.bin_no }}
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <div style="display: inline-block; background: #112C47; color: #fff; font-size: 14px; font-weight: bold; padding: 4px 14px; border-radius: 4px; letter-spacing: 0.5px;">
-              TAX INVOICE
-            </div>
-            <div style="font-size: 16px; font-weight: bold; margin-top: 6px; font-family: monospace; color: #112C47;">#{{ selectedPrintInvoice.invoice_no }}</div>
-            <div style="font-size: 11px; color: #64748b;"><strong>Date:</strong> {{ selectedPrintInvoice.invoice_date }}</div>
-            <div style="font-size: 11px; color: #64748b;"><strong>Payment Mode:</strong> {{ selectedPrintInvoice.payment_method || 'Cash' }}</div>
-          </div>
-        </div>
-
-        <!-- Customer Box -->
-        <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px;">
-          <div style="width: 58%;">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #112C47; margin-bottom: 3px;">Invoice To (গ্রাহক):</div>
-            <div style="font-size: 13px; font-weight: bold; color: #0f172a;">{{ selectedPrintInvoice.client ? selectedPrintInvoice.client.name : 'Walk-in Customer' }}</div>
-            <div style="font-size: 11.5px; color: #334155; margin-top: 2px;" v-if="selectedPrintInvoice.client?.mobile">
-              <strong>Phone:</strong> {{ selectedPrintInvoice.client.mobile }}
-            </div>
-            <div style="font-size: 11px; color: #475569; margin-top: 2px;" v-if="selectedPrintInvoice.client?.address">
-              <strong>Address:</strong> {{ selectedPrintInvoice.client.address }}
-            </div>
-          </div>
-          <div style="width: 38%; text-align: right; border-left: 1px solid #e2e8f0; padding-left: 12px;">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #112C47; margin-bottom: 3px;">Payment Status:</div>
-            <div style="font-size: 13px; font-weight: bold; color: #16a34a;" v-if="selectedPrintInvoice.amount <= selectedPrintInvoice.paid_amount">PAID IN FULL</div>
-            <div style="font-size: 13px; font-weight: bold; color: #dc2626;" v-else>DUE AMOUNT PENDING</div>
-          </div>
-        </div>
-
-        <!-- Items Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 11.5px;">
-          <thead>
-            <tr style="background: #112C47; color: #fff;">
-              <th style="padding: 6px 8px; text-align: center; width: 5%;">#</th>
-              <th style="padding: 6px 8px; text-align: left; width: 45%;">Item Description</th>
-              <th style="padding: 6px 8px; text-align: center; width: 12%;">Qty</th>
-              <th style="padding: 6px 8px; text-align: right; width: 18%;">Unit Price</th>
-              <th style="padding: 6px 8px; text-align: right; width: 20%;">Total (৳)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, idx) in selectedPrintInvoice.details" :key="item.id" style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 6px 8px; text-align: center; color: #64748b;">{{ idx + 1 }}</td>
-              <td style="padding: 6px 8px;">
-                <div style="font-weight: 600; color: #0f172a;">{{ item.item ? item.item.title : 'Product' }}</div>
-                <div style="font-size: 10px; color: #475569;" v-if="item.color || item.size">
-                  Variant: {{ item.color ? item.color.title : '' }} {{ item.size ? '/' + item.size.title : '' }}
-                </div>
-                <div style="font-size: 10px; color: #0284c7; font-family: monospace;" v-if="item.serial_no">
-                  Serial/IMEI: {{ item.serial_no }}
-                </div>
-                <div style="font-size: 10px; color: #16a34a;" v-if="item.item && item.item.warranty_type && item.item.warranty_type !== 'none'">
-                  Warranty: {{ item.item.warranty_type }} ({{ item.item.warranty_period }})
-                </div>
-              </td>
-              <td style="padding: 6px 8px; text-align: center; font-weight: 600;">{{ item.qty }}</td>
-              <td style="padding: 6px 8px; text-align: right; font-family: monospace;">{{ formatPrice(item.amount) }}</td>
-              <td style="padding: 6px 8px; text-align: right; font-weight: bold; font-family: monospace;">{{ formatPrice(item.total_amount) }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Bottom Row -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-          <div style="width: 52%; font-size: 10.5px;">
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 10px; color: #64748b; line-height: 1.35;">
-              <div style="font-weight: bold; color: #334155; margin-bottom: 2px;">Terms & Conditions:</div>
-              <div>1. Sold items are eligible for replacement within 7 days against manufacturing defects.</div>
-              <div>2. Warranty claims require presenting this original commercial invoice.</div>
-              <div>3. Physical damage, liquid exposure, or tampering invalidates all guarantees.</div>
-            </div>
-          </div>
-
-          <div style="width: 42%;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
-              <tbody>
-                <tr>
-                  <td style="padding: 4px 6px; color: #475569;">Gross Subtotal:</td>
-                  <td style="padding: 4px 6px; text-align: right; font-family: monospace;">৳ {{ formatPrice(selectedPrintInvoice.original_amount) }}</td>
-                </tr>
-                <tr v-if="selectedPrintInvoice.discount > 0">
-                  <td style="padding: 4px 6px; color: #dc2626;">Special Discount:</td>
-                  <td style="padding: 4px 6px; text-align: right; color: #dc2626; font-family: monospace;">- ৳ {{ formatPrice(selectedPrintInvoice.discount) }}</td>
-                </tr>
-                <tr v-if="selectedPrintInvoice.vat > 0">
-                  <td style="padding: 4px 6px; color: #475569;">VAT / Tax:</td>
-                  <td style="padding: 4px 6px; text-align: right; font-family: monospace;">+ ৳ {{ formatPrice(selectedPrintInvoice.vat) }}</td>
-                </tr>
-                <tr style="border-top: 2px solid #112C47; font-weight: bold; background: #f1f5f9; font-size: 13px;">
-                  <td style="padding: 6px 8px; color: #112C47;">TOTAL PAYABLE:</td>
-                  <td style="padding: 6px 8px; text-align: right; color: #112C47; font-family: monospace;">৳ {{ formatPrice(selectedPrintInvoice.amount) }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 6px; color: #166534; font-weight: bold;">Paid Amount:</td>
-                  <td style="padding: 4px 6px; text-align: right; color: #166534; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(selectedPrintInvoice.paid_amount) }}</td>
-                </tr>
-                <tr v-if="(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) > 0">
-                  <td style="padding: 4px 6px; color: #dc2626; font-weight: bold;">Balance Due:</td>
-                  <td style="padding: 4px 6px; text-align: right; color: #dc2626; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Signature Blocks -->
-        <div style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 8px; font-size: 10.5px; color: #334155;">
-          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Customer's Acceptance</div>
-          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Prepared By (Cashier)</div>
-          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Authorized Signature & Seal</div>
+        <div style="display: flex; justify-content: flex-end;">
+          <table style="width: 300px; border-collapse: collapse;">
+            <tbody>
+              <tr>
+                <td style="padding: 4px;">Subtotal:</td>
+                <td style="padding: 4px; text-align: right;">৳ {{ formatPrice(selectedPrintInvoice.original_amount) }}</td>
+              </tr>
+              <tr v-if="selectedPrintInvoice.discount > 0">
+                <td style="padding: 4px;">Discount:</td>
+                <td style="padding: 4px; text-align: right;">- ৳ {{ formatPrice(selectedPrintInvoice.discount) }}</td>
+              </tr>
+              <tr style="border-top: 1px solid #112C47; font-weight: bold;">
+                <td style="padding: 4px;">Net Payable:</td>
+                <td style="padding: 4px; text-align: right;">৳ {{ formatPrice(selectedPrintInvoice.amount) }}</td>
+              </tr>
+              <tr>
+                <td style="padding: 4px;">Paid:</td>
+                <td style="padding: 4px; text-align: right; color: green;">৳ {{ formatPrice(selectedPrintInvoice.paid_amount) }}</td>
+              </tr>
+              <tr v-if="(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) > 0" style="color: red; font-weight: bold;">
+                <td style="padding: 4px;">Due:</td>
+                <td style="padding: 4px; text-align: right;">৳ {{ formatPrice(selectedPrintInvoice.amount - selectedPrintInvoice.paid_amount) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -732,16 +522,16 @@ export default {
       loading: false,
       showAdvanced: false,
       filter: {
-        keyword: '',
-        client_id: '',
-        payment_status: '',
-        from_invoice_date: '',
-        to_invoice_date: '',
+        keyword: this.$route.query.keyword ?? '',
+        client_id: this.$route.query.client_id ?? '',
+        payment_status: this.$route.query.payment_status ?? '',
+        from_invoice_date: this.$route.query.from_invoice_date ?? '',
+        to_invoice_date: this.$route.query.to_invoice_date ?? '',
       },
       pagination: {
-        current_page: 1,
+        current_page: parseInt(this.$route.query.page || 1),
         last_page: 1,
-        per_page: 15,
+        per_page: parseInt(this.$route.query.pagination || 15),
         total: 0,
         from: 0,
         to: 0,
@@ -795,6 +585,36 @@ export default {
       if (this.filter.to_invoice_date) count++;
       return count;
     },
+    pageNumbers() {
+      const current = this.pagination.current_page;
+      const last = this.pagination.last_page;
+      const delta = 2;
+      const left = current - delta;
+      const right = current + delta + 1;
+      const range = [];
+      const rangeWithDots = [];
+      let l;
+
+      for (let i = 1; i <= last; i++) {
+        if (i === 1 || i === last || (i >= left && i < right)) {
+          range.push(i);
+        }
+      }
+
+      for (let i of range) {
+        if (l) {
+          if (i - l === 2) {
+            rangeWithDots.push(l + 1);
+          } else if (i - l !== 1) {
+            rangeWithDots.push('...');
+          }
+        }
+        rangeWithDots.push(i);
+        l = i;
+      }
+
+      return rangeWithDots;
+    },
     exportData() {
       return this.invoices.map(inv => ({
         invoice_no: inv.invoice_no,
@@ -817,7 +637,7 @@ export default {
     },
     getPaymentStatusText(inv) {
       const due = floatval(inv.amount) - floatval(inv.paid_amount);
-      if (due <= 0) return 'Paid';
+      if (due <= 0.01) return 'Paid';
       if (floatval(inv.paid_amount) > 0) return 'Partial';
       return 'Due';
     },
@@ -841,15 +661,25 @@ export default {
         to_invoice_date: this.filter.to_invoice_date,
       };
 
+      // Sync route query parameters without page reload
+      this.$router.push({
+        query: Object.fromEntries(
+          Object.entries({ ...params }).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+        )
+      }).catch(() => {});
+
       axios.get('invoice', { params })
         .then(res => {
           this.loading = false;
           if (res.data) {
             this.invoices = res.data.data || [];
-            this.pagination.total = res.data.total || 0;
-            this.pagination.last_page = res.data.last_page || 1;
-            this.pagination.from = res.data.from || 0;
-            this.pagination.to = res.data.to || 0;
+            
+            // Read metadata from Laravel Resource meta or root
+            const meta = res.data.meta || res.data;
+            this.pagination.total = meta.total || (res.data.data ? res.data.data.length : 0);
+            this.pagination.last_page = meta.last_page || 1;
+            this.pagination.from = meta.from || (this.invoices.length > 0 ? (page - 1) * this.pagination.per_page + 1 : 0);
+            this.pagination.to = meta.to || (this.invoices.length > 0 ? this.pagination.from + this.invoices.length - 1 : 0);
 
             if (res.data.kpi) {
               this.kpi = res.data.kpi;
@@ -872,7 +702,7 @@ export default {
       if (!this.helpContent) {
         axios.get('helpInfo/Invoice/index').then(res => {
           this.helpContent = res.data?.description || '';
-        });
+        }).catch(() => {});
       }
     },
     resetFilter() {
@@ -884,6 +714,9 @@ export default {
         to_invoice_date: '',
       };
       this.fetchInvoices(1);
+    },
+    printTable() {
+      this.print('invoiceTablePrintArea', 'Sales Invoices List');
     },
     printReceipt(inv) {
       this.selectedPrintInvoice = inv;
@@ -910,7 +743,7 @@ export default {
             html, body { margin: 0; padding: 0; width: 148mm; background: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10.5px; color: #111; }
             .invoice-print-wrapper { width: 138mm; max-width: 138mm; margin: 0 auto; }
           `;
-        } else { // normal-a4
+        } else {
           pageStyles = `
             @page { size: 210mm 297mm; margin: 10mm 12mm; }
             html, body { margin: 0; padding: 0; width: 210mm; background: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #111; }
@@ -950,7 +783,7 @@ export default {
     }
   },
   mounted() {
-    this.fetchInvoices(1);
+    this.fetchInvoices(this.pagination.current_page);
     this.fetchClients();
   }
 };
