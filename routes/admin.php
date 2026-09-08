@@ -269,7 +269,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('loanInfo/approvalcancel', [App\Http\Controllers\Admin\LoanInfoController::class, 'approvalcancel'])->name('loanInfo.approvalcancel');
 
         // Software / Database Update Routes
-        Route::get('system-update', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('software.update');
+        Route::get('software-update', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'index'])->name('software.update');
         Route::get('software-update/status', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'status'])->name('software.update.status');
         Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('software.update.run');
         Route::post('software-update/sync-only', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'syncOnly'])->name('software.update.syncOnly');

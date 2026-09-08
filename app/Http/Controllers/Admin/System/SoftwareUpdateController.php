@@ -17,6 +17,17 @@ class SoftwareUpdateController extends Controller
     }
 
     /**
+     * Render the admin SPA view for software update.
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
+     */
+    public function index(Request $request)
+    {
+        return view('admin.layouts.admin_app');
+    }
+
+    /**
      * Check current update status (pure code-driven inspection).
      *
      * @return JsonResponse
