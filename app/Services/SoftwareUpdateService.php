@@ -21,8 +21,9 @@ class SoftwareUpdateService
             $ranMigrations = [];
         }
 
-        // 1. Scan pending Laravel migration files
+        // 1. Scan pending Laravel migration files in chronological order
         $allMigrationFiles = glob(database_path('migrations/*.php')) ?: [];
+        sort($allMigrationFiles);
         $pendingMigrations = [];
 
         foreach ($allMigrationFiles as $file) {
@@ -40,6 +41,7 @@ class SoftwareUpdateService
         // 2. Scan pending custom SQL patch files (if any in database/sql_updates/*.sql)
         $pendingSqlPatches = [];
         $sqlFiles = glob(database_path('sql_updates/*.sql')) ?: [];
+        sort($sqlFiles);
 
         if (!empty($sqlFiles)) {
             $this->ensureSqlPatchTableExists();
@@ -148,8 +150,17 @@ class SoftwareUpdateService
                     }
                 }
 
-                // Execute the migration class
+                // Execute the migration class (Supports both Anonymous and Named classes)
                 $migrationObject = require $filePath;
+                if (!is_object($migrationObject)) {
+                    if (preg_match('/class\s+([a-zA-Z0-9_]+)\s+extends\s+Migration/i', $fileContent, $classMatches)) {
+                        $className = $classMatches[1];
+                        if (class_exists($className)) {
+                            $migrationObject = new $className();
+                        }
+                    }
+                }
+
                 if (is_object($migrationObject) && method_exists($migrationObject, 'up')) {
                     $migrationObject->up();
                 }
@@ -161,15 +172,24 @@ class SoftwareUpdateService
                 $logs[] = "Migrated: {$migrationName}";
 
             } catch (\Throwable $e) {
-                // If it failed because table/column already exists, safely mark as recorded
-                if (str_contains($e->getMessage(), 'already exists') || str_contains($e->getMessage(), 'Duplicate column')) {
+                $errMsg = $e->getMessage();
+                // If it failed because table/column/index already exists, safely mark as recorded
+                if (
+                    str_contains($errMsg, 'already exists') ||
+                    str_contains($errMsg, 'Duplicate column') ||
+                    str_contains($errMsg, 'Duplicate key') ||
+                    str_contains($errMsg, '42S01') ||
+                    str_contains($errMsg, '42S21') ||
+                    str_contains($errMsg, 'Multiple primary key') ||
+                    str_contains($errMsg, 'Base table or view already exists')
+                ) {
                     DB::table('migrations')->insert([
                         'migration' => $migrationName,
                         'batch'     => $batch,
                     ]);
-                    $logs[] = "Resolved already existing structure: {$migrationName}";
+                    $logs[] = "Synced existing structure: {$migrationName}";
                 } else {
-                    $logs[] = "Failed: {$migrationName} - " . $e->getMessage();
+                    $logs[] = "Failed: {$migrationName} - " . $errMsg;
                 }
             }
         }
@@ -194,10 +214,14 @@ class SoftwareUpdateService
             }
         }
 
-        // 3. Clear application caches
+        // 3. Clear application and system caches
         try {
             Artisan::call('optimize:clear');
-            $logs[] = "Application caches cleared successfully.";
+            Artisan::call('view:clear');
+            Artisan::call('cache:clear');
+            Artisan::call('config:clear');
+            Artisan::call('route:clear');
+            $logs[] = "Application caches and optimizations cleared successfully.";
         } catch (\Throwable $e) {
             // Ignore cache clear error
         }
@@ -219,7 +243,7 @@ class SoftwareUpdateService
 
     /**
      * Mark all pending migration files as executed in the migrations table only,
-     * without executing DDL schema changes (useful when DB is uploaded manually).
+     * without executing DDL schema changes (useful when DB is uploaded manually via phpMyAdmin).
      *
      * @return array
      */
@@ -257,7 +281,11 @@ class SoftwareUpdateService
 
         try {
             Artisan::call('optimize:clear');
-            $logs[] = "Application caches cleared successfully.";
+            Artisan::call('view:clear');
+            Artisan::call('cache:clear');
+            Artisan::call('config:clear');
+            Artisan::call('route:clear');
+            $logs[] = "Application caches and optimizations cleared successfully.";
         } catch (\Throwable $e) {
             // ignore
         }
@@ -292,3 +320,4 @@ class SoftwareUpdateService
         }
     }
 }
+
