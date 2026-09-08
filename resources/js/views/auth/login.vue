@@ -269,8 +269,8 @@ export default {
         toggle(value) {
             this.visibilityFlag = value;
         },
-        toggleForgetFlag(value) {
-            this.forgetFlag = value;
+        toggleForgetFlag(value = false) {
+            this.forgetFlag = typeof value === 'boolean' ? value : false;
         },
         resetToken() {
             this.reset.token = false;

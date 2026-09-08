@@ -14,7 +14,7 @@ Route::get('app/environment', [LibController::class, 'environment']);
 Route::get('app/initialize-systems', [LibController::class, 'systems']);
 
 // Application Authentication Verification Route...
-Auth::routes(['verify' => false]);
+Auth::routes(['verify' => false, 'reset' => false]);
 
 // Application Storage Link Route...
 Route::get('/sym', function () {

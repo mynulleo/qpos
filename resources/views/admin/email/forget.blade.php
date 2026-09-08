@@ -1,13 +1,19 @@
 @component('mail::message')
-Dear {{ $data['name'] }},
+# Dear {{ $data['name'] }},
 
-To complete your reset password,Please click the button below to reset you password:
-[ {{ backend_password_reset_url($data['email']) }}]( {{ backend_password_reset_url($data['email']) }} )
+You have requested to reset your password. Please click the button below to set a new password:
 
-If you did not requested for a password reset, please ignore this email.
+@component('mail::button', ['url' => $data['reset_url']])
+Reset Password
+@endcomponent
 
-"Please note that this URL will expire within the next two hours."
+If the button above does not work, copy and paste the following URL into your browser:
+[{{ $data['reset_url'] }}]({{ $data['reset_url'] }})
 
-Best regards,
-{{ env('APP_NAME') }}
+> **Notice:** This password reset link is valid for **10 minutes** only. After 10 minutes, this link will expire and will no longer work.
+
+If you did not request a password reset, please ignore this email. No changes will be made to your account.
+
+Best regards,  
+**{{ config('app.name') }}**
 @endcomponent
