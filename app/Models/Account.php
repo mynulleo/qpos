@@ -23,9 +23,15 @@ class Account extends BaseModel
     public static function generateAccountCode()
     {
         $account_code = 111;
-        $last_account = Account::latest()->first(['id', 'account_code']);
-        if ($last_account) {
-            $account_code = $last_account->account_code + 1;
+        $last_account = Account::latest('id')->first(['id', 'account_code']);
+        if ($last_account && !empty($last_account->account_code)) {
+            if (is_numeric($last_account->account_code)) {
+                $account_code = intval($last_account->account_code) + 1;
+            } elseif (preg_match('/^(.*?)(\d+)$/', $last_account->account_code, $matches)) {
+                $prefix = $matches[1];
+                $num = intval($matches[2]) + 1;
+                $account_code = $prefix . str_pad($num, strlen($matches[2]), '0', STR_PAD_LEFT);
+            }
         }
         return $account_code;
     }

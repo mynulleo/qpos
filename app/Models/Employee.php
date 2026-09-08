@@ -17,9 +17,15 @@ class Employee extends BaseModel
 	public static function generateEmpID()
 	{
 		$empid = 111;
-		$emp = Employee::latest()->first(['id', 'empid']);
-		if ($emp) {
-			$empid = $emp->empid + 1;
+		$emp = Employee::latest('id')->first(['id', 'empid']);
+		if ($emp && !empty($emp->empid)) {
+			if (is_numeric($emp->empid)) {
+				$empid = intval($emp->empid) + 1;
+			} elseif (preg_match('/^(.*?)(\d+)$/', $emp->empid, $matches)) {
+				$prefix = $matches[1];
+				$num = intval($matches[2]) + 1;
+				$empid = $prefix . str_pad($num, strlen($matches[2]), '0', STR_PAD_LEFT);
+			}
 		}
 		return $empid;
 	}

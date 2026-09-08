@@ -20,9 +20,15 @@ class LoanInfo extends BaseModel
     public static function generateTrnsID()
     {
         $trnsid = 111;
-        $loaninfo = LoanInfo::latest()->first(['id', 'trnsid']);
-        if ($loaninfo) {
-            $trnsid = $loaninfo->trnsid + 1;
+        $loaninfo = LoanInfo::latest('id')->first(['id', 'trnsid']);
+        if ($loaninfo && !empty($loaninfo->trnsid)) {
+            if (is_numeric($loaninfo->trnsid)) {
+                $trnsid = intval($loaninfo->trnsid) + 1;
+            } elseif (preg_match('/^(.*?)(\d+)$/', $loaninfo->trnsid, $matches)) {
+                $prefix = $matches[1];
+                $num = intval($matches[2]) + 1;
+                $trnsid = $prefix . str_pad($num, strlen($matches[2]), '0', STR_PAD_LEFT);
+            }
         }
         return $trnsid;
     }

@@ -133,7 +133,7 @@ class ExpenseController extends BaseController
         if ($request->format() == 'html') {
             return view('layouts.backend_app');
         }
-        $expense = Expense::with('expense_details.account', 'workorder:id,order_no,order_date', 'approved_admin:id,full_name')->find($id);
+        $expense = Expense::with(['expense_details.account', 'workorder:id,order_no,order_date', 'employee:id,full_name', 'approved_admin:id,full_name'])->find($id);
         return $expense;
     }
 
@@ -243,7 +243,7 @@ class ExpenseController extends BaseController
             }
         }
 
-        return $this->responseReturn('success', null, null, false, 'Salary Sheet approved successfully');
+        return $this->responseReturn('success', null, null, false, 'Expense approved successfully');
     }
 
     /**

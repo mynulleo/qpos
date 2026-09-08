@@ -49,19 +49,19 @@ export default {
                     this.$root.spinner = true;
 
                     axios
-                        .post(`password/reset`, this.data)
+                        .post("/password/reset", this.data)
                         .then((res) => {
+                            this.$root.spinner = false;
                             this.$toast(res.data.message, "success");
 
                             setTimeout(() => {
                                 window.location.href = `${this.$root.baseurl}/qpanel`;
-                            }, 3000);
+                            }, 2000);
                         })
                         .catch((e) => {
-                            console.log(e);
                             this.$root.spinner = false;
                             this.$toast(
-                                e.response.data.message ??
+                                e.response?.data?.message ??
                                 "Something went wrong!",
                                 "error"
                             );
@@ -71,11 +71,18 @@ export default {
         },
 
         backToLogin() {
-            this.$parent.reset.flag = false;
-            this.$parent.toggleForgetFlag();
+            if (this.$parent && this.$parent.reset) {
+                this.$parent.reset.flag = false;
+            }
+            if (typeof this.toggleForgetFlag === "function") {
+                this.toggleForgetFlag(false);
+            }
+            if (window.history.pushState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
         },
     },
-    inject: ["token", "resetToken", "email"],
+    inject: ["token", "resetToken", "email", "toggleForgetFlag"],
     provide() {
         return {
             validate: this.validation,
@@ -83,6 +90,9 @@ export default {
     },
     created() {
         this.data.token = this.token;
+        if (this.email) {
+            this.data.email = this.email;
+        }
     },
     validators: {
         "data.email": function (value = null) {

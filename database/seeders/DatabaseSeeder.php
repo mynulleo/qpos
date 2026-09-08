@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             SliderDetailsSeeder::class,
             CountrySeeder::class,
             CategorySeeder::class,
-
+            ComprehensivePosSeeder::class,
 
             News::class,
         ];

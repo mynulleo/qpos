@@ -38,4 +38,16 @@ class SoftwareUpdateController extends Controller
         $result = $this->updateService->runUpdate();
         return response()->json($result);
     }
+
+    /**
+     * Mark all pending migrations as completed in the migrations table only (without running DDL).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function syncOnly(Request $request): JsonResponse
+    {
+        $result = $this->updateService->syncMigrationsTableOnly();
+        return response()->json($result);
+    }
 }

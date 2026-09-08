@@ -14,13 +14,14 @@ class ForgetMail extends Mailable
     /**
      * User information for email.
      *
-     * @var [array]
+     * @var array
      */
     public $data;
 
     /**
      * Create a new message instance.
      *
+     * @param array $data
      * @return void
      */
     public function __construct($data)
@@ -35,9 +36,8 @@ class ForgetMail extends Mailable
      */
     public function build()
     {
-        return $this->from([
-            'email' => $this->data['email'],
-        ])->subject('Password Reset')
+        return $this
+            ->subject('Password Reset Request - ' . config('app.name'))
             ->markdown('admin.email.forget')
             ->with('data', $this->data);
     }

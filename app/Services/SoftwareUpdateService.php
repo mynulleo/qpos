@@ -218,6 +218,63 @@ class SoftwareUpdateService
     }
 
     /**
+     * Mark all pending migration files as executed in the migrations table only,
+     * without executing DDL schema changes (useful when DB is uploaded manually).
+     *
+     * @return array
+     */
+    public function syncMigrationsTableOnly(): array
+    {
+        $statusBefore = $this->getUpdateStatus();
+        $batch = (DB::table('migrations')->max('batch') ?: 0) + 1;
+        $logs = [];
+
+        foreach ($statusBefore['pending_migrations'] as $item) {
+            $migrationName = $item['name'];
+            $exists = DB::table('migrations')->where('migration', $migrationName)->exists();
+            if (!$exists) {
+                DB::table('migrations')->insert([
+                    'migration' => $migrationName,
+                    'batch'     => $batch,
+                ]);
+                $logs[] = "Recorded in migrations table: {$migrationName}";
+            }
+        }
+
+        if (!empty($statusBefore['pending_sql_patches'])) {
+            $this->ensureSqlPatchTableExists();
+            foreach ($statusBefore['pending_sql_patches'] as $patch) {
+                $patchExists = DB::table('applied_sql_patches')->where('patch_name', $patch['name'])->exists();
+                if (!$patchExists) {
+                    DB::table('applied_sql_patches')->insert([
+                        'patch_name'   => $patch['name'],
+                        'executed_at'  => now(),
+                    ]);
+                    $logs[] = "Recorded SQL patch as applied: {$patch['name']}";
+                }
+            }
+        }
+
+        try {
+            Artisan::call('optimize:clear');
+            $logs[] = "Application caches cleared successfully.";
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        $statusAfter = $this->getUpdateStatus();
+
+        return [
+            'success'          => true,
+            'message'          => 'Migrations table successfully synced! All migrations marked as completed.',
+            'output'           => implode("\n", $logs) ?: "All migrations were already recorded in the migrations table.",
+            'is_update_needed' => $statusAfter['is_update_needed'],
+            'pending_count'    => $statusAfter['pending_count'],
+            'status'           => $statusAfter,
+        ];
+    }
+
+    /**
      * Ensure the applied_sql_patches table exists on the tenant DB.
      */
     protected function ensureSqlPatchTableExists(): void

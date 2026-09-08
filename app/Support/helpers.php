@@ -239,23 +239,16 @@ if (!function_exists('use_intervation')) {
 if (!function_exists('backend_password_reset_url')) {
     function backend_password_reset_url($email)
     {
-        $token = Str::uuid();
-        $expiredAt = time() + (60 * 60 * 2);
+        $token = Str::random(64);
 
-        $token = Str::uuid();
-        DB::table('password_resets')->insert([
+        DB::connection('accessdb')->table('password_resets')->where('email', $email)->delete();
+        DB::connection('accessdb')->table('password_resets')->insert([
             'email' => $email,
             'token' => $token,
-            'expired_at' => $expiredAt,
+            'created_at' => now(),
         ]);
 
-        $query = http_build_query([
-            'token' => $token,
-        ]);
-
-        $data = DB::table('password_resets')->where('email', $email)->first();
-
-        return url("/backend/password-reset?token={$data->token}");
+        return url("/password-reset?token={$token}&email=" . urlencode($email));
     }
 }
 

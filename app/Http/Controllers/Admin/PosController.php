@@ -747,8 +747,15 @@ class PosController extends BaseController
             $query->where('opening_rate', '<=', $request->max_price);
         }
 
+        // Limit handling:
+        // - If searching keyword (term): limit to 20 for instant search dropdown (<20ms).
+        // - If modal browse inventory: default to 100 or user provided limit.
         if ($request->filled('limit') && is_numeric($request->limit)) {
             $query->limit((int)$request->limit);
+        } elseif ($request->filled('term') && !$request->has('allData')) {
+            $query->limit(20);
+        } elseif ($request->has('allData') && !$request->has('full_inventory')) {
+            $query->limit(100);
         }
 
         $items = $query->with([
@@ -756,8 +763,6 @@ class PosController extends BaseController
             'unit:id,title',
             'itemPrices.color:id,title',
             'itemPrices.size:id,title',
-            'stockSummaries.color:id,title',
-            'stockSummaries.size:id,title',
         ])->latest('created_at')->get();
 
         return response()->json($items);

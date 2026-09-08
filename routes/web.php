@@ -13,6 +13,11 @@ Route::group(['prefix' => '', 'as' => 'admin.'], function () {
     Route::post('/qlogin', [AdminLoginController::class, 'login']);
     Route::get('/login-check', [AdminLoginController::class, 'loginCheck'])->name('loginCheck');
     Route::any('/logout', [AdminLoginController::class, 'logout'])->name('logout');
+
+    // Password Reset Routes...
+    Route::post('/password/email', [AdminLoginController::class, 'forget'])->name('password.email');
+    Route::post('/password/reset', [AdminLoginController::class, 'reset'])->name('password.reset');
+    Route::get('/password-reset', [AdminLoginController::class, 'login'])->name('password.reset.page');
 });
 
 

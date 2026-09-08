@@ -101,12 +101,26 @@
                             কোডে নতুন ডাটাবেজ মাইগ্রেশন বা টেবিল পরিবর্তন পাওয়া গেছে যা আপনার অর্গানাইজেশনের ডাটাবেজে এখনও অ্যাপ্লাই করা হয়নি। নিচের বাটনে ক্লিক করে সাথে সাথে আপডেট করে নিন:
                         </p>
 
-                        <!-- Primary Action Button -->
-                        <div class="d-grid mb-4">
-                            <button type="button" class="btn btn-primary btn-lg fw-bold py-3 shadow d-flex align-items-center justify-content-center gap-2 update-btn" :disabled="updating" @click="runUpdate">
-                                <i class="fas" :class="updating ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
-                                <span>{{ updating ? 'Updating Database... Please wait' : 'Update Database Now (ডাটাবেজ আপডেট করুন)' }}</span>
-                            </button>
+                        <!-- Action Buttons Grid -->
+                        <div class="row g-2 mb-4">
+                            <div class="col-md-7 col-12">
+                                <button type="button" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow d-flex align-items-center justify-content-center gap-2 update-btn" :disabled="updating" @click="runUpdate">
+                                    <i class="fas" :class="updating ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
+                                    <span>{{ updating ? 'Processing... Please wait' : 'Update Database Now (ডাটাবেজ আপডেট)' }}</span>
+                                </button>
+                            </div>
+                            <div class="col-md-5 col-12">
+                                <button type="button" class="btn btn-outline-dark btn-lg w-100 fw-bold py-3 shadow-sm d-flex align-items-center justify-content-center gap-2" :disabled="updating" @click="syncMigrationsOnly" title="ম্যানুয়াল DB আপলোডের ক্ষেত্রে কোনো টেবিল চেঞ্জ না করে শুধু migrations টেবিলে রেকর্ড সিঙ্ক করবে">
+                                    <i class="fas" :class="updating ? 'fa-spinner fa-spin' : 'fa-database'"></i>
+                                    <span style="font-size: 13.5px;">Sync Migrations Table Only</span>
+                                </button>
+                            </div>
+                            <div class="col-12 mt-1">
+                                <small class="text-muted fst-italic d-block">
+                                    <i class="fas fa-info-circle text-primary me-1"></i>
+                                    <strong>টিপস:</strong> আপনি যদি phpMyAdmin-এ ম্যানুয়ালি লেটেস্ট DB ডাম্প আপলোড করে থাকেন, তবে <strong>"Sync Migrations Table Only"</strong> বাটনে ক্লিক করলেই পেন্ডিং আপডেটগুলো মাইগ্রেশন টেবিলে রেকর্ড হয়ে বাটন চলে যাবে।
+                                </small>
+                            </div>
                         </div>
 
                         <!-- Pending Migrations List -->
@@ -152,14 +166,18 @@
                         <p class="text-muted mx-auto mb-4" style="max-width: 480px;">
                             আপনার অর্গানাইজেশনের ডাটাবেজ লেটেস্ট সফটওয়্যার কোড ও স্কিমার সাথে শতভাগ সিনক্রোনাইজড রয়েছে। কোনো পেন্ডিং আপডেট নেই।
                         </p>
-                        <div class="d-flex justify-content-center gap-3">
+                        <div class="d-flex flex-wrap justify-content-center gap-3">
                             <button type="button" class="btn btn-outline-primary px-4 py-2 fw-semibold rounded-pill d-flex align-items-center gap-2 shadow-sm" :disabled="loading" @click="fetchStatus">
                                 <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
                                 Check Again
                             </button>
                             <button type="button" class="btn btn-light px-4 py-2 fw-semibold rounded-pill d-flex align-items-center gap-2 border" :disabled="updating" @click="runUpdate">
                                 <i class="fas fa-arrows-rotate"></i>
-                                Force Re-sync
+                                Force Re-sync (Run Migrations)
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2 fw-semibold rounded-pill d-flex align-items-center gap-2 border" :disabled="updating" @click="syncMigrationsOnly">
+                                <i class="fas fa-database"></i>
+                                Sync Migrations Table Only
                             </button>
                         </div>
                     </div>
@@ -184,12 +202,12 @@
                     </div>
                     <div class="card-body p-3 bg-dark text-light font-monospace d-flex flex-column" style="min-height: 380px;">
                         <div class="console-box flex-grow-1 p-2 overflow-auto" style="max-height: 420px; font-size: 12px; line-height: 1.6;">
-                            <div class="text-white-50 mb-2">// System ready. Click 'Update Database' to execute.</div>
+                            <div class="text-white-50 mb-2">// System ready. Click 'Update Database' or 'Sync Migrations Table Only' to execute.</div>
                             <div v-if="lastActionTime" class="text-info mb-2">[{{ lastActionTime }}] Console active.</div>
                             <pre class="m-0 text-success" style="white-space: pre-wrap; font-family: inherit;">{{ consoleLogs || '> Awaiting user command...' }}</pre>
                         </div>
                         <div class="border-top border-secondary pt-2 mt-2 d-flex justify-content-between align-items-center text-white-50 small" style="font-size: 11px;">
-                            <span>Status: {{ updating ? 'Executing updates...' : (status.is_update_needed ? 'Pending' : 'Synchronized') }}</span>
+                            <span>Status: {{ updating ? 'Executing...' : (status.is_update_needed ? 'Pending' : 'Synchronized') }}</span>
                             <span v-if="status.last_migration">Latest: {{ status.last_migration }}</span>
                         </div>
                     </div>
@@ -240,7 +258,7 @@ export default {
                     }
                 }
             } catch (err) {
-                this.notification("error", "Failed to check update status.");
+                this.$toast("Failed to check update status.", "error");
             } finally {
                 this.loading = false;
             }
@@ -255,17 +273,45 @@ export default {
                 const res = await this.callApi("post", "software-update/run");
                 if (res.status === 200 && res.data.success) {
                     this.consoleLogs = res.data.output || "All migrations completed successfully.";
-                    this.notification("success", res.data.message || "Database updated successfully!");
+                    this.$toast(res.data.message || "Database updated successfully!", "success");
                     
                     // Re-fetch updated status
                     await this.fetchStatus();
                 } else {
                     this.consoleLogs = res.data.output || "Update failed.";
-                    this.notification("error", res.data.message || "Update encountered an error.");
+                    this.$toast(res.data.message || "Update encountered an error.", "error");
                 }
             } catch (err) {
                 this.consoleLogs += "\n> Error: Server returned an exception.";
-                this.notification("error", "Database update execution failed.");
+                this.$toast("Database update execution failed.", "error");
+            } finally {
+                this.updating = false;
+            }
+        },
+
+        async syncMigrationsOnly() {
+            if (!confirm("Are you sure you want to mark all pending migrations as completed in the migrations table without executing DDL changes?")) {
+                return;
+            }
+            this.updating = true;
+            this.consoleLogs = "> Syncing migrations table records without executing DDL...\n> Baseline updating migrations table...";
+            this.lastActionTime = new Date().toLocaleTimeString();
+
+            try {
+                const res = await this.callApi("post", "software-update/sync-only");
+                if (res.status === 200 && res.data.success) {
+                    this.consoleLogs = res.data.output || "Migrations table synced successfully.";
+                    this.$toast(res.data.message || "Migrations table synced successfully!", "success");
+                    
+                    // Re-fetch updated status
+                    await this.fetchStatus();
+                } else {
+                    this.consoleLogs = res.data.output || "Sync failed.";
+                    this.$toast(res.data.message || "Sync encountered an error.", "error");
+                }
+            } catch (err) {
+                this.consoleLogs += "\n> Error: Server returned an exception.";
+                this.$toast("Sync execution failed.", "error");
             } finally {
                 this.updating = false;
             }

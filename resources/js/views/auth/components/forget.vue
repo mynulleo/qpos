@@ -26,7 +26,7 @@
             <div class="col-12 text-center">
                 <a
                     href="javascript:void(0)"
-                    @click.prevent="toggleForgetFlag()"
+                    @click.prevent="toggleForgetFlag(false)"
                     class="forgot text-center"
                     >Back to Login</a
                 >
@@ -55,17 +55,20 @@ export default {
                     this.$root.spinner = true;
 
                     axios
-                        .post("password/email", this.data)
+                        .post("/password/email", this.data)
                         .then((res) => {
                             this.$root.spinner = false;
                             const status = res.data.status ?? 'success';
                             const message = res.data.message;
                             this.$toast(message, status);
+                            if (status === 'success') {
+                                this.data.email = "";
+                            }
                         })
                         .catch((e) => {
                             this.$root.spinner = false;
                             this.$toast(
-                                e.response.data.message ??
+                                e.response?.data?.message ??
                                     "Something went wrong!",
                                 "error"
                             );

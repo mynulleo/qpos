@@ -54,7 +54,11 @@ class ItemController extends BaseController
 
 
         if ($request->allData) {
-            return $query->get();
+            $results = $query->get();
+            if (!$request->has('with_barcode_image')) {
+                $results->makeHidden(['barcode_image', 'original_image']);
+            }
+            return $results;
         } else {
             $datas = $query->paginate($request->pagination);
             return new Resource($datas);

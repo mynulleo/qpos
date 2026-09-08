@@ -38,7 +38,15 @@
 
                                 <!-- Text Search Input -->
                                 <input
-                                    type="text"
+                                    type="search"
+                                    name="qpos_table_search_query"
+                                    id="qpos_header_search_input"
+                                    autocomplete="off"
+                                    autocapitalize="off"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                    data-lpignore="true"
+                                    data-form-type="other"
                                     class="form-control"
                                     placeholder="Search... (Press Enter)"
                                     v-model="search_data.value"

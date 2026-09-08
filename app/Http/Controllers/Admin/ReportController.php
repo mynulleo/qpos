@@ -53,6 +53,25 @@ class ReportController extends BaseController
         }
         $searchdata = $request->all();
 
+        $lowThreshold = isset($searchdata['low_threshold']) && is_numeric($searchdata['low_threshold'])
+            ? (int) $searchdata['low_threshold']
+            : 5;
+
+        // 1. Fast Global Stock Counts & KPI Aggregation
+        $counts = \Illuminate\Support\Facades\DB::table('item_stock_summaries')
+            ->selectRaw("
+                COUNT(*) as all_count,
+                SUM(CASE WHEN current_stock > 0 AND current_stock <= {$lowThreshold} THEN 1 ELSE 0 END) as low_stock_count,
+                SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_of_stock_count,
+                SUM(CASE WHEN current_stock < 0 THEN 1 ELSE 0 END) as negative_stock_count,
+                SUM(CASE WHEN current_stock > 0 THEN 1 ELSE 0 END) as in_stock_count,
+                SUM(total_qty_in) as total_in,
+                SUM(total_qty_out) as total_out,
+                SUM(current_stock) as total_current_stock
+            ")
+            ->first();
+
+        // 2. Query Builder with Lean Relations
         $query = ItemStockSummary::query()
             ->with([
                 'item:id,title,category_id,unit_id,barcode',
@@ -61,6 +80,22 @@ class ReportController extends BaseController
                 'color:id,title',
                 'size:id,title'
             ]);
+
+        // Default stock status is 'low_stock' if not specified
+        $stockStatus = $searchdata['stock_status'] ?? 'low_stock';
+
+        if (!empty($stockStatus)) {
+            if ($stockStatus === 'low_stock') {
+                $query->where('current_stock', '>', 0)->where('current_stock', '<=', $lowThreshold);
+            } elseif ($stockStatus === 'out_of_stock') {
+                $query->where('current_stock', '<=', 0);
+            } elseif ($stockStatus === 'negative_stock') {
+                $query->where('current_stock', '<', 0);
+            } elseif ($stockStatus === 'in_stock') {
+                $query->where('current_stock', '>', 0);
+            }
+            // If 'all', do not apply current_stock condition
+        }
 
         if ($searchdata) {
             /** 🔍 Category filter */
@@ -83,17 +118,6 @@ class ReportController extends BaseController
             /** 🔍 Size filter */
             if (!empty($searchdata['size_id'])) {
                 $query->where('size_id', $searchdata['size_id']);
-            }
-
-            /** 🔍 Stock Status Filter */
-            if (!empty($searchdata['stock_status'])) {
-                if ($searchdata['stock_status'] === 'in_stock') {
-                    $query->where('current_stock', '>', 0);
-                } elseif ($searchdata['stock_status'] === 'out_of_stock') {
-                    $query->where('current_stock', '<=', 0);
-                } elseif ($searchdata['stock_status'] === 'low_stock') {
-                    $query->where('current_stock', '>', 0)->where('current_stock', '<=', 5);
-                }
             }
 
             /** 🔍 Zero Qty Filter */
@@ -125,11 +149,49 @@ class ReportController extends BaseController
             }
         }
 
-        /** 📊 Order for report */
-        $query->orderBy('item_id');
+        /** 📊 Sorting Options */
+        $sortBy = $searchdata['sort_by'] ?? null;
+        if ($sortBy === 'stock_asc' || (!$sortBy && in_array($stockStatus, ['low_stock', 'out_of_stock', 'negative_stock']))) {
+            $query->orderBy('current_stock', 'asc');
+        } elseif ($sortBy === 'stock_desc') {
+            $query->orderBy('current_stock', 'desc');
+        } elseif ($sortBy === 'item_id') {
+            $query->orderBy('item_id', 'asc');
+        } else {
+            $query->orderBy('item_id', 'asc');
+        }
 
-        $results = $query->get();
-        return $results;
+        /** ⏱️ Limit handling (Default 50 if low_stock or initial view, unless user requests specific limit or 'all') */
+        $limit = $searchdata['limit'] ?? null;
+        if ($limit === 'all' || !empty($searchdata['allData'])) {
+            // No limit or high ceiling
+            $results = $query->limit(5000)->get();
+        } elseif (is_numeric($limit) && (int) $limit > 0) {
+            $results = $query->limit((int) $limit)->get();
+        } elseif ($stockStatus === 'low_stock') {
+            $results = $query->limit(50)->get();
+        } else {
+            // Default 50 items for speed
+            $results = $query->limit(50)->get();
+        }
+
+        return response()->json([
+            'datas' => $results,
+            'counts' => [
+                'low_stock' => (int) ($counts->low_stock_count ?? 0),
+                'out_of_stock' => (int) ($counts->out_of_stock_count ?? 0),
+                'in_stock' => (int) ($counts->in_stock_count ?? 0),
+                'negative_stock' => (int) ($counts->negative_stock_count ?? 0),
+                'all' => (int) ($counts->all_count ?? 0),
+            ],
+            'summary' => [
+                'total_in' => (float) ($counts->total_in ?? 0),
+                'total_out' => (float) ($counts->total_out ?? 0),
+                'total_current_stock' => (float) ($counts->total_current_stock ?? 0),
+                'filtered_count' => count($results),
+                'limit_applied' => $limit ?: ($stockStatus === 'low_stock' ? 50 : 50),
+            ]
+        ]);
     }
 
     public function incomestatement(Request $request)
