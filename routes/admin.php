@@ -269,6 +269,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('loanInfo/approvalcancel', [App\Http\Controllers\Admin\LoanInfoController::class, 'approvalcancel'])->name('loanInfo.approvalcancel');
 
         // Software / Database Update Routes
+        Route::get('software-update', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'index'])->name('software.update');
         Route::get('software-update/status', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'status'])->name('software.update.status');
         Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('software.update.run');
         Route::post('software-update/sync-only', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'syncOnly'])->name('software.update.syncOnly');
@@ -278,4 +279,13 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     });
     Route::get('mediaValidator/{modelName}/getFields', [App\Http\Controllers\Admin\MediaValidatorController::class, 'getFields'])->name('mediaValidator.getFields');
     Route::get('helpInfo/{modelName}/{pageType}/', [App\Http\Controllers\Admin\HelpInfoController::class, 'getHelpInfo'])->name('get.HelpInfo');
+
+    // SPA Fallback Catch-All Route for Admin Panel (Handles browser hard-refresh on any Vue Router path)
+    Route::get('{any}', function (\Illuminate\Http\Request $request) {
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Resource not found.'], 404);
+        }
+        return view('admin.layouts.admin_app');
+    })->where('any', '.*');
 });
+
