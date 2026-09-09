@@ -8,12 +8,21 @@ use App\Models\Account;
 use App\Models\Payment;
 use App\Models\Employee;
 use App\Models\Purchase;
+use App\Models\PurchaseDetail;
 use App\Models\Supplier;
+use App\Models\Expense;
 use App\Models\ExpenseDetail;
 use App\Models\PaymentDetail;
 use App\Models\VoucherDetail;
 use App\Models\Commission;
+use App\Models\SalarySheet;
 use App\Models\SalarySheetDetail;
+use App\Models\LoanInfo;
+use App\Models\Invoice;
+use App\Models\InvoiceDetails;
+use App\Models\Item;
+use App\Models\ItemPrice;
+use App\Models\Category;
 use App\Models\Agent;
 use Illuminate\Support\Facades\DB;
 
@@ -195,91 +204,454 @@ trait ReportTrait
 
     public function getIncomeStatement($searchdata)
     {
-        $from = array_key_exists('from_date', $searchdata)
+        // 1. Date Range Handling (Default: Current Month)
+        $from = !empty($searchdata['from_date'])
             ? vue_to_server_date($searchdata['from_date'])
             : date('Y-m-01');
 
-        $to = array_key_exists('to_date', $searchdata)
+        $to = !empty($searchdata['to_date'])
             ? vue_to_server_date($searchdata['to_date'])
             : date('Y-m-t');
 
+        // Optional filters
+        $clientId   = $searchdata['client_id'] ?? null;
+        $categoryId = $searchdata['category_id'] ?? null;
+        $itemId     = $searchdata['item_id'] ?? null;
+        $saleType   = $searchdata['sale_type'] ?? 'all';
+        $invoiceNo  = !empty($searchdata['invoice_no']) ? trim($searchdata['invoice_no']) : null;
 
-        // =========================
-        // TOTAL INCOME
-        // =========================
-        $total_income = VoucherDetail::whereNull('voucher_details.deleted_at')
-            ->where('voucher_details.status', 'active')
-            ->whereHas('account', function ($q) {
-                $q->where('accounts.account_type', 'Income')
-                    ->where('accounts.status', 'active')
-                    ->whereNull('accounts.deleted_at');
-            })
-            ->whereHas('voucher', function ($q) use ($from, $to) {
-                $q->whereBetween('vouchers.voucher_date', [$from, $to])
-                    ->whereNull('vouchers.deleted_at')
-                    ->where('vouchers.status', 'active');
-            })
-            ->sum('voucher_details.cr_amount');
-
-
-        // =========================
-        // TOTAL EXPENSE
-        // =========================
-        $total_expense = VoucherDetail::whereNull('voucher_details.deleted_at')
-            ->where('voucher_details.status', 'active')
-            ->whereHas('account', function ($q) {
-                $q->where('accounts.account_type', 'Expense')
-                    ->where('accounts.status', 'active')
-                    ->whereNull('accounts.deleted_at');
-            })
-            ->whereHas('voucher', function ($q) use ($from, $to) {
-                $q->whereBetween('vouchers.voucher_date', [$from, $to])
-                    ->whereNull('vouchers.deleted_at')
-                    ->where('vouchers.status', 'active');
-            })
-            ->sum('voucher_details.dr_amount');
-
-
-        // =========================
-        // NET PROFIT
-        // =========================
-        $net_profit = $total_income - $total_expense;
-
-
-        // =========================
-        // DETAILS
-        // =========================
-        $details = VoucherDetail::selectRaw(
-            'account_id,
-            SUM(dr_amount) as total_debit,
-            SUM(cr_amount) as total_credit'
-        )
-            ->with([
-                'account:id,account_code,account_name,account_type'
-            ])
-            ->whereNull('voucher_details.deleted_at')
-            ->where('voucher_details.status', 'active')
-            ->whereHas('account', function ($q) {
-                $q->whereIn('accounts.account_type', ['Income', 'Expense'])
-                    ->where('accounts.status', 'active')
-                    ->whereNull('accounts.deleted_at');
-            })
-            ->whereHas('voucher', function ($q) use ($from, $to) {
-                $q->whereBetween('vouchers.voucher_date', [$from, $to])
-                    ->whereNull('vouchers.deleted_at')
-                    ->where('vouchers.status', 'active');
-            })
-            ->groupBy('account_id')
+        // 2. Pre-cache Item Cost Mappings to avoid N+1 queries
+        // a) Variant-level item prices: (item_id_color_id_size_id) -> purchase_price
+        $itemPrices = ItemPrice::where('status', 'active')
+            ->select('item_id', 'color_id', 'size_id', 'purchase_price', 'selling_price')
             ->get();
 
+        $variantCostMap = [];
+        $itemDefaultCostFromVariants = [];
+        foreach ($itemPrices as $ip) {
+            $key = ($ip->item_id ?? 0) . '_' . ($ip->color_id ?? 0) . '_' . ($ip->size_id ?? 0);
+            $cost = floatval($ip->purchase_price);
+            $variantCostMap[$key] = $cost;
+            if (!isset($itemDefaultCostFromVariants[$ip->item_id]) && $cost > 0) {
+                $itemDefaultCostFromVariants[$ip->item_id] = $cost;
+            }
+        }
+
+        // b) Latest purchase details cost
+        $latestPurchases = PurchaseDetail::whereNull('deleted_at')
+            ->select('item_id', 'color_id', 'size_id', 'price', 'id')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $purchaseDetailCostMap = [];
+        $itemDefaultCostFromPurchase = [];
+        foreach ($latestPurchases as $pd) {
+            $key = ($pd->item_id ?? 0) . '_' . ($pd->color_id ?? 0) . '_' . ($pd->size_id ?? 0);
+            if (!isset($purchaseDetailCostMap[$key])) {
+                $purchaseDetailCostMap[$key] = floatval($pd->price);
+            }
+            if (!isset($itemDefaultCostFromPurchase[$pd->item_id])) {
+                $itemDefaultCostFromPurchase[$pd->item_id] = floatval($pd->price);
+            }
+        }
+
+        // c) Base Items cost (opening_rate)
+        $baseItems = Item::select('id', 'title', 'barcode', 'category_id', 'unit_id', 'opening_rate')
+            ->with(['category:id,title', 'unit:id,title'])
+            ->get()
+            ->keyBy('id');
+
+        // Helper closure to resolve unit purchase price
+        $resolvePurchaseCost = function ($itemId, $colorId, $sizeId) use (
+            $variantCostMap,
+            $purchaseDetailCostMap,
+            $itemDefaultCostFromVariants,
+            $itemDefaultCostFromPurchase,
+            $baseItems
+        ) {
+            $key = ($itemId ?: 0) . '_' . ($colorId ?: 0) . '_' . ($sizeId ?: 0);
+
+            // 1. Check exact variant cost in ItemPrice
+            if (isset($variantCostMap[$key]) && $variantCostMap[$key] > 0) {
+                return $variantCostMap[$key];
+            }
+
+            // 2. Check exact variant cost in PurchaseDetail
+            if (isset($purchaseDetailCostMap[$key]) && $purchaseDetailCostMap[$key] > 0) {
+                return $purchaseDetailCostMap[$key];
+            }
+
+            // 3. Check item-level variant cost
+            if (isset($itemDefaultCostFromVariants[$itemId]) && $itemDefaultCostFromVariants[$itemId] > 0) {
+                return $itemDefaultCostFromVariants[$itemId];
+            }
+
+            // 4. Check item-level purchase detail cost
+            if (isset($itemDefaultCostFromPurchase[$itemId]) && $itemDefaultCostFromPurchase[$itemId] > 0) {
+                return $itemDefaultCostFromPurchase[$itemId];
+            }
+
+            // 5. Check base item model opening_rate
+            if ($itemId && isset($baseItems[$itemId])) {
+                $item = $baseItems[$itemId];
+                if (!empty($item->opening_rate) && floatval($item->opening_rate) > 0) {
+                    return floatval($item->opening_rate);
+                }
+            }
+
+            return 0.0;
+        };
+
+        // 3. Query Invoices for the Period
+        $invQuery = Invoice::query()
+            ->whereNull('invoices.deleted_at')
+            ->where('invoices.status', 'active')
+            ->whereBetween('invoices.invoice_date', [$from, $to]);
+
+        if ($clientId) {
+            $invQuery->where('invoices.client_id', $clientId);
+        }
+        if ($invoiceNo) {
+            $invQuery->where('invoices.invoice_no', 'like', "%{$invoiceNo}%");
+        }
+        if ($categoryId) {
+            $invQuery->whereHas('invoice_details.item', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
+            });
+        }
+        if ($itemId) {
+            $invQuery->whereHas('invoice_details', function ($q) use ($itemId) {
+                $q->where('item_id', $itemId);
+            });
+        }
+        if ($saleType === 'pos') {
+            $invQuery->whereHas('invoice_details', function ($q) {
+                $q->where('reference', 'POS Sale');
+            });
+        } elseif ($saleType === 'general') {
+            $invQuery->whereDoesntHave('invoice_details', function ($q) {
+                $q->where('reference', 'POS Sale');
+            });
+        }
+
+        $invoices = $invQuery->with([
+            'client:id,clientid,name,mobile,address',
+            'invoice_details' => function ($q) use ($categoryId, $itemId) {
+                $q->with([
+                    'item:id,title,barcode,category_id,unit_id,opening_rate',
+                    'item.category:id,title',
+                    'item.unit:id,title',
+                    'color:id,title',
+                    'size:id,title',
+                ]);
+                if ($itemId) {
+                    $q->where('item_id', $itemId);
+                }
+                if ($categoryId) {
+                    $q->whereHas('item', function ($iq) use ($categoryId) {
+                        $iq->where('category_id', $categoryId);
+                    });
+                }
+            }
+        ])
+        ->orderBy('invoice_date', 'desc')
+        ->orderBy('id', 'desc')
+        ->get();
+
+        // 4. Calculate Sales, COGS & Profit per Invoice & Item
+        $totalGrossSales  = 0;
+        $totalDiscount    = 0;
+        $totalVat         = 0;
+        $totalNetSales    = 0;
+        $totalPaid        = 0;
+        $totalDue         = 0;
+        $totalCogs        = 0;
+        $totalGrossProfit = 0;
+        $totalQtySold     = 0;
+
+        $itemBreakdownMap = [];
+        $processedInvoices = [];
+
+        foreach ($invoices as $inv) {
+            $invAmount   = floatval($inv->amount);
+            $invPaid     = floatval($inv->paid_amount ?? 0);
+            $invDue      = max(0, $invAmount - $invPaid);
+            $invDiscount = floatval($inv->discount ?? 0);
+            $invVat      = floatval($inv->vat ?? 0);
+
+            $invLineSalesTotal = 0;
+            $invLineCogsTotal  = 0;
+            $invLineQtyTotal   = 0;
+            $processedDetails  = [];
+
+            foreach ($inv->invoice_details as $detail) {
+                $qty = floatval($detail->qty ?? 1);
+                $unitSalePrice = floatval($detail->amount ?? 0);
+                $lineSaleAmount = floatval($detail->total_amount ?? ($qty * $unitSalePrice));
+
+                $unitPurchaseCost = $resolvePurchaseCost($detail->item_id, $detail->color_id, $detail->size_id);
+                $linePurchaseCost = $qty * $unitPurchaseCost;
+                $lineProfit = $lineSaleAmount - $linePurchaseCost;
+                $lineMarginPercent = $lineSaleAmount > 0 ? round(($lineProfit / $lineSaleAmount) * 100, 2) : 0;
+
+                $invLineSalesTotal += $lineSaleAmount;
+                $invLineCogsTotal  += $linePurchaseCost;
+                $invLineQtyTotal   += $qty;
+
+                // Detail item record
+                $processedDetails[] = [
+                    'id'                  => $detail->id,
+                    'item_id'             => $detail->item_id,
+                    'item_title'          => $detail->item ? $detail->item->title : ($detail->description ?: 'Item Sale'),
+                    'barcode'             => $detail->item ? $detail->item->barcode : 'N/A',
+                    'category_title'      => $detail->item && $detail->item->category ? $detail->item->category->title : 'N/A',
+                    'unit_title'          => $detail->item && $detail->item->unit ? $detail->item->unit->title : 'Pcs',
+                    'color_title'         => $detail->color ? $detail->color->title : null,
+                    'size_title'          => $detail->size ? $detail->size->title : null,
+                    'serial_no'           => $detail->serial_no,
+                    'qty'                 => $qty,
+                    'unit_purchase_cost'  => round($unitPurchaseCost, 2),
+                    'unit_sale_price'     => round($unitSalePrice, 2),
+                    'line_sale_amount'    => round($lineSaleAmount, 2),
+                    'line_purchase_cost'  => round($linePurchaseCost, 2),
+                    'line_profit'         => round($lineProfit, 2),
+                    'line_margin_percent' => $lineMarginPercent,
+                ];
+
+                // Item Breakdown Accumulator
+                $itemKey = ($detail->item_id ?? 0) . '_' . ($detail->color_id ?? 0) . '_' . ($detail->size_id ?? 0);
+                if (!isset($itemBreakdownMap[$itemKey])) {
+                    $itemBreakdownMap[$itemKey] = [
+                        'item_id'            => $detail->item_id,
+                        'item_title'         => $detail->item ? $detail->item->title : ($detail->description ?: 'Other Item'),
+                        'barcode'            => $detail->item ? $detail->item->barcode : 'N/A',
+                        'category_title'     => $detail->item && $detail->item->category ? $detail->item->category->title : 'N/A',
+                        'unit_title'         => $detail->item && $detail->item->unit ? $detail->item->unit->title : 'Pcs',
+                        'color_title'        => $detail->color ? $detail->color->title : null,
+                        'size_title'         => $detail->size ? $detail->size->title : null,
+                        'total_qty'          => 0,
+                        'unit_purchase_cost' => round($unitPurchaseCost, 2),
+                        'total_sales_amount' => 0,
+                        'total_cost_amount'  => 0,
+                        'total_profit'       => 0,
+                        'margin_percent'     => 0,
+                        'orders_count'       => 0,
+                    ];
+                }
+                $itemBreakdownMap[$itemKey]['total_qty']          += $qty;
+                $itemBreakdownMap[$itemKey]['total_sales_amount'] += $lineSaleAmount;
+                $itemBreakdownMap[$itemKey]['total_cost_amount']  += $linePurchaseCost;
+                $itemBreakdownMap[$itemKey]['total_profit']       += $lineProfit;
+                $itemBreakdownMap[$itemKey]['orders_count']       += 1;
+            }
+
+            $invGrossSales = floatval($inv->original_amount ?? $invLineSalesTotal);
+            if ($invGrossSales <= 0) {
+                $invGrossSales = $invLineSalesTotal;
+            }
+
+            // Invoice Gross Profit = (Gross Sales - Discount) - COGS
+            $invNetRevenue = max(0, $invGrossSales - $invDiscount + $invVat);
+            $invProfit     = ($invGrossSales - $invDiscount) - $invLineCogsTotal;
+            $invMarginPct  = $invNetRevenue > 0 ? round(($invProfit / $invNetRevenue) * 100, 2) : 0;
+
+            $totalGrossSales += $invGrossSales;
+            $totalDiscount   += $invDiscount;
+            $totalVat        += $invVat;
+            $totalNetSales   += $invAmount;
+            $totalPaid       += $invPaid;
+            $totalDue        += $invDue;
+            $totalCogs       += $invLineCogsTotal;
+            $totalGrossProfit+= $invProfit;
+            $totalQtySold    += $invLineQtyTotal;
+
+            $processedInvoices[] = [
+                'id'             => $inv->id,
+                'invoice_no'     => $inv->invoice_no,
+                'invoice_date'   => $inv->invoice_date,
+                'client_id'      => $inv->client_id,
+                'client_name'    => $inv->client ? $inv->client->name : 'Walk-in Customer',
+                'client_mobile'  => $inv->client ? $inv->client->mobile : 'N/A',
+                'total_qty'      => $invLineQtyTotal,
+                'gross_amount'   => round($invGrossSales, 2),
+                'discount'       => round($invDiscount, 2),
+                'vat'            => round($invVat, 2),
+                'net_amount'     => round($invAmount, 2),
+                'paid_amount'    => round($invPaid, 2),
+                'due_amount'     => round($invDue, 2),
+                'total_cogs'     => round($invLineCogsTotal, 2),
+                'profit'         => round($invProfit, 2),
+                'margin_percent' => $invMarginPct,
+                'is_closed'      => $inv->is_closed,
+                'details'        => $processedDetails,
+            ];
+        }
+
+        // Finalize Item Breakdown list
+        $itemBreakdownList = [];
+        foreach ($itemBreakdownMap as $item) {
+            $item['total_sales_amount'] = round($item['total_sales_amount'], 2);
+            $item['total_cost_amount']  = round($item['total_cost_amount'], 2);
+            $item['total_profit']       = round($item['total_profit'], 2);
+            $item['avg_sale_price']     = $item['total_qty'] > 0 ? round($item['total_sales_amount'] / $item['total_qty'], 2) : 0;
+            $item['margin_percent']     = $item['total_sales_amount'] > 0 ? round(($item['total_profit'] / $item['total_sales_amount']) * 100, 2) : 0;
+            $itemBreakdownList[] = $item;
+        }
+
+        // Sort items by highest profit
+        usort($itemBreakdownList, function ($a, $b) {
+            return $b['total_profit'] <=> $a['total_profit'];
+        });
+
+        // 5. Operating Expenses & Deductions
+        // a) Office & General Expenses
+        $expenseQuery = ExpenseDetail::with([
+            'expense:id,expenseid,expense_date,employee_id,approved_by,approved_date',
+            'expense.employee:id,full_name',
+            'account:id,account_code,account_name'
+        ])
+        ->whereNull('expense_details.deleted_at')
+        ->whereHas('expense', function ($q) use ($from, $to) {
+            $q->whereNull('deleted_at')
+              ->whereBetween('expense_date', [$from, $to]);
+        });
+
+        $expenses = $expenseQuery->get()->map(function ($row) {
+            return [
+                'id'            => $row->id,
+                'expense_id'    => $row->expense_id,
+                'expense_no'    => $row->expense ? $row->expense->expenseid : 'EXP-' . $row->expense_id,
+                'date'          => $row->expense ? $row->expense->expense_date : null,
+                'account_name'  => $row->account ? ($row->account->account_code . ' - ' . $row->account->account_name) : 'General Expense',
+                'employee_name' => $row->expense && $row->expense->employee ? $row->expense->employee->full_name : 'Office',
+                'narration'     => $row->narration ?? 'General Expense',
+                'amount'        => floatval($row->amount ?? 0),
+            ];
+        });
+        $totalExpensesAmount = floatval($expenses->sum('amount'));
+
+        // b) Employee Salary Sheets
+        $salaryQuery = SalarySheetDetail::with([
+            'salary_sheet:id,title,month,year,generated_date,approved_by',
+            'employee:id,full_name,empid,designation_id',
+            'employee.designation:id,title'
+        ])
+        ->whereNull('salary_sheet_details.deleted_at')
+        ->whereHas('salary_sheet', function ($q) use ($from, $to) {
+            $q->whereNull('deleted_at')
+              ->whereBetween('generated_date', [$from, $to]);
+        });
+
+        $salaries = $salaryQuery->get()->map(function ($row) {
+            return [
+                'id'              => $row->id,
+                'salary_sheet_id' => $row->salary_sheet_id,
+                'sheet_title'     => $row->salary_sheet ? $row->salary_sheet->title : 'Salary Sheet',
+                'month'           => $row->salary_sheet ? $row->salary_sheet->month : '',
+                'year'            => $row->salary_sheet ? $row->salary_sheet->year : '',
+                'date'            => $row->salary_sheet ? $row->salary_sheet->generated_date : null,
+                'employee_id'     => $row->employee_id,
+                'employee_name'   => $row->employee ? $row->employee->full_name : 'N/A',
+                'designation'     => $row->employee && $row->employee->designation ? $row->employee->designation->title : 'N/A',
+                'basic_salary'    => floatval($row->salary ?? 0),
+                'additions'       => floatval(($row->commission ?? 0) + ($row->bonus ?? 0)),
+                'deductions'      => floatval(($row->installment ?? 0) + ($row->deduct ?? 0)),
+                'amount'          => floatval($row->total ?? 0),
+                'is_paid'         => (int)($row->is_paid ?? 0),
+            ];
+        });
+        $totalSalariesAmount = floatval($salaries->sum('amount'));
+
+        // c) Employee Loan & Advance Information
+        $loanQuery = LoanInfo::with(['employee:id,full_name,empid'])
+            ->whereNull('deleted_at')
+            ->where('status', 'active')
+            ->whereBetween('trns_date', [$from, $to]);
+
+        $loans = $loanQuery->get()->map(function ($row) {
+            return [
+                'id'                 => $row->id,
+                'trnsid'             => $row->trnsid,
+                'date'               => $row->trns_date,
+                'return_date'        => $row->return_date,
+                'employee_name'      => $row->employee ? $row->employee->full_name : 'N/A',
+                'trns_type'          => $row->trns_type ?: 'Loan',
+                'amount'             => floatval($row->amount ?? 0),
+                'total_installment'  => $row->total_installment ?? 1,
+                'installment_amount' => floatval($row->installment_amount ?? 0),
+                'due_amount'         => floatval($row->due_amount ?? 0),
+            ];
+        });
+        $totalLoansAmount = floatval($loans->sum('amount'));
+
+        // d) Commissions (Agents & Employees)
+        $commissionQuery = Commission::with([
+            'employee:id,full_name',
+            'agent:id,full_name,mobile',
+            'client:id,name',
+            'workorder:id,order_no'
+        ])
+        ->whereNull('deleted_at')
+        ->where('status', 'active')
+        ->where(function ($q) use ($from, $to) {
+            $q->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+              ->orWhereBetween('approved_date', [$from, $to]);
+        });
+
+        $commissions = $commissionQuery->get()->map(function ($row) {
+            $beneficiary = $row->agent ? ($row->agent->full_name . ' (Agent)') : ($row->employee ? ($row->employee->full_name . ' (Staff)') : ($row->reference_name ?: 'Reference'));
+            return [
+                'id'            => $row->id,
+                'beneficiary'   => $beneficiary,
+                'client_name'   => $row->client ? $row->client->name : 'N/A',
+                'workorder_no'  => $row->workorder ? $row->workorder->order_no : 'N/A',
+                'percentage'    => $row->percentage,
+                'date'          => $row->approved_date ?: date('d M, Y', strtotime($row->created_at)),
+                'amount'        => floatval($row->amount ?? 0),
+            ];
+        });
+        $totalCommissionsAmount = floatval($commissions->sum('amount'));
+
+        // 6. Final Summary Aggregations
+        $totalDeductions  = $totalExpensesAmount + $totalSalariesAmount + $totalLoansAmount + $totalCommissionsAmount;
+        $netProfit        = $totalGrossProfit - $totalDeductions;
+        $netProfitMargin  = $totalNetSales > 0 ? round(($netProfit / $totalNetSales) * 100, 2) : 0;
+        $grossProfitMargin= $totalNetSales > 0 ? round(($totalGrossProfit / $totalNetSales) * 100, 2) : 0;
 
         return response()->json([
-            'from' => $from,
-            'to' => $to,
-            'total_income' => (float) $total_income,
-            'total_expense' => (float) $total_expense,
-            'net_profit' => (float) $net_profit,
-            'details' => $details,
+            'from'              => $from,
+            'to'                => $to,
+            'summary'           => [
+                'total_invoices'     => count($processedInvoices),
+                'total_qty_sold'     => round($totalQtySold, 2),
+                'gross_sales'        => round($totalGrossSales, 2),
+                'total_discount'     => round($totalDiscount, 2),
+                'total_vat'          => round($totalVat, 2),
+                'net_sales'          => round($totalNetSales, 2),
+                'total_paid'         => round($totalPaid, 2),
+                'total_due'          => round($totalDue, 2),
+                'total_cogs'         => round($totalCogs, 2),
+                'gross_profit'       => round($totalGrossProfit, 2),
+                'gross_profit_margin'=> $grossProfitMargin,
+
+                // Deductions breakdown
+                'total_expenses'     => round($totalExpensesAmount, 2),
+                'total_salaries'     => round($totalSalariesAmount, 2),
+                'total_loans'        => round($totalLoansAmount, 2),
+                'total_commissions'  => round($totalCommissionsAmount, 2),
+                'total_deductions'   => round($totalDeductions, 2),
+
+                // Final Net Profit / Loss
+                'net_profit'         => round($netProfit, 2),
+                'net_profit_margin'  => $netProfitMargin,
+                'is_profitable'      => $netProfit >= 0,
+            ],
+            'invoices'          => $processedInvoices,
+            'item_breakdown'    => $itemBreakdownList,
+            'expenses'          => $expenses,
+            'salaries'          => $salaries,
+            'loans'             => $loans,
+            'commissions'       => $commissions,
         ]);
     }
 

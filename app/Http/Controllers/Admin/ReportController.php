@@ -16,10 +16,12 @@ use App\Models\InvoiceDetails;
 use App\Models\PurchaseDetail;
 use App\Models\WarrantyClaim;
 use App\Models\Item;
+use App\Models\ItemPrice;
 use App\Models\Category;
 use App\Models\ClientPointTransaction;
 use App\Models\System\SiteSetting;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends BaseController
 {
@@ -57,8 +59,8 @@ class ReportController extends BaseController
             ? (int) $searchdata['low_threshold']
             : 5;
 
-        // 1. Fast Global Stock Counts & KPI Aggregation
-        $counts = \Illuminate\Support\Facades\DB::table('item_stock_summaries')
+        // 1. Fast Global Stock Counts in single query
+        $counts = DB::table('item_stock_summaries')
             ->selectRaw("
                 COUNT(*) as all_count,
                 SUM(CASE WHEN current_stock > 0 AND current_stock <= {$lowThreshold} THEN 1 ELSE 0 END) as low_stock_count,
@@ -67,129 +69,221 @@ class ReportController extends BaseController
                 SUM(CASE WHEN current_stock > 0 THEN 1 ELSE 0 END) as in_stock_count,
                 SUM(total_qty_in) as total_in,
                 SUM(total_qty_out) as total_out,
-                SUM(current_stock) as total_current_stock
+                SUM(CASE WHEN current_stock > 0 THEN current_stock ELSE 0 END) as total_current_stock
             ")
             ->first();
 
-        // 2. Query Builder with Lean Relations
-        $query = ItemStockSummary::query()
-            ->with([
-                'item:id,title,category_id,unit_id,barcode',
-                'item.category:id,title',
-                'item.unit:id,title',
-                'color:id,title',
-                'size:id,title'
+        // 2. High-Performance Query with Single-Pass Pricing Resolution
+        $latestPurchaseSub = DB::table('purchase_details')
+            ->select('item_id', 'color_id', 'size_id', 'price', 'selling_price')
+            ->whereIn('id', function ($q) {
+                $q->selectRaw('MAX(id)')
+                  ->from('purchase_details')
+                  ->whereNull('deleted_at')
+                  ->groupBy('item_id', 'color_id', 'size_id');
+            });
+
+        $query = DB::table('item_stock_summaries as iss')
+            ->join('items as i', 'i.id', '=', 'iss.item_id')
+            ->leftJoin('categories as c', 'c.id', '=', 'i.category_id')
+            ->leftJoin('units as u', 'u.id', '=', 'i.unit_id')
+            ->leftJoin('colors as col', 'col.id', '=', 'iss.color_id')
+            ->leftJoin('sizes as sz', 'sz.id', '=', 'iss.size_id')
+            ->leftJoin('item_prices as ip', function ($join) {
+                $join->on('ip.item_id', '=', 'iss.item_id')
+                     ->where('ip.status', '=', 'active')
+                     ->where(function ($q) {
+                         $q->whereColumn('ip.color_id', 'iss.color_id')
+                           ->orWhere(function ($sq) {
+                               $sq->whereNull('ip.color_id')->whereNull('iss.color_id');
+                           });
+                     })
+                     ->where(function ($q) {
+                         $q->whereColumn('ip.size_id', 'iss.size_id')
+                           ->orWhere(function ($sq) {
+                               $sq->whereNull('ip.size_id')->whereNull('iss.size_id');
+                           });
+                     });
+            })
+            ->leftJoinSub($latestPurchaseSub, 'pd', function ($join) {
+                $join->on('pd.item_id', '=', 'iss.item_id')
+                     ->where(function ($q) {
+                         $q->whereColumn('pd.color_id', 'iss.color_id')
+                           ->orWhere(function ($sq) {
+                               $sq->whereNull('pd.color_id')->whereNull('iss.color_id');
+                           });
+                     })
+                     ->where(function ($q) {
+                         $q->whereColumn('pd.size_id', 'iss.size_id')
+                           ->orWhere(function ($sq) {
+                               $sq->whereNull('pd.size_id')->whereNull('iss.size_id');
+                           });
+                     });
+            })
+            ->select([
+                'iss.item_id',
+                'iss.color_id',
+                'iss.size_id',
+                'iss.total_qty_in',
+                'iss.total_qty_out',
+                'iss.current_stock',
+                'i.title as item_title',
+                'i.barcode',
+                'i.category_id',
+                'c.title as category_title',
+                'u.title as unit_title',
+                'col.title as color_title',
+                'sz.title as size_title',
+                DB::raw("COALESCE(NULLIF(ip.purchase_price, 0), NULLIF(pd.price, 0), NULLIF(i.opening_rate, 0), 0) as purchase_price"),
+                DB::raw("COALESCE(NULLIF(ip.selling_price, 0), NULLIF(pd.selling_price, 0), 0) as selling_price"),
             ]);
 
-        // Default stock status is 'low_stock' if not specified
+        // Stock Status Filter
         $stockStatus = $searchdata['stock_status'] ?? 'low_stock';
-
-        if (!empty($stockStatus)) {
-            if ($stockStatus === 'low_stock') {
-                $query->where('current_stock', '>', 0)->where('current_stock', '<=', $lowThreshold);
-            } elseif ($stockStatus === 'out_of_stock') {
-                $query->where('current_stock', '<=', 0);
-            } elseif ($stockStatus === 'negative_stock') {
-                $query->where('current_stock', '<', 0);
-            } elseif ($stockStatus === 'in_stock') {
-                $query->where('current_stock', '>', 0);
-            }
-            // If 'all', do not apply current_stock condition
+        if ($stockStatus === 'low_stock') {
+            $query->where('iss.current_stock', '>', 0)->where('iss.current_stock', '<=', $lowThreshold);
+        } elseif ($stockStatus === 'out_of_stock') {
+            $query->where('iss.current_stock', '<=', 0);
+        } elseif ($stockStatus === 'negative_stock') {
+            $query->where('iss.current_stock', '<', 0);
+        } elseif ($stockStatus === 'in_stock') {
+            $query->where('iss.current_stock', '>', 0);
         }
 
-        if ($searchdata) {
-            /** 🔍 Category filter */
-            if (!empty($searchdata['category_id'])) {
-                $query->whereHas('item', function ($q) use ($searchdata) {
-                    $q->where('category_id', $searchdata['category_id']);
-                });
-            }
-
-            /** 🔍 Item filter */
-            if (!empty($searchdata['item_id'])) {
-                $query->where('item_id', $searchdata['item_id']);
-            }
-
-            /** 🔍 Color filter */
-            if (!empty($searchdata['color_id'])) {
-                $query->where('color_id', $searchdata['color_id']);
-            }
-
-            /** 🔍 Size filter */
-            if (!empty($searchdata['size_id'])) {
-                $query->where('size_id', $searchdata['size_id']);
-            }
-
-            /** 🔍 Zero Qty Filter */
-            if (isset($searchdata['is_zero']) && ($searchdata['is_zero'] === '1' || $searchdata['is_zero'] === 1 || $searchdata['is_zero'] === true)) {
-                $query->where('current_stock', 0);
-            }
-
-            /** 🔍 Keyword / Barcode / Title Search */
-            if (!empty($searchdata['keyword'])) {
-                $keyword = trim($searchdata['keyword']);
-                $query->whereHas('item', function ($q) use ($keyword) {
-                    $q->where('title', 'like', "%{$keyword}%")
-                        ->orWhere('barcode', 'like', "%{$keyword}%");
-                });
-            }
-
-            /** 🔍 Quantity Range Filter */
-            if (
-                isset($searchdata['from_qty'], $searchdata['to_qty']) &&
-                is_numeric($searchdata['from_qty']) &&
-                is_numeric($searchdata['to_qty'])
-            ) {
-                $query->where('current_stock', '>=', (int) $searchdata['from_qty']);
-                $query->where('current_stock', '<=', (int) $searchdata['to_qty']);
-            } elseif (isset($searchdata['from_qty']) && is_numeric($searchdata['from_qty'])) {
-                $query->where('current_stock', '>=', (int) $searchdata['from_qty']);
-            } elseif (isset($searchdata['to_qty']) && is_numeric($searchdata['to_qty'])) {
-                $query->where('current_stock', '<=', (int) $searchdata['to_qty']);
-            }
+        if (!empty($searchdata['category_id'])) {
+            $query->where('i.category_id', $searchdata['category_id']);
+        }
+        if (!empty($searchdata['item_id'])) {
+            $query->where('iss.item_id', $searchdata['item_id']);
+        }
+        if (!empty($searchdata['color_id'])) {
+            $query->where('iss.color_id', $searchdata['color_id']);
+        }
+        if (!empty($searchdata['size_id'])) {
+            $query->where('iss.size_id', $searchdata['size_id']);
+        }
+        if (isset($searchdata['is_zero']) && ($searchdata['is_zero'] === '1' || $searchdata['is_zero'] === 1 || $searchdata['is_zero'] === true)) {
+            $query->where('iss.current_stock', 0);
+        }
+        if (!empty($searchdata['keyword'])) {
+            $kw = trim($searchdata['keyword']);
+            $query->where(function ($q) use ($kw) {
+                $q->where('i.title', 'like', "%{$kw}%")
+                  ->orWhere('i.barcode', 'like', "%{$kw}%");
+            });
+        }
+        if (isset($searchdata['from_qty']) && is_numeric($searchdata['from_qty'])) {
+            $query->where('iss.current_stock', '>=', (int) $searchdata['from_qty']);
+        }
+        if (isset($searchdata['to_qty']) && is_numeric($searchdata['to_qty'])) {
+            $query->where('iss.current_stock', '<=', (int) $searchdata['to_qty']);
         }
 
-        /** 📊 Sorting Options */
-        $sortBy = $searchdata['sort_by'] ?? null;
-        if ($sortBy === 'stock_asc' || (!$sortBy && in_array($stockStatus, ['low_stock', 'out_of_stock', 'negative_stock']))) {
-            $query->orderBy('current_stock', 'asc');
+        // Sorting
+        $sortBy = $searchdata['sort_by'] ?? ($stockStatus === 'low_stock' ? 'stock_asc' : 'stock_desc');
+        if ($sortBy === 'stock_asc') {
+            $query->orderBy('iss.current_stock', 'asc');
         } elseif ($sortBy === 'stock_desc') {
-            $query->orderBy('current_stock', 'desc');
+            $query->orderBy('iss.current_stock', 'desc');
         } elseif ($sortBy === 'item_id') {
-            $query->orderBy('item_id', 'asc');
+            $query->orderBy('iss.item_id', 'asc');
         } else {
-            $query->orderBy('item_id', 'asc');
+            $query->orderBy('iss.current_stock', 'desc');
         }
 
-        /** ⏱️ Limit handling (Default 50 if low_stock or initial view, unless user requests specific limit or 'all') */
+        // Fetch dataset (support pagination or full dataset)
         $limit = $searchdata['limit'] ?? null;
-        if ($limit === 'all' || !empty($searchdata['allData'])) {
-            // No limit or high ceiling
-            $results = $query->limit(5000)->get();
-        } elseif (is_numeric($limit) && (int) $limit > 0) {
-            $results = $query->limit((int) $limit)->get();
-        } elseif ($stockStatus === 'low_stock') {
-            $results = $query->limit(50)->get();
+        if (is_numeric($limit) && (int) $limit > 0) {
+            $rawList = $query->limit((int) $limit)->get();
         } else {
-            // Default 50 items for speed
-            $results = $query->limit(50)->get();
+            $rawList = $query->get();
         }
+
+        // 3. Process Records and Compute Non-Negative Valuations
+        $processedList = [];
+        $filteredQty = 0;
+        $filteredPurchaseValue = 0;
+        $filteredSellingValue = 0;
+
+        foreach ($rawList as $row) {
+            $qty = floatval($row->current_stock);
+            $cost = floatval($row->purchase_price);
+            $sell = floatval($row->selling_price);
+
+            // Stock value and displayed stock (-) asbe na, (-)value holeo 0 takbe
+            $displayQty = max(0, $qty);
+
+            if ($qty > 0) {
+                $rowPurchaseValue = round($qty * $cost, 2);
+                $rowSellingValue  = round($qty * $sell, 2);
+                $rowProfit        = max(0, round($rowSellingValue - $rowPurchaseValue, 2));
+                $rowMargin        = $rowSellingValue > 0 ? round(($rowProfit / $rowSellingValue) * 100, 2) : 0;
+
+                $filteredQty           += $qty;
+                $filteredPurchaseValue += $rowPurchaseValue;
+                $filteredSellingValue  += $rowSellingValue;
+            } else {
+                // Negative or 0 stock => 0 valuation
+                $rowPurchaseValue = 0.00;
+                $rowSellingValue  = 0.00;
+                $rowProfit        = 0.00;
+                $rowMargin        = 0.00;
+            }
+
+            $row->current_stock        = $displayQty;
+            $row->purchase_price       = round($cost, 2);
+            $row->selling_price        = round($sell, 2);
+            $row->total_purchase_value = $rowPurchaseValue;
+            $row->total_selling_value  = $rowSellingValue;
+            $row->potential_profit     = $rowProfit;
+            $row->margin_percent       = $rowMargin;
+
+            // Structured object for Vue template & export
+            $row->item = [
+                'id'          => $row->item_id,
+                'title'       => $row->item_title,
+                'barcode'     => $row->barcode,
+                'category_id' => $row->category_id,
+                'category'    => $row->category_title ? ['title' => $row->category_title] : null,
+                'unit'        => $row->unit_title ? ['title' => $row->unit_title] : null,
+            ];
+            $row->color = $row->color_title ? ['title' => $row->color_title] : null;
+            $row->size  = $row->size_title ? ['title' => $row->size_title] : null;
+
+            $processedList[] = $row;
+        }
+
+        $filteredProfit = max(0, $filteredSellingValue - $filteredPurchaseValue);
+        $filteredMargin = $filteredSellingValue > 0 ? round(($filteredProfit / $filteredSellingValue) * 100, 2) : 0;
 
         return response()->json([
-            'datas' => $results,
+            'datas' => $processedList,
             'counts' => [
-                'low_stock' => (int) ($counts->low_stock_count ?? 0),
-                'out_of_stock' => (int) ($counts->out_of_stock_count ?? 0),
-                'in_stock' => (int) ($counts->in_stock_count ?? 0),
+                'low_stock'      => (int) ($counts->low_stock_count ?? 0),
+                'out_of_stock'   => (int) ($counts->out_of_stock_count ?? 0),
+                'in_stock'       => (int) ($counts->in_stock_count ?? 0),
                 'negative_stock' => (int) ($counts->negative_stock_count ?? 0),
-                'all' => (int) ($counts->all_count ?? 0),
+                'all'            => (int) ($counts->all_count ?? 0),
             ],
             'summary' => [
-                'total_in' => (float) ($counts->total_in ?? 0),
-                'total_out' => (float) ($counts->total_out ?? 0),
+                'total_in'            => (float) ($counts->total_in ?? 0),
+                'total_out'           => (float) ($counts->total_out ?? 0),
                 'total_current_stock' => (float) ($counts->total_current_stock ?? 0),
-                'filtered_count' => count($results),
-                'limit_applied' => $limit ?: ($stockStatus === 'low_stock' ? 50 : 50),
+
+                // Global Shop Inventory Valuation (Total mal in shop)
+                'global_total_stock_qty'      => round($filteredQty, 2),
+                'global_total_purchase_value' => round($filteredPurchaseValue, 2),
+                'global_total_selling_value'  => round($filteredSellingValue, 2),
+                'global_potential_profit'     => round($filteredProfit, 2),
+                'global_potential_margin'     => $filteredMargin,
+
+                // Filtered List Valuation
+                'filtered_count'                => count($processedList),
+                'filtered_total_qty'            => round($filteredQty, 2),
+                'filtered_total_purchase_value' => round($filteredPurchaseValue, 2),
+                'filtered_total_selling_value'  => round($filteredSellingValue, 2),
+                'filtered_potential_profit'     => round($filteredProfit, 2),
+                'filtered_potential_margin'     => $filteredMargin,
             ]
         ]);
     }
