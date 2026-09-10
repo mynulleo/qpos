@@ -1376,7 +1376,7 @@ const routes = [
             // ------------------SOFTWARE UPDATE PORTION------------------
             {
                 path: "/software-update",
-                name: "software.update",
+                name: "softwareupdate.index",
                 component: () =>
                     import("./../views/admin/system/update/index"),
             },
