@@ -56,7 +56,7 @@ class SoftwareUpdateController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function syncOnly(Request $request): JsonResponse
+    public function synconly(Request $request): JsonResponse
     {
         $result = $this->updateService->syncMigrationsTableOnly();
         return response()->json($result);

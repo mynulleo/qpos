@@ -219,8 +219,8 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');
         Route::resource('warrantyClaim', App\Http\Controllers\Admin\WarrantyClaimController::class);
         Route::resource('warehouse', App\Http\Controllers\Admin\WarehouseController::class);
-        Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'getPendingPurchases'])->name('grn.pendingPurchases');
-        Route::get('grn/get-purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'getPurchaseItems'])->name('grn.purchaseItems');
+        Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'pendingpurchases'])->name('grn.pendingpurchases');
+        Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
         Route::resource('grn', App\Http\Controllers\Admin\GrnController::class);
 
         // POS Terminal View Routes
@@ -269,10 +269,10 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('loanInfo/approvalcancel', [App\Http\Controllers\Admin\LoanInfoController::class, 'approvalcancel'])->name('loanInfo.approvalcancel');
 
         // Software / Database Update Routes
-        Route::get('software-update', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'index'])->name('software.update');
-        Route::get('software-update/status', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'status'])->name('software.update.status');
-        Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('software.update.run');
-        Route::post('software-update/sync-only', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'syncOnly'])->name('software.update.syncOnly');
+        Route::get('software-update', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'index'])->name('softwareupdate');
+        Route::get('software-update/status', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'status'])->name('softwareupdate.status');
+        Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('softwareupdate.run');
+        Route::post('software-update/sync-only', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'synconly'])->name('softwareupdate.synconly');
 
         // Resident Approval & Actions Start
 

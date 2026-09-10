@@ -230,7 +230,7 @@ export default {
         return;
       }
 
-      axios.get(`grn/get-purchase-items/${purchase_id}`)
+      axios.get(`grn/purchase-items/${purchase_id}`)
         .then((res) => {
           this.data.supplier_id = res.data.purchase.supplier_id;
           this.selectedSupplierName = res.data.purchase.supplier?.org_name || '';
