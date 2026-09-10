@@ -89,7 +89,7 @@ class GrnController extends BaseController
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function getPendingPurchases(Request $request)
+    public function pendingpurchases(Request $request)
     {
         $query = Purchase::with('supplier:id,org_name')
             ->where(function ($q) {
@@ -113,7 +113,7 @@ class GrnController extends BaseController
      * @param  int  $purchase_id
      * @return \Illuminate\Http\Response
      */
-    public function getPurchaseItems($purchase_id)
+    public function purchaseitems($purchase_id)
     {
         $purchase = Purchase::with([
             'supplier:id,org_name,mobile,address',

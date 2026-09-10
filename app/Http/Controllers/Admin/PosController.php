@@ -20,9 +20,13 @@ use App\Models\ClientPointTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Base\BaseController;
+use App\Traits\PaymentTrait;
+use App\Traits\VoucherTrait;
 
 class PosController extends BaseController
 {
+    use PaymentTrait, VoucherTrait;
+
     public function index(Request $request)
     {
         return view('layouts.backend_app');
@@ -478,12 +482,16 @@ class PosController extends BaseController
             'return_items.*.item_id' => 'required|exists:items,id',
             'return_items.*.qty' => 'required|numeric|min:0.01',
             'return_items.*.rate' => 'required|numeric|min:0',
+            'payment_method' => 'nullable|string',
+            'mbanking_type' => 'nullable|string',
+            'trxid' => 'nullable|string',
+            'note' => 'nullable|string',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $invoice = Invoice::with('details')->findOrFail($request->invoice_id);
+            $invoice = Invoice::with(['details', 'client'])->findOrFail($request->invoice_id);
             $returnItems = $request->return_items;
             $totalRefund = 0;
 
@@ -558,12 +566,81 @@ class PosController extends BaseController
                 throw new Exception("ফেরত দেওয়ার জন্য কোনো বৈধ পণ্য বা পরিমাণ পাওয়া যায়নি।");
             }
 
+            // 1. Ensure Sales Return Account exists in Chart of Accounts
+            $salesReturnAccount = Account::where('system_key_name', 'sales-return')->first();
+            if (!$salesReturnAccount) {
+                $incomeParent = Account::where('system_key_name', 'sales-revenue')->first();
+                $parentId = $incomeParent ? $incomeParent->parent_id : 39;
+
+                $salesReturnAccount = Account::create([
+                    'parent_id'         => $parentId,
+                    'account_code'      => 4150,
+                    'account_name'      => 'Sales Return',
+                    'account_type'      => 'Income',
+                    'default_type'      => 'System',
+                    'system_key_name'   => 'sales-return',
+                    'balance_type'      => 'Debit',
+                    'status'            => 'active',
+                ]);
+            }
+
+            // 2. Resolve Fund / Cash Account
+            $paymentMethod = $request->input('payment_method', 'Cash');
+            $fundAccount = null;
+            if ($paymentMethod === 'Cash') {
+                $fundAccount = Account::where('system_key_name', 'Cash')
+                    ->where('account_type', 'Asset')
+                    ->first()
+                    ?? Account::where('system_key_name', 'Cash')->first();
+            } elseif ($paymentMethod === 'MobileBanking' || in_array($paymentMethod, ['bKash', 'Nagad', 'Rocket'])) {
+                $fundAccount = Account::where('system_key_name', 'MobileBanking')->first()
+                    ?? Account::where('account_name', 'bKash/Nagad/Rocket')->first()
+                    ?? Account::where('account_name', $paymentMethod)->first();
+            } else {
+                $fundAccount = Account::where('account_name', $paymentMethod)->first()
+                    ?? Account::where('system_key_name', $paymentMethod)->first();
+            }
+            $fundAccountId = $fundAccount ? $fundAccount->id : 1;
+
+            // 3. Create Payment record in Payment module (payment_type = 'Pay')
+            $slipNo = Payment::getPaySlipNo();
+            $payment = Payment::create([
+                'payslipno'       => $slipNo,
+                'payment_type'    => 'Pay',
+                'client_id'       => $invoice->client_id,
+                'payment_date'    => date('Y-m-d'),
+                'discount'        => 0,
+                'amount'          => $totalRefund,
+                'fund_account_id' => $fundAccountId,
+                'payment_method'  => $paymentMethod,
+                'mbanking_type'   => $request->input('mbanking_type', null),
+                'trxid'           => $request->input('trxid', null),
+                'account_name'    => 'Sales Return',
+                'status'          => 'active',
+            ]);
+
+            // 4. Create PaymentDetail record
+            PaymentDetail::create([
+                'payment_id'     => $payment->id,
+                'reference_type' => 'SalesReturn',
+                'reference_id'   => $invoice->id,
+                'account_id'     => $salesReturnAccount->id,
+                'amount'         => $totalRefund,
+                'is_closed'      => 1,
+                'status'         => 'active',
+            ]);
+
+            // 5. Generate Double-Entry Accounting Voucher (Debit: Sales Return, Credit: Cash/Bank)
+            $this->createVoucherFromPayment($payment, $payment->id);
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sales return processed and stock updated successfully!',
+                'message' => 'Sales return processed successfully! Payment & Voucher recorded.',
                 'refund_amount' => $totalRefund,
+                'payment_id' => $payment->id,
+                'payslipno' => $payment->payslipno,
             ]);
 
         } catch (Exception $ex) {

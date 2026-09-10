@@ -184,7 +184,13 @@ trait VoucherTrait
                         }
                     }
 
-                    // Debit side (Payable A/C)
+                    if ($detail['reference_type'] == 'SalesReturn' || !empty($detail['account_id'])) {
+                        $payable_account_id = !empty($detail['account_id']) ? $detail['account_id'] : $this->getAccountID('sales-return');
+                        $module = 'Client';
+                        $module_id = $payment->client_id;
+                    }
+
+                    // Debit side (Payable A/C or Sales Return / Expense Head)
                     VoucherDetail::create([
                         'voucher_id'     => $voucher->id,
                         'account_id'     => $payable_account_id,
@@ -931,6 +937,10 @@ trait VoucherTrait
                 return Account::where('account_name', 'Office Supplies')->first()->id;
             case 'Discount':
                 return Account::where('account_name', 'Discount')->first()->id;
+            case 'SalesReturn':
+                return Account::where('system_key_name', 'sales-return')->first()?->id 
+                    ?? Account::where('account_name', 'Sales Return')->first()?->id 
+                    ?? Account::where('system_key_name', 'sales-revenue')->first()->id;
             default:
                 return Account::where('account_name', 'Other Expense')->first()->id;
         }

@@ -172,6 +172,44 @@
               </table>
             </div>
 
+            <!-- Refund Payment & Notes Section -->
+            <div class="row g-3 mb-3 p-3 bg-white rounded border">
+              <div class="col-md-3">
+                <label class="form-label fw-bold small text-muted mb-1">
+                  <i class="fas fa-wallet me-1 text-primary"></i> Refund Method (টাকা ফেরতের মাধ্যম)
+                </label>
+                <select class="form-select form-select-sm font-monospace fw-bold" v-model="payment_method">
+                  <option value="Cash">Cash (নগদ ফেরত)</option>
+                  <option value="bKash">bKash (বিকাশ)</option>
+                  <option value="Nagad">Nagad (নগদ)</option>
+                  <option value="Rocket">Rocket (রকেট)</option>
+                  <option value="Bank">Bank Transfer</option>
+                </select>
+              </div>
+              <div class="col-md-3" v-if="payment_method !== 'Cash'">
+                <label class="form-label fw-bold small text-muted mb-1">
+                  <i class="fas fa-hashtag me-1 text-info"></i> TrxID / Reference No
+                </label>
+                <input
+                  type="text"
+                  class="form-control form-control-sm font-monospace"
+                  placeholder="e.g. TRX893242"
+                  v-model="trxid"
+                >
+              </div>
+              <div :class="payment_method !== 'Cash' ? 'col-md-6' : 'col-md-9'">
+                <label class="form-label fw-bold small text-muted mb-1">
+                  <i class="fas fa-comment-alt me-1 text-secondary"></i> Return Reason / Note (মন্তব্য)
+                </label>
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="e.g. Defective item / Wrong size exchange"
+                  v-model="return_note"
+                >
+              </div>
+            </div>
+
             <!-- Total Refund Summary & Action Buttons -->
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 bg-light border rounded gap-3">
               <div class="d-flex align-items-center gap-2">
@@ -184,7 +222,7 @@
                 </button>
                 <button type="button" class="btn btn-danger px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" @click="submitReturn" :disabled="totalRefundAmount <= 0 || isSubmitting">
                   <i class="fas fa-check-circle"></i>
-                  <span>{{ isSubmitting ? 'Processing...' : 'Process Sales Return & Restore Stock' }}</span>
+                  <span>{{ isSubmitting ? 'Processing...' : 'Process Sales Return & Record Refund' }}</span>
                 </button>
               </div>
             </div>
@@ -205,6 +243,9 @@ export default {
       selectedInvoice: null,
       returnList: [],
       isSubmitting: false,
+      payment_method: 'Cash',
+      trxid: '',
+      return_note: '',
     };
   },
   computed: {
@@ -235,6 +276,9 @@ export default {
     },
     selectInvoice(inv) {
       this.selectedInvoice = inv;
+      this.payment_method = 'Cash';
+      this.trxid = '';
+      this.return_note = '';
       this.returnList = (inv.details || []).map(d => {
         const soldQty = floatval(d.qty);
         const alreadyReturned = floatval(d.already_returned_qty || 0);
@@ -320,14 +364,22 @@ export default {
       axios.post('pos/process-return', {
         invoice_id: this.selectedInvoice.id,
         return_items: returnItems,
+        payment_method: this.payment_method,
+        mbanking_type: ['bKash', 'Nagad', 'Rocket'].includes(this.payment_method) ? this.payment_method : null,
+        trxid: this.trxid,
+        note: this.return_note,
       })
       .then(res => {
         this.isSubmitting = false;
         if (res.data && res.data.success) {
-          this.$toast(res.data.message || 'Sales return processed successfully!', 'success');
+          const payslip = res.data.payslipno ? ` (Payslip: ${res.data.payslipno})` : '';
+          this.$toast((res.data.message || 'Sales return processed successfully!') + payslip, 'success');
           this.selectedInvoice = null;
           this.invoices = [];
           this.searchTerm = '';
+          this.payment_method = 'Cash';
+          this.trxid = '';
+          this.return_note = '';
         }
       })
       .catch(err => {
