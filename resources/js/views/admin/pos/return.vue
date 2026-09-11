@@ -5,7 +5,7 @@
       <div class="card-header bg-white py-3 border-0 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
         <div>
           <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-undo me-2 text-warning"></i>Sales Return Management (পণ্য ফেরত ব্যবস্থাপনা)</h5>
-          <small class="text-muted">Search previous invoice, select returned items, and restore inventory stock</small>
+          <small class="text-muted">Search previous invoice, select returned items, choose return reason, and process refund</small>
         </div>
         <div class="d-flex align-items-center gap-2">
           <router-link to="/invoice" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 font-monospace">
@@ -172,41 +172,98 @@
               </table>
             </div>
 
-            <!-- Refund Payment & Notes Section -->
-            <div class="row g-3 mb-3 p-3 bg-white rounded border">
-              <div class="col-md-3">
-                <label class="form-label fw-bold small text-muted mb-1">
-                  <i class="fas fa-wallet me-1 text-primary"></i> Refund Method (টাকা ফেরতের মাধ্যম)
-                </label>
-                <select class="form-select form-select-sm font-monospace fw-bold" v-model="payment_method">
-                  <option value="Cash">Cash (নগদ ফেরত)</option>
-                  <option value="bKash">bKash (বিকাশ)</option>
-                  <option value="Nagad">Nagad (নগদ)</option>
-                  <option value="Rocket">Rocket (রকেট)</option>
-                  <option value="Bank">Bank Transfer</option>
-                </select>
-              </div>
-              <div class="col-md-3" v-if="payment_method !== 'Cash'">
-                <label class="form-label fw-bold small text-muted mb-1">
-                  <i class="fas fa-hashtag me-1 text-info"></i> TrxID / Reference No
-                </label>
-                <input
-                  type="text"
-                  class="form-control form-control-sm font-monospace"
-                  placeholder="e.g. TRX893242"
-                  v-model="trxid"
-                >
-              </div>
-              <div :class="payment_method !== 'Cash' ? 'col-md-6' : 'col-md-9'">
-                <label class="form-label fw-bold small text-muted mb-1">
-                  <i class="fas fa-comment-alt me-1 text-secondary"></i> Return Reason / Note (মন্তব্য)
-                </label>
-                <input
-                  type="text"
-                  class="form-control form-control-sm"
-                  placeholder="e.g. Defective item / Wrong size exchange"
-                  v-model="return_note"
-                >
+            <!-- Return Configuration & Refund Payment Section -->
+            <div class="card border mb-3 bg-white shadow-sm">
+              <div class="card-body p-3">
+                <div class="row g-3">
+                  <!-- Return Reason Selection (Radio Pill Cards) -->
+                  <div class="col-12">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                      <label class="form-label fw-bold small text-dark mb-0">
+                        <i class="fas fa-tasks me-1 text-primary"></i> Return Reason (ফেরতের কারণ নির্বাচন করুন):
+                      </label>
+                      <span v-if="return_reason === 'Client request'" class="badge bg-success px-2 py-1 shadow-sm">
+                        <i class="fas fa-check-circle me-1"></i> পণ্য সরাসরি স্টকে যুক্ত হবে (Stock In)
+                      </span>
+                      <span v-else-if="return_reason === 'Wastage'" class="badge bg-danger px-2 py-1 shadow-sm">
+                        <i class="fas fa-exclamation-triangle me-1"></i> ওয়েস্টেজ এন্ট্রি হবে, স্টকে ঢুকবে না
+                      </span>
+                      <span v-else-if="return_reason === 'Date Expaired'" class="badge bg-warning text-dark px-2 py-1 shadow-sm">
+                        <i class="fas fa-calendar-times me-1"></i> মেয়াদোত্তীর্ণ হিসেবে ওয়েস্টেজ এন্ট্রি হবে, স্টকে ঢুকবে না
+                      </span>
+                    </div>
+                    
+                    <div class="row g-2">
+                      <div class="col-md-4">
+                        <label class="return-reason-card d-flex align-items-center p-2 rounded border cursor-pointer h-100" :class="{ 'active border-primary bg-primary-subtle': return_reason === 'Client request' }">
+                          <input type="radio" class="form-check-input me-2 mt-0" value="Client request" v-model="return_reason">
+                          <div>
+                            <div class="fw-bold text-dark small"><i class="fas fa-user-check me-1 text-primary"></i> 1. Client request</div>
+                            <small class="text-muted d-block" style="font-size: 11px;">ভালো পণ্য - স্টকে পুনরায় জমা হবে</small>
+                          </div>
+                        </label>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="return-reason-card d-flex align-items-center p-2 rounded border cursor-pointer h-100" :class="{ 'active border-danger bg-danger-subtle': return_reason === 'Wastage' }">
+                          <input type="radio" class="form-check-input me-2 mt-0" value="Wastage" v-model="return_reason">
+                          <div>
+                            <div class="fw-bold text-danger small"><i class="fas fa-trash-alt me-1 text-danger"></i> 2. Wastage</div>
+                            <small class="text-muted d-block" style="font-size: 11px;">নষ্ট/ড্যামেজ - ওয়েস্টেজ এন্ট্রি হবে, স্টকে নয়</small>
+                          </div>
+                        </label>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="return-reason-card d-flex align-items-center p-2 rounded border cursor-pointer h-100" :class="{ 'active border-warning bg-warning-subtle': return_reason === 'Date Expaired' }">
+                          <input type="radio" class="form-check-input me-2 mt-0" value="Date Expaired" v-model="return_reason">
+                          <div>
+                            <div class="fw-bold text-dark small"><i class="fas fa-calendar-times me-1 text-warning"></i> 3. Date Expaired</div>
+                            <small class="text-muted d-block" style="font-size: 11px;">মেয়াদ শেষ - ওয়েস্টেজ এন্ট্রি হবে, স্টকে নয়</small>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Refund Method -->
+                  <div class="col-md-3">
+                    <label class="form-label fw-bold small text-muted mb-1">
+                      <i class="fas fa-wallet me-1 text-primary"></i> Refund Method (টাকা ফেরতের মাধ্যম)
+                    </label>
+                    <select class="form-select form-select-sm font-monospace fw-bold" v-model="payment_method">
+                      <option value="Cash">Cash (নগদ ফেরত)</option>
+                      <option value="bKash">bKash (বিকাশ)</option>
+                      <option value="Nagad">Nagad (নগদ)</option>
+                      <option value="Rocket">Rocket (রকেট)</option>
+                      <option value="Bank">Bank Transfer</option>
+                    </select>
+                  </div>
+
+                  <!-- TrxID / Reference No -->
+                  <div class="col-md-3" v-if="payment_method !== 'Cash'">
+                    <label class="form-label fw-bold small text-muted mb-1">
+                      <i class="fas fa-hashtag me-1 text-info"></i> TrxID / Reference No
+                    </label>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm font-monospace"
+                      placeholder="e.g. TRX893242"
+                      v-model="trxid"
+                    >
+                  </div>
+
+                  <!-- Return Note Textarea -->
+                  <div :class="payment_method !== 'Cash' ? 'col-md-6' : 'col-md-9'">
+                    <label class="form-label fw-bold small text-muted mb-1">
+                      <i class="fas fa-comment-alt me-1 text-secondary"></i> Return Note / Remarks (মন্তব্য)
+                    </label>
+                    <textarea
+                      class="form-control form-control-sm"
+                      rows="2"
+                      placeholder="ফেরত সংক্রান্ত কোনো অতিরিক্ত তথ্য বা মন্তব্য থাকলে লিখুন..."
+                      v-model="return_note"
+                    ></textarea>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -243,6 +300,7 @@ export default {
       selectedInvoice: null,
       returnList: [],
       isSubmitting: false,
+      return_reason: 'Client request',
       payment_method: 'Cash',
       trxid: '',
       return_note: '',
@@ -276,6 +334,7 @@ export default {
     },
     selectInvoice(inv) {
       this.selectedInvoice = inv;
+      this.return_reason = 'Client request';
       this.payment_method = 'Cash';
       this.trxid = '';
       this.return_note = '';
@@ -364,6 +423,7 @@ export default {
       axios.post('pos/process-return', {
         invoice_id: this.selectedInvoice.id,
         return_items: returnItems,
+        return_reason: this.return_reason,
         payment_method: this.payment_method,
         mbanking_type: ['bKash', 'Nagad', 'Rocket'].includes(this.payment_method) ? this.payment_method : null,
         trxid: this.trxid,
@@ -377,6 +437,7 @@ export default {
           this.selectedInvoice = null;
           this.invoices = [];
           this.searchTerm = '';
+          this.return_reason = 'Client request';
           this.payment_method = 'Cash';
           this.trxid = '';
           this.return_note = '';
@@ -479,4 +540,26 @@ function floatval(val) {
   color: #ffffff;
   transform: translateY(-1px);
 }
+
+.return-reason-card {
+  transition: all 0.2s ease-in-out;
+  border-width: 1.5px !important;
+  user-select: none;
+}
+.return-reason-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.return-reason-card.active {
+  box-shadow: 0 2px 8px rgba(17, 44, 71, 0.12);
+}
+.bg-primary-subtle {
+  background-color: rgba(17, 44, 71, 0.06) !important;
+}
+.bg-danger-subtle {
+  background-color: rgba(220, 53, 69, 0.08) !important;
+}
+.bg-warning-subtle {
+  background-color: rgba(255, 193, 7, 0.12) !important;
+}
 </style>
+

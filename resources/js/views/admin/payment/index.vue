@@ -239,12 +239,18 @@
             <div class="small text-muted font-monospace" v-if="item.client.mobile">
               <i class="fas fa-phone-alt me-1 text-success"></i>{{ item.client.mobile }}
             </div>
+            <div class="small text-secondary font-monospace" v-if="item.client.clientid">
+              <i class="fas fa-id-badge me-1"></i>{{ item.client.clientid }}
+            </div>
           </div>
           <div v-else-if="item.supplier">
             <span class="badge bg-warning-soft text-dark me-1">Supplier</span>
             <strong class="text-dark">{{ item.supplier.org_name }}</strong>
             <div class="small text-muted font-monospace" v-if="item.supplier.mobile">
               <i class="fas fa-phone-alt me-1 text-success"></i>{{ item.supplier.mobile }}
+            </div>
+            <div class="small text-secondary font-monospace" v-if="item.supplier.supid">
+              <i class="fas fa-id-badge me-1"></i>{{ item.supplier.supid }}
             </div>
           </div>
           <div v-else-if="item.employee">
@@ -257,11 +263,26 @@
           <div v-else-if="item.agent">
             <span class="badge bg-secondary-soft text-secondary me-1">Agent</span>
             <strong class="text-dark">{{ item.agent.full_name }}</strong>
+            <div class="small text-muted font-monospace" v-if="item.agent.mobile">
+              <i class="fas fa-phone-alt me-1 text-success"></i>{{ item.agent.mobile }}
+            </div>
           </div>
           <div v-else-if="item.office_expense">
             <span class="badge bg-danger-soft text-danger me-1">Office Expense</span>
             <strong class="text-dark">Office Operations</strong>
           </div>
+          <span v-else-if="item.client_id" class="text-dark small fw-semibold">
+            Client #{{ item.client_id }}
+          </span>
+          <span v-else-if="item.supplier_id" class="text-dark small fw-semibold">
+            Supplier #{{ item.supplier_id }}
+          </span>
+          <span v-else-if="item.employee_id" class="text-dark small fw-semibold">
+            Employee #{{ item.employee_id }}
+          </span>
+          <span v-else-if="item.agent_id" class="text-dark small fw-semibold">
+            Agent #{{ item.agent_id }}
+          </span>
           <span v-else class="text-muted small">-- N/A --</span>
         </td>
       </template>
@@ -287,6 +308,9 @@
           <span class="small font-monospace fw-semibold text-secondary" v-if="item.fund_account">
             <i class="fas fa-wallet me-1 text-primary"></i>
             {{ item.fund_account.account_code ? item.fund_account.account_code + ' - ' : '' }}{{ item.fund_account.account_name || item.fund_account.name }}
+          </span>
+          <span v-else-if="item.fund_account_id" class="text-muted small">
+            Account #{{ item.fund_account_id }}
           </span>
           <span v-else class="text-muted small">--</span>
         </td>
@@ -315,9 +339,9 @@ const model = "payment";
 const tableColumns = [
   { field: "payslipno", title: "Payslip & Date", width: "140px" },
   { field: "payment_type", title: "Type", align: "center", width: "100px" },
-  { field: "client_id", title: "Party / Payee Info", width: "240px" },
+  { field: "client_id", title: "Party / Payee Info", subfield: "client.name", width: "240px" },
   { field: "payment_method", title: "Payment Method / Trx", width: "180px" },
-  { field: "fund_account_id", title: "Fund Account", width: "160px" },
+  { field: "fund_account_id", title: "Fund Account", subfield: "fund_account.account_name", width: "160px" },
   { field: "amount", title: "Amount (৳)", align: "right", width: "140px" },
   { field: "status", title: "Status", align: "center", width: "90px" },
 ];

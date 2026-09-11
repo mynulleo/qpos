@@ -230,6 +230,8 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         
         //Report
         Route::get('report/sales', [App\Http\Controllers\Admin\ReportController::class, 'sales'])->name('report.sales');
+        Route::get('report/sales-return', [App\Http\Controllers\Admin\ReportController::class, 'salesReturn'])->name('report.salesReturn');
+        Route::get('report/salesreturn', [App\Http\Controllers\Admin\ReportController::class, 'salesReturn'])->name('report.salesreturn');
         Route::get('report/itemladger', [App\Http\Controllers\Admin\ReportController::class, 'itemladger'])->name('report.itemladger');
         Route::get('report/availablestock', [App\Http\Controllers\Admin\ReportController::class, 'availablestock'])->name('report.availablestock');
         Route::get('report/incomestatement', [App\Http\Controllers\Admin\ReportController::class, 'incomestatement'])->name('report.incomestatement');

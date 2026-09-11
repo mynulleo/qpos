@@ -82,11 +82,16 @@ export default {
         },
     },
 
-    inject: ["validate"],
+    inject: {
+        validate: {
+            from: "validate",
+            default: () => ({ errors: [] }),
+        },
+    },
 
     computed: {
         fieldName() {
-            return this.field.split(".").pop();
+            return this.field ? this.field.split(".").pop() : "";
         },
     },
 
@@ -94,7 +99,7 @@ export default {
         "validate.errors": {
             immediate: true,
             handler() {
-                if (this.validate.errors.length > 0) {
+                if (this.validate && this.validate.errors && this.validate.errors.length > 0) {
                     for (let i = 0; i < this.validate.errors.length; i++) {
                         if (this.field === this.validate.errors[i].field) {
                             this.has_error = true;
