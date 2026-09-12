@@ -8,13 +8,20 @@ export default {
 
         app.mixin({
             methods: {
-                $toast(message, type, title = '', time = 5000) {
-                    this.toast[type]({
-                        position: 'topCenter',
-                        title: title ? title : type.toUpperCase() + " !!",
-                        message,
-                        timeout: time,
-                    });
+                $toast(message, type = 'info', title = '', time = 5000) {
+                    let method = type || 'info';
+                    if (method === 'danger') method = 'error';
+                    if (!this.toast || typeof this.toast[method] !== 'function') {
+                        method = 'info';
+                    }
+                    if (this.toast && typeof this.toast[method] === 'function') {
+                        this.toast[method]({
+                            position: 'topCenter',
+                            title: title ? title : (type || 'INFO').toUpperCase() + " !!",
+                            message: message || '',
+                            timeout: time,
+                        });
+                    }
                 }
             },
         })

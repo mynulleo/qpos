@@ -30,7 +30,7 @@
                         <!-- 🔄 SaaS Database Update Available Indicator -->
                         <router-link
                             v-if="$root.global?.db_update_needed"
-                            :to="{ name: 'software.update' }"
+                            :to="{ name: 'softwareupdate.index' }"
                             class="btn btn-sm btn-warning text-dark fw-bold d-flex align-items-center gap-1 shadow-sm px-2 py-1 pulse-update-btn text-decoration-none rounded-pill"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"

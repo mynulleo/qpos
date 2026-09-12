@@ -1272,6 +1272,21 @@ const routes = [
                 component: () => import("./../views/admin/report/sales"),
             },
             {
+                path: "/report/sales-return",
+                name: "report.salesReturn",
+                component: () => import("./../views/admin/report/salesReturn"),
+            },
+            {
+                path: "/report/salesreturn",
+                name: "report.salesreturn",
+                component: () => import("./../views/admin/report/salesReturn"),
+            },
+            {
+                path: "/report/return",
+                name: "report.return",
+                component: () => import("./../views/admin/report/salesReturn"),
+            },
+            {
                 path: "/report/itemladger",
                 name: "report.itemladger",
                 component: () => import("./../views/admin/report/itemladger"),
@@ -1373,9 +1388,27 @@ const routes = [
                 component: () =>
                     import("./../views/admin/report/warrantyclaim"),
             },
+            {
+                path: "/report/wastage",
+                name: "report.wastage",
+                component: () =>
+                    import("./../views/admin/report/wastage"),
+            },
+            {
+                path: "/report/disposal",
+                name: "report.disposal",
+                component: () =>
+                    import("./../views/admin/report/wastage"),
+            },
             // ------------------SOFTWARE UPDATE PORTION------------------
             {
                 path: "/software-update",
+                name: "softwareupdate.index",
+                component: () =>
+                    import("./../views/admin/system/update/index"),
+            },
+            {
+                path: "/software/update",
                 name: "software.update",
                 component: () =>
                     import("./../views/admin/system/update/index"),

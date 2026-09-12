@@ -269,11 +269,23 @@ export default {
       page_title: "Coupon & Loyalty Points Report",
       activePreset: "all",
       clients: [],
+      fields_name: {
+        default: "Select One",
+      },
       search_data: {
+        pagination: 50,
+        page: 1,
         client_id: null,
         type: "",
         from_date: "",
         to_date: "",
+      },
+      table: {
+        columns: [],
+        routes: {},
+        datas: [],
+        meta: [],
+        links: [],
       },
       datas: {
         records: [],
@@ -282,6 +294,18 @@ export default {
         settings: {},
       },
       currentDate: new Date().toLocaleDateString("en-GB"),
+    };
+  },
+
+  provide() {
+    return {
+      validate: this.validation,
+      model: this.model,
+      fields_name: this.fields_name,
+      search_data: this.search_data,
+      table: this.table,
+      search: this.getReportData,
+      resetSearchData: this.resetSearchData,
     };
   },
 
@@ -411,6 +435,15 @@ export default {
       this.getReportData();
     },
 
+    resetSearchData() {
+      this.search_data.client_id = null;
+      this.search_data.type = "";
+      this.search_data.from_date = "";
+      this.search_data.to_date = "";
+      this.activePreset = "all";
+      this.getReportData();
+    },
+
     getClients() {
       axios.get("client?page=1&per_page=1000")
         .then((res) => {
@@ -453,6 +486,8 @@ export default {
       this.getReportData();
     },
   },
+
+  validators: {},
 
   mounted() {
     this.getClients();

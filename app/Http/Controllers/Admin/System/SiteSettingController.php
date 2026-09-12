@@ -62,7 +62,7 @@ class SiteSettingController extends BaseController
     public function index(Request $request)
     {
         $this->ensurePrinterColumns();
-        return response()->json(SiteSetting::first());
+        return response()->json(SiteSetting::with('currency:id,title,short_name')->first());
     }
 
     /**

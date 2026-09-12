@@ -44,6 +44,13 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('initialize-systems', [App\Http\Controllers\Admin\System\LibController::class, 'systems']);
     Route::post('subscription/initiate-payment', [App\Http\Controllers\SubscriptionPaymentController::class, 'initiatePayment'])->name('subscription.initiatePayment');
 
+    // Software / Database Update Routes (Accessible to authenticated users without role permission blocking)
+    Route::get('software-update', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'index'])->name('softwareupdate.index');
+    Route::get('software/update', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'index'])->name('software.update');
+    Route::get('software-update/status', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'status'])->name('softwareupdate.status');
+    Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('softwareupdate.run');
+    Route::post('software-update/sync-only', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'synconly'])->name('softwareupdate.synconly');
+
     // Category Route...
     Route::get('get-category/{type}', [App\Http\Controllers\Admin\CategoryController::class, 'getCategory']);
     Route::get('paynow/{invoiceid}', [App\Http\Controllers\Admin\InvoiceController::class, 'paynow']);
@@ -230,6 +237,8 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         
         //Report
         Route::get('report/sales', [App\Http\Controllers\Admin\ReportController::class, 'sales'])->name('report.sales');
+        Route::get('report/sales-return', [App\Http\Controllers\Admin\ReportController::class, 'salesReturn'])->name('report.salesReturn');
+        Route::get('report/salesreturn', [App\Http\Controllers\Admin\ReportController::class, 'salesReturn'])->name('report.salesreturn');
         Route::get('report/itemladger', [App\Http\Controllers\Admin\ReportController::class, 'itemladger'])->name('report.itemladger');
         Route::get('report/availablestock', [App\Http\Controllers\Admin\ReportController::class, 'availablestock'])->name('report.availablestock');
         Route::get('report/incomestatement', [App\Http\Controllers\Admin\ReportController::class, 'incomestatement'])->name('report.incomestatement');
@@ -249,6 +258,8 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::get('report/serial', [App\Http\Controllers\Admin\ReportController::class, 'serial'])->name('report.serial');
         Route::get('report/warrantyclaim', [App\Http\Controllers\Admin\ReportController::class, 'warrantyclaim'])->name('report.warrantyclaim');
         Route::get('report/warrantyClaim', [App\Http\Controllers\Admin\ReportController::class, 'warrantyclaim'])->name('report.warrantyClaim');
+        Route::get('report/wastage', [App\Http\Controllers\Admin\ReportController::class, 'wastage'])->name('report.wastage');
+        Route::get('report/disposal', [App\Http\Controllers\Admin\ReportController::class, 'wastage'])->name('report.disposal');
 
         Route::post('expense/approved', [App\Http\Controllers\Admin\ExpenseController::class, 'approved'])->name('expense.approved');
         Route::post('expense/approvalcancel', [App\Http\Controllers\Admin\ExpenseController::class, 'approvalcancel'])->name('expense.approvalcancel');
@@ -267,12 +278,6 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
 
         Route::post('loanInfo/approved', [App\Http\Controllers\Admin\LoanInfoController::class, 'approved'])->name('loanInfo.approved');
         Route::post('loanInfo/approvalcancel', [App\Http\Controllers\Admin\LoanInfoController::class, 'approvalcancel'])->name('loanInfo.approvalcancel');
-
-        // Software / Database Update Routes
-        Route::get('software-update', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'index'])->name('softwareupdate');
-        Route::get('software-update/status', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'status'])->name('softwareupdate.status');
-        Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('softwareupdate.run');
-        Route::post('software-update/sync-only', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'synconly'])->name('softwareupdate.synconly');
 
         // Resident Approval & Actions Start
 

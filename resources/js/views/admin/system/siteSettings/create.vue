@@ -69,47 +69,62 @@
                                 <label class="form-label fw-bold small text-dark mb-2">
                                     <i class="fas fa-store text-theme me-1"></i> Shop Type / Business Category (দোকানের ধরন):
                                 </label>
-                                <div class="row g-2">
+                                <div class="row g-3">
+                                    <!-- Departmental Store / Grocery -->
+                                    <div class="col-12 col-md-6">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': data.shop_type === 'grocery' || data.shop_type === 'departmental' }"
+                                            @click="data.shop_type = 'grocery'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="shopGrocery" value="grocery" v-model="data.shop_type">
+                                                <label class="form-check-label cursor-pointer text-dark" for="shopGrocery">
+                                                    <div class="fw-bold small"><i class="fas fa-shopping-basket text-success me-1"></i> Grocery & Departmental (মুদি / ডিপার্টমেন্টাল)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">Fast POS (সরাসরি কার্টে যোগ, পপআপ ছাড়া ফাস্ট সেল)</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!-- Clothing -->
-                                    <div class="col-md-4">
-                                        <div class="shop-type-option p-2 rounded border cursor-pointer h-100"
+                                    <div class="col-12 col-md-6">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
                                             :class="{ 'active-shop-type': data.shop_type === 'clothing' }"
                                             @click="data.shop_type = 'clothing'">
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="shopClothing" value="clothing" v-model="data.shop_type">
                                                 <label class="form-check-label cursor-pointer text-dark" for="shopClothing">
-                                                    <div class="fw-bold small"><i class="fas fa-tshirt text-info me-1"></i> Clothing & Fashion</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Color & Size variants</div>
+                                                    <div class="fw-bold small"><i class="fas fa-tshirt text-info me-1"></i> Clothing & Fashion (গার্মেন্টস ও পোশাক)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">Color & Size variants (কালার ও সাইজ ভেরিয়েন্ট)</div>
                                                 </label>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Electronics -->
-                                    <div class="col-md-4">
-                                        <div class="shop-type-option p-2 rounded border cursor-pointer h-100"
+                                    <div class="col-12 col-md-6">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
                                             :class="{ 'active-shop-type': data.shop_type === 'electronics' }"
                                             @click="data.shop_type = 'electronics'">
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="shopElectronics" value="electronics" v-model="data.shop_type">
                                                 <label class="form-check-label cursor-pointer text-dark" for="shopElectronics">
-                                                    <div class="fw-bold small"><i class="fas fa-tv text-primary me-1"></i> Electronics</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Warranty & Serial tracking</div>
+                                                    <div class="fw-bold small"><i class="fas fa-tv text-primary me-1"></i> Electronics & Gadgets (ইলেকট্রনিক্স)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">Warranty & Serial tracking (ওয়ারেন্টি ও সিরিয়াল ট্র্যাকিং)</div>
                                                 </label>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- General Retail -->
-                                    <div class="col-md-4">
-                                        <div class="shop-type-option p-2 rounded border cursor-pointer h-100"
+                                    <div class="col-12 col-md-6">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
                                             :class="{ 'active-shop-type': data.shop_type === 'others' }"
                                             @click="data.shop_type = 'others'">
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="shopOthers" value="others" v-model="data.shop_type">
                                                 <label class="form-check-label cursor-pointer text-dark" for="shopOthers">
-                                                    <div class="fw-bold small"><i class="fas fa-boxes text-secondary me-1"></i> General Retail</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Standard inventory</div>
+                                                    <div class="fw-bold small"><i class="fas fa-boxes text-secondary me-1"></i> General Retail (সাধারণ রিটেইল)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">Standard inventory (স্ট্যান্ডার্ড ইনভেন্টরি)</div>
                                                 </label>
                                             </div>
                                         </div>

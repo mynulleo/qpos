@@ -22,8 +22,11 @@ use App\Models\Invoice;
 use App\Models\InvoiceDetails;
 use App\Models\Item;
 use App\Models\ItemPrice;
-use App\Models\Category;
 use App\Models\Agent;
+use App\Models\SalesReturn;
+use App\Models\SalesReturnDetail;
+use App\Models\Wastage;
+use App\Models\WastageDetail;
 use Illuminate\Support\Facades\DB;
 
 trait ReportTrait
@@ -2002,6 +2005,712 @@ trait ReportTrait
             'invoices'             => $invoices,
             'item_breakdown'       => $itemBreakdowns,
             'customer_breakdown'   => $customerBreakdowns,
+            'daily_breakdown'      => $dailyBreakdowns,
+        ]);
+    }
+
+    /**
+     * Professional Sales Return Audit Report with Reasons, Notes & Breakdown
+     */
+    public function getSalesReturnReport($searchdata)
+    {
+        // 0. Self-healing sync for any un-synced return payment or wastage
+        $this->syncHistoricalReturnsIfNeeded();
+
+        // 1. Date Range Handling (Default to Current Month if parameters not supplied)
+        $from = !empty($searchdata['from_date']) && $searchdata['from_date'] !== 'null' && $searchdata['from_date'] !== 'undefined'
+            ? vue_to_server_date($searchdata['from_date'])
+            : null;
+
+        $to = !empty($searchdata['to_date']) && $searchdata['to_date'] !== 'null' && $searchdata['to_date'] !== 'undefined'
+            ? vue_to_server_date($searchdata['to_date'])
+            : null;
+
+        // If neither from_date nor to_date is provided at all, default to current month
+        if (!array_key_exists('from_date', $searchdata) && !array_key_exists('to_date', $searchdata)) {
+            $from = date('Y-m-01');
+            $to = date('Y-m-t');
+        }
+
+        $clientId      = !empty($searchdata['client_id']) && $searchdata['client_id'] !== 'all' && $searchdata['client_id'] !== 'null' ? $searchdata['client_id'] : null;
+        $returnReason  = !empty($searchdata['return_reason']) && $searchdata['return_reason'] !== 'all' && $searchdata['return_reason'] !== 'null' ? $searchdata['return_reason'] : null;
+        $paymentMethod = !empty($searchdata['payment_method']) && $searchdata['payment_method'] !== 'all' && $searchdata['payment_method'] !== 'null' ? $searchdata['payment_method'] : null;
+        $categoryId    = !empty($searchdata['category_id']) && $searchdata['category_id'] !== 'all' && $searchdata['category_id'] !== 'null' ? $searchdata['category_id'] : null;
+        $itemId        = !empty($searchdata['item_id']) && $searchdata['item_id'] !== 'all' && $searchdata['item_id'] !== 'null' ? $searchdata['item_id'] : null;
+        $keyword       = !empty($searchdata['keyword']) ? trim($searchdata['keyword']) : (!empty($searchdata['value']) ? trim($searchdata['value']) : null);
+
+        // 2. Query SalesReturn model
+        $query = SalesReturn::with([
+            'invoice:id,invoice_no,invoice_date,amount,paid_amount,created_at',
+            'client:id,clientid,name,mobile,email,address',
+            'creator:id,name,email',
+            'payment:id,payslipno,payment_method,mbanking_type,trxid,amount,payment_date',
+            'wastage:id,audit_number,audit_date,status',
+            'details.item:id,title,barcode,category_id,unit_id',
+            'details.category:id,title',
+            'details.color:id,title',
+            'details.size:id,title',
+            'details.unit:id,title',
+        ])
+        ->whereNull('deleted_at');
+
+        // Apply safe date filters (never whereBetween with NULL)
+        if ($from && $to) {
+            $query->whereBetween('return_date', [$from, $to]);
+        } elseif ($from) {
+            $query->where('return_date', '>=', $from);
+        } elseif ($to) {
+            $query->where('return_date', '<=', $to);
+        }
+
+        // Filter: Customer
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        // Filter: Return Reason
+        if ($returnReason && $returnReason !== 'all') {
+            $query->where('return_reason', $returnReason);
+        }
+
+        // Filter: Payment Method
+        if ($paymentMethod && $paymentMethod !== 'all') {
+            $query->where('payment_method', $paymentMethod);
+        }
+
+        // Filter: Category (via details)
+        if ($categoryId) {
+            $query->whereHas('details', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId)
+                  ->orWhereHas('item', function ($iq) use ($categoryId) {
+                      $iq->where('category_id', $categoryId);
+                  });
+            });
+        }
+
+        // Filter: Item (via details)
+        if ($itemId) {
+            $query->whereHas('details', function ($q) use ($itemId) {
+                $q->where('item_id', $itemId);
+            });
+        }
+
+        // Filter: Keyword (Search return_no, invoice_no, client name/mobile, note, trxid, item title, barcode, serial_no)
+        if ($keyword) {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('return_no', 'like', "%{$keyword}%")
+                  ->orWhere('note', 'like', "%{$keyword}%")
+                  ->orWhere('trxid', 'like', "%{$keyword}%")
+                  ->orWhereHas('invoice', function ($iq) use ($keyword) {
+                      $iq->where('invoice_no', 'like', "%{$keyword}%");
+                  })
+                  ->orWhereHas('client', function ($cq) use ($keyword) {
+                      $cq->where('name', 'like', "%{$keyword}%")
+                         ->orWhere('mobile', 'like', "%{$keyword}%")
+                         ->orWhere('clientid', 'like', "%{$keyword}%");
+                  })
+                  ->orWhereHas('details', function ($dq) use ($keyword) {
+                      $dq->where('serial_no', 'like', "%{$keyword}%")
+                         ->orWhere('note', 'like', "%{$keyword}%")
+                         ->orWhereHas('item', function ($itq) use ($keyword) {
+                             $itq->where('title', 'like', "%{$keyword}%")
+                                 ->orWhere('barcode', 'like', "%{$keyword}%");
+                         });
+                  });
+            });
+        }
+
+        $returns = $query->orderBy('return_date', 'desc')->orderBy('id', 'desc')->get();
+
+        // 3. Compute Metrics & Breakdowns
+        $totalReturnsCount = $returns->count();
+        $totalReturnedQty = 0;
+        $totalRefundAmount = 0;
+
+        $reasonCounts = [
+            'Client request' => ['count' => 0, 'qty' => 0, 'amount' => 0, 'label' => 'Client request (স্টকে যুক্ত)', 'badge' => 'badge bg-success'],
+            'Wastage'        => ['count' => 0, 'qty' => 0, 'amount' => 0, 'label' => 'Wastage (নষ্ট/ওয়েস্টেজ)', 'badge' => 'badge bg-danger'],
+            'Date Expaired'  => ['count' => 0, 'qty' => 0, 'amount' => 0, 'label' => 'Date Expaired (মেয়াদোত্তীর্ণ)', 'badge' => 'badge bg-warning text-dark'],
+            'Other'          => ['count' => 0, 'qty' => 0, 'amount' => 0, 'label' => 'Other Reasons', 'badge' => 'badge bg-secondary'],
+        ];
+
+        $paymentMethodCounts = [];
+        $itemBreakdownMap = [];
+        $customerBreakdownMap = [];
+        $dailyBreakdownMap = [];
+
+        foreach ($returns as $ret) {
+            $retQty = floatval($ret->total_qty);
+            $retAmount = floatval($ret->total_refund_amount);
+
+            $totalReturnedQty += $retQty;
+            $totalRefundAmount += $retAmount;
+
+            // Reason aggregation
+            $rKey = in_array($ret->return_reason, ['Client request', 'Wastage', 'Date Expaired']) ? $ret->return_reason : 'Other';
+            $reasonCounts[$rKey]['count'] += 1;
+            $reasonCounts[$rKey]['qty'] += $retQty;
+            $reasonCounts[$rKey]['amount'] += $retAmount;
+
+            // Payment method aggregation
+            $pmKey = $ret->payment_method ?: 'Cash';
+            if (!isset($paymentMethodCounts[$pmKey])) {
+                $paymentMethodCounts[$pmKey] = ['method' => $pmKey, 'count' => 0, 'amount' => 0];
+            }
+            $paymentMethodCounts[$pmKey]['count'] += 1;
+            $paymentMethodCounts[$pmKey]['amount'] += $retAmount;
+
+            // Daily breakdown
+            $retDate = $ret->return_date ? date('Y-m-d', strtotime($ret->return_date)) : date('Y-m-d');
+            if (!isset($dailyBreakdownMap[$retDate])) {
+                $dailyBreakdownMap[$retDate] = [
+                    'date'          => $retDate,
+                    'returns_count' => 0,
+                    'total_qty'     => 0,
+                    'refund_amount' => 0,
+                ];
+            }
+            $dailyBreakdownMap[$retDate]['returns_count'] += 1;
+            $dailyBreakdownMap[$retDate]['total_qty'] += $retQty;
+            $dailyBreakdownMap[$retDate]['refund_amount'] += $retAmount;
+
+            // Customer breakdown
+            $custKey = $ret->client_id ?: 0;
+            if (!isset($customerBreakdownMap[$custKey])) {
+                $customerBreakdownMap[$custKey] = [
+                    'client_id'     => $ret->client_id,
+                    'clientid'      => $ret->client ? $ret->client->clientid : 'WALK-IN',
+                    'name'          => $ret->client ? $ret->client->name : 'Walk-in Customer (সাধারণ ক্রেতা)',
+                    'mobile'        => $ret->client ? $ret->client->mobile : 'N/A',
+                    'returns_count' => 0,
+                    'total_qty'     => 0,
+                    'refund_amount' => 0,
+                ];
+            }
+            $customerBreakdownMap[$custKey]['returns_count'] += 1;
+            $customerBreakdownMap[$custKey]['total_qty'] += $retQty;
+            $customerBreakdownMap[$custKey]['refund_amount'] += $retAmount;
+
+            // Item-level breakdown
+            if ($ret->details) {
+                foreach ($ret->details as $d) {
+                    $dQty = floatval($d->qty);
+                    $dAmount = floatval($d->refund_amount);
+                    $itemKey = ($d->item_id ?? 0) . '_' . ($d->color_id ?? 0) . '_' . ($d->size_id ?? 0);
+
+                    if (!isset($itemBreakdownMap[$itemKey])) {
+                        $itemBreakdownMap[$itemKey] = [
+                            'item_id'           => $d->item_id,
+                            'item_title'        => $d->item ? $d->item->title : 'Item #' . $d->item_id,
+                            'barcode'           => $d->item ? $d->item->barcode : 'N/A',
+                            'category'          => $d->category ? $d->category->title : ($d->item && $d->item->category ? $d->item->category->title : 'N/A'),
+                            'unit'              => $d->unit ? $d->unit->title : ($d->item && $d->item->unit ? $d->item->unit->title : 'Pcs'),
+                            'color'             => $d->color ? $d->color->title : null,
+                            'size'              => $d->size ? $d->size->title : null,
+                            'total_qty'         => 0,
+                            'total_refund'      => 0,
+                            'restocked_qty'     => 0,
+                            'wastage_qty'       => 0,
+                            'expired_qty'       => 0,
+                            'reasons_summary'   => [],
+                            'returns_count'     => 0,
+                        ];
+                    }
+
+                    $itemBreakdownMap[$itemKey]['total_qty'] += $dQty;
+                    $itemBreakdownMap[$itemKey]['total_refund'] += $dAmount;
+                    $itemBreakdownMap[$itemKey]['returns_count'] += 1;
+
+                    $reasonName = $d->return_reason ?: $ret->return_reason;
+                    if ($reasonName === 'Client request') {
+                        $itemBreakdownMap[$itemKey]['restocked_qty'] += $dQty;
+                    } elseif ($reasonName === 'Wastage') {
+                        $itemBreakdownMap[$itemKey]['wastage_qty'] += $dQty;
+                    } elseif ($reasonName === 'Date Expaired') {
+                        $itemBreakdownMap[$itemKey]['expired_qty'] += $dQty;
+                    }
+
+                    if (!in_array($reasonName, $itemBreakdownMap[$itemKey]['reasons_summary'])) {
+                        $itemBreakdownMap[$itemKey]['reasons_summary'][] = $reasonName;
+                    }
+                }
+            }
+        }
+
+        // Format items avg refund rate
+        foreach ($itemBreakdownMap as &$ib) {
+            $ib['avg_rate'] = $ib['total_qty'] > 0 ? round($ib['total_refund'] / $ib['total_qty'], 2) : 0;
+            $ib['total_refund'] = round($ib['total_refund'], 2);
+            $ib['total_qty'] = round($ib['total_qty'], 2);
+            $ib['reasons_text'] = implode(', ', $ib['reasons_summary']);
+        }
+        unset($ib);
+
+        $itemBreakdowns = collect(array_values($itemBreakdownMap))->sortByDesc('total_refund')->values();
+        $customerBreakdowns = collect(array_values($customerBreakdownMap))->sortByDesc('refund_amount')->values();
+        $dailyBreakdowns = collect(array_values($dailyBreakdownMap))->sortByDesc('date')->values();
+        $paymentMethodsList = collect(array_values($paymentMethodCounts))->sortByDesc('amount')->values();
+
+        return response()->json([
+            'from'                 => $from,
+            'to'                   => $to,
+            'summary'              => [
+                'total_returns'    => $totalReturnsCount,
+                'total_qty'        => round($totalReturnedQty, 2),
+                'total_refund'     => round($totalRefundAmount, 2),
+                'restocked_qty'    => round($reasonCounts['Client request']['qty'], 2),
+                'restocked_amount' => round($reasonCounts['Client request']['amount'], 2),
+                'wastage_qty'      => round($reasonCounts['Wastage']['qty'] + $reasonCounts['Date Expaired']['qty'], 2),
+                'wastage_amount'   => round($reasonCounts['Wastage']['amount'] + $reasonCounts['Date Expaired']['amount'], 2),
+                'reasons'          => $reasonCounts,
+                'payment_methods'  => $paymentMethodsList,
+            ],
+            'returns'              => $returns,
+            'item_breakdown'       => $itemBreakdowns,
+            'customer_breakdown'   => $customerBreakdowns,
+            'daily_breakdown'      => $dailyBreakdowns,
+        ]);
+    }
+
+    /**
+     * Self-healing sync for any returns in payments/stock_transactions/wastages not yet in sales_returns
+     */
+    protected function syncHistoricalReturnsIfNeeded()
+    {
+        try {
+            $unSyncedPaymentDetails = PaymentDetail::where('reference_type', 'SalesReturn')
+                ->whereNotIn('payment_id', function ($q) {
+                    $q->select('payment_id')->from('sales_returns')->whereNotNull('payment_id');
+                })
+                ->with('payment')
+                ->get();
+
+            if ($unSyncedPaymentDetails->isEmpty()) {
+                return;
+            }
+
+            foreach ($unSyncedPaymentDetails as $pd) {
+                $payment = $pd->payment;
+                $invoiceId = $pd->reference_id;
+                $invoice = Invoice::with(['details.item', 'client'])->find($invoiceId);
+
+                if (!$invoice) continue;
+
+                $wastage = \App\Models\Wastage::where('note', 'like', "%POS Return%[ID:{$invoiceId}]%")
+                    ->orWhere('note', 'like', "%Invoice #{$invoice->invoice_no}%")
+                    ->with('wastage_details')
+                    ->first();
+
+                $returnReason = 'Client request';
+                $returnNote = null;
+                $wastageId = null;
+
+                if ($wastage) {
+                    $wastageId = $wastage->id;
+                    if (preg_match('/Reason:\s*([^\|]+)/i', $wastage->note, $rMatches)) {
+                        $returnReason = trim($rMatches[1]);
+                    }
+                    if (preg_match('/Note:\s*(.+)$/i', $wastage->note, $nMatches)) {
+                        $returnNote = trim($nMatches[1]);
+                    }
+                }
+
+                $rawDate = $payment ? $payment->getRawOriginal('payment_date') : $invoice->getRawOriginal('invoice_date');
+                if (!$rawDate) $rawDate = date('Y-m-d');
+
+                $returnNo = SalesReturn::generateReturnNo();
+                $totalRefund = floatval($pd->amount);
+                $totalQty = 0;
+                $itemsToInsert = [];
+
+                if ($wastage && $wastage->wastage_details->isNotEmpty()) {
+                    foreach ($wastage->wastage_details as $wd) {
+                        $qty = floatval($wd->quantity);
+                        $rate = floatval($wd->unit_price);
+                        $amount = floatval($wd->total_amount);
+                        $totalQty += $qty;
+
+                        $itemsToInsert[] = [
+                            'item_id'       => $wd->item_id,
+                            'category_id'   => $wd->category_id,
+                            'color_id'      => $wd->color_id,
+                            'size_id'       => $wd->size_id,
+                            'unit_id'       => $wd->unit_id,
+                            'qty'           => $qty,
+                            'rate'          => $rate,
+                            'refund_amount' => $amount,
+                            'return_reason' => $wd->reason ?: $returnReason,
+                            'serial_no'     => $wd->serial_no,
+                            'note'          => $returnNote,
+                        ];
+                    }
+                } else {
+                    $stockTrans = \App\Models\StockTransaction::where('reference_type', 'SalesReturn')
+                        ->where('reference_id', (string)$invoiceId)
+                        ->get();
+
+                    if ($stockTrans->isNotEmpty()) {
+                        foreach ($stockTrans as $st) {
+                            $qty = floatval($st->qty_in);
+                            $totalQty += $qty;
+
+                            $invDet = $invoice->details->first(function ($d) use ($st) {
+                                return $d->item_id == $st->item_id &&
+                                    (($st->color_id === null && empty($d->color_id)) || $d->color_id == $st->color_id) &&
+                                    (($st->size_id === null && empty($d->size_id)) || $d->size_id == $st->size_id);
+                            }) ?? $invoice->details->firstWhere('item_id', $st->item_id);
+
+                            $rate = $invDet ? floatval($invDet->rate) : ($totalQty > 0 ? round($totalRefund / $totalQty, 2) : 0);
+                            $lineRefund = $qty * $rate;
+
+                            $itemsToInsert[] = [
+                                'item_id'           => $st->item_id,
+                                'invoice_detail_id' => $invDet ? $invDet->id : null,
+                                'category_id'       => $invDet && $invDet->item ? $invDet->item->category_id : null,
+                                'color_id'          => $st->color_id,
+                                'size_id'           => $st->size_id,
+                                'unit_id'           => $invDet && $invDet->item ? $invDet->item->unit_id : null,
+                                'qty'               => $qty,
+                                'rate'              => $rate,
+                                'refund_amount'     => $lineRefund > 0 ? $lineRefund : $totalRefund,
+                                'return_reason'     => 'Client request',
+                                'serial_no'         => $invDet ? $invDet->serial_no : null,
+                                'note'              => $returnNote,
+                            ];
+                        }
+                    } else {
+                        if ($invoice->details->isNotEmpty()) {
+                            $firstDetail = $invoice->details->first();
+                            $totalQty = 1;
+                            $itemsToInsert[] = [
+                                'item_id'           => $firstDetail->item_id,
+                                'invoice_detail_id' => $firstDetail->id,
+                                'category_id'       => $firstDetail->item ? $firstDetail->item->category_id : null,
+                                'color_id'          => $firstDetail->color_id,
+                                'size_id'           => $firstDetail->size_id,
+                                'unit_id'           => $firstDetail->item ? $firstDetail->item->unit_id : null,
+                                'qty'               => 1,
+                                'rate'              => $totalRefund,
+                                'refund_amount'     => $totalRefund,
+                                'return_reason'     => $returnReason,
+                                'serial_no'         => $firstDetail->serial_no,
+                                'note'              => $returnNote,
+                            ];
+                        }
+                    }
+                }
+
+                if ($totalQty <= 0) $totalQty = 1;
+
+                $salesReturn = SalesReturn::create([
+                    'return_no'           => $returnNo,
+                    'invoice_id'          => $invoice->id,
+                    'client_id'           => $payment ? $payment->client_id : $invoice->client_id,
+                    'branch_id'           => $invoice->branch_id ?? 1,
+                    'return_date'         => $rawDate,
+                    'return_reason'       => $returnReason,
+                    'note'                => $returnNote,
+                    'payment_method'      => $payment ? $payment->payment_method : 'Cash',
+                    'mbanking_type'       => $payment ? $payment->mbanking_type : null,
+                    'trxid'               => $payment ? $payment->trxid : null,
+                    'total_qty'           => $totalQty,
+                    'total_refund_amount' => $totalRefund,
+                    'payment_id'          => $payment ? $payment->id : null,
+                    'wastage_id'          => $wastageId,
+                    'created_by'          => $payment ? $payment->created_by : 1,
+                    'status'              => 'active',
+                ]);
+
+                foreach ($itemsToInsert as $item) {
+                    $item['sales_return_id'] = $salesReturn->id;
+                    $item['status'] = 'active';
+                    SalesReturnDetail::create($item);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Log or ignore silently
+        }
+    }
+
+    /**
+     * Professional Wastage & Disposal Audit Report
+     */
+    public function getWastageReport($searchdata)
+    {
+        // 1. Date Range Handling (Default to Current Month)
+        $from = !empty($searchdata['from_date']) && $searchdata['from_date'] !== 'null' && $searchdata['from_date'] !== 'undefined'
+            ? vue_to_server_date($searchdata['from_date'])
+            : null;
+
+        $to = !empty($searchdata['to_date']) && $searchdata['to_date'] !== 'null' && $searchdata['to_date'] !== 'undefined'
+            ? vue_to_server_date($searchdata['to_date'])
+            : null;
+
+        // If neither from_date nor to_date is provided at all, default to current month
+        if (!array_key_exists('from_date', $searchdata) && !array_key_exists('to_date', $searchdata)) {
+            $from = date('Y-m-01');
+            $to = date('Y-m-t');
+        }
+
+        $categoryId = !empty($searchdata['category_id']) && $searchdata['category_id'] !== 'all' && $searchdata['category_id'] !== 'null' ? $searchdata['category_id'] : null;
+        $itemId     = !empty($searchdata['item_id']) && $searchdata['item_id'] !== 'all' && $searchdata['item_id'] !== 'null' ? $searchdata['item_id'] : null;
+        $auditorId  = !empty($searchdata['auditor_id']) && $searchdata['auditor_id'] !== 'all' && $searchdata['auditor_id'] !== 'null' ? $searchdata['auditor_id'] : null;
+        $status     = !empty($searchdata['status']) && $searchdata['status'] !== 'all' && $searchdata['status'] !== 'null' ? $searchdata['status'] : null;
+        $reason     = !empty($searchdata['reason']) && $searchdata['reason'] !== 'all' && $searchdata['reason'] !== 'null' ? $searchdata['reason'] : null;
+        $branchId   = !empty($searchdata['branch_id']) && $searchdata['branch_id'] !== 'all' && $searchdata['branch_id'] !== 'null' ? $searchdata['branch_id'] : null;
+        $keyword    = !empty($searchdata['keyword']) ? trim($searchdata['keyword']) : (!empty($searchdata['value']) ? trim($searchdata['value']) : null);
+
+        // 2. Query Wastage model
+        $query = Wastage::with([
+            'auditor:id,empid,full_name,mobile',
+            'branch:id,branch_name',
+            'approved_admin:id,full_name,email',
+            'creator:id,full_name,email',
+            'wastage_details.item:id,title,barcode,category_id,unit_id',
+            'wastage_details.category:id,title',
+            'wastage_details.color:id,title',
+            'wastage_details.size:id,title',
+            'wastage_details.unit:id,title',
+        ])
+        ->whereNull('deleted_at');
+
+        // Apply safe date filters (never whereBetween with NULL)
+        if ($from && $to) {
+            $query->whereBetween('audit_date', [$from, $to]);
+        } elseif ($from) {
+            $query->where('audit_date', '>=', $from);
+        } elseif ($to) {
+            $query->where('audit_date', '<=', $to);
+        }
+
+        // Filter: Status
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        // Filter: Branch
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+
+        // Filter: Auditor
+        if ($auditorId) {
+            $query->where('auditor_id', $auditorId);
+        }
+
+        // Filter: Category (via wastage_details)
+        if ($categoryId) {
+            $query->whereHas('wastage_details', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId)
+                  ->orWhereHas('item', function ($iq) use ($categoryId) {
+                      $iq->where('category_id', $categoryId);
+                  });
+            });
+        }
+
+        // Filter: Item (via wastage_details)
+        if ($itemId) {
+            $query->whereHas('wastage_details', function ($q) use ($itemId) {
+                $q->where('item_id', $itemId);
+            });
+        }
+
+        // Filter: Reason (via wastage_details or note)
+        if ($reason) {
+            $query->where(function ($q) use ($reason) {
+                $q->whereHas('wastage_details', function ($dq) use ($reason) {
+                    $dq->where('reason', $reason);
+                })->orWhere('note', 'like', "%{$reason}%");
+            });
+        }
+
+        // Filter: Keyword (Search audit_number, audited_by, note, serial_no, remarks, item title, item barcode)
+        if ($keyword) {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('audit_number', 'like', "%{$keyword}%")
+                  ->orWhere('audited_by', 'like', "%{$keyword}%")
+                  ->orWhere('note', 'like', "%{$keyword}%")
+                  ->orWhereHas('auditor', function ($aq) use ($keyword) {
+                      $aq->where('full_name', 'like', "%{$keyword}%")
+                         ->orWhere('employee_id', 'like', "%{$keyword}%");
+                  })
+                  ->orWhereHas('wastage_details', function ($dq) use ($keyword) {
+                      $dq->where('serial_no', 'like', "%{$keyword}%")
+                         ->orWhere('remarks', 'like', "%{$keyword}%")
+                         ->orWhere('reason', 'like', "%{$keyword}%")
+                         ->orWhereHas('item', function ($itq) use ($keyword) {
+                             $itq->where('title', 'like', "%{$keyword}%")
+                                 ->orWhere('barcode', 'like', "%{$keyword}%");
+                         });
+                  });
+            });
+        }
+
+        $wastages = $query->orderBy('audit_date', 'desc')->orderBy('id', 'desc')->get();
+
+        // 3. Compute Metrics & Breakdowns
+        $totalAuditsCount = $wastages->count();
+        $totalDisposedQty = 0;
+        $totalLossAmount = 0;
+        $approvedQty = 0;
+        $approvedLoss = 0;
+        $pendingQty = 0;
+        $pendingLoss = 0;
+
+        $reasonCounts = [];
+        $statusCounts = [
+            'approved' => ['count' => 0, 'qty' => 0, 'amount' => 0],
+            'pending'  => ['count' => 0, 'qty' => 0, 'amount' => 0],
+            'rejected' => ['count' => 0, 'qty' => 0, 'amount' => 0],
+        ];
+
+        $itemBreakdownMap = [];
+        $categoryBreakdownMap = [];
+        $dailyBreakdownMap = [];
+
+        foreach ($wastages as $wst) {
+            $wstQty = floatval($wst->total_qty);
+            $wstAmount = floatval($wst->total_loss_amount);
+
+            $totalDisposedQty += $wstQty;
+            $totalLossAmount += $wstAmount;
+
+            $stKey = strtolower($wst->status ?: 'pending');
+            if (!isset($statusCounts[$stKey])) {
+                $statusCounts[$stKey] = ['count' => 0, 'qty' => 0, 'amount' => 0];
+            }
+            $statusCounts[$stKey]['count']++;
+            $statusCounts[$stKey]['qty'] += $wstQty;
+            $statusCounts[$stKey]['amount'] += $wstAmount;
+
+            if ($stKey === 'approved') {
+                $approvedQty += $wstQty;
+                $approvedLoss += $wstAmount;
+            } elseif ($stKey === 'pending') {
+                $pendingQty += $wstQty;
+                $pendingLoss += $wstAmount;
+            }
+
+            // Daily Map
+            $dateKey = $wst->getRawOriginal('audit_date') ?: date('Y-m-d', strtotime($wst->audit_date));
+            if (!isset($dailyBreakdownMap[$dateKey])) {
+                $dailyBreakdownMap[$dateKey] = [
+                    'date'           => $dateKey,
+                    'formatted_date' => date('d M, Y', strtotime($dateKey)),
+                    'audits_count'   => 0,
+                    'total_qty'      => 0,
+                    'loss_amount'    => 0,
+                ];
+            }
+            $dailyBreakdownMap[$dateKey]['audits_count'] += 1;
+            $dailyBreakdownMap[$dateKey]['total_qty'] += $wstQty;
+            $dailyBreakdownMap[$dateKey]['loss_amount'] += $wstAmount;
+
+            // Details Breakdown (Items, Categories, Reasons)
+            if ($wst->wastage_details) {
+                foreach ($wst->wastage_details as $d) {
+                    $dQty = floatval($d->quantity);
+                    $dRate = floatval($d->unit_price);
+                    $dAmount = floatval($d->total_amount);
+                    if ($dAmount <= 0 && $dRate > 0) $dAmount = $dQty * $dRate;
+
+                    $dReason = $d->reason ?: 'Damaged / Defective';
+                    if (!isset($reasonCounts[$dReason])) {
+                        $reasonCounts[$dReason] = ['count' => 0, 'qty' => 0, 'amount' => 0];
+                    }
+                    $reasonCounts[$dReason]['count']++;
+                    $reasonCounts[$dReason]['qty'] += $dQty;
+                    $reasonCounts[$dReason]['amount'] += $dAmount;
+
+                    // Item Breakdown
+                    $itemKey = $d->item_id . '_' . ($d->color_id ?? '0') . '_' . ($d->size_id ?? '0');
+                    if (!isset($itemBreakdownMap[$itemKey])) {
+                        $itemBreakdownMap[$itemKey] = [
+                            'item_id'        => $d->item_id,
+                            'item_title'     => $d->item ? $d->item->title : 'Item #' . $d->item_id,
+                            'barcode'        => $d->item ? $d->item->barcode : 'N/A',
+                            'category'       => $d->category ? $d->category->title : ($d->item && $d->item->category ? $d->item->category->title : 'N/A'),
+                            'unit'           => $d->unit ? $d->unit->title : ($d->item && $d->item->unit ? $d->item->unit->title : 'Pcs'),
+                            'color'          => $d->color ? $d->color->title : null,
+                            'size'           => $d->size ? $d->size->title : null,
+                            'total_qty'      => 0,
+                            'total_loss'     => 0,
+                            'reasons_summary'=> [],
+                            'audits_count'   => 0,
+                        ];
+                    }
+                    $itemBreakdownMap[$itemKey]['total_qty'] += $dQty;
+                    $itemBreakdownMap[$itemKey]['total_loss'] += $dAmount;
+                    $itemBreakdownMap[$itemKey]['audits_count'] += 1;
+                    if (!in_array($dReason, $itemBreakdownMap[$itemKey]['reasons_summary'])) {
+                        $itemBreakdownMap[$itemKey]['reasons_summary'][] = $dReason;
+                    }
+
+                    // Category Breakdown
+                    $catId = $d->category_id ?: ($d->item ? $d->item->category_id : 0);
+                    $catTitle = $d->category ? $d->category->title : ($d->item && $d->item->category ? $d->item->category->title : 'General / Uncategorized');
+                    if (!isset($categoryBreakdownMap[$catId])) {
+                        $categoryBreakdownMap[$catId] = [
+                            'category_id'    => $catId,
+                            'category_title' => $catTitle,
+                            'total_qty'      => 0,
+                            'total_loss'     => 0,
+                            'audits_count'   => 0,
+                        ];
+                    }
+                    $categoryBreakdownMap[$catId]['total_qty'] += $dQty;
+                    $categoryBreakdownMap[$catId]['total_loss'] += $dAmount;
+                    $categoryBreakdownMap[$catId]['audits_count'] += 1;
+                }
+            }
+        }
+
+        // Format items avg loss rate and reasons string
+        foreach ($itemBreakdownMap as &$ib) {
+            $ib['avg_rate'] = $ib['total_qty'] > 0 ? round($ib['total_loss'] / $ib['total_qty'], 2) : 0;
+            $ib['total_loss'] = round($ib['total_loss'], 2);
+            $ib['total_qty'] = round($ib['total_qty'], 2);
+            $ib['reasons_text'] = implode(', ', $ib['reasons_summary']);
+        }
+        unset($ib);
+
+        // Calculate Category % Share
+        foreach ($categoryBreakdownMap as &$cb) {
+            $cb['loss_percentage'] = $totalLossAmount > 0 ? round(($cb['total_loss'] / $totalLossAmount) * 100, 1) : 0;
+            $cb['total_loss'] = round($cb['total_loss'], 2);
+            $cb['total_qty'] = round($cb['total_qty'], 2);
+        }
+        unset($cb);
+
+        $itemBreakdowns = collect(array_values($itemBreakdownMap))->sortByDesc('total_loss')->values();
+        $categoryBreakdowns = collect(array_values($categoryBreakdownMap))->sortByDesc('total_loss')->values();
+        $dailyBreakdowns = collect(array_values($dailyBreakdownMap))->sortByDesc('date')->values();
+        $reasonsList = collect(array_map(function($key, $val) {
+            return [
+                'reason' => $key,
+                'count'  => $val['count'],
+                'qty'    => round($val['qty'], 2),
+                'amount' => round($val['amount'], 2),
+            ];
+        }, array_keys($reasonCounts), array_values($reasonCounts)))->sortByDesc('amount')->values();
+
+        return response()->json([
+            'from'                 => $from,
+            'to'                   => $to,
+            'summary'              => [
+                'total_audits'     => $totalAuditsCount,
+                'total_qty'        => round($totalDisposedQty, 2),
+                'total_loss'       => round($totalLossAmount, 2),
+                'approved_qty'     => round($approvedQty, 2),
+                'approved_loss'    => round($approvedLoss, 2),
+                'pending_qty'      => round($pendingQty, 2),
+                'pending_loss'     => round($pendingLoss, 2),
+                'reasons'          => $reasonsList,
+                'status_summary'   => $statusCounts,
+            ],
+            'wastages'             => $wastages,
+            'item_breakdown'       => $itemBreakdowns,
+            'category_breakdown'   => $categoryBreakdowns,
             'daily_breakdown'      => $dailyBreakdowns,
         ]);
     }

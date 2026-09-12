@@ -165,7 +165,11 @@
                 <slot name="table-list"></slot>
 
                 <!-- base-table -->
-                <base-table v-if="defaultTable"></base-table>
+                <base-table v-if="defaultTable">
+                    <template v-for="(_, slotName) in $slots" v-slot:[slotName]="slotProps">
+                        <slot :name="slotName" v-bind="slotProps"></slot>
+                    </template>
+                </base-table>
                 <slot name="summary-page"></slot>
                 <!-- base pagination -->
                 <Pagination />

@@ -51,44 +51,46 @@ if (!function_exists('artisan')) {
 if (!function_exists('vue_to_server_date')) {
     function vue_to_server_date($value)
     {
-        if (empty($value)) {
+        if (empty($value) || $value === 'null' || $value === 'undefined') {
             return null;
         }
 
         $value = trim($value);
 
-        // ✅ 1. If already valid Y-m-d format, return as is
-        if (\DateTime::createFromFormat('Y-m-d', $value) !== false) {
+        // 1. If already valid Y-m-d format (e.g. 2026-09-11)
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
             return $value;
         }
 
-        // ✅ 2. Try to parse "DD Month YYYY" (e.g. 02 March 2026)
-        $dateArray = explode(' ', $value);
-
-        if (count($dateArray) < 3) {
-            return null; // invalid format safety
+        // 2. Check for d-m-Y or d/m/Y explicitly (e.g. 11-09-2026, 01/09/2026)
+        if (preg_match('/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/', $value, $m)) {
+            $d = (int)$m[1];
+            $mo = (int)$m[2];
+            $y = (int)$m[3];
+            if (checkdate($mo, $d, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $mo, $d);
+            }
         }
 
-        $day  = (int) $dateArray[0];
-        $year = (int) $dateArray[2];
+        // 3. Try parsing with Carbon
+        try {
+            $cleanValue = str_replace(',', ' ', $value);
+            $cleanValue = preg_replace('/\s+/', ' ', $cleanValue);
+            $carbon = \Carbon\Carbon::parse($cleanValue);
+            if ($carbon) {
+                return $carbon->format('Y-m-d');
+            }
+        } catch (\Throwable $e) {
+            // Fallback below
+        }
 
+        // 4. Try date_parse as fallback
         $parsed = date_parse($value);
-
-        if (empty($parsed['month']) || empty($day) || empty($year)) {
-            return null;
+        if (!empty($parsed['year']) && !empty($parsed['month']) && !empty($parsed['day']) && checkdate($parsed['month'], $parsed['day'], $parsed['year'])) {
+            return sprintf('%04d-%02d-%02d', $parsed['year'], $parsed['month'], $parsed['day']);
         }
 
-        // ✅ 3. Final safety check for real date
-        if (!checkdate($parsed['month'], $day, $year)) {
-            return null;
-        }
-
-        return sprintf(
-            '%04d-%02d-%02d',
-            $year,
-            $parsed['month'],
-            $day
-        );
+        return null;
     }
 }
 

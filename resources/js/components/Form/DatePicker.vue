@@ -118,7 +118,12 @@ export default {
         // disableToDates: { type: [String, Date], default: moment().format("DD MMMM, YYYY") },
     },
 
-    inject: ["validate"],
+    inject: {
+        validate: {
+            from: "validate",
+            default: () => ({ errors: [] }),
+        },
+    },
 
     watch: {
         value: {
@@ -150,7 +155,7 @@ export default {
         "validate.errors": {
             immediate: true,
             handler() {
-                if (this.validate.errors.length > 0) {
+                if (this.validate && this.validate.errors && this.validate.errors.length > 0) {
                     for (let i = 0; i < this.validate.errors.length; i++) {
                         if (this.field === this.validate.errors[i].field) {
                             this.has_error = true;

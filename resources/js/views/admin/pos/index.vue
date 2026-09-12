@@ -157,7 +157,7 @@
                   :id="'search-item-' + idx"
                   class="p-2 border-bottom cursor-pointer d-flex align-items-center justify-content-between transition-all"
                   :class="{ 'active-search-row': selectedSearchIndex === idx, 'hover-bg-light': selectedSearchIndex !== idx }"
-                  @click="openItemModal(item)"
+                  @click="selectItem(item)"
                   @mouseenter="selectedSearchIndex = idx"
                 >
                   <div>
@@ -329,6 +329,91 @@
       </div>
     </div>
 
+    <!-- ⚠️ Modal Popup for Multiple Items with Same Barcode (Duplicate Barcode Selector with Keyboard Numbers 1-9 & Arrows) -->
+    <div
+      v-if="showDuplicateBarcodeModal"
+      class="modal fade show d-block tab-modal-backdrop"
+      tabindex="-1"
+      style="background: rgba(0,0,0,0.65); z-index: 10050;"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header bg-warning text-dark py-2 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fas fa-exclamation-triangle fs-5 text-dark"></i>
+              <div>
+                <h5 class="modal-title fw-bold fs-6 mb-0">একাধিক পণ্য পাওয়া গেছে (Multiple Products Found)</h5>
+                <small class="font-monospace text-dark opacity-75">Barcode: <strong>{{ duplicateBarcodeScanned }}</strong> ({{ duplicateBarcodeItems.length }} টি পণ্য পাওয়া গেছে)</small>
+              </div>
+            </div>
+            <button type="button" class="btn-close" @click="closeDuplicateModal"></button>
+          </div>
+          <div class="modal-body p-3 bg-light">
+            <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between">
+              <div class="small">
+                <i class="fas fa-keyboard me-1"></i> কীবোর্ড শর্টকাট: নম্বর <strong>[1]</strong>, <strong>[2]</strong>, <strong>[3]</strong> চাপুন অথবা <strong>Arrow Keys (↑/↓)</strong> দিয়ে সিলেক্ট করে <strong>[Enter]</strong> চাপুন।
+              </div>
+              <span class="badge bg-dark font-monospace">Esc = বন্ধ</span>
+            </div>
+
+            <div class="list-group shadow-sm">
+              <div
+                v-for="(item, idx) in duplicateBarcodeItems"
+                :key="item.id"
+                class="list-group-item list-group-item-action p-3 d-flex align-items-center justify-content-between cursor-pointer transition-all"
+                :class="{ 'bg-primary text-white active-dup-item': selectedDuplicateIndex === idx, 'bg-white text-dark': selectedDuplicateIndex !== idx }"
+                @click="selectDuplicateItem(item)"
+                @mouseenter="selectedDuplicateIndex = idx"
+              >
+                <div class="d-flex align-items-center gap-3">
+                  <div
+                    class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm"
+                    :class="selectedDuplicateIndex === idx ? 'bg-white text-primary' : 'bg-primary text-white'"
+                    style="width: 38px; height: 38px; min-width: 38px;"
+                  >
+                    {{ idx + 1 }}
+                  </div>
+                  <div>
+                    <h6 class="fw-bold mb-1" :class="selectedDuplicateIndex === idx ? 'text-white' : 'text-dark'">{{ item.title }}</h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap" style="font-size: 12px;">
+                      <span class="badge" :class="selectedDuplicateIndex === idx ? 'bg-white text-dark' : 'bg-light text-muted border'" v-if="item.category">
+                        {{ item.category.title }}
+                      </span>
+                      <span class="font-monospace" :class="selectedDuplicateIndex === idx ? 'text-white-50' : 'text-muted'">
+                        Barcode: {{ item.barcode }}
+                      </span>
+                      <span class="font-monospace" :class="selectedDuplicateIndex === idx ? 'text-white' : ''">
+                        Stock: <strong :class="selectedDuplicateIndex === idx ? 'text-warning' : (getItemStock(item) > 0 ? 'text-success' : 'text-danger')">{{ getItemStock(item) }}</strong>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-end">
+                  <div class="fs-5 fw-bold font-monospace" :class="selectedDuplicateIndex === idx ? 'text-white' : 'text-success'">
+                    Tk. {{ formatPrice(getItemPrice(item)) }}
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-sm mt-1 px-3 fw-bold"
+                    :class="selectedDuplicateIndex === idx ? 'btn-light text-primary shadow-sm' : 'btn-outline-primary'"
+                  >
+                    <i class="fas fa-check me-1"></i> Select [{{ idx + 1 }}]
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2 d-flex justify-content-between align-items-center bg-white">
+            <div class="small text-muted font-monospace">
+              Press <kbd>1</kbd>-<kbd>{{ Math.min(duplicateBarcodeItems.length, 9) }}</kbd> or <kbd>↑</kbd><kbd>↓</kbd> then <kbd>Enter</kbd>
+            </div>
+            <button type="button" class="btn btn-sm btn-secondary" @click="closeDuplicateModal">Cancel (Esc)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Popup for Item Color, Size & Serial Selection with Full Mouseless Keyboard Control -->
     <div
       v-if="showItemModal"
@@ -356,7 +441,7 @@
 
             <div class="row g-3">
               <!-- Color Selection -->
-              <div class="col-6">
+              <div class="col-6" v-if="availableColors && availableColors.length > 0">
                 <label class="form-label fw-bold small text-muted">Color (রং)</label>
                 <select
                   ref="modalColorSelect"
@@ -371,7 +456,7 @@
               </div>
 
               <!-- Size Selection -->
-              <div class="col-6">
+              <div class="col-6" v-if="availableSizes && availableSizes.length > 0">
                 <label class="form-label fw-bold small text-muted">Size (সাইজ)</label>
                 <select
                   ref="modalSizeSelect"
@@ -393,9 +478,9 @@
                 </div>
               </div>
 
-              <!-- Serial No (For Electronics / Serialized items) -->
-              <div class="col-12" v-if="isElectronicsShop">
-                <label class="form-label fw-bold small text-muted">Serial No. (ইলেকট্রনিক্স পণ্যের জন্য সিরিয়াল নং)</label>
+              <!-- Serial No (For items with purchase serials or serialized items) -->
+              <div class="col-12" v-if="activeItem && (activeItem.has_purchase_serials || activeItem.is_serialized || isElectronicsShop)">
+                <label class="form-label fw-bold small text-muted">Serial No. (সিরিয়াল নং)</label>
                 <input
                   ref="modalSerialInput"
                   type="text"
@@ -963,6 +1048,11 @@ export default {
         available_stock: 0
       },
 
+      showDuplicateBarcodeModal: false,
+      duplicateBarcodeItems: [],
+      duplicateBarcodeScanned: '',
+      selectedDuplicateIndex: 0,
+
       cart: [],
       discount: 0,
       points_to_redeem: 0,
@@ -1008,12 +1098,13 @@ export default {
       if (this.activeItem) {
         const itemPrices = this.activeItem.item_prices || this.activeItem.itemPrices || [];
         const stockSummaries = this.activeItem.stock_summaries || this.activeItem.stockSummaries || [];
-        const colorIdsFromPrices = itemPrices.map(p => p.color_id).filter(id => id !== null);
-        const colorIdsFromStock = stockSummaries.map(s => s.color_id).filter(id => id !== null);
+        const colorIdsFromPrices = itemPrices.map(p => p.color_id).filter(id => id !== null && id !== undefined && id !== '');
+        const colorIdsFromStock = stockSummaries.map(s => s.color_id).filter(id => id !== null && id !== undefined && id !== '');
         const allColorIds = Array.from(new Set([...colorIdsFromPrices, ...colorIdsFromStock]));
         if (allColorIds.length > 0) {
           return this.allColors.filter(c => allColorIds.includes(c.id));
         }
+        return [];
       }
       return this.allColors;
     },
@@ -1021,18 +1112,23 @@ export default {
       if (this.activeItem) {
         const itemPrices = this.activeItem.item_prices || this.activeItem.itemPrices || [];
         const stockSummaries = this.activeItem.stock_summaries || this.activeItem.stockSummaries || [];
-        const sizeIdsFromPrices = itemPrices.map(p => p.size_id).filter(id => id !== null);
-        const sizeIdsFromStock = stockSummaries.map(s => s.size_id).filter(id => id !== null);
+        const sizeIdsFromPrices = itemPrices.map(p => p.size_id).filter(id => id !== null && id !== undefined && id !== '');
+        const sizeIdsFromStock = stockSummaries.map(s => s.size_id).filter(id => id !== null && id !== undefined && id !== '');
         const allSizeIds = Array.from(new Set([...sizeIdsFromPrices, ...sizeIdsFromStock]));
         if (allSizeIds.length > 0) {
           return this.allSizes.filter(s => allSizeIds.includes(s.id));
         }
+        return [];
       }
       return this.allSizes;
     },
+    isGroceryShop() {
+      const shopType = (this.$root.site?.shop_type || '').toLowerCase();
+      return shopType === 'grocery' || shopType === 'departmental' || shopType === 'departmental_store';
+    },
     isElectronicsShop() {
-      const shopType = this.$root.site?.shop_type;
-      return !shopType || shopType === 'electronics';
+      const shopType = (this.$root.site?.shop_type || '').toLowerCase();
+      return shopType === 'electronics';
     },
     printerType() {
       return this.$root.site?.printer_type || 'thermal';
@@ -1236,12 +1332,220 @@ export default {
         }
       });
     },
+    getItemPrice(item) {
+      if (!item) return 0;
+      const itemPrices = item.item_prices || item.itemPrices || [];
+      if (itemPrices.length > 0 && floatval(itemPrices[0].selling_price) > 0) {
+        return floatval(itemPrices[0].selling_price);
+      }
+      return floatval(item.sale_price || item.selling_price || item.opening_rate || 0);
+    },
+    getItemStock(item) {
+      if (!item) return 0;
+      const stockSummaries = item.stock_summaries || item.stockSummaries || [];
+      if (stockSummaries.length > 0) {
+        return stockSummaries.reduce((sum, s) => sum + floatval(s.current_stock), 0);
+      }
+      return floatval(item.current_stock || item.opening_stock || 0);
+    },
+    isSimpleProduct(item) {
+      if (!item) return true;
+
+      // 1. Serial requirement: If serial numbers exist in purchase/GRN records or item is specifically serialized
+      const hasPurchaseSerials = !!(item.has_purchase_serials || item.is_serialized);
+      if (hasPurchaseSerials) {
+        return false;
+      }
+
+      // 2. Color / Size check: Check if stock has color or size data
+      const stockSummaries = item.stock_summaries || item.stockSummaries || [];
+      const hasColorOrSizeInStock = stockSummaries.some(s => 
+        (s.color_id !== null && s.color_id !== undefined && s.color_id !== '') ||
+        (s.size_id !== null && s.size_id !== undefined && s.size_id !== '')
+      );
+
+      if (hasColorOrSizeInStock) {
+        return false;
+      }
+
+      // 3. If stockSummaries is empty (0 stock), check if itemPrices has colors/sizes defined
+      if (stockSummaries.length === 0) {
+        const itemPrices = item.item_prices || item.itemPrices || [];
+        const hasColorOrSizeInPrices = itemPrices.some(p => 
+          (p.color_id !== null && p.color_id !== undefined && p.color_id !== '') ||
+          (p.size_id !== null && p.size_id !== undefined && p.size_id !== '')
+        );
+        if (hasColorOrSizeInPrices) {
+          return false;
+        }
+      }
+
+      // Otherwise (no color, no size, no purchase serials) -> Simple Product (direct add to cart)
+      return true;
+    },
+    selectItem(item) {
+      if (!item) return;
+      this.processSelectedItem(item);
+    },
+    processSelectedItem(item) {
+      if (!item) return;
+      if (this.isSimpleProduct(item)) {
+        this.addSimpleItemToCart(item);
+      } else {
+        this.openItemModal(item);
+      }
+    },
+    addSimpleItemToCart(item) {
+      this.searchTerm = '';
+      this.searchResults = [];
+      this.selectedSearchIndex = -1;
+      this.showDuplicateBarcodeModal = false;
+
+      const rate = this.getItemPrice(item);
+      const availableStock = this.getItemStock(item);
+
+      if (availableStock <= 0) {
+        this.$toast(`"${item.title}" এর স্টক খালি!`, 'warning');
+        return;
+      }
+
+      // If single variant with positive stock exists, pick its color/size
+      const stockSummaries = item.stock_summaries || item.stockSummaries || [];
+      const positiveStockRows = stockSummaries.filter(s => floatval(s.current_stock) > 0);
+      let colorId = null;
+      let sizeId = null;
+      let colorTitle = null;
+      let sizeTitle = null;
+
+      if (positiveStockRows.length === 1) {
+        const singleVar = positiveStockRows[0];
+        if (singleVar.color_id) {
+          colorId = singleVar.color_id;
+          colorTitle = singleVar.color?.title || ((this.allColors || []).find(c => c && c.id == colorId)?.title) || null;
+        }
+        if (singleVar.size_id) {
+          sizeId = singleVar.size_id;
+          sizeTitle = singleVar.size?.title || ((this.allSizes || []).find(s => s && s.id == sizeId)?.title) || null;
+        }
+      }
+
+      const existingCartIndex = this.cart.findIndex(c =>
+        c.item_id === item.id &&
+        (c.color_id || null) == (colorId || null) &&
+        (c.size_id || null) == (sizeId || null) &&
+        (!c.serial_no || c.serial_no === '')
+      );
+
+      if (existingCartIndex > -1) {
+        const currentQty = floatval(this.cart[existingCartIndex].qty);
+        if (currentQty + 1 > availableStock) {
+          this.$toast(`পর্যাপ্ত স্টক নেই! সর্বোচ্চ প্রাপ্য স্টক: ${availableStock}`, 'warning');
+          return;
+        }
+        this.cart[existingCartIndex].qty = currentQty + 1;
+      } else {
+        this.cart.push({
+          item_id: item.id,
+          title: item.title,
+          barcode: item.barcode,
+          color_id: colorId,
+          color_title: colorTitle,
+          size_id: sizeId,
+          size_title: sizeTitle,
+          serial_no: '',
+          qty: 1,
+          rate: rate,
+          available_stock: availableStock,
+        });
+      }
+
+      this.$toast(`"${item.title}" কার্টে যোগ করা হয়েছে`, 'success');
+
+      this.$nextTick(() => {
+        this.$refs.itemSearchInput?.focus();
+      });
+    },
+    selectDuplicateItem(item) {
+      this.showDuplicateBarcodeModal = false;
+      this.duplicateBarcodeItems = [];
+      this.processSelectedItem(item);
+    },
+    closeDuplicateModal() {
+      this.showDuplicateBarcodeModal = false;
+      this.duplicateBarcodeItems = [];
+      this.duplicateBarcodeScanned = '';
+      this.$nextTick(() => {
+        this.$refs.itemSearchInput?.focus();
+      });
+    },
     handleSearchEnter() {
-      if (this.searchResults.length > 0) {
-        const idx = (this.selectedSearchIndex >= 0 && this.selectedSearchIndex < this.searchResults.length)
-          ? this.selectedSearchIndex
-          : 0;
-        this.openItemModal(this.searchResults[idx]);
+      const term = (this.searchTerm || '').toString().trim();
+      if (!term) return;
+
+      if (this.searchResults && this.searchResults.length > 0) {
+        const exactBarcodeMatches = this.searchResults.filter(it => it && it.barcode && String(it.barcode).trim().toLowerCase() === term.toLowerCase());
+        if (exactBarcodeMatches.length > 1) {
+          this.duplicateBarcodeItems = exactBarcodeMatches;
+          this.duplicateBarcodeScanned = term;
+          this.selectedDuplicateIndex = 0;
+          this.showDuplicateBarcodeModal = true;
+          return;
+        }
+
+        if (exactBarcodeMatches.length === 1) {
+          this.processSelectedItem(exactBarcodeMatches[0]);
+          return;
+        }
+
+        let selectedItem = null;
+        if (this.selectedSearchIndex >= 0 && this.selectedSearchIndex < this.searchResults.length) {
+          selectedItem = this.searchResults[this.selectedSearchIndex];
+        } else if (this.searchResults.length > 0) {
+          selectedItem = this.searchResults[0];
+        }
+
+        if (selectedItem) {
+          this.processSelectedItem(selectedItem);
+        }
+      } else {
+        axios.get('pos/search-items', { params: { term: term } })
+          .then(res => {
+            const items = res.data.items || [];
+            if (items.length === 0) {
+              this.$toast('কোন পণ্য পাওয়া যায়নি!', 'warning');
+              return;
+            }
+
+            this.allColors = res.data.colors || [];
+            this.allSizes = res.data.sizes || [];
+
+            const exactBarcodeMatches = items.filter(it => it && it.barcode && String(it.barcode).trim().toLowerCase() === term.toLowerCase());
+            if (exactBarcodeMatches.length > 1) {
+              this.duplicateBarcodeItems = exactBarcodeMatches;
+              this.duplicateBarcodeScanned = term;
+              this.selectedDuplicateIndex = 0;
+              this.showDuplicateBarcodeModal = true;
+              return;
+            }
+
+            if (exactBarcodeMatches.length === 1) {
+              this.processSelectedItem(exactBarcodeMatches[0]);
+              return;
+            }
+
+            if (items.length === 1) {
+              this.processSelectedItem(items[0]);
+            } else {
+              this.duplicateBarcodeItems = items;
+              this.duplicateBarcodeScanned = term;
+              this.selectedDuplicateIndex = 0;
+              this.showDuplicateBarcodeModal = true;
+            }
+          })
+          .catch(err => {
+            console.error('POS search error:', err);
+            this.$toast('পণ্য অনুসন্ধানে সমস্যা হয়েছে', 'error');
+          });
       }
     },
     clearSearch() {
@@ -1411,8 +1715,8 @@ export default {
         }
       }
 
-      const colorObj = this.allColors.find(c => c.id == this.modalSelection.color_id);
-      const sizeObj = this.allSizes.find(s => s.id == this.modalSelection.size_id);
+      const colorObj = (this.allColors || []).find(c => c && c.id == this.modalSelection.color_id);
+      const sizeObj = (this.allSizes || []).find(s => s && s.id == this.modalSelection.size_id);
 
       // Check if identical item+color+size is already in cart, increment quantity
       const existingCartIndex = this.cart.findIndex(c => 
@@ -1423,7 +1727,9 @@ export default {
       );
 
       if (existingCartIndex > -1 && !this.modalSelection.serial_no) {
-        const newQty = this.cart[existingCartIndex].qty + (this.modalSelection.qty || 1);
+        const currentQty = floatval(this.cart[existingCartIndex].qty);
+        const addQty = floatval(this.modalSelection.qty) || 1;
+        const newQty = currentQty + addQty;
         if (newQty > this.modalSelection.available_stock) {
           this.$toast(`পর্যাপ্ত স্টক নেই! সর্বোচ্চ প্রাপ্য স্টক: ${this.modalSelection.available_stock}`, 'warning');
           return;
@@ -1521,8 +1827,55 @@ export default {
       this.searchTerm = '';
       this.searchResults = [];
       this.selectedSearchIndex = -1;
+      this.showDuplicateBarcodeModal = false;
+      this.duplicateBarcodeItems = [];
+      this.duplicateBarcodeScanned = '';
+      this.selectedDuplicateIndex = 0;
     },
     handleKeydown(e) {
+      if (e.target === this.$refs.itemSearchInput && e.key === 'Enter') {
+        return;
+      }
+
+      if (this.showDuplicateBarcodeModal) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          this.closeDuplicateModal();
+          return;
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (this.duplicateBarcodeItems && this.duplicateBarcodeItems.length > 0) {
+            this.selectedDuplicateIndex = (this.selectedDuplicateIndex + 1) % this.duplicateBarcodeItems.length;
+          }
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (this.duplicateBarcodeItems && this.duplicateBarcodeItems.length > 0) {
+            this.selectedDuplicateIndex = (this.selectedDuplicateIndex - 1 + this.duplicateBarcodeItems.length) % this.duplicateBarcodeItems.length;
+          }
+          return;
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (this.duplicateBarcodeItems && this.duplicateBarcodeItems[this.selectedDuplicateIndex]) {
+            this.selectDuplicateItem(this.duplicateBarcodeItems[this.selectedDuplicateIndex]);
+          }
+          return;
+        }
+        // Numeric direct selection (1 to 9)
+        if (e.key >= '1' && e.key <= '9') {
+          const numIdx = parseInt(e.key) - 1;
+          if (this.duplicateBarcodeItems && numIdx >= 0 && numIdx < this.duplicateBarcodeItems.length) {
+            e.preventDefault();
+            this.selectDuplicateItem(this.duplicateBarcodeItems[numIdx]);
+            return;
+          }
+        }
+        return;
+      }
+
       if (this.showItemModal) {
         if (e.key === 'Escape') {
           e.preventDefault();
@@ -1715,5 +2068,15 @@ function floatval(val) {
 
 .transition-all {
   transition: all 0.15s ease-in-out;
+}
+
+.active-dup-item {
+  background-color: rgb(17, 44, 70) !important;
+  border-color: rgb(17, 44, 70) !important;
+  color: #ffffff !important;
+}
+
+.active-dup-item h6 {
+  color: #ffffff !important;
 }
 </style>

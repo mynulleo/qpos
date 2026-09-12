@@ -17,6 +17,10 @@ use App\Models\ItemStockSummary;
 use App\Models\Account;
 use App\Models\System\SiteSetting;
 use App\Models\ClientPointTransaction;
+use App\Models\Wastage;
+use App\Models\WastageDetail;
+use App\Models\SalesReturn;
+use App\Models\SalesReturnDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Base\BaseController;
@@ -118,6 +122,30 @@ class PosController extends BaseController
             ])
             ->limit(20)
             ->get();
+
+        $itemIds = $items->pluck('id')->toArray();
+        $itemsWithSerials = \App\Models\PurchaseDetail::whereIn('item_id', $itemIds)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->distinct()
+            ->pluck('item_id')
+            ->toArray();
+
+        $grnSerialItemIds = \Illuminate\Support\Facades\Schema::hasTable('grn_details')
+            ? \Illuminate\Support\Facades\DB::table('grn_details')->whereIn('item_id', $itemIds)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->distinct()
+                ->pluck('item_id')
+                ->toArray()
+            : [];
+
+        $allSerialItemIds = array_unique(array_merge($itemsWithSerials, $grnSerialItemIds));
+        $serialMap = array_flip($allSerialItemIds);
+
+        foreach ($items as $item) {
+            $item->has_purchase_serials = isset($serialMap[$item->id]);
+        }
 
         // Also fetch list of all colors & sizes for fallback selection
         $allColors = Color::where('status', 'active')->oldest('sort')->get(['id', 'title']);
@@ -443,10 +471,10 @@ class PosController extends BaseController
             ->limit(10)
             ->get();
 
-        // Calculate already returned quantities and remaining returnable for each item
+        // Calculate already returned quantities and remaining returnable for each item (from both StockTransaction and Wastage)
         foreach ($invoices as $invoice) {
             foreach ($invoice->details as $detail) {
-                $returnedQty = StockTransaction::where('reference_type', 'SalesReturn')
+                $clientReturnedQty = StockTransaction::where('reference_type', 'SalesReturn')
                     ->where('reference_id', (string)$invoice->id)
                     ->where('item_id', $detail->item_id)
                     ->where(function($q) use ($detail) {
@@ -466,6 +494,27 @@ class PosController extends BaseController
                     ->where('status', 'active')
                     ->sum('qty_in');
 
+                $wastageReturnedQty = WastageDetail::where('remarks', 'like', "POS Return Invoice ID: {$invoice->id}%")
+                    ->where('item_id', $detail->item_id)
+                    ->where(function($q) use ($detail) {
+                        if ($detail->color_id) {
+                            $q->where('color_id', $detail->color_id);
+                        } else {
+                            $q->whereNull('color_id');
+                        }
+                    })
+                    ->where(function($q) use ($detail) {
+                        if ($detail->size_id) {
+                            $q->where('size_id', $detail->size_id);
+                        } else {
+                            $q->whereNull('size_id');
+                        }
+                    })
+                    ->where('status', 'active')
+                    ->sum('quantity');
+
+                $returnedQty = floatval($clientReturnedQty) + floatval($wastageReturnedQty);
+
                 $detail->already_returned_qty = floatval($returnedQty);
                 $detail->remaining_returnable_qty = max(0, floatval($detail->qty) - floatval($returnedQty));
             }
@@ -478,6 +527,7 @@ class PosController extends BaseController
     {
         $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
+            'return_reason' => 'required|string|in:Client request,Wastage,Date Expaired',
             'return_items' => 'required|array|min:1',
             'return_items.*.item_id' => 'required|exists:items,id',
             'return_items.*.qty' => 'required|numeric|min:0.01',
@@ -491,9 +541,11 @@ class PosController extends BaseController
         try {
             DB::beginTransaction();
 
-            $invoice = Invoice::with(['details', 'client'])->findOrFail($request->invoice_id);
+            $invoice = Invoice::with(['details.item', 'client'])->findOrFail($request->invoice_id);
+            $returnReason = $request->input('return_reason', 'Client request');
             $returnItems = $request->return_items;
             $totalRefund = 0;
+            $validatedItems = [];
 
             foreach ($returnItems as $item) {
                 $qty = floatval($item['qty']);
@@ -515,8 +567,8 @@ class PosController extends BaseController
                     throw new Exception("পণ্যটি (Item ID: {$itemId}) এই ইনভয়েসের অন্তর্ভুক্ত নয়!");
                 }
 
-                // Check previously returned quantity in stock_transactions for this invoice
-                $alreadyReturned = StockTransaction::where('reference_type', 'SalesReturn')
+                // Check previously returned quantity in both stock_transactions and wastage_details for this invoice
+                $clientReturned = StockTransaction::where('reference_type', 'SalesReturn')
                     ->where('reference_id', (string)$invoice->id)
                     ->where('item_id', $itemId)
                     ->where(function($q) use ($colorId) {
@@ -536,6 +588,26 @@ class PosController extends BaseController
                     ->where('status', 'active')
                     ->sum('qty_in');
 
+                $wastageReturned = WastageDetail::where('remarks', 'like', "POS Return Invoice ID: {$invoice->id}%")
+                    ->where('item_id', $itemId)
+                    ->where(function($q) use ($colorId) {
+                        if ($colorId) {
+                            $q->where('color_id', $colorId);
+                        } else {
+                            $q->whereNull('color_id');
+                        }
+                    })
+                    ->where(function($q) use ($sizeId) {
+                        if ($sizeId) {
+                            $q->where('size_id', $sizeId);
+                        } else {
+                            $q->whereNull('size_id');
+                        }
+                    })
+                    ->where('status', 'active')
+                    ->sum('quantity');
+
+                $alreadyReturned = floatval($clientReturned) + floatval($wastageReturned);
                 $maxReturnable = max(0, floatval($matchingDetail->qty) - floatval($alreadyReturned));
 
                 // 🛑 STRICT VALIDATION: Return qty cannot exceed purchased or remaining qty
@@ -547,23 +619,85 @@ class PosController extends BaseController
                 $itemRefund = $qty * $rate;
                 $totalRefund += $itemRefund;
 
-                // Add stock back in
-                StockTransaction::create([
+                $validatedItems[] = [
+                    'matching_detail' => $matchingDetail,
                     'item_id' => $itemId,
                     'color_id' => $colorId,
                     'size_id' => $sizeId,
-                    'transaction_date' => date('Y-m-d'),
-                    'transaction_type' => 'Adjustment',
-                    'reference_type' => 'SalesReturn',
-                    'reference_id' => (string)$invoice->id,
-                    'qty_in' => $qty,
-                    'qty_out' => 0,
-                    'status' => 'active',
-                ]);
+                    'qty' => $qty,
+                    'rate' => $rate,
+                    'item_refund' => $itemRefund,
+                ];
             }
 
-            if ($totalRefund <= 0) {
+            if ($totalRefund <= 0 || empty($validatedItems)) {
                 throw new Exception("ফেরত দেওয়ার জন্য কোনো বৈধ পণ্য বা পরিমাণ পাওয়া যায়নি।");
+            }
+
+            $adminUser = auth()->guard('admin')->user() ?? auth()->user();
+            $adminId = $adminUser ? $adminUser->id : 1;
+            $adminName = $adminUser ? ($adminUser->name ?? $adminUser->full_name ?? 'POS System') : 'POS System';
+            $wastage = null;
+            $wastageAuditNo = null;
+
+            // Route 1: 'Client request' -> Direct store stock restoration
+            if ($returnReason === 'Client request') {
+                foreach ($validatedItems as $vItem) {
+                    StockTransaction::create([
+                        'item_id' => $vItem['item_id'],
+                        'color_id' => $vItem['color_id'],
+                        'size_id' => $vItem['size_id'],
+                        'transaction_date' => date('Y-m-d'),
+                        'transaction_type' => 'Adjustment',
+                        'reference_type' => 'SalesReturn',
+                        'reference_id' => (string)$invoice->id,
+                        'qty_in' => $vItem['qty'],
+                        'qty_out' => 0,
+                        'status' => 'active',
+                    ]);
+                }
+            } 
+            // Route 2 & 3: 'Wastage' or 'Date Expaired' -> Record in Wastage module, do NOT add to store stock
+            else {
+                $wastageAuditNo = Wastage::generateAuditNumber();
+
+                $totalWastageQty = array_sum(array_column($validatedItems, 'qty'));
+
+                $wastage = Wastage::create([
+                    'audit_number'      => $wastageAuditNo,
+                    'audit_date'        => date('Y-m-d'),
+                    'audited_by'        => $adminName,
+                    'auditor_id'        => null,
+                    'branch_id'         => $invoice->branch_id ?? 1,
+                    'total_qty'         => $totalWastageQty,
+                    'total_loss_amount' => $totalRefund,
+                    'status'            => 'approved',
+                    'note'              => "POS Return (Invoice #{$invoice->invoice_no} [ID:{$invoice->id}]) - Reason: {$returnReason}" . (!empty($request->note) ? " | Note: {$request->note}" : ''),
+                    'approved_by'       => $adminId,
+                    'approved_date'     => now(),
+                    'created_by'        => $adminId,
+                    'created_ip'        => $request->ip(),
+                ]);
+
+                foreach ($validatedItems as $vItem) {
+                    $mDetail = $vItem['matching_detail'];
+                    WastageDetail::create([
+                        'wastage_id'   => $wastage->id,
+                        'category_id'  => $mDetail->item?->category_id ?? null,
+                        'item_id'      => $vItem['item_id'],
+                        'color_id'     => $vItem['color_id'],
+                        'size_id'      => $vItem['size_id'],
+                        'unit_id'      => $mDetail->item?->unit_id ?? null,
+                        'quantity'     => $vItem['qty'],
+                        'unit_price'   => $vItem['rate'],
+                        'total_amount' => $vItem['item_refund'],
+                        'reason'       => $returnReason,
+                        'expired_date' => ($returnReason === 'Date Expaired') ? date('Y-m-d') : null,
+                        'serial_no'    => $mDetail->serial_no ?? null,
+                        'remarks'      => "POS Return Invoice ID: {$invoice->id} (Invoice #{$invoice->invoice_no})" . (!empty($request->note) ? " - {$request->note}" : ''),
+                        'status'       => 'active',
+                    ]);
+                }
             }
 
             // 1. Ensure Sales Return Account exists in Chart of Accounts
@@ -633,14 +767,66 @@ class PosController extends BaseController
             // 5. Generate Double-Entry Accounting Voucher (Debit: Sales Return, Credit: Cash/Bank)
             $this->createVoucherFromPayment($payment, $payment->id);
 
+            // 6. Record in SalesReturn & SalesReturnDetail
+            $returnNo = SalesReturn::generateReturnNo();
+            $totalReturnQty = array_sum(array_column($validatedItems, 'qty'));
+
+            $salesReturn = SalesReturn::create([
+                'return_no'           => $returnNo,
+                'invoice_id'          => $invoice->id,
+                'client_id'           => $invoice->client_id,
+                'branch_id'           => $invoice->branch_id ?? 1,
+                'return_date'         => date('Y-m-d'),
+                'return_reason'       => $returnReason,
+                'note'                => $request->input('note', null),
+                'payment_method'      => $paymentMethod,
+                'mbanking_type'       => $request->input('mbanking_type', null),
+                'trxid'               => $request->input('trxid', null),
+                'total_qty'           => $totalReturnQty,
+                'total_refund_amount' => $totalRefund,
+                'payment_id'          => $payment->id,
+                'wastage_id'          => $wastage ? $wastage->id : null,
+                'created_by'          => $adminId,
+                'status'              => 'active',
+            ]);
+
+            foreach ($validatedItems as $vItem) {
+                $mDetail = $vItem['matching_detail'];
+                SalesReturnDetail::create([
+                    'sales_return_id'   => $salesReturn->id,
+                    'invoice_detail_id' => $mDetail->id ?? null,
+                    'item_id'           => $vItem['item_id'],
+                    'category_id'       => $mDetail->item?->category_id ?? null,
+                    'color_id'          => $vItem['color_id'],
+                    'size_id'           => $vItem['size_id'],
+                    'unit_id'           => $mDetail->item?->unit_id ?? null,
+                    'qty'               => $vItem['qty'],
+                    'rate'              => $vItem['rate'],
+                    'refund_amount'     => $vItem['item_refund'],
+                    'return_reason'     => $returnReason,
+                    'serial_no'         => $mDetail->serial_no ?? null,
+                    'note'              => $request->input('note', null),
+                    'status'            => 'active',
+                ]);
+            }
+
             DB::commit();
+
+            $statusMsg = ($returnReason === 'Client request') 
+                ? 'পণ্য স্টকে সফলভাবে যুক্ত হয়েছে এবং পেমেন্ট রেকর্ড সম্পন্ন হয়েছে।' 
+                : "পণ্য ওয়েস্টেজ মডিউলে (Audit #{$wastageAuditNo}) এন্ট্রি হয়েছে এবং পেমেন্ট রেকর্ড সম্পন্ন হয়েছে।";
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sales return processed successfully! Payment & Voucher recorded.',
+                'message' => "Sales return processed successfully ({$returnReason})! {$statusMsg}",
+                'return_no' => $returnNo,
+                'sales_return_id' => $salesReturn->id,
                 'refund_amount' => $totalRefund,
                 'payment_id' => $payment->id,
                 'payslipno' => $payment->payslipno,
+                'wastage_audit_no' => $wastageAuditNo,
+                'return_reason' => $returnReason,
+                'note' => $salesReturn->note,
             ]);
 
         } catch (Exception $ex) {
