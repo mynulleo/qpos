@@ -5,6 +5,23 @@
         <v-select v-model="search_data.supplier_id" label="org_name" :reduce="(obj) => obj.id"
           :options="$root.global.suppliers" placeholder="--Select Supplier--" :closeOnSelect="true"></v-select>
       </v-select-container>
+
+      <v-select-container title="Category" field="search_data.category_id" col="3">
+        <v-select v-model="search_data.category_id" label="title" :reduce="(obj) => obj.id"
+          :options="categories" placeholder="--Select Category--" :closeOnSelect="true"></v-select>
+      </v-select-container>
+
+      <v-select-container title="Item" field="search_data.item_id" col="3">
+        <v-select v-model="search_data.item_id" label="title" :reduce="(obj) => obj.id"
+          :options="filteredItems" placeholder="--Select Item--" :closeOnSelect="true">
+          <template #option="option">
+            <div>
+              <span>{{ option.title }}</span>
+              <small class="text-muted d-block" v-if="option.barcode">Barcode: {{ option.barcode }}</small>
+            </div>
+          </template>
+        </v-select>
+      </v-select-container>
     </template>
   </index-page>
 </template>
@@ -37,6 +54,23 @@ const json_fields = {
 
 export default {
 
+  computed: {
+    filteredItems() {
+      if (this.search_data.category_id) {
+        return this.allItems.filter(item => item.category_id == this.search_data.category_id);
+      }
+      return this.allItems;
+    },
+  },
+
+  watch: {
+    'search_data.category_id'(newVal, oldVal) {
+      if (oldVal && newVal !== oldVal) {
+        this.search_data.item_id = "";
+      }
+    },
+  },
+
   data() {
     return {
       model: model,
@@ -49,6 +83,9 @@ export default {
         field_name: this.$route.query.field_name ?? "",
         value: this.$route.query.value ?? "",
         status: this.$route.query.status ?? "",
+        supplier_id: this.$route.query.supplier_id ?? "",
+        category_id: this.$route.query.category_id ?? "",
+        item_id: this.$route.query.item_id ?? "",
       },
       table: {
         columns: tableColumns,
@@ -56,7 +93,9 @@ export default {
         datas: [],
         meta: [],
         links: []
-      }
+      },
+      categories: [],
+      allItems: [],
     };
   },
 
@@ -84,6 +123,21 @@ export default {
       this.search_data.field_name = "";
       this.search_data.value = "";
       this.search_data.status = "";
+      this.search_data.supplier_id = "";
+      this.search_data.category_id = "";
+      this.search_data.item_id = "";
+    },
+
+    getCategories() {
+      axios.get("getcategories/Item").then((response) => {
+        this.categories = response.data || [];
+      });
+    },
+
+    getItems() {
+      axios.get("item?allData=true").then((response) => {
+        this.allItems = response.data || [];
+      });
     },
   },
 
@@ -91,6 +145,8 @@ export default {
     this.getRouteName(this.model);
     this.page_title = `${this.headline(this.model)} List`;
     this.search();
+    this.getCategories();
+    this.getItems();
   },
 
   validators: {},

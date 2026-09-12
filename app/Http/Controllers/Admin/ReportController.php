@@ -546,6 +546,16 @@ class ReportController extends BaseController
         return $this->getSalesReturnReport($searchdata);
     }
 
+    public function wastage(Request $request)
+    {
+        if ($request->format() == 'html') {
+            return view('admin.layouts.admin_app');
+        }
+
+        $searchdata = $request->all();
+        return $this->getWastageReport($searchdata);
+    }
+
     public function coupon(Request $request)
     {
         if ($request->format() == 'html') {

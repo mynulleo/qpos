@@ -123,6 +123,30 @@ class PosController extends BaseController
             ->limit(20)
             ->get();
 
+        $itemIds = $items->pluck('id')->toArray();
+        $itemsWithSerials = \App\Models\PurchaseDetail::whereIn('item_id', $itemIds)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->distinct()
+            ->pluck('item_id')
+            ->toArray();
+
+        $grnSerialItemIds = \Illuminate\Support\Facades\Schema::hasTable('grn_details')
+            ? \Illuminate\Support\Facades\DB::table('grn_details')->whereIn('item_id', $itemIds)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->distinct()
+                ->pluck('item_id')
+                ->toArray()
+            : [];
+
+        $allSerialItemIds = array_unique(array_merge($itemsWithSerials, $grnSerialItemIds));
+        $serialMap = array_flip($allSerialItemIds);
+
+        foreach ($items as $item) {
+            $item->has_purchase_serials = isset($serialMap[$item->id]);
+        }
+
         // Also fetch list of all colors & sizes for fallback selection
         $allColors = Color::where('status', 'active')->oldest('sort')->get(['id', 'title']);
         $allSizes = Size::where('status', 'active')->oldest('sort')->get(['id', 'title']);

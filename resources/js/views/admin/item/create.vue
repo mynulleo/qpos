@@ -1,88 +1,133 @@
 <template>
   <create-form @onSubmit='submit'>
-    <div class="col-lg-3">
+    <!-- Left Sidebar: Media, Barcode & Status -->
+    <div class="col-lg-3 col-md-4">
       <div class="row g-3">
-        <File
-          title="Image"
-          field="data.original_image"
-          mime="img"
-          fileClassName="file2"
-          accept=".jpg, .jpeg, .png"
-          :showCrop="true"
-          :vHeight="
-            $root.media_validators?.image?.min_height ??
-            $root.media_validators?.item?.min_height ??
-            600
-          "
-          :vWidth="
-            $root.media_validators?.image?.min_width ??
-            $root.media_validators?.item?.min_width ??
-            600
-          "
-          :vSizeInKb="
-            $root.media_validators?.image?.max_size ??
-            $root.media_validators?.item?.max_size ??
-            5000
-          "
-          col="12"
-        />
-        <GlobalCrop
-          field="data.original_image"
-          v-on:update:modelValue="data.original_image = $event"
-          :image="image.original_image"
-          :aspectRatio="{
-            aspectRatio:
-              ($root.media_validators?.image?.min_width ??
-                $root.media_validators?.item?.min_width ??
-                600) /
-              ($root.media_validators?.image?.min_height ??
-                $root.media_validators?.item?.min_height ??
-                600),
-          }"
-          :minWidth="
-            $root.media_validators?.image?.min_width ??
-            $root.media_validators?.item?.min_width ??
-            600
-          "
-          :minHeight="
-            $root.media_validators?.image?.min_height ??
-            $root.media_validators?.item?.min_height ??
-            600
-          "
-        ></GlobalCrop>
-
-        <!-- Barcode Preview below Image -->
-        <div class="col-12" v-if="data.barcode">
-          <div class="p-2 border rounded bg-light text-center shadow-sm">
-            <small class="text-muted d-block fw-bold mb-1">Barcode Preview:</small>
-            <div class="d-flex justify-content-center my-1">
-              <img v-if="data.barcode_image" :src="data.barcode_image" alt="Barcode Preview" style="height: 45px; max-width: 100%;" />
+        <!-- Image Upload Card -->
+        <div class="col-12">
+          <div class="card border shadow-sm">
+            <div class="card-header bg-light py-2">
+              <span class="fw-bold small text-dark"><i class="fas fa-image me-1 text-primary"></i> Item Image</span>
             </div>
-            <div class="fw-bold font-monospace fs-6 text-dark">{{ data.barcode }}</div>
-            <button type="button" class="btn btn-xs btn-outline-secondary mt-2 w-100" @click="fetchGeneratedBarcode" title="Regenerate Next Barcode">
-              <i class="fas fa-sync-alt me-1"></i> Auto Barcode
-            </button>
+            <div class="card-body p-3">
+              <File
+                title="Image"
+                field="data.original_image"
+                mime="img"
+                fileClassName="file2"
+                accept=".jpg, .jpeg, .png"
+                :showCrop="true"
+                :vHeight="
+                  $root.media_validators?.image?.min_height ??
+                  $root.media_validators?.item?.min_height ??
+                  600
+                "
+                :vWidth="
+                  $root.media_validators?.image?.min_width ??
+                  $root.media_validators?.item?.min_width ??
+                  600
+                "
+                :vSizeInKb="
+                  $root.media_validators?.image?.max_size ??
+                  $root.media_validators?.item?.max_size ??
+                  5000
+                "
+                col="12"
+              />
+              <GlobalCrop
+                field="data.original_image"
+                v-on:update:modelValue="data.original_image = $event"
+                :image="image.original_image"
+                :aspectRatio="{
+                  aspectRatio:
+                    ($root.media_validators?.image?.min_width ??
+                      $root.media_validators?.item?.min_width ??
+                      600) /
+                    ($root.media_validators?.image?.min_height ??
+                      $root.media_validators?.item?.min_height ??
+                      600),
+                }"
+                :minWidth="
+                  $root.media_validators?.image?.min_width ??
+                  $root.media_validators?.item?.min_width ??
+                  600
+                "
+                :minHeight="
+                  $root.media_validators?.image?.min_height ??
+                  $root.media_validators?.item?.min_height ??
+                  600
+                "
+              ></GlobalCrop>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barcode Preview Card -->
+        <div class="col-12" v-if="data.barcode">
+          <div class="card border shadow-sm">
+            <div class="card-header bg-light py-2">
+              <span class="fw-bold small text-dark"><i class="fas fa-barcode me-1 text-primary"></i> Barcode</span>
+            </div>
+            <div class="card-body p-3 text-center">
+              <div class="d-flex justify-content-center my-1">
+                <img v-if="data.barcode_image" :src="data.barcode_image" alt="Barcode Preview" style="height: 45px; max-width: 100%;" />
+              </div>
+              <div class="fw-bold font-monospace fs-6 text-dark mt-1">{{ data.barcode }}</div>
+              <button type="button" class="btn btn-xs btn-outline-secondary mt-2 w-100" @click="fetchGeneratedBarcode" title="Regenerate Next Barcode">
+                <i class="fas fa-sync-alt me-1"></i> Auto Barcode
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Switch Card -->
+        <div class="col-12">
+          <div class="card border shadow-sm">
+            <div class="card-header bg-light py-2">
+              <span class="fw-bold small text-dark"><i class="fas fa-toggle-on me-1 text-primary"></i> Status (অবস্থা)</span>
+            </div>
+            <div class="card-body p-3">
+              <Switch v-model='data.status' field='data.status' title='Status' on-label='Active' off-label='Deactive' :req='true' col="12">
+              </Switch>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-lg-9">
+
+    <!-- Right Main Content: Form Inputs & Matrices -->
+    <div class="col-lg-9 col-md-8">
       <div class="row g-3">
-        <Select title='Category' v-model='data.category_id' field='data.category_id' label='title'
-          :reduce='(obj) => obj.id' col="4 col-md-3" :options='categories' placeholder='--Select Category--' :closeOnSelect='true'
-          :required='true' />
-        <Select title='Brand' v-model='data.brand_id' field='data.brand_id' label='title'
-          :reduce='(obj) => obj.id' col="4 col-md-3" :options='brands'
-          :placeholder="data.category_id ? (brands.length ? '--Select Brand--' : 'No Brand in Category') : '--Select Category First--'"
-          :closeOnSelect='true'
-          :required='false' />
-        <Input v-model='data.title' field='data.title' title='Title' col="4 col-md-3" :req='true' />
-        <Input v-model='data.barcode' field='data.barcode' title='Barcode' col="4 col-md-3" placeholder="Auto-generated" :req='false' />
-        <Select title='Unit' v-model='data.unit_id' field='data.unit_id' label='title' :reduce='(obj) => obj.id' col="4 col-md-3"
-          :options='units' placeholder='--Select Unit--' :closeOnSelect='true' :required='true' />
-        <Input v-model='data.purchase_price' col="4 col-md-3" field='data.purchase_price' title='Purchase Price (ক্রয় মূল্য)' type="number" step="0.01" :req='false' />
-        <Input v-model='data.selling_price' col="4 col-md-3" field='data.selling_price' title='Selling Price (বিক্রয় মূল্য)' type="number" step="0.01" :req='false' />
-        <Textarea v-model='data.description' field='data.description' :required='false' title="Description" col="12" />
+        <!-- Basic Information Card -->
+        <div class="col-12">
+          <div class="card border shadow-sm">
+            <div class="card-header bg-light py-2">
+              <span class="fw-bold text-dark"><i class="fas fa-info-circle me-1 text-primary"></i> Basic Information (মৌলিক তথ্য)</span>
+            </div>
+            <div class="card-body p-3">
+              <div class="row g-3">
+                <Select title='Category' v-model='data.category_id' field='data.category_id' label='title'
+                  :reduce='(obj) => obj.id' col="4" :options='categories' placeholder='--Select Category--' :closeOnSelect='true'
+                  :required='true' />
+                <Select title='Brand' v-model='data.brand_id' field='data.brand_id' label='title'
+                  :reduce='(obj) => obj.id' col="4" :options='brands'
+                  :placeholder="data.category_id ? (brands.length ? '--Select Brand--' : 'No Brand in Category') : '--Select Category First--'"
+                  :closeOnSelect='true'
+                  :required='false' />
+                <Select title='Unit' v-model='data.unit_id' field='data.unit_id' label='title' :reduce='(obj) => obj.id' col="4"
+                  :options='units' placeholder='--Select Unit--' :closeOnSelect='true' :required='true' />
+                
+                <Input v-model='data.title' field='data.title' title='Title' col="6" :req='true' />
+                <Input v-model='data.barcode' field='data.barcode' title='Barcode' col="6" placeholder="Auto-generated" :req='false' />
+                
+                <Input v-model='data.purchase_price' col="6" field='data.purchase_price' title='Purchase Price (ক্রয় মূল্য)' type="number" step="0.01" :req='false' />
+                <Input v-model='data.selling_price' col="6" field='data.selling_price' title='Selling Price (বিক্রয় মূল্য)' type="number" step="0.01" :req='false' />
+                
+                <Textarea v-model='data.description' field='data.description' :required='false' title="Description" col="12" />
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- 🛡️ Warranty / Guarantee Section (Display when site_setting shop_type is electronics) -->
         <div class="col-12" v-if="isElectronicsShop">
@@ -99,17 +144,17 @@
                   <label class="form-label fw-bold small text-dark d-block mb-2">Coverage Type (ধরণ):</label>
                   <div class="d-flex flex-wrap gap-3">
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" id="warrantyNone" value="none" v-model="data.warranty_type">
+                      <input class="form-check-input cursor-pointer" type="radio" id="warrantyNone" value="none" v-model="data.warranty_type">
                       <label class="form-check-label small cursor-pointer" for="warrantyNone">None (নেই)</label>
                     </div>
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" id="warrantyType" value="warranty" v-model="data.warranty_type">
+                      <input class="form-check-input cursor-pointer" type="radio" id="warrantyType" value="warranty" v-model="data.warranty_type">
                       <label class="form-check-label small fw-bold text-primary cursor-pointer" for="warrantyType">
                         <i class="fas fa-tools me-1"></i> Warranty (ওয়ারেন্টি)
                       </label>
                     </div>
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" id="guaranteeType" value="guarantee" v-model="data.warranty_type">
+                      <input class="form-check-input cursor-pointer" type="radio" id="guaranteeType" value="guarantee" v-model="data.warranty_type">
                       <label class="form-check-label small fw-bold text-success cursor-pointer" for="guaranteeType">
                         <i class="fas fa-certificate me-1"></i> Guarantee (গ্যারান্টি)
                       </label>
@@ -152,23 +197,29 @@
 
         <!-- Price Modification / New Purchase Checkbox for Edit Mode -->
         <div class="col-12" v-if="data.id">
-          <div class="form-check form-switch p-3 bg-light border rounded">
-            <input class="form-check-input ms-0 me-2" type="checkbox" id="priceModCheck" v-model="is_price_modification" style="transform: scale(1.2);">
-            <label class="form-check-label fw-bold text-primary" for="priceModCheck">
-              <i class="fas fa-edit me-1"></i> Price Modification / New Purchase (মূল্য পরিবর্তন / নতুন ক্রয়)
-            </label>
-            <small class="d-block text-muted ms-4 mt-1">Check this box to modify purchase/selling prices or add new stock for specific color & size variants.</small>
+          <div class="card border border-info shadow-sm bg-light">
+            <div class="card-body p-3">
+              <div class="form-check form-switch d-flex align-items-center gap-2">
+                <input class="form-check-input ms-0 cursor-pointer" type="checkbox" id="priceModCheck" v-model="is_price_modification" style="transform: scale(1.3);">
+                <label class="form-check-label fw-bold text-primary fs-6 cursor-pointer mb-0 ms-2" for="priceModCheck">
+                  <i class="fas fa-edit me-1"></i> Price Modification / New Purchase (মূল্য পরিবর্তন / নতুন ক্রয়)
+                </label>
+              </div>
+              <small class="d-block text-muted mt-2">
+                <i class="fas fa-info-circle me-1"></i> Enable this switch to modify purchase/selling prices or add new stock for specific color & size variants.
+              </small>
+            </div>
           </div>
         </div>
 
         <!-- Color & Size Wise Price & Stock Matrix -->
-        <div class="col-12 mt-3" v-if="!data.id || is_price_modification">
+        <div class="col-12" v-if="!data.id || is_price_modification">
           <div class="card border shadow-sm">
             <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-2">
               <span class="fw-bold fs-6">
                 <i class="fas fa-tags me-2"></i>{{ isElectronicsShop ? 'Color Wise Price & Stock Matrix' : 'Color & Size Wise Price & Stock Matrix' }}
               </span>
-              <button type="button" class="btn btn-sm btn-success px-3" @click="addVariantRow">
+              <button type="button" class="btn btn-sm btn-success px-3 fw-bold" @click="addVariantRow">
                 <i class="fas fa-plus me-1"></i> Add Variant Row
               </button>
             </div>
@@ -180,7 +231,7 @@
                     <th width="20%" v-if="!isElectronicsShop">Size (সাইজ)</th>
                     <th :width="isElectronicsShop ? '24%' : '18%'">Purchase Price (ক্রয় মূল্য)</th>
                     <th :width="isElectronicsShop ? '24%' : '18%'">Selling Price (বিক্রয় মূল্য)</th>
-                    <th :width="isElectronicsShop ? '14%' : '14%'">Qty (পরিমাণ)</th>
+                    <th :width="isElectronicsShop ? '14%' : '14%'">{{ data.id ? 'Add Qty (নতুন স্টক)' : 'Opening Qty (মজুদ)' }}</th>
                     <th width="10%">Action</th>
                   </tr>
                 </thead>
@@ -208,7 +259,7 @@
                       <input type="number" class="form-control form-control-sm text-center" v-model.number="v.qty" placeholder="0" />
                     </td>
                     <td class="text-center">
-                      <button type="button" class="btn btn-sm btn-outline-danger" @click="removeVariantRow(index)" :disabled="variants.length === 1">
+                      <button type="button" class="btn btn-sm btn-outline-danger" @click="removeVariantRow(index)" :disabled="variants.length === 1" title="Remove Row">
                         <i class="fas fa-trash-alt"></i>
                       </button>
                     </td>
@@ -221,8 +272,32 @@
 
       </div>
     </div>
-    <Switch v-model='data.status' field='data.status' title='status' on-label='Active' off-label='Deactive' :req='true'>
-    </Switch>
+
+    <!-- 🌟 Prominent Custom Form Footer Actions -->
+    <template #form_footer>
+      <div class="col-12 mt-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 bg-white border rounded shadow-sm">
+          <router-link :to="{ name: model + '.index' }" class="btn btn-outline-secondary px-4 fw-semibold">
+            <i class="fas fa-arrow-left me-1"></i> Back to List
+          </router-link>
+
+          <div class="d-flex align-items-center gap-2">
+            <button
+              type="submit"
+              class="theme_btn px-5 py-2 fw-bold d-flex align-items-center gap-2 shadow"
+              :disabled="$root.submit"
+            >
+              <template v-if="$root.submit">
+                <i class="fa fa-spinner fa-spin"></i> Processing...
+              </template>
+              <template v-else>
+                <i class="fas fa-check-circle"></i> {{ $route.params.id ? "Update Item" : "Save & Create Item" }}
+              </template>
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
 
   </create-form>
 </template>

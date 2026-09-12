@@ -107,8 +107,21 @@ class SoftwareUpdateService
             ];
         }
 
+        if (!Schema::hasTable('migrations')) {
+            try {
+                Artisan::call('migrate:install');
+            } catch (\Throwable $e) {
+                // Ignore if install failed
+            }
+        }
+
         $logs = [];
-        $batch = (DB::table('migrations')->max('batch') ?: 0) + 1;
+        $batch = 1;
+        try {
+            $batch = (DB::table('migrations')->max('batch') ?: 0) + 1;
+        } catch (\Throwable $e) {
+            $batch = 1;
+        }
 
         // 1. Run Pending Migrations Safely
         foreach ($statusBefore['pending_migrations'] as $item) {
@@ -151,11 +164,11 @@ class SoftwareUpdateService
                 }
 
                 // Execute the migration class (Supports both Anonymous and Named classes)
-                $migrationObject = require $filePath;
+                $migrationObject = require_once $filePath;
                 if (!is_object($migrationObject)) {
                     if (preg_match('/class\s+([a-zA-Z0-9_]+)\s+extends\s+Migration/i', $fileContent, $classMatches)) {
                         $className = $classMatches[1];
-                        if (class_exists($className)) {
+                        if (class_exists($className, false) || class_exists($className)) {
                             $migrationObject = new $className();
                         }
                     }

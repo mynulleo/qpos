@@ -41,10 +41,29 @@ class PurchaseController extends BaseController
             $query->where('supplier_id', $request->supplier_id);
         }
 
+        if ($request->category_id) {
+            $query->whereHas('purchase_details', function ($q) use ($request) {
+                $q->where('category_id', $request->category_id)
+                  ->orWhereHas('item', function ($iq) use ($request) {
+                      $iq->where('category_id', $request->category_id);
+                  });
+            });
+        }
+
+        if ($request->item_id) {
+            $query->whereHas('purchase_details', function ($q) use ($request) {
+                $q->where('item_id', $request->item_id);
+            });
+        }
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
         if ($request->allData) {
             return $query->get();
         } else {
-            $datas = $query->paginate($request->pagination);
+            $datas = $query->paginate($request->pagination ?? 10);
             return new Resource($datas);
         }
     }

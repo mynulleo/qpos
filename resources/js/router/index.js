@@ -1388,6 +1388,18 @@ const routes = [
                 component: () =>
                     import("./../views/admin/report/warrantyclaim"),
             },
+            {
+                path: "/report/wastage",
+                name: "report.wastage",
+                component: () =>
+                    import("./../views/admin/report/wastage"),
+            },
+            {
+                path: "/report/disposal",
+                name: "report.disposal",
+                component: () =>
+                    import("./../views/admin/report/wastage"),
+            },
             // ------------------SOFTWARE UPDATE PORTION------------------
             {
                 path: "/software-update",
