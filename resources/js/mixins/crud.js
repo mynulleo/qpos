@@ -37,6 +37,9 @@ export default {
                         this.table["datas"] = res.data.data;
                         this.table["meta"] = res.data.meta;
                         this.table["links"] = res.data.links;
+                        if (res.data.summary) {
+                            this.table["summary"] = res.data.summary;
+                        }
                     }
                 })
                 .catch((error) => {

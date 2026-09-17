@@ -53,6 +53,28 @@ class Grn extends BaseModel
         return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
     }
 
+    public function fund_account()
+    {
+        return $this->belongsTo(Account::class, 'fund_account_id', 'id');
+    }
+
+    public function payment_details()
+    {
+        return $this->hasMany(PaymentDetail::class, 'reference_id', 'id')->where('reference_type', 'GRN');
+    }
+
+    public function payments()
+    {
+        return $this->hasManyThrough(
+            Payment::class,
+            PaymentDetail::class,
+            'reference_id', // Foreign key on payment_details table
+            'id',           // Foreign key on payments table
+            'id',           // Local key on grns table
+            'payment_id'    // Local key on payment_details table
+        )->where('payment_details.reference_type', 'GRN');
+    }
+
     public function stock_transactions()
     {
         return $this->hasMany(StockTransaction::class, 'reference_id', 'id')->where('reference_type', 'GRN');

@@ -29,28 +29,40 @@
                                 <select v-if="fields_name && Object.keys(fields_name).length > 0"
                                     class="form-select form-select-sm"
                                     style="max-width: 140px;"
-                                    v-model="search_data.field_name"
-                                    @change="liveSearch">
+                                    v-model="search_data.field_name">
                                     <option v-for="(item, key) in fields_name" :value="key === 'default' ? '' : key" :key="key">
                                         {{ item }}
                                     </option>
                                 </select>
 
+                                <!-- Decoy hidden input to absorb aggressive browser autofill -->
+                                <input
+                                    type="text"
+                                    name="prevent_autofill_email"
+                                    autocomplete="off"
+                                    tabindex="-1"
+                                    style="display:none !important; position:absolute; opacity:0; pointer-events:none;"
+                                />
+
                                 <!-- Text Search Input -->
                                 <input
                                     type="search"
-                                    name="qpos_table_search_query"
+                                    name="qpos_table_search_query_no_autofill"
                                     id="qpos_header_search_input"
-                                    autocomplete="off"
+                                    :readonly="isSearchReadonly"
+                                    @focus="isSearchReadonly = false"
+                                    @pointerdown="isSearchReadonly = false"
+                                    @touchstart="isSearchReadonly = false"
+                                    autocomplete=false
                                     autocapitalize="off"
                                     autocorrect="off"
                                     spellcheck="false"
                                     data-lpignore="true"
+                                    data-1p-ignore="true"
                                     data-form-type="other"
                                     class="form-control"
                                     placeholder="Search... (Press Enter)"
                                     v-model="search_data.value"
-                                    @input="liveSearch"
                                     @keyup.enter="handleEnterSearch"
                                 />
 
@@ -129,6 +141,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Header Summary / KPI Cards Slot -->
+            <slot name="header-summary"></slot>
 
             <!-- Help Sidebar Overlay & Content -->
             <div class="help_overlay"></div>
@@ -209,6 +224,7 @@ export default {
         return {
             show_advance_filter: false,
             is_focus_bg: false,
+            isSearchReadonly: true,
             old_search_field_name: this.search_data?.field_name,
             old_search_field_value: this.search_data?.value,
         };
@@ -269,34 +285,28 @@ export default {
 
     methods: {
         handleEnterSearch() {
+            this.search_data.page = 1;
             this.$root.tableSpinner = true;
             this.updateQueryParams();
         },
 
         liveSearch: _.debounce(function (event) {
-            if (!this.old_search_field_value) {
-                this.old_search_field_value = this.search_data.value;
-            }
-
-            if (!this.old_search_field_name) {
-                this.old_search_field_name = this.search_data.field_name;
-            }
-
-            if (this.old_search_field_name && this.old_search_field_value) {
-                this.old_search_field_name = this.search_data.field_name;
-                this.old_search_field_value = this.search_data.value;
-                this.$root.tableSpinner = true;
-                this.search();
-            }
-
-            this.old_search_field_name = this.search_data.field_name;
-            this.old_search_field_value = this.search_data.value;
-        }, 800),
+            this.search_data.page = 1;
+            this.$root.tableSpinner = true;
+            this.updateQueryParams();
+        }, 500),
 
         updateQueryParams() {
+            const cleanParams = {};
+            for (const key in this.search_data) {
+                const val = this.search_data[key];
+                if (val !== '' && val !== null && val !== undefined) {
+                    cleanParams[key] = val;
+                }
+            }
             this.$router.push({
-                query: this.search_data,
-            });
+                query: cleanParams,
+            }).catch(() => {});
 
             this.search();
         },
