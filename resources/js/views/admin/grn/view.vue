@@ -13,6 +13,10 @@
               <div>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                   <h4 class="fw-bold mb-0 text-white">Goods Receive Note #{{ data.grn_no || data.id || 'N/A' }}</h4>
+                  <span class="badge bg-light text-dark fw-bold">
+                    <i :class="data.grn_type === 'direct' ? 'fas fa-bolt text-warning' : (data.grn_type === 'supplier' ? 'fas fa-truck-loading text-info' : 'fas fa-file-invoice-dollar text-primary')" class="me-1"></i>
+                    {{ data.grn_type === 'direct' ? 'Direct Purchase' : (data.grn_type === 'supplier' ? 'Supplier Based' : 'PO Based') }}
+                  </span>
                   <span class="badge" :class="data.is_closed ? 'bg-success text-white' : 'bg-warning text-dark'">
                     <i :class="data.is_closed ? 'fas fa-check-circle me-1' : 'fas fa-clock me-1'"></i>
                     {{ data.is_closed ? 'Fully Paid / Settled' : 'Payment Due' }}
@@ -23,9 +27,11 @@
                 </div>
                 <div class="d-flex align-items-center gap-3 mt-2 text-white-50 small flex-wrap font-monospace">
                   <span><i class="far fa-calendar-alt me-1"></i>Receive Date: <strong class="text-white">{{ data.grn_date || 'N/A' }}</strong></span>
-                  <span><i class="fas fa-file-invoice me-1"></i>PO: <strong class="text-white">{{ data.purchase?.invoiceno || 'N/A' }}</strong></span>
+                  <span v-if="data.purchase"><i class="fas fa-file-invoice me-1"></i>PO: <strong class="text-white">{{ data.purchase.invoiceno }}</strong></span>
+                  <span v-else><i class="fas fa-file-invoice me-1"></i>PO: <strong class="text-white-50 fst-italic">Direct Receiving</strong></span>
                   <span><i class="fas fa-warehouse me-1"></i>Warehouse: <strong class="text-white">{{ data.warehouse?.name || 'N/A' }}</strong></span>
-                  <span><i class="fas fa-user-tag me-1"></i>Supplier: <strong class="text-white">{{ data.supplier?.org_name || data.supplier?.name || 'N/A' }}</strong></span>
+                  <span v-if="data.supplier"><i class="fas fa-user-tag me-1"></i>Supplier: <strong class="text-white">{{ data.supplier.org_name || data.supplier.name }}</strong></span>
+                  <span v-else-if="data.fund_account"><i class="fas fa-wallet me-1 text-warning"></i>Fund: <strong class="text-white">{{ data.fund_account.account_name }}</strong></span>
                 </div>
               </div>
             </div>
@@ -124,6 +130,14 @@
                 <table class="table table-hover align-middle mb-0 custom-spec-table">
                   <tbody>
                     <tr>
+                      <td class="spec-label"><i class="fas fa-tag me-2 text-muted"></i>GRN Mode</td>
+                      <td class="spec-value">
+                        <span class="badge" :class="data.grn_type === 'direct' ? 'bg-warning text-dark' : (data.grn_type === 'supplier' ? 'bg-info text-dark' : 'bg-primary text-white')">
+                          {{ data.grn_type === 'direct' ? 'Direct Purchase' : (data.grn_type === 'supplier' ? 'Supplier Based' : 'PO Based') }}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
                       <td class="spec-label"><i class="fas fa-warehouse me-2 text-muted"></i>Destination Warehouse</td>
                       <td class="spec-value fw-bold text-dark">{{ data.warehouse?.name || 'N/A' }}</td>
                     </tr>
@@ -131,24 +145,28 @@
                       <td class="spec-label"><i class="fas fa-barcode me-2 text-muted"></i>Warehouse Code</td>
                       <td class="spec-value font-monospace">{{ data.warehouse?.code || 'N/A' }}</td>
                     </tr>
-                    <tr>
+                    <tr v-if="data.supplier">
                       <td class="spec-label"><i class="fas fa-building me-2 text-muted"></i>Supplier / Vendor</td>
-                      <td class="spec-value fw-bold text-dark">{{ data.supplier?.org_name || data.supplier?.name || 'N/A' }}</td>
+                      <td class="spec-value fw-bold text-dark">{{ data.supplier.org_name || data.supplier.name || 'N/A' }}</td>
                     </tr>
-                    <tr>
+                    <tr v-if="data.supplier?.mobile">
                       <td class="spec-label"><i class="fas fa-phone me-2 text-muted"></i>Supplier Mobile</td>
-                      <td class="spec-value font-monospace">{{ data.supplier?.mobile || 'N/A' }}</td>
+                      <td class="spec-value font-monospace">{{ data.supplier.mobile }}</td>
                     </tr>
-                    <tr>
+                    <tr v-if="data.fund_account">
+                      <td class="spec-label"><i class="fas fa-wallet me-2 text-warning"></i>Fund Account</td>
+                      <td class="spec-value fw-bold text-dark">{{ data.fund_account.account_name }}</td>
+                    </tr>
+                    <tr v-if="data.purchase">
                       <td class="spec-label"><i class="fas fa-file-invoice me-2 text-muted"></i>PO Invoice</td>
-                      <td class="spec-value font-monospace fw-bold text-dark">{{ data.purchase?.invoiceno || 'N/A' }}</td>
+                      <td class="spec-value font-monospace fw-bold text-dark">{{ data.purchase.invoiceno }}</td>
                     </tr>
-                    <tr>
+                    <tr v-if="data.purchase?.purchase_date">
                       <td class="spec-label"><i class="far fa-calendar-check me-2 text-muted"></i>PO Date</td>
-                      <td class="spec-value font-monospace">{{ data.purchase?.purchase_date || 'N/A' }}</td>
+                      <td class="spec-value font-monospace">{{ data.purchase.purchase_date }}</td>
                     </tr>
                     <tr>
-                      <td class="spec-label"><i class="fas fa-truck-loading me-2 text-muted"></i>Supplier Challan No</td>
+                      <td class="spec-label"><i class="fas fa-truck-loading me-2 text-muted"></i>Challan / Memo No</td>
                       <td class="spec-value font-monospace fw-bold text-dark">{{ data.challan_no || 'N/A' }}</td>
                     </tr>
                     <tr>
@@ -158,6 +176,10 @@
                     <tr>
                       <td class="spec-label"><i class="fas fa-user-check me-2 text-muted"></i>Received By</td>
                       <td class="spec-value">{{ data.received_by || 'Store Keeper' }}</td>
+                    </tr>
+                    <tr v-if="data.discount > 0">
+                      <td class="spec-label"><i class="fas fa-percent me-2 text-muted"></i>Discount</td>
+                      <td class="spec-value font-monospace text-success fw-bold">৳ {{ formatNum(data.discount) }}</td>
                     </tr>
                     <tr>
                       <td class="spec-label"><i class="fas fa-sticky-note me-2 text-muted"></i>Note</td>
@@ -346,21 +368,29 @@
             </div>
             <table class="table table-sm table-borderless mb-0 small-meta-table">
               <tbody>
-                <tr>
+                <tr v-if="data.supplier">
                   <td class="text-muted" width="40%">Supplier / Vendor:</td>
-                  <td class="fw-bold text-dark">{{ data.supplier?.org_name || data.supplier?.name || 'N/A' }}</td>
+                  <td class="fw-bold text-dark">{{ data.supplier.org_name || data.supplier.name || 'N/A' }}</td>
                 </tr>
-                <tr>
+                <tr v-else-if="data.fund_account">
+                  <td class="text-muted" width="40%">Payment Source:</td>
+                  <td class="fw-bold text-dark">{{ data.fund_account.account_name }} (Direct Purchase)</td>
+                </tr>
+                <tr v-else>
+                  <td class="text-muted" width="40%">Supplier:</td>
+                  <td class="fw-bold text-dark">Direct Purchase / Cash</td>
+                </tr>
+                <tr v-if="data.supplier?.mobile">
                   <td class="text-muted">Contact Mobile:</td>
-                  <td class="font-monospace text-dark">{{ data.supplier?.mobile || '-' }}</td>
+                  <td class="font-monospace text-dark">{{ data.supplier.mobile }}</td>
                 </tr>
                 <tr>
                   <td class="text-muted">PO Invoice No:</td>
-                  <td class="font-monospace fw-bold text-dark">{{ data.purchase?.invoiceno || '-' }} <span class="fw-normal">({{ data.purchase?.purchase_date || '-' }})</span></td>
+                  <td class="font-monospace fw-bold text-dark">{{ data.purchase?.invoiceno || 'Direct GRN (No PO)' }} <span class="fw-normal" v-if="data.purchase?.purchase_date">({{ data.purchase.purchase_date }})</span></td>
                 </tr>
                 <tr>
-                  <td class="text-muted">Supplier Challan:</td>
-                  <td class="font-monospace text-dark">{{ data.challan_no || '-' }} <span class="fw-normal">({{ data.challan_date || '-' }})</span></td>
+                  <td class="text-muted">Challan / Memo:</td>
+                  <td class="font-monospace text-dark">{{ data.challan_no || '-' }} <span class="fw-normal" v-if="data.challan_date">({{ data.challan_date }})</span></td>
                 </tr>
               </tbody>
             </table>

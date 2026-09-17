@@ -228,6 +228,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('warehouse', App\Http\Controllers\Admin\WarehouseController::class);
         Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'pendingpurchases'])->name('grn.pendingpurchases');
         Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
+        Route::get('grn/statistics', [App\Http\Controllers\Admin\GrnController::class, 'statistics'])->name('grn.statistics');
         Route::resource('grn', App\Http\Controllers\Admin\GrnController::class);
 
         // POS Terminal View Routes

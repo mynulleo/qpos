@@ -6,10 +6,12 @@ $kernel->bootstrap();
 
 use Illuminate\Support\Facades\DB;
 
-echo "=== SALES_RETURNS COUNT ===\n";
-echo "Count: " . DB::table('sales_returns')->count() . "\n\n";
-
-echo "=== PAYMENT_DETAILS (reference_type = 'SalesReturn') ===\n";
+use Illuminate\Support\Facades\Artisan;
+Artisan::call('migrate', ['--force' => true]);
+echo Artisan::output();
+echo "\n=== UPDATED GRNS COLUMNS ===\n";
+print_r(DB::select("DESCRIBE grns"));
+exit;
 $pd = DB::table('payment_details')
     ->join('payments', 'payments.id', '=', 'payment_details.payment_id')
     ->where('payment_details.reference_type', 'SalesReturn')
