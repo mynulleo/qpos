@@ -80,129 +80,445 @@ trait ReportTrait
         return (float) $opening_balance;
     }
 
-    public function getItemLadger($itemid, $fromDate = null, $toDate = null)
+    public function getItemLadger($searchdata)
     {
+        if (is_numeric($searchdata) || is_string($searchdata)) {
+            $itemid = $searchdata;
+            $searchdata = ['item_id' => $itemid];
+        } else {
+            $itemid = $searchdata['item_id'] ?? null;
+        }
 
         if (!$itemid) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Item ID is required'
-            ], 422);
-        }
-
-        // ----------------------------
-        // CASE 1: Date Range Provided
-        // ----------------------------
-        if ($fromDate && $toDate) {
-
-            /** 1️⃣ Opening Balance (before from_date) */
-            $openingBalance = DB::table('stock_transactions')
-                ->where('item_id', $itemid)
-                ->where('status', 'active')
-                ->where('transaction_date', '<', $fromDate)
-                ->selectRaw('
-                    COALESCE(SUM(qty_in), 0) - COALESCE(SUM(qty_out), 0)
-                    AS opening_balance
-                ')
-                ->value('opening_balance');
-
-            /** 2️⃣ Start running balance from opening */
-            DB::statement("SET @balance := {$openingBalance}");
-
-            /** 3️⃣ Ledger rows (from → to) */
-            $ledger = DB::table('stock_transactions as st')
-                ->leftJoin('purchases as p', function ($join) {
-                    $join->on('p.id', '=', 'st.reference_id')
-                        ->where('st.reference_type', 'Purchase');
-                })
-                ->leftJoin('issues as i', function ($join) {
-                    $join->on('i.id', '=', 'st.reference_id')
-                        ->where('st.reference_type', 'Issue');
-                })
-                ->leftJoin('wastages as w', function ($join) {
-                    $join->on('w.id', '=', 'st.reference_id')
-                        ->where('st.reference_type', 'Wastage');
-                })
-                ->select(
-                    'st.transaction_date',
-                    'st.transaction_type',
-                    'st.reference_type',
-                    DB::raw("
-                        CASE
-                            WHEN st.reference_type = 'Purchase' THEN p.invoiceno
-                            WHEN st.reference_type = 'Issue' THEN i.issueno
-                            WHEN st.reference_type = 'Wastage' THEN w.audit_number
-                            ELSE NULL
-                        END AS reference_no
-                    "),
-                    'st.qty_in',
-                    'st.qty_out',
-                    DB::raw('(@balance := @balance + st.qty_in - st.qty_out) AS balance')
-                )
-                ->where('st.item_id', $itemid)
-                ->whereBetween('st.transaction_date', [$fromDate, $toDate])
-                ->where('st.status', 'active')
-                ->orderBy('st.transaction_date')
-                ->orderBy('st.id')
-                ->get();
-
-            /** 4️⃣ Opening row add (structure unchanged) */
-            $openingRow = [
-                'transaction_date' => $fromDate,
-                'transaction_type' => 'Opening Balance',
-                'reference_type'   => null,
-                'reference_no'     => null,
-                'qty_in'           => 0,
-                'qty_out'          => 0,
-                'balance'          => $openingBalance
+            return [
+                'item' => null,
+                'metrics' => null,
+                'variants_breakdown' => [],
+                'datas' => []
             ];
-
-            $ledger->prepend($openingRow);
-
-            return $ledger;
         }
 
-        // ----------------------------
-        // CASE 2: Only Item Ledger
-        // ----------------------------
-        DB::statement('SET @balance := 0');
+        $fromDate = !empty($searchdata['start_date']) ? vue_to_server_date($searchdata['start_date']) : null;
+        $toDate = !empty($searchdata['end_date']) ? vue_to_server_date($searchdata['end_date']) : null;
+        $colorId = !empty($searchdata['color_id']) ? $searchdata['color_id'] : null;
+        $sizeId = !empty($searchdata['size_id']) ? $searchdata['size_id'] : null;
+        $warehouseId = !empty($searchdata['warehouse_id']) ? $searchdata['warehouse_id'] : null;
+        $trxType = !empty($searchdata['transaction_type']) ? $searchdata['transaction_type'] : null;
 
-        $ledger = DB::table('stock_transactions as st')
+        // 1. Fetch Item Profile
+        $item = Item::with('category:id,title', 'brand:id,title', 'unit:id,title')->find($itemid);
+        if (!$item) {
+            return [
+                'item' => null,
+                'metrics' => null,
+                'variants_breakdown' => [],
+                'datas' => []
+            ];
+        }
+
+        // 2. Lifetime Metrics
+        $lifetimeIn = (float) DB::table('stock_transactions')
+            ->where('item_id', $itemid)
+            ->where('status', 'active')
+            ->sum('qty_in');
+
+        $lifetimeOut = (float) DB::table('stock_transactions')
+            ->where('item_id', $itemid)
+            ->where('status', 'active')
+            ->sum('qty_out');
+
+        $lifetimeSold = (float) DB::table('stock_transactions')
+            ->where('item_id', $itemid)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->where('transaction_type', 'Issue')->orWhere('reference_type', 'Issue');
+            })
+            ->sum('qty_out');
+
+        $lifetimeWastage = (float) DB::table('stock_transactions')
+            ->where('item_id', $itemid)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->where('transaction_type', 'Wastage')->orWhere('reference_type', 'Wastage');
+            })
+            ->sum('qty_out');
+
+        $lifetimeReturned = (float) DB::table('stock_transactions')
+            ->where('item_id', $itemid)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->whereIn('transaction_type', ['SalesReturn', 'Return'])->orWhereIn('reference_type', ['SalesReturn', 'Return']);
+            })
+            ->sum('qty_in');
+
+        $currentStock = $lifetimeIn - $lifetimeOut;
+        $costPrice = floatval($item->purchase_price ?? 0);
+        $sellPrice = floatval($item->selling_price ?? 0);
+
+        // 3. Variant Breakdown & Pricing
+        $colors = DB::table('colors')->pluck('title', 'id')->toArray();
+        $sizes = DB::table('sizes')->pluck('title', 'id')->toArray();
+
+        $variantSummaries = DB::table('item_stock_summaries')
+            ->where('item_id', $itemid)
+            ->get();
+
+        $itemPrices = DB::table('item_prices')
+            ->where('item_id', $itemid)
+            ->where('status', 'active')
+            ->get();
+
+        if ($costPrice == 0 && $itemPrices->isNotEmpty()) {
+            $costPrice = floatval($itemPrices->first()->purchase_price ?? 0);
+        }
+        if ($sellPrice == 0 && $itemPrices->isNotEmpty()) {
+            $sellPrice = floatval($itemPrices->first()->selling_price ?? 0);
+        }
+
+        $variantPriceMap = [];
+        foreach ($itemPrices as $ip) {
+            $key = ($ip->color_id ?? 0) . '_' . ($ip->size_id ?? 0);
+            $variantPriceMap[$key] = [
+                'purchase_price' => floatval($ip->purchase_price),
+                'selling_price' => floatval($ip->selling_price),
+            ];
+        }
+
+        $variantsBreakdown = [];
+        $totalValuationCost = 0;
+        $totalValuationSell = 0;
+        foreach ($variantSummaries as $vs) {
+            $k = ($vs->color_id ?? 0) . '_' . ($vs->size_id ?? 0);
+            $vp = $variantPriceMap[$k] ?? ['purchase_price' => $costPrice, 'selling_price' => $sellPrice];
+            $stk = floatval($vs->current_stock);
+            $pPrice = $vp['purchase_price'] ?: $costPrice;
+            $sPrice = $vp['selling_price'] ?: $sellPrice;
+
+            if ($stk > 0) {
+                $totalValuationCost += $stk * $pPrice;
+                $totalValuationSell += $stk * $sPrice;
+            }
+
+            $variantsBreakdown[] = [
+                'color_id' => $vs->color_id,
+                'color_title' => $vs->color_id && isset($colors[$vs->color_id]) ? $colors[$vs->color_id] : null,
+                'size_id' => $vs->size_id,
+                'size_title' => $vs->size_id && isset($sizes[$vs->size_id]) ? $sizes[$vs->size_id] : null,
+                'purchase_price' => $pPrice,
+                'selling_price' => $sPrice,
+                'total_qty_in' => floatval($vs->total_qty_in),
+                'total_qty_out' => floatval($vs->total_qty_out),
+                'current_stock' => $stk,
+            ];
+        }
+
+        if ($totalValuationCost == 0 && $currentStock > 0 && $costPrice > 0) {
+            $totalValuationCost = $currentStock * $costPrice;
+        }
+        if ($totalValuationSell == 0 && $currentStock > 0 && $sellPrice > 0) {
+            $totalValuationSell = $currentStock * $sellPrice;
+        }
+
+        $stockPurchaseValue = round($totalValuationCost, 2);
+        $stockSellingValue = round($totalValuationSell, 2);
+        $potentialProfit = round(max(0, $stockSellingValue - $stockPurchaseValue), 2);
+
+        // 4. Period Opening Balance (before fromDate)
+        $openingBalanceQuery = DB::table('stock_transactions')
+            ->where('item_id', $itemid)
+            ->where('status', 'active');
+
+        if ($colorId) {
+            $openingBalanceQuery->where('color_id', $colorId);
+        }
+        if ($sizeId) {
+            $openingBalanceQuery->where('size_id', $sizeId);
+        }
+        if ($warehouseId) {
+            $openingBalanceQuery->where('warehouse_id', $warehouseId);
+        }
+
+        $periodOpeningBalance = 0;
+        if ($fromDate) {
+            $periodOpeningBalance = (float) (clone $openingBalanceQuery)
+                ->where('transaction_date', '<', $fromDate)
+                ->selectRaw('COALESCE(SUM(qty_in), 0) - COALESCE(SUM(qty_out), 0) AS opening_balance')
+                ->value('opening_balance');
+        }
+
+        // 5. Query Ledger Rows
+        $query = DB::table('stock_transactions as st')
             ->leftJoin('purchases as p', function ($join) {
                 $join->on('p.id', '=', 'st.reference_id')
                     ->where('st.reference_type', 'Purchase');
             })
-            ->leftJoin('issues as i', function ($join) {
-                $join->on('i.id', '=', 'st.reference_id')
+            ->leftJoin('suppliers as p_sup', 'p_sup.id', '=', 'p.supplier_id')
+            ->leftJoin('invoices as inv', function ($join) {
+                $join->on('inv.id', '=', 'st.reference_id')
                     ->where('st.reference_type', 'Issue');
             })
+            ->leftJoin('clients as cust', 'cust.id', '=', 'inv.client_id')
+            ->leftJoin('grns as g', function ($join) {
+                $join->on('g.id', '=', 'st.reference_id')
+                    ->where('st.reference_type', 'GRN');
+            })
+            ->leftJoin('suppliers as g_sup', 'g_sup.id', '=', 'g.supplier_id')
+            ->leftJoin('sales_returns as sr', function ($join) {
+                $join->on('sr.id', '=', 'st.reference_id')
+                    ->where(function($sq) {
+                        $sq->where('st.reference_type', 'SalesReturn')
+                           ->orWhere('st.reference_type', 'Return');
+                    });
+            })
+            ->leftJoin('clients as sr_cust', 'sr_cust.id', '=', 'sr.client_id')
             ->leftJoin('wastages as w', function ($join) {
                 $join->on('w.id', '=', 'st.reference_id')
                     ->where('st.reference_type', 'Wastage');
             })
+            ->leftJoin('employees as w_emp', 'w_emp.id', '=', 'w.auditor_id')
+            ->leftJoin('stock_adjustments as sa', function ($join) {
+                $join->on('sa.id', '=', 'st.reference_id')
+                    ->where(function($sq) {
+                        $sq->where('st.reference_type', 'StockAdjustment')
+                           ->orWhere('st.reference_type', 'Adjustment');
+                    });
+            })
+            ->leftJoin('employees as sa_emp', 'sa_emp.id', '=', 'sa.conducted_by')
+            ->leftJoin('colors as col', 'col.id', '=', 'st.color_id')
+            ->leftJoin('sizes as sz', 'sz.id', '=', 'st.size_id')
+            ->leftJoin('warehouses as wh', 'wh.id', '=', 'st.warehouse_id')
             ->select(
+                'st.id',
                 'st.transaction_date',
                 'st.transaction_type',
                 'st.reference_type',
+                'st.reference_id',
+                'st.color_id',
+                'st.size_id',
+                'st.warehouse_id',
+                'st.created_at',
+                'col.title as color_title',
+                'sz.title as size_title',
+                'wh.name as warehouse_name',
                 DB::raw("
                     CASE
                         WHEN st.reference_type = 'Purchase' THEN p.invoiceno
-                        WHEN st.reference_type = 'Issue' THEN i.issueno
+                        WHEN st.reference_type = 'Issue' THEN inv.invoice_no
+                        WHEN st.reference_type = 'GRN' THEN g.grn_no
+                        WHEN st.reference_type = 'SalesReturn' OR st.reference_type = 'Return' THEN sr.return_no
                         WHEN st.reference_type = 'Wastage' THEN w.audit_number
+                        WHEN st.reference_type = 'StockAdjustment' OR st.reference_type = 'Adjustment' OR st.transaction_type = 'Adjustment' THEN sa.adjustment_no
+                        WHEN st.reference_type = 'Production' OR st.transaction_type = 'Production' THEN CONCAT('PRD-', st.id)
                         ELSE NULL
                     END AS reference_no
                 "),
+                DB::raw("
+                    CASE
+                        WHEN st.reference_type = 'Purchase' THEN COALESCE(p_sup.org_name, p_sup.name)
+                        WHEN st.reference_type = 'Issue' THEN cust.name
+                        WHEN st.reference_type = 'GRN' THEN COALESCE(g_sup.org_name, g_sup.name)
+                        WHEN st.reference_type = 'SalesReturn' OR st.reference_type = 'Return' THEN sr_cust.name
+                        WHEN st.reference_type = 'Wastage' THEN w_emp.full_name
+                        WHEN st.reference_type = 'StockAdjustment' OR st.reference_type = 'Adjustment' OR st.transaction_type = 'Adjustment' THEN CONCAT('Conducted: ', COALESCE(sa_emp.full_name, sa_emp.name, 'N/A'))
+                        WHEN st.reference_type = 'Production' OR st.transaction_type = 'Production' THEN 'In-House Production'
+                        ELSE NULL
+                    END AS party_name
+                "),
                 'st.qty_in',
-                'st.qty_out',
-                DB::raw('(@balance := @balance + st.qty_in - st.qty_out) AS balance')
+                'st.qty_out'
             )
             ->where('st.item_id', $itemid)
-            ->where('st.status', 'active')
-            ->orderBy('st.transaction_date')
-            ->orderBy('st.id')
+            ->where('st.status', 'active');
+
+        if ($fromDate && $toDate) {
+            $query->whereBetween('st.transaction_date', [$fromDate, $toDate]);
+        } elseif ($fromDate) {
+            $query->where('st.transaction_date', '>=', $fromDate);
+        } elseif ($toDate) {
+            $query->where('st.transaction_date', '<=', $toDate);
+        }
+
+        if ($colorId) {
+            $query->where('st.color_id', $colorId);
+        }
+        if ($sizeId) {
+            $query->where('st.size_id', $sizeId);
+        }
+        if ($warehouseId) {
+            $query->where('st.warehouse_id', $warehouseId);
+        }
+        if ($trxType) {
+            if ($trxType === 'Sale') {
+                $query->where(function($q) {
+                    $q->where('st.transaction_type', 'Issue')->orWhere('st.reference_type', 'Issue');
+                });
+            } else {
+                $query->where(function($q) use ($trxType) {
+                    $q->where('st.transaction_type', $trxType)->orWhere('st.reference_type', $trxType);
+                });
+            }
+        }
+
+        $rows = $query->orderBy('st.transaction_date', 'asc')
+            ->orderBy('st.id', 'asc')
             ->get();
 
-        return $ledger;
+        // 6. Fetch details in batch
+        $grnIds = $rows->where('reference_type', 'GRN')->pluck('reference_id')->filter()->unique()->toArray();
+        $purchaseIds = $rows->where('reference_type', 'Purchase')->pluck('reference_id')->filter()->unique()->toArray();
+        $invoiceIds = $rows->where('reference_type', 'Issue')->pluck('reference_id')->filter()->unique()->toArray();
+        $returnIds = $rows->whereIn('reference_type', ['SalesReturn', 'Return'])->pluck('reference_id')->filter()->unique()->toArray();
+        $wastageIds = $rows->where('reference_type', 'Wastage')->pluck('reference_id')->filter()->unique()->toArray();
+
+        $grnDetailsMap = [];
+        if (!empty($grnIds)) {
+            $gds = DB::table('grn_details')->whereIn('grn_id', $grnIds)->where('item_id', $itemid)->get();
+            foreach ($gds as $gd) {
+                $k = $gd->grn_id . '_' . ($gd->color_id ?? 0) . '_' . ($gd->size_id ?? 0);
+                $grnDetailsMap[$k] = ['serial_no' => $gd->serial_no, 'rate' => floatval($gd->unit_cost), 'total' => floatval($gd->total_cost)];
+            }
+        }
+
+        $purchaseDetailsMap = [];
+        if (!empty($purchaseIds)) {
+            $pds = DB::table('purchase_details')->whereIn('purchase_id', $purchaseIds)->where('item_id', $itemid)->get();
+            foreach ($pds as $pd) {
+                $k = $pd->purchase_id . '_' . ($pd->color_id ?? 0) . '_' . ($pd->size_id ?? 0);
+                $purchaseDetailsMap[$k] = ['serial_no' => $pd->serial_no, 'rate' => floatval($pd->price), 'total' => floatval($pd->total_amount)];
+            }
+        }
+
+        $invoiceDetailsMap = [];
+        if (!empty($invoiceIds)) {
+            $inds = DB::table('invoice_details')->whereIn('invoice_id', $invoiceIds)->where('item_id', $itemid)->get();
+            foreach ($inds as $ind) {
+                $k = $ind->invoice_id . '_' . ($ind->color_id ?? 0) . '_' . ($ind->size_id ?? 0);
+                $invoiceDetailsMap[$k] = ['serial_no' => $ind->serial_no, 'rate' => floatval($ind->amount), 'total' => floatval($ind->total_amount)];
+            }
+        }
+
+        $returnDetailsMap = [];
+        if (!empty($returnIds)) {
+            $srds = DB::table('sales_return_details')->whereIn('sales_return_id', $returnIds)->where('item_id', $itemid)->get();
+            foreach ($srds as $srd) {
+                $k = $srd->sales_return_id . '_' . ($srd->color_id ?? 0) . '_' . ($srd->size_id ?? 0);
+                $returnDetailsMap[$k] = ['serial_no' => $srd->serial_no, 'rate' => floatval($srd->unit_price), 'total' => floatval($srd->total_amount)];
+            }
+        }
+
+        $wastageDetailsMap = [];
+        if (!empty($wastageIds)) {
+            $wds = DB::table('wastage_details')->whereIn('wastage_id', $wastageIds)->where('item_id', $itemid)->get();
+            foreach ($wds as $wd) {
+                $k = $wd->wastage_id . '_' . ($wd->color_id ?? 0) . '_' . ($wd->size_id ?? 0);
+                $wastageDetailsMap[$k] = ['serial_no' => $wd->serial_no, 'rate' => floatval($wd->unit_price), 'total' => floatval($wd->total_amount)];
+            }
+        }
+
+        $adjustmentIds = $rows->whereIn('reference_type', ['StockAdjustment', 'Adjustment'])->pluck('reference_id')->filter()->unique()->toArray();
+        $adjustmentDetailsMap = [];
+        if (!empty($adjustmentIds)) {
+            $sads = DB::table('stock_adjustment_details')->whereIn('stock_adjustment_id', $adjustmentIds)->where('item_id', $itemid)->get();
+            foreach ($sads as $sad) {
+                $k = $sad->stock_adjustment_id . '_' . ($sad->color_id ?? 0) . '_' . ($sad->size_id ?? 0);
+                $adjustmentDetailsMap[$k] = ['rate' => floatval($sad->unit_cost), 'total' => floatval($sad->total_amount)];
+            }
+        }
+
+        $periodQtyIn = 0;
+        $periodQtyOut = 0;
+        $runningBalance = $periodOpeningBalance;
+
+        $processedRows = [];
+        foreach ($rows as $row) {
+            $runningBalance += (float)$row->qty_in - (float)$row->qty_out;
+            $row->balance = $runningBalance;
+            $periodQtyIn += (float)$row->qty_in;
+            $periodQtyOut += (float)$row->qty_out;
+
+            // Resolve detail
+            $key = $row->reference_id . '_' . ($row->color_id ?? 0) . '_' . ($row->size_id ?? 0);
+            $detail = null;
+            if ($row->reference_type === 'GRN') $detail = $grnDetailsMap[$key] ?? null;
+            elseif ($row->reference_type === 'Purchase') $detail = $purchaseDetailsMap[$key] ?? null;
+            elseif ($row->reference_type === 'Issue') $detail = $invoiceDetailsMap[$key] ?? null;
+            elseif (in_array($row->reference_type, ['SalesReturn', 'Return'])) $detail = $returnDetailsMap[$key] ?? null;
+            elseif ($row->reference_type === 'Wastage') $detail = $wastageDetailsMap[$key] ?? null;
+            elseif (in_array($row->reference_type, ['StockAdjustment', 'Adjustment'])) $detail = $adjustmentDetailsMap[$key] ?? null;
+
+            $rawSerial = $detail['serial_no'] ?? null;
+            $serials = [];
+            if (!empty($rawSerial)) {
+                $parts = preg_split('/[\r\n,]+/', $rawSerial, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($parts as $p) {
+                    $t = trim($p);
+                    if (!empty($t)) $serials[] = $t;
+                }
+            }
+
+            $count = count($serials);
+            $vPrice = $variantPriceMap[($row->color_id ?? 0) . '_' . ($row->size_id ?? 0)] ?? ['purchase_price' => $costPrice, 'selling_price' => $sellPrice];
+            $rowCostPrice = $vPrice['purchase_price'] ?: $costPrice;
+            $rowSellPrice = $vPrice['selling_price'] ?: $sellPrice;
+
+            $row->rate = $detail && !empty($detail['rate']) ? $detail['rate'] : ($row->qty_in > 0 ? $rowCostPrice : $rowSellPrice);
+            $row->total_amount = $detail && !empty($detail['total']) ? $detail['total'] : round(($row->qty_in > 0 ? $row->qty_in : $row->qty_out) * $row->rate, 2);
+            $row->has_serial = $count > 0;
+            $row->serial_count = $count;
+            $row->serials = $serials;
+            $row->serial_preview = $count > 0 ? ($count > 1 ? $serials[0] . ' +' . ($count - 1) . ' more' : $serials[0]) : '';
+            $row->transaction_date_formatted = date('d M, Y', strtotime($row->transaction_date));
+            $row->created_time = $row->created_at ? date('h:i A', strtotime($row->created_at)) : '';
+
+            $processedRows[] = $row;
+        }
+
+        // Prepend opening row if date filter applies
+        if ($fromDate) {
+            $openingRow = (object)[
+                'id'                         => 0,
+                'transaction_date'           => $fromDate,
+                'transaction_date_formatted' => date('d M, Y', strtotime($fromDate)),
+                'created_time'               => '',
+                'transaction_type'           => 'Opening Balance',
+                'reference_type'             => 'Opening',
+                'reference_no'               => '-',
+                'party_name'                 => '-',
+                'warehouse_name'             => '-',
+                'color_title'                => null,
+                'size_title'                 => null,
+                'has_serial'                 => false,
+                'serial_count'               => 0,
+                'serials'                    => [],
+                'serial_preview'             => '',
+                'rate'                       => $costPrice,
+                'total_amount'               => round($periodOpeningBalance * $costPrice, 2),
+                'qty_in'                     => 0,
+                'qty_out'                    => 0,
+                'balance'                    => $periodOpeningBalance
+            ];
+            array_unshift($processedRows, $openingRow);
+        }
+
+        return [
+            'item' => $item,
+            'metrics' => [
+                'total_qty_in'           => $lifetimeIn,
+                'total_sold'             => $lifetimeSold,
+                'total_wastage'          => $lifetimeWastage,
+                'total_returned'         => $lifetimeReturned,
+                'current_stock'          => $currentStock,
+                'stock_purchase_value'   => $stockPurchaseValue,
+                'stock_selling_value'    => $stockSellingValue,
+                'potential_profit'       => $potentialProfit,
+                'period_opening_balance' => $periodOpeningBalance,
+                'period_qty_in'          => $periodQtyIn,
+                'period_qty_out'         => $periodQtyOut,
+                'period_closing_balance' => $runningBalance,
+            ],
+            'variants_breakdown' => $variantsBreakdown,
+            'datas' => $processedRows
+        ];
     }
 
     public function getIncomeStatement($searchdata)

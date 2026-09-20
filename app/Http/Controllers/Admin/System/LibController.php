@@ -438,16 +438,13 @@ class LibController extends Controller
 
 
 
-    public function getItemsByCategory($categoryid)
+    public function getItemsByCategory($categoryid = null)
     {
-        return DB::table('items')
-            ->where('status', 'active')
-            ->where('category_id', $categoryid)
-            ->select(
-                'id',
-                "title"
-            )
-            ->get();
+        $query = DB::table('items')->where('status', 'active');
+        if (!empty($categoryid)) {
+            $query->where('category_id', $categoryid);
+        }
+        return $query->select('id', 'title')->get();
     }
 
     public function getGroupAccounts()
@@ -538,6 +535,20 @@ class LibController extends Controller
             $query->where('category_id', $catId);
         }
         return $query->get(['id', 'title', 'category_id']);
+    }
+
+    public function getseries($brand_id = null)
+    {
+        $brandId = $brand_id ?: request('brand_id');
+        $catId = request('category_id');
+        $query = \App\Models\Series::where('status', 'active')->orderBy('sorting', 'asc');
+        if (!empty($brandId)) {
+            $query->where('brand_id', $brandId);
+        }
+        if (!empty($catId)) {
+            $query->where('category_id', $catId);
+        }
+        return $query->get(['id', 'title', 'brand_id', 'category_id']);
     }
 
     public function getActiveAgents()

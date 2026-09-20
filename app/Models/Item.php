@@ -67,6 +67,11 @@ class Item extends BaseModel
 		return null;
 	}
 
+	public function getCurrentStockAttribute($value)
+	{
+		return $value !== null ? (float) $value : 0;
+	}
+
 	public static function generateBarcode()
 	{
 		$maxBarcode = \Illuminate\Support\Facades\DB::table('items')
@@ -92,6 +97,11 @@ class Item extends BaseModel
 	public function brand()
 	{
 		return $this->belongsTo(Brand::class, 'brand_id', 'id');
+	}
+
+	public function series()
+	{
+		return $this->belongsTo(Series::class, 'series_id', 'id');
 	}
 
 	public function unit()

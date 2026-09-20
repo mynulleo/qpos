@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Base\BaseController;
 use App\Models\ItemStockSummary;
+use App\Models\ItemPrice;
 use App\Models\StockTransaction;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +27,23 @@ class ItemController extends BaseController
      */
     public function index(Request $request)
     {
-        $query  = Item::with('category:id,title', 'brand:id,title', 'unit:id,title')->latest();
+        $stockSub = DB::table('stock_transactions')
+            ->selectRaw('COALESCE(SUM(qty_in - qty_out), 0)')
+            ->whereColumn('stock_transactions.item_id', 'items.id')
+            ->where('stock_transactions.status', 'active');
+
+        if (!empty($request->color_id)) {
+            $stockSub->where('stock_transactions.color_id', $request->color_id);
+        }
+
+        if (!empty($request->size_id)) {
+            $stockSub->where('stock_transactions.size_id', $request->size_id);
+        }
+
+        $query  = Item::select('items.*')
+            ->selectSub($stockSub, 'current_stock')
+            ->with('category:id,title', 'brand:id,title', 'series:id,title', 'unit:id,title')
+            ->latest('items.id');
 
         if ($request->field_name && $request->value) {
             $query->whereLike($request->field_name, $request->value);
@@ -38,6 +55,10 @@ class ItemController extends BaseController
 
         if (!empty($request->brand_id)) {
             $query->where('brand_id', $request->brand_id);
+        }
+
+        if (!empty($request->series_id)) {
+            $query->where('series_id', $request->series_id);
         }
 
         if (!empty($request->color_id)) {
@@ -195,6 +216,7 @@ class ItemController extends BaseController
         $item = Item::with([
             'category:id,title',
             'brand:id,title',
+            'series:id,title',
             'unit:id,title',
             'itemPrices.color:id,title',
             'itemPrices.size:id,title',
@@ -497,6 +519,10 @@ class ItemController extends BaseController
     public function update(Request $request, $id)
     {
         $item = Item::find($id);
+        if (!$item) {
+            return response()->json(['type' => 'error', 'message' => 'Item not found!'], 404);
+        }
+
         if ($this->validateCheck($request, $item->id)) {
             try {
                 DB::beginTransaction();
@@ -518,20 +544,19 @@ class ItemController extends BaseController
                 }
                 $item->fill($data)->save();
 
-                // Check for Price Modification or New Purchase
-                $isPriceModification = filter_var($request->input('is_price_modification'), FILTER_VALIDATE_BOOLEAN);
+                // Process Variants (Prices & Stock Additions)
                 $variants = $request->input('variants');
                 if (is_string($variants)) {
                     $variants = json_decode($variants, true);
                 }
 
-                if ($isPriceModification && is_array($variants)) {
+                if (is_array($variants) && !empty($variants)) {
                     foreach ($variants as $variant) {
                         $colorId = !empty($variant['color_id']) ? $variant['color_id'] : null;
                         $sizeId = !empty($variant['size_id']) ? $variant['size_id'] : null;
                         $purchasePrice = isset($variant['purchase_price']) ? floatval($variant['purchase_price']) : 0;
                         $sellingPrice = isset($variant['selling_price']) ? floatval($variant['selling_price']) : 0;
-                        $qty = isset($variant['qty']) ? intval($variant['qty']) : 0;
+                        $qty = isset($variant['qty']) ? floatval($variant['qty']) : 0;
 
                         if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0) {
                             \App\Models\ItemPrice::updateOrCreate(
@@ -553,8 +578,8 @@ class ItemController extends BaseController
                                     'color_id' => $colorId,
                                     'size_id' => $sizeId,
                                     'transaction_date' => date('Y-m-d'),
-                                    'transaction_type' => 'Purchase',
-                                    'reference_type' => 'Purchase',
+                                    'transaction_type' => 'Production',
+                                    'reference_type' => 'Production',
                                     'qty_in' => $qty,
                                     'qty_out' => 0,
                                     'status' => 'active',
@@ -565,7 +590,7 @@ class ItemController extends BaseController
                 }
 
                 DB::commit();
-                return $this->responseReturn("update", $item);
+                return $this->responseReturn("update", $item, null, true);
             } catch (Exception $ex) {
                 DB::rollBack();
                 return response()->json(['exception' => $ex->errorInfo ?? $ex->getMessage()], 422);
@@ -582,16 +607,80 @@ class ItemController extends BaseController
     public function destroy($id)
     {
         $item = Item::find($id);
-        // delete
-        app("deleteAction")->arrayImages($item->image);
-        $old = $this->oldFile($item->image);
-        if (Storage::disk("public")->exists($old)) {
-            Storage::delete($old);
+        if (!$item) {
+            return response()->json([
+                'type' => 'error',
+                'message' => 'Item not found!',
+            ], 422);
         }
 
+        // Check if item is used in any other tables
+        $usedIn = [];
+        if (DB::table('invoice_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Sales Invoice (বিক্রয় চালান)';
+        }
+        if (DB::table('purchase_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Purchase (ক্রয় চালান)';
+        }
+        if (DB::table('grn_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'GRN (পণ্য গ্রহণ)';
+        }
+        if (DB::table('sales_return_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Sales Return (বিক্রয় ফেরত)';
+        }
+        if (DB::table('wastage_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Wastage (অপচয়)';
+        }
+        if (DB::table('warranty_claims')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Warranty Claim (ওয়ারেন্টি ক্লেইম)';
+        }
+        if (DB::table('workorder_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Work Order (ওয়ার্ক অর্ডার)';
+        }
+        if (DB::table('challan_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Challan (চালান)';
+        }
+        if (DB::table('stock_adjustment_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Stock Adjustment (স্টক সমন্বয়)';
+        }
+        if (DB::table('issue_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Issue (পণ্য ইস্যু)';
+        }
+        if (DB::table('stock_transactions')->where('item_id', $id)->whereNotIn('transaction_type', ['Opening'])->exists()) {
+            $usedIn[] = 'Stock Transactions (স্টক লেনদেন)';
+        }
 
-        $res = $item->delete();
-        return $this->responseReturn("delete", $res);
+        if (!empty($usedIn)) {
+            $msg = 'এই আইটেমটি ডিলিট করা সম্ভব নয়! কারণ এটি ইতিমধ্যে ' . implode(', ', $usedIn) . ' টেবিলে ব্যবহৃত হয়েছে।';
+            return response()->json([
+                'type' => 'error',
+                'message' => $msg,
+            ], 202);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Clean up item opening stock transactions & prices
+            DB::table('stock_transactions')->where('item_id', $id)->delete();
+            DB::table('item_prices')->where('item_id', $id)->delete();
+            DB::table('item_stock_summaries')->where('item_id', $id)->delete();
+
+            // Delete item image
+            if (!empty($item->image)) {
+                $old = $this->oldFile($item->image);
+                if (Storage::disk("public")->exists($old)) {
+                    Storage::delete($old);
+                }
+            }
+
+            $res = $item->delete();
+            DB::commit();
+            return $this->responseReturn("delete", $res);
+        } catch (Exception $ex) {
+            DB::rollBack();
+            return response()->json(['type' => 'error', 'message' => $ex->getMessage()], 422);
+        }
     }
 
     public function getItemStock(Request $request, $item_id)
@@ -612,14 +701,29 @@ class ItemController extends BaseController
         $defaultSizeId  = $bestVariant ? $bestVariant->size_id : null;
         $defaultStock   = $bestVariant ? (float)$bestVariant->current_stock : $totalStock;
 
-        // Build list of variants with stock
-        $variants = $allSummaries->map(function ($row) {
+        $item = Item::with('category:id,title', 'unit:id,title')->find($item_id);
+
+        // Fetch prices map from ItemPrice
+        $itemPrices = ItemPrice::where('item_id', $item_id)->get();
+        $priceMap = [];
+        foreach ($itemPrices as $ip) {
+            $key = ($ip->color_id ?? '0') . '_' . ($ip->size_id ?? '0');
+            $priceMap[$key] = (float)($ip->purchase_price ?? 0);
+        }
+
+        // Build list of variants with stock and variant unit cost
+        $variants = $allSummaries->map(function ($row) use ($priceMap, $item) {
+            $key = ($row->color_id ?? '0') . '_' . ($row->size_id ?? '0');
+            $cost = isset($priceMap[$key]) && $priceMap[$key] > 0 
+                ? $priceMap[$key] 
+                : (float)($item->purchase_price ?? $item->opening_rate ?? 0);
             return [
                 'color_id'    => $row->color_id,
-                'color_title' => $row->color ? $row->color->title : 'Standard',
+                'color_title' => $row->color ? $row->color->title : null,
                 'size_id'     => $row->size_id,
-                'size_title'  => $row->size ? $row->size->title : 'Standard',
+                'size_title'  => $row->size ? $row->size->title : null,
                 'stock'       => (float)$row->current_stock,
+                'unit_cost'   => $cost,
             ];
         })->values();
 
@@ -649,25 +753,27 @@ class ItemController extends BaseController
             $stock = $defaultStock;
         }
 
-        // Fetch item details and purchase price
-        $item = Item::with('category:id,title', 'unit:id,title')->find($item_id);
-        $cost = $item ? (float)($item->purchase_price ?? $item->price ?? 0) : 0;
+        // Fetch item purchase price
+        $cost = $item ? (float)($item->purchase_price ?? $item->opening_rate ?? 0) : 0;
 
         // Fetch variant-specific purchase price from ItemPrice
         $targetColorId = $request->filled('color_id') ? $request->color_id : ($request->has('color_id') ? null : $defaultColorId);
         $targetSizeId  = $request->filled('size_id') ? $request->size_id : ($request->has('size_id') ? null : $defaultSizeId);
 
-        if ($targetColorId || $targetSizeId) {
-            $ipQuery = \App\Models\ItemPrice::where('item_id', $item_id);
-            if ($targetColorId) {
-                $ipQuery->where('color_id', $targetColorId);
-            }
-            if ($targetSizeId) {
-                $ipQuery->where('size_id', $targetSizeId);
-            }
-            $varPrice = $ipQuery->first();
-            if ($varPrice && !empty($varPrice->purchase_price)) {
-                $cost = (float)$varPrice->purchase_price;
+        $ipQuery = \App\Models\ItemPrice::where('item_id', $item_id);
+        if ($targetColorId) {
+            $ipQuery->where('color_id', $targetColorId);
+        }
+        if ($targetSizeId) {
+            $ipQuery->where('size_id', $targetSizeId);
+        }
+        $varPrice = $ipQuery->first();
+        if ($varPrice && !empty($varPrice->purchase_price)) {
+            $cost = (float)$varPrice->purchase_price;
+        } elseif ($cost <= 0) {
+            $firstPrice = \App\Models\ItemPrice::where('item_id', $item_id)->whereNotNull('purchase_price')->where('purchase_price', '>', 0)->first();
+            if ($firstPrice) {
+                $cost = (float)$firstPrice->purchase_price;
             }
         }
 

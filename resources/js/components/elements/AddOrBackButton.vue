@@ -105,7 +105,9 @@ export default {
 
     methods: {
         pushToBack() {
-            if (window.history.state.back) {
+            if (this.route) {
+                this.$router.push({ name: this.route });
+            } else if (window.history.state.back) {
                 this.$router.back();
             } else {
                 this.$router.push("/dashboard");

@@ -106,23 +106,45 @@
             </div>
             <div class="card-body p-3">
               <div class="row g-3">
+                <!-- 1. Barcode -->
+                <Input v-model='data.barcode' field='data.barcode' title='Barcode' col="4" placeholder="Auto-generated" :req='false' />
+
+                <!-- 2. Category* -->
                 <Select title='Category' v-model='data.category_id' field='data.category_id' label='title'
                   :reduce='(obj) => obj.id' col="4" :options='categories' placeholder='--Select Category--' :closeOnSelect='true'
                   :required='true' />
+
+                <!-- 3. Brand -->
                 <Select title='Brand' v-model='data.brand_id' field='data.brand_id' label='title'
                   :reduce='(obj) => obj.id' col="4" :options='brands'
                   :placeholder="data.category_id ? (brands.length ? '--Select Brand--' : 'No Brand in Category') : '--Select Category First--'"
                   :closeOnSelect='true'
                   :required='false' />
-                <Select title='Unit' v-model='data.unit_id' field='data.unit_id' label='title' :reduce='(obj) => obj.id' col="4"
+                
+                <!-- 4. Series (Brand -> Series - for Electronics Shop) -->
+                <Select v-if="isElectronicsShop" title='Series (সিরিজ)' v-model='data.series_id' field='data.series_id' label='title'
+                  :reduce='(obj) => obj.id' col="4" :options='seriesList'
+                  :placeholder="data.brand_id ? (seriesList.length ? '--Select Series--' : 'No Series in Brand') : '--Select Brand First--'"
+                  :closeOnSelect='true'
+                  :required='false' />
+
+                <!-- 5. Title* -->
+                <Input v-model='data.title' field='data.title' title='Title (নাম)' col="4" :req='true' />
+
+                <!-- 6. Unit* -->
+                <Select title='Unit (একক)' v-model='data.unit_id' field='data.unit_id' label='title' :reduce='(obj) => obj.id' col="4"
                   :options='units' placeholder='--Select Unit--' :closeOnSelect='true' :required='true' />
+
+                <!-- 7. Model (Input Box for Electronics Shop) -->
+                <Input v-if="isElectronicsShop" v-model='data.model_no' field='data.model_no' title='Model (মডেল)' col="4" placeholder="e.g. Inspiron 15, Pro 14..." :req='false' />
+
+                <!-- 8. Purchase Price -->
+                <Input v-model='data.purchase_price' col="4" field='data.purchase_price' title='Purchase Price (ক্রয় মূল্য)' type="number" step="0.01" :req='false' />
+
+                <!-- 9. Selling Price -->
+                <Input v-model='data.selling_price' col="4" field='data.selling_price' title='Selling Price (বিক্রয় মূল্য)' type="number" step="0.01" :req='false' />
                 
-                <Input v-model='data.title' field='data.title' title='Title' col="6" :req='true' />
-                <Input v-model='data.barcode' field='data.barcode' title='Barcode' col="6" placeholder="Auto-generated" :req='false' />
-                
-                <Input v-model='data.purchase_price' col="6" field='data.purchase_price' title='Purchase Price (ক্রয় মূল্য)' type="number" step="0.01" :req='false' />
-                <Input v-model='data.selling_price' col="6" field='data.selling_price' title='Selling Price (বিক্রয় মূল্য)' type="number" step="0.01" :req='false' />
-                
+                <!-- 10. Description -->
                 <Textarea v-model='data.description' field='data.description' :required='false' title="Description" col="12" />
               </div>
             </div>
@@ -195,44 +217,70 @@
           </div>
         </div>
 
-        <!-- Price Modification / New Purchase Checkbox for Edit Mode -->
+        <!-- Price Modification / New Stock Checkbox for Edit Mode -->
         <div class="col-12" v-if="data.id">
           <div class="card border border-info shadow-sm bg-light">
             <div class="card-body p-3">
               <div class="form-check form-switch d-flex align-items-center gap-2">
                 <input class="form-check-input ms-0 cursor-pointer" type="checkbox" id="priceModCheck" v-model="is_price_modification" style="transform: scale(1.3);">
                 <label class="form-check-label fw-bold text-primary fs-6 cursor-pointer mb-0 ms-2" for="priceModCheck">
-                  <i class="fas fa-edit me-1"></i> Price Modification / New Purchase (মূল্য পরিবর্তন / নতুন ক্রয়)
+                  <i class="fas fa-edit me-1"></i> Price Modification / Add Production Stock (মূল্য পরিবর্তন / নতুন স্টক যোগ)
                 </label>
               </div>
               <small class="d-block text-muted mt-2">
-                <i class="fas fa-info-circle me-1"></i> Enable this switch to modify purchase/selling prices or add new stock for specific color & size variants.
+                <i class="fas fa-info-circle me-1"></i> Enable this switch to modify purchase/selling prices or add new production stock for specific color & size variants.
               </small>
             </div>
           </div>
         </div>
 
         <!-- Color & Size Wise Price & Stock Matrix -->
-        <div class="col-12" v-if="!data.id || is_price_modification">
+        <div class="col-12">
           <div class="card border shadow-sm">
             <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-2">
-              <span class="fw-bold fs-6">
-                <i class="fas fa-tags me-2"></i>{{ isElectronicsShop ? 'Color Wise Price & Stock Matrix' : 'Color & Size Wise Price & Stock Matrix' }}
-              </span>
+              <div class="d-flex align-items-center flex-wrap gap-2">
+                <span class="fw-bold fs-6">
+                  <i class="fas fa-tags me-2"></i>{{ isElectronicsShop ? 'Color Wise Price & Stock Matrix' : 'Color & Size Wise Price & Stock Matrix' }}
+                </span>
+                <!-- Stock Instruction Tooltip Button for Edit Mode -->
+                <button
+                  v-if="data.id"
+                  type="button"
+                  class="btn btn-xs btn-outline-info text-info border-info d-inline-flex align-items-center gap-1 ms-1 px-2 py-1 shadow-sm rounded-pill"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="স্টক সম্পর্কিত নির্দেশনা: পূর্বে সংরক্ষিত মজুদ Current Stock (বর্তমান) কলামে দেখা যাচ্ছে। নতুন করে কোনো স্টক ইনপুট দিতে চাইলে Add Qty (নতুন স্টক) ঘরে সংখ্যা লিখুন (ডিফল্ট মান ০ রাখা হয়েছে যাতে আগের স্টকে ভুলবশত কোনো পরিবর্তন না হয়)।"
+                  v-x-tooltip
+                >
+                  <i class="fas fa-info-circle"></i> <span class="small fw-semibold">স্টক নির্দেশিকা</span>
+                </button>
+              </div>
               <button type="button" class="btn btn-sm btn-success px-3 fw-bold" @click="addVariantRow">
                 <i class="fas fa-plus me-1"></i> Add Variant Row
               </button>
             </div>
+
             <div class="card-body p-0 table-responsive">
               <table class="table table-bordered table-striped mb-0 align-middle">
                 <thead class="table-light text-center">
                   <tr>
-                    <th :width="isElectronicsShop ? '28%' : '20%'">Color (রং)</th>
-                    <th width="20%" v-if="!isElectronicsShop">Size (সাইজ)</th>
-                    <th :width="isElectronicsShop ? '24%' : '18%'">Purchase Price (ক্রয় মূল্য)</th>
-                    <th :width="isElectronicsShop ? '24%' : '18%'">Selling Price (বিক্রয় মূল্য)</th>
-                    <th :width="isElectronicsShop ? '14%' : '14%'">{{ data.id ? 'Add Qty (নতুন স্টক)' : 'Opening Qty (মজুদ)' }}</th>
-                    <th width="10%">Action</th>
+                    <th :width="isElectronicsShop ? '24%' : '18%'">Color (রং)</th>
+                    <th width="16%" v-if="!isElectronicsShop">Size (সাইজ)</th>
+                    <th :width="isElectronicsShop ? '18%' : '14%'">Purchase Price (ক্রয়)</th>
+                    <th :width="isElectronicsShop ? '18%' : '14%'">Selling Price (বিক্রয়)</th>
+                    <!-- Current Stock in Edit Mode -->
+                    <th v-if="data.id" :width="isElectronicsShop ? '16%' : '14%'" class="text-primary">Current Stock (বর্তমান)</th>
+                    <!-- Add Qty with explanation tooltip -->
+                    <th :width="isElectronicsShop ? '18%' : '14%'">
+                      <span>{{ data.id ? 'Add Qty (নতুন স্টক)' : 'Opening Qty (মজুদ)' }}</span>
+                      <button v-if="data.id" type="button" class="btn btn-xs btn-link p-0 text-info ms-1 align-baseline"
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="স্টক সম্পর্কিত নির্দেশনা: পূর্বে সংরক্ষিত মজুদ Current Stock (বর্তমান) কলামে দেখা যাচ্ছে। নতুন করে কোনো স্টক ইনপুট দিতে চাইলে Add Qty (নতুন স্টক) ঘরে সংখ্যা লিখুন (ডিফল্ট মান ০ রাখা হয়েছে যাতে আগের স্টকে ভুলবশত কোনো পরিবর্তন না হয়)।"
+                        v-x-tooltip>
+                        <i class="fas fa-question-circle text-primary"></i>
+                      </button>
+                    </th>
+                    <th width="8%">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -255,8 +303,15 @@
                     <td>
                       <input type="number" step="0.01" class="form-control form-control-sm text-end" v-model.number="v.selling_price" placeholder="0.00" />
                     </td>
+                    <!-- Current Stock in Edit Mode -->
+                    <td v-if="data.id" class="text-center">
+                      <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle font-monospace fs-6 px-2 py-1">
+                        {{ formatQty(v.current_stock) }}
+                      </span>
+                    </td>
+                    <!-- Add Qty -->
                     <td>
-                      <input type="number" class="form-control form-control-sm text-center" v-model.number="v.qty" placeholder="0" />
+                      <input type="number" class="form-control form-control-sm text-center font-monospace fw-bold" v-model.number="v.qty" placeholder="0" min="0" />
                     </td>
                     <td class="text-center">
                       <button type="button" class="btn btn-sm btn-outline-danger" @click="removeVariantRow(index)" :disabled="variants.length === 1" title="Remove Row">
@@ -324,6 +379,8 @@ export default {
         barcode: '',
         category_id: null,
         brand_id: null,
+        series_id: null,
+        model_no: '',
         unit_id: null,
         purchase_price: '',
         selling_price: '',
@@ -336,12 +393,13 @@ export default {
       },
       categories: [],
       brands: [],
+      seriesList: [],
       units: [],
       colors: [],
       sizes: [],
       is_price_modification: false,
       variants: [
-        { color_id: null, size_id: null, purchase_price: 0, selling_price: 0, qty: 0 }
+        { color_id: null, size_id: null, purchase_price: 0, selling_price: 0, current_stock: 0, qty: 0 }
       ],
     };
   },
@@ -351,6 +409,14 @@ export default {
       this.getBrands(newVal);
       if (oldVal && newVal !== oldVal) {
         this.data.brand_id = null;
+        this.data.series_id = null;
+        this.seriesList = [];
+      }
+    },
+    'data.brand_id'(newVal, oldVal) {
+      this.getSeries(newVal);
+      if (oldVal && newVal !== oldVal) {
+        this.data.series_id = null;
       }
     },
     'data.purchase_price'(newVal) {
@@ -373,6 +439,11 @@ export default {
     };
   },
   methods: {
+    formatQty(val) {
+      if (val === null || val === undefined || isNaN(val)) return '0';
+      const num = Number(val);
+      return num % 1 === 0 ? num.toString() : num.toFixed(2);
+    },
     addVariantRow() {
       const defPurchase = this.data.purchase_price ? Number(this.data.purchase_price) : 0;
       const defSelling = this.data.selling_price ? Number(this.data.selling_price) : 0;
@@ -381,6 +452,7 @@ export default {
         size_id: null,
         purchase_price: defPurchase,
         selling_price: defSelling,
+        current_stock: 0,
         qty: 0
       });
     },
@@ -408,6 +480,8 @@ export default {
           formData.append('description', this.data.description || '');
           formData.append('category_id', this.data.category_id || '');
           formData.append('brand_id', this.data.brand_id || '');
+          formData.append('series_id', this.data.series_id || '');
+          formData.append('model_no', this.data.model_no || '');
           formData.append('unit_id', this.data.unit_id || '');
           formData.append('purchase_price', this.data.purchase_price || 0);
           formData.append('selling_price', this.data.selling_price || 0);
@@ -455,6 +529,17 @@ export default {
           this.brands = response.data;
         });
     },
+    getSeries(brandId = null) {
+      const bId = brandId || this.data.brand_id;
+      if (!bId) {
+        this.seriesList = [];
+        return;
+      }
+      axios.get(`getseries/${bId}`)
+        .then((response) => {
+          this.seriesList = response.data;
+        });
+    },
     getUnits() {
       let module = 'Item';
       axios.get(`getunits/${module}`)
@@ -464,7 +549,9 @@ export default {
     },
     getColorsAndSizes() {
       axios.get('color?allData=true').then(res => { this.colors = res.data; });
-      axios.get('size?allData=true').then(res => { this.sizes = res.data; });
+      if (!this.isElectronicsShop) {
+        axios.get('size?allData=true').then(res => { this.sizes = res.data; });
+      }
     },
     fetchGeneratedBarcode() {
       axios.get('generate-item-barcode')
@@ -483,20 +570,33 @@ export default {
         if (this.data.category_id) {
           this.getBrands(this.data.category_id);
         }
-        if (this.data.item_prices && this.data.item_prices.length > 0) {
+        if (this.data.brand_id) {
+          this.getSeries(this.data.brand_id);
+        }
+        if (this.data.variants_breakdown && this.data.variants_breakdown.length > 0) {
+          this.variants = this.data.variants_breakdown.map(p => ({
+            color_id: p.color_id,
+            size_id: p.size_id,
+            purchase_price: p.purchase_price,
+            selling_price: p.selling_price,
+            current_stock: p.current_stock || 0,
+            qty: 0,
+          }));
+        } else if (this.data.item_prices && this.data.item_prices.length > 0) {
           this.variants = this.data.item_prices.map(p => ({
             color_id: p.color_id,
             size_id: p.size_id,
             purchase_price: p.purchase_price,
             selling_price: p.selling_price,
+            current_stock: p.current_stock || 0,
             qty: 0,
           }));
-          if (!this.data.purchase_price && this.data.item_prices[0]) {
-            this.data.purchase_price = this.data.item_prices[0].purchase_price;
-          }
-          if (!this.data.selling_price && this.data.item_prices[0]) {
-            this.data.selling_price = this.data.item_prices[0].selling_price;
-          }
+        }
+        if (!this.data.purchase_price && this.variants[0]) {
+          this.data.purchase_price = this.variants[0].purchase_price;
+        }
+        if (!this.data.selling_price && this.variants[0]) {
+          this.data.selling_price = this.variants[0].selling_price;
         }
       });
     } else {
@@ -510,8 +610,23 @@ export default {
   },
 
   validators: {
-    'data.category_id': function (value = null) { return Validator.value(value).required('Category Id is required'); },
+    'data.category_id': function (value = null) { return Validator.value(value).required('Category is required'); },
     'data.title': function (value = null) { return Validator.value(value).required('Title is required'); },
+    'data.unit_id': function (value = null) { return Validator.value(value).required('Unit is required'); },
   },
 }
 </script>
+
+<style scoped>
+.hover-shadow:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-color: #0d6efd !important;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.btn-xs {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.75rem;
+}
+</style>

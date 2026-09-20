@@ -33,19 +33,9 @@ class ReportController extends BaseController
         if ($request->format() == 'html') {
             return view('admin.layouts.admin_app');
         }
-        $from_date = null;
-        $to_date = null;
-
-        $itemid = null;
         $searchdata = $request->all();
-        if ($searchdata && array_key_exists('item_id', $searchdata)) {
-            $itemid = $searchdata['item_id'];
-            $from_date = vue_to_server_date($searchdata['start_date']);
-            $to_date = vue_to_server_date($searchdata['end_date']);
-        }
-
-        $stockledger = $this->getItemLadger($itemid, $from_date, $to_date);
-        return $stockledger;
+        $stockledger = $this->getItemLadger($searchdata);
+        return response()->json($stockledger);
     }
 
     public function availablestock(Request $request)

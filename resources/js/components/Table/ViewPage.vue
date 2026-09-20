@@ -83,10 +83,11 @@
                         <router-link class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit"
                             v-x-tooltip v-if="
                                 showEditRoute &&
+                                ($parent.data?.id || $route.params.id) &&
                                 $root.checkPermission($parent.model + '.edit')
                             " :to="{
                                 name: $parent.model + '.edit',
-                                params: { id: $parent.data.id },
+                                params: { id: $parent.data?.id || $route.params.id },
                                 query: {
                                     page: $route.query.page,
                                 },
@@ -103,13 +104,14 @@
                         <button type="button" class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-title="Delete" v-x-tooltip v-if="
                                 showDeleteButton &&
+                                ($parent.data?.id || $route.params.id) &&
                                 $root.checkPermission(
                                     $parent.model + '.destroy'
                                 )
                             " @click="
                                 destroy(
-                                    $parent.data.id,
-                                    $parent.data.is_delete ?? null
+                                    $parent.data?.id || $route.params.id,
+                                    $parent.data?.is_delete ?? null
                                 )
                                 ">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -290,7 +292,9 @@ export default {
 
                         $("#deleteModal").modal("hide");
 
-                        if (window.history.state.back) {
+                        if (this.$parent && this.$parent.model) {
+                            this.$router.push({ name: this.$parent.model + '.index' });
+                        } else if (window.history.state.back) {
                             this.$router.back();
                         } else {
                             this.$router.push("/dashboard");

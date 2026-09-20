@@ -22,18 +22,9 @@
           </div>
         </div>
 
-        <div class="d-flex flex-wrap gap-2">
-          <button type="button" class="btn btn-outline-primary btn-sm px-3 fw-bold" @click="printSingleBarcode">
-            <i class="fas fa-print me-1"></i> Print Barcode
-          </button>
-          <router-link v-if="data.id" :to="{ name: 'item.edit', params: { id: data.id } }" class="btn btn-warning btn-sm px-3 fw-bold text-dark">
-            <i class="fas fa-edit me-1"></i> Edit Item
-          </router-link>
-          <router-link :to="'/report/itemladger?item_id=' + data.id" class="btn btn-outline-secondary btn-sm px-3 fw-bold">
-            <i class="fas fa-chart-line me-1"></i> Item Ledger
-          </router-link>
-          <router-link :to="{ name: 'item.index' }" class="btn btn-outline-dark btn-sm px-3 fw-bold">
-            <i class="fas fa-arrow-left me-1"></i> Back to List
+        <div class="d-flex flex-wrap gap-2" v-if="data.id">
+          <router-link :to="'/report/itemladger?item_id=' + data.id" class="btn btn-primary btn-sm px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1">
+            <i class="fas fa-chart-line"></i> Item Ledger
           </router-link>
         </div>
       </div>

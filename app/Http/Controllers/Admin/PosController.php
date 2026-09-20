@@ -105,12 +105,17 @@ class PosController extends BaseController
             return response()->json([]);
         }
 
-        $items = Item::where('status', 'active')
+        $itemsQuery = Item::where('status', 'active')
             ->where(function ($q) use ($term) {
                 $q->where('barcode', 'like', "%{$term}%")
                   ->orWhere('title', 'like', "%{$term}%");
-            })
-            ->with([
+            });
+
+        if ($request->filled('category_id')) {
+            $itemsQuery->where('category_id', $request->category_id);
+        }
+
+        $items = $itemsQuery->with([
                 'category:id,title',
                 'unit:id,title',
                 'itemPrices' => function($q) {
@@ -120,7 +125,7 @@ class PosController extends BaseController
                     $q->with('color:id,title', 'size:id,title');
                 }
             ])
-            ->limit(20)
+            ->limit(25)
             ->get();
 
         $itemIds = $items->pluck('id')->toArray();

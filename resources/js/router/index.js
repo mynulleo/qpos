@@ -1220,6 +1220,27 @@ const routes = [
                 name: "brand.edit",
                 component: () => import("./../views/admin/brand/create"),
             },
+            // ------------------Series PORTION------------------
+            {
+                path: "/series",
+                name: "series.index",
+                component: () => import("./../views/admin/series/index"),
+            },
+            {
+                path: "/series/create",
+                name: "series.create",
+                component: () => import("./../views/admin/series/create"),
+            },
+            {
+                path: "/series/:id",
+                name: "series.show",
+                component: () => import("./../views/admin/series/view"),
+            },
+            {
+                path: "/series/:id/edit",
+                name: "series.edit",
+                component: () => import("./../views/admin/series/create"),
+            },
 
             // ------------------Warranty Claim PORTION------------------
             {
@@ -1264,6 +1285,29 @@ const routes = [
                 name: "wastage.edit",
                 component: () => import("./../views/admin/wastage/create"),
             },
+
+            // ------------------Stock Adjustment PORTION------------------
+            {
+                path: "/stockAdjustment",
+                name: "stockAdjustment.index",
+                component: () => import("./../views/admin/stockAdjustment/index"),
+            },
+            {
+                path: "/stockAdjustment/create",
+                name: "stockAdjustment.create",
+                component: () => import("./../views/admin/stockAdjustment/create"),
+            },
+            {
+                path: "/stockAdjustment/:id",
+                name: "stockAdjustment.show",
+                component: () => import("./../views/admin/stockAdjustment/view"),
+            },
+            {
+                path: "/stockAdjustment/:id/edit",
+                name: "stockAdjustment.edit",
+                component: () => import("./../views/admin/stockAdjustment/create"),
+            },
+
 
             // ------------------Report PORTION------------------
             {

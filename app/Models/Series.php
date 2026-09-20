@@ -8,24 +8,24 @@ namespace App\Models;
 
 use App\Models\Base\BaseModel;
 
-class Brand extends BaseModel
+class Series extends BaseModel
 {
     protected $guarded = ['id'];
 
-    protected $logName = "Brand";
+    protected $logName = "Series";
 
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
     }
 
-    public function series()
+    public function brand()
     {
-        return $this->hasMany(Series::class, 'brand_id', 'id');
+        return $this->belongsTo(Brand::class, 'brand_id', 'id');
     }
 
     public function items()
     {
-        return $this->hasMany(Item::class);
+        return $this->hasMany(Item::class, 'series_id', 'id');
     }
 }
