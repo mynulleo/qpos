@@ -32,7 +32,7 @@
       <!-- KPI Summary Cards (Overview) -->
       <div class="row g-3 mb-4" v-if="data.metrics">
         <!-- 1. Current Available Stock -->
-        <div class="col-xl-3 col-md-6 col-12">
+        <div class="col-xxl-2 col-xl-4 col-md-6 col-12" style="flex: 1 1 0px;">
           <div class="card border-0 shadow-sm border-start border-primary border-4 h-100 bg-white">
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
@@ -63,7 +63,7 @@
         </div>
 
         <!-- 2. Total Sold Quantity & Sales Value -->
-        <div class="col-xl-3 col-md-6 col-12">
+        <div class="col-xxl-2 col-xl-4 col-md-6 col-12" style="flex: 1 1 0px;">
           <div class="card border-0 shadow-sm border-start border-success border-4 h-100 bg-white">
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
@@ -86,7 +86,7 @@
         </div>
 
         <!-- 3. Total Stock In & Purchase Value -->
-        <div class="col-xl-3 col-md-6 col-12">
+        <div class="col-xxl-2 col-xl-4 col-md-6 col-12" style="flex: 1 1 0px;">
           <div class="card border-0 shadow-sm border-start border-info border-4 h-100 bg-white">
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
@@ -108,8 +108,42 @@
           </div>
         </div>
 
-        <!-- 4. Total Wastage / Damage -->
-        <div class="col-xl-3 col-md-6 col-12">
+        <!-- 4. Stock Adjustment (সমন্বয়) -->
+        <div class="col-xxl-2 col-xl-4 col-md-6 col-12" style="flex: 1 1 0px;">
+          <div class="card border-0 shadow-sm border-start border-warning border-4 h-100 bg-white">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="text-uppercase small fw-bold text-muted mb-1">Stock Adjustment (সমন্বয়)</div>
+                  <h3 class="mb-0 fw-bold" :class="Number(data.metrics.net_adjustment_qty) > 0 ? 'text-success' : (Number(data.metrics.net_adjustment_qty) < 0 ? 'text-danger' : 'text-secondary')">
+                    {{ Number(data.metrics.net_adjustment_qty) > 0 ? '+' : '' }}{{ data.metrics.net_adjustment_qty }}
+                    <small class="fs-6 text-muted fw-normal">Net</small>
+                  </h3>
+                  <div class="small mt-1">
+                    <span v-if="Number(data.metrics.net_adjustment_qty) > 0" class="badge bg-success bg-opacity-10 text-success fw-bold">
+                      <i class="fas fa-arrow-up me-1"></i> Increased
+                    </span>
+                    <span v-else-if="Number(data.metrics.net_adjustment_qty) < 0" class="badge bg-danger bg-opacity-10 text-danger fw-bold">
+                      <i class="fas fa-arrow-down me-1"></i> Decreased
+                    </span>
+                    <span v-else class="badge bg-secondary bg-opacity-10 text-muted fw-bold">
+                      <i class="fas fa-check me-1"></i> Balanced
+                    </span>
+                    <small class="text-muted ms-1" v-if="data.metrics.total_adjustments_count > 0">
+                      ({{ data.metrics.total_adjustments_count }} record{{ data.metrics.total_adjustments_count > 1 ? 's' : '' }})
+                    </small>
+                  </div>
+                </div>
+                <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle">
+                  <i class="fas fa-sliders-h fa-2x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Total Wastage / Damage -->
+        <div class="col-xxl-2 col-xl-4 col-md-6 col-12" style="flex: 1 1 0px;">
           <div class="card border-0 shadow-sm border-start border-danger border-4 h-100 bg-white">
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
@@ -287,15 +321,16 @@
               <table class="table table-bordered table-striped align-middle mb-0">
                 <thead class="table-light text-center" style="font-size: 13px;">
                   <tr>
-                    <th width="4%">#</th>
-                    <th :width="isElectronicsShop ? '16%' : '12%'">Color (রং)</th>
-                    <th width="12%" v-if="!isElectronicsShop">Size (সাইজ)</th>
-                    <th width="12%">Purchase Price</th>
-                    <th width="12%">Selling Price</th>
-                    <th width="14%">Profit Margin</th>
-                    <th width="9%">Total In</th>
-                    <th width="9%">Sold Qty</th>
-                    <th width="9%">Wastage</th>
+                    <th width="3%">#</th>
+                    <th :width="isElectronicsShop ? '15%' : '11%'">Color (রং)</th>
+                    <th width="11%" v-if="!isElectronicsShop">Size (সাইজ)</th>
+                    <th width="11%">Purchase Price</th>
+                    <th width="11%">Selling Price</th>
+                    <th width="12%">Profit Margin</th>
+                    <th width="8%">Total In</th>
+                    <th width="8%">Sold Qty</th>
+                    <th width="8%">Wastage</th>
+                    <th width="9%">Stock Adj (+/-)</th>
                     <th width="9%">Current Stock</th>
                   </tr>
                 </thead>
@@ -325,13 +360,24 @@
                     <td class="text-center fw-bold text-success">{{ v.total_sold }}</td>
                     <td class="text-center fw-semibold text-danger">{{ v.total_wastage }}</td>
                     <td class="text-center">
+                      <span v-if="Number(v.net_adjustment) > 0" class="badge bg-success bg-opacity-10 text-success border border-success font-monospace px-2 py-1" :title="'Adjusted In: ' + v.adjustment_in">
+                        +{{ v.net_adjustment }}
+                      </span>
+                      <span v-else-if="Number(v.net_adjustment) < 0" class="badge bg-danger bg-opacity-10 text-danger border border-danger font-monospace px-2 py-1" :title="'Adjusted Out: ' + v.adjustment_out">
+                        {{ v.net_adjustment }}
+                      </span>
+                      <span v-else class="text-muted small font-monospace">
+                        0
+                      </span>
+                    </td>
+                    <td class="text-center">
                       <span class="badge fs-6 font-monospace" :class="v.current_stock > 5 ? 'bg-success' : (v.current_stock > 0 ? 'bg-warning text-dark' : 'bg-danger')">
                         {{ v.current_stock }}
                       </span>
                     </td>
                   </tr>
                   <tr v-if="!data.variants_breakdown || data.variants_breakdown.length === 0">
-                    <td :colspan="isElectronicsShop ? 9 : 10" class="text-center text-muted py-3">No variant details found for this item.</td>
+                    <td :colspan="isElectronicsShop ? 10 : 11" class="text-center text-muted py-3">No variant details found for this item.</td>
                   </tr>
                 </tbody>
               </table>
@@ -359,6 +405,14 @@
                 <li class="nav-item" role="presentation">
                   <button class="nav-link fw-bold small" id="purchase-tab" data-bs-toggle="tab" data-bs-target="#purchase-tab-pane" type="button" role="tab">
                     <i class="fas fa-truck-loading me-1 text-info"></i> Recent Purchases (সাম্প্রতিক ক্রয়সমূহ)
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link fw-bold small" id="adjustment-tab" data-bs-toggle="tab" data-bs-target="#adjustment-tab-pane" type="button" role="tab">
+                    <i class="fas fa-sliders-h me-1 text-warning"></i> Stock Adjustments (স্টক সমন্বয় ইতিহাস)
+                    <span class="badge bg-secondary ms-1" v-if="data.recent_stock_adjustments && data.recent_stock_adjustments.length > 0">
+                      {{ data.recent_stock_adjustments.length }}
+                    </span>
                   </button>
                 </li>
               </ul>
@@ -478,6 +532,91 @@
                         </tr>
                         <tr v-if="!data.recent_purchases || data.recent_purchases.length === 0">
                           <td colspan="8" class="text-center text-muted py-3">No purchase records found for this item yet.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Tab 4: Recent Stock Adjustments -->
+                <div class="tab-pane fade p-3" id="adjustment-tab-pane" role="tabpanel">
+                  <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0">
+                      <thead class="table-light text-center" style="font-size: 13px;">
+                        <tr>
+                          <th width="4%">#</th>
+                          <th width="14%">Adjustment No</th>
+                          <th width="11%">Date</th>
+                          <th width="13%">Type / Reason</th>
+                          <th width="11%">Warehouse</th>
+                          <th width="11%">Variant</th>
+                          <th width="7%" class="text-center">System</th>
+                          <th width="7%" class="text-center">Physical</th>
+                          <th width="10%" class="text-center">Adjusted (+/-)</th>
+                          <th width="9%" class="text-end">Unit Cost</th>
+                          <th width="10%" class="text-end">Total Value</th>
+                          <th width="11%">Conducted By</th>
+                          <th width="6%" class="text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(adj, aIdx) in data.recent_stock_adjustments" :key="aIdx">
+                          <td class="text-center">{{ aIdx + 1 }}</td>
+                          <td class="text-center">
+                            <router-link :to="'/stockAdjustment/' + adj.stock_adjustment_id" class="fw-bold font-monospace text-primary text-decoration-none" title="View Full Adjustment">
+                              <i class="fas fa-sliders-h me-1 text-warning"></i>{{ adj.adjustment_no }}
+                            </router-link>
+                          </td>
+                          <td class="text-center small font-monospace">{{ adj.adjustment_date }}</td>
+                          <td class="text-center">
+                            <span class="badge bg-warning bg-opacity-10 text-dark border border-warning">
+                              {{ adj.adjustment_type || 'General' }}
+                            </span>
+                          </td>
+                          <td class="text-center small">
+                            <span v-if="adj.warehouse_name" class="badge bg-light text-secondary border">
+                              <i class="fas fa-warehouse me-1"></i>{{ adj.warehouse_name }}
+                            </span>
+                            <span v-else class="text-muted">-</span>
+                          </td>
+                          <td class="small text-center">
+                            <span v-if="adj.color_title || adj.size_title" class="badge bg-light text-dark border">
+                              {{ adj.color_title || '-' }} / {{ adj.size_title || '-' }}
+                            </span>
+                            <span v-else class="text-muted">Standard</span>
+                          </td>
+                          <td class="text-center font-monospace text-secondary">{{ adj.system_qty }}</td>
+                          <td class="text-center font-monospace fw-semibold">{{ adj.physical_qty }}</td>
+                          <td class="text-center">
+                            <span v-if="Number(adj.difference_qty) > 0" class="badge bg-success bg-opacity-10 text-success border border-success font-monospace px-2 py-1">
+                              +{{ adj.difference_qty }} (In)
+                            </span>
+                            <span v-else-if="Number(adj.difference_qty) < 0" class="badge bg-danger bg-opacity-10 text-danger border border-danger font-monospace px-2 py-1">
+                              {{ adj.difference_qty }} (Out)
+                            </span>
+                            <span v-else class="badge bg-secondary bg-opacity-10 text-muted font-monospace px-2 py-1">
+                              0
+                            </span>
+                          </td>
+                          <td class="text-end font-monospace">{{ $filter.formatBDT(adj.unit_cost) }}</td>
+                          <td class="text-end font-monospace fw-bold text-dark">{{ $filter.formatBDT(adj.total_amount) }}</td>
+                          <td class="small">
+                            <span v-if="adj.conducted_by_name && adj.conducted_by_name !== 'N/A'">
+                              <i class="fas fa-user-check text-success me-1"></i>{{ adj.conducted_by_name }}
+                            </span>
+                            <span v-else class="text-muted">-</span>
+                          </td>
+                          <td class="text-center">
+                            <router-link :to="'/stockAdjustment/' + adj.stock_adjustment_id" class="btn btn-xs btn-outline-primary px-2 py-0" title="View Full Adjustment Voucher">
+                              <i class="fas fa-eye"></i>
+                            </router-link>
+                          </td>
+                        </tr>
+                        <tr v-if="!data.recent_stock_adjustments || data.recent_stock_adjustments.length === 0">
+                          <td colspan="13" class="text-center text-muted py-4">
+                            <i class="fas fa-sliders-h fa-2x mb-2 text-secondary opacity-50 d-block"></i>
+                            No stock adjustment records logged for this item yet.
+                          </td>
                         </tr>
                       </tbody>
                     </table>

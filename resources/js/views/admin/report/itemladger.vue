@@ -828,6 +828,11 @@ export default {
                 case 'SalesReturn':
                 case 'Return':
                     return 'bg-warning text-dark';
+                case 'Adjustment':
+                case 'StockAdjustment':
+                    return 'bg-warning text-dark border border-warning';
+                case 'Production':
+                    return 'bg-info text-white';
                 case 'Wastage':
                     return 'bg-danger text-white';
                 default:
@@ -851,6 +856,11 @@ export default {
                 case 'SalesReturn':
                 case 'Return':
                     return 'fas fa-undo-alt';
+                case 'Adjustment':
+                case 'StockAdjustment':
+                    return 'fas fa-sliders-h';
+                case 'Production':
+                    return 'fas fa-industry';
                 case 'Wastage':
                     return 'fas fa-trash-alt';
                 default:

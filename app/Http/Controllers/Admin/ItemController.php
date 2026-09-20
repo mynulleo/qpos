@@ -248,6 +248,38 @@ class ItemController extends BaseController
             })
             ->sum('qty_out');
 
+        $totalAdjustmentIn = (float) DB::table('stock_transactions')
+            ->where('item_id', $id)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->where('transaction_type', 'Adjustment')
+                  ->orWhere('reference_type', 'StockAdjustment')
+                  ->orWhere('reference_type', 'Adjustment');
+            })
+            ->sum('qty_in');
+
+        $totalAdjustmentOut = (float) DB::table('stock_transactions')
+            ->where('item_id', $id)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->where('transaction_type', 'Adjustment')
+                  ->orWhere('reference_type', 'StockAdjustment')
+                  ->orWhere('reference_type', 'Adjustment');
+            })
+            ->sum('qty_out');
+
+        $netAdjustmentQty = $totalAdjustmentIn - $totalAdjustmentOut;
+
+        $totalAdjustmentDetailsCount = DB::table('stock_adjustment_details')
+            ->where('item_id', $id)
+            ->where('status', 'active')
+            ->count();
+
+        $totalAdjustmentAmount = (float) DB::table('stock_adjustment_details')
+            ->where('item_id', $id)
+            ->where('status', 'active')
+            ->sum('total_amount');
+
         $totalStockOut = (float) DB::table('stock_transactions')
             ->where('item_id', $id)
             ->where('status', 'active')
@@ -368,6 +400,44 @@ class ItemController extends BaseController
                 })
                 ->sum('qty_out');
 
+            $vAdjustmentIn = (float) DB::table('stock_transactions')
+                ->where('item_id', $id)
+                ->where('status', 'active')
+                ->where(function($q) use ($cId) {
+                    if ($cId) $q->where('color_id', $cId);
+                    else $q->whereNull('color_id');
+                })
+                ->where(function($q) use ($sId) {
+                    if ($sId) $q->where('size_id', $sId);
+                    else $q->whereNull('size_id');
+                })
+                ->where(function($q) {
+                    $q->where('transaction_type', 'Adjustment')
+                      ->orWhere('reference_type', 'StockAdjustment')
+                      ->orWhere('reference_type', 'Adjustment');
+                })
+                ->sum('qty_in');
+
+            $vAdjustmentOut = (float) DB::table('stock_transactions')
+                ->where('item_id', $id)
+                ->where('status', 'active')
+                ->where(function($q) use ($cId) {
+                    if ($cId) $q->where('color_id', $cId);
+                    else $q->whereNull('color_id');
+                })
+                ->where(function($q) use ($sId) {
+                    if ($sId) $q->where('size_id', $sId);
+                    else $q->whereNull('size_id');
+                })
+                ->where(function($q) {
+                    $q->where('transaction_type', 'Adjustment')
+                      ->orWhere('reference_type', 'StockAdjustment')
+                      ->orWhere('reference_type', 'Adjustment');
+                })
+                ->sum('qty_out');
+
+            $vNetAdjustment = $vAdjustmentIn - $vAdjustmentOut;
+
             $vTotalOut = (float) DB::table('stock_transactions')
                 ->where('item_id', $id)
                 ->where('status', 'active')
@@ -397,6 +467,9 @@ class ItemController extends BaseController
                 'total_qty_in'    => $vQtyIn,
                 'total_sold'      => $vSoldQty,
                 'total_wastage'   => $vWastageQty,
+                'adjustment_in'   => $vAdjustmentIn,
+                'adjustment_out'  => $vAdjustmentOut,
+                'net_adjustment'  => $vNetAdjustment,
                 'current_stock'   => $vStock,
                 'last_updated'    => $v['updated_at'] ? date('d M, Y h:i A', strtotime($v['updated_at'])) : ($v['created_at'] ? date('d M, Y h:i A', strtotime($v['created_at'])) : null),
             ];
@@ -451,10 +524,6 @@ class ItemController extends BaseController
             ];
         }
 
-        usort($priceHistory, function ($a, $b) {
-            return strtotime($b['created_at']) <=> strtotime($a['created_at']);
-        });
-
         // 4. Recent Sales History (Last 10)
         $recentSales = DB::table('invoice_details as ind')
             ->join('invoices as inv', 'inv.id', '=', 'ind.invoice_id')
@@ -480,20 +549,75 @@ class ItemController extends BaseController
             ->limit(10)
             ->get();
 
+        // 5. Recent Stock Adjustments (Last 20)
+        $recentStockAdjustments = DB::table('stock_adjustment_details as sad')
+            ->join('stock_adjustments as sa', 'sa.id', '=', 'sad.stock_adjustment_id')
+            ->leftJoin('employees as emp', 'emp.id', '=', 'sa.conducted_by')
+            ->leftJoin('warehouses as wh', 'wh.id', '=', 'sad.warehouse_id')
+            ->leftJoin('colors as c', 'c.id', '=', 'sad.color_id')
+            ->leftJoin('sizes as sz', 'sz.id', '=', 'sad.size_id')
+            ->where('sad.item_id', $id)
+            ->where('sad.status', 'active')
+            ->select(
+                'sad.id',
+                'sad.stock_adjustment_id',
+                'sa.adjustment_no',
+                'sa.adjustment_type',
+                'sa.adjustment_date',
+                DB::raw("COALESCE(emp.full_name, 'N/A') as conducted_by_name"),
+                'wh.name as warehouse_name',
+                'c.title as color_title',
+                'sz.title as size_title',
+                'sad.system_qty',
+                'sad.physical_qty',
+                'sad.difference_qty',
+                'sad.unit_cost',
+                'sad.total_amount',
+                'sad.remarks',
+                'sad.created_at'
+            )
+            ->orderBy('sad.id', 'desc')
+            ->limit(20)
+            ->get();
+
+        foreach ($recentStockAdjustments as $adj) {
+            if ($adj->unit_cost > 0) {
+                $priceHistory[] = [
+                    'type'           => 'Stock Adjustment (' . ($adj->adjustment_no ?: 'N/A') . ')',
+                    'color_title'    => $adj->color_title ?: 'Standard',
+                    'size_title'     => $adj->size_title ?: 'Standard',
+                    'purchase_price' => (float)$adj->unit_cost,
+                    'selling_price'  => null,
+                    'date'           => date('d M, Y', strtotime($adj->adjustment_date ?: $adj->created_at)),
+                    'created_at'     => $adj->created_at,
+                ];
+            }
+        }
+
+        usort($priceHistory, function ($a, $b) {
+            return strtotime($b['created_at']) <=> strtotime($a['created_at']);
+        });
+
         $item->metrics = [
-            'total_stock_in'        => $totalQtyIn,
-            'total_sold_qty'        => $totalSoldQty,
-            'total_wastage_qty'     => $totalWastageQty,
-            'total_stock_out'       => $totalStockOut,
-            'current_stock'         => $currentStock,
-            'total_sales_amount'    => $totalSalesAmount,
-            'total_purchase_amount' => $totalPurchaseAmount,
+            'total_stock_in'           => $totalQtyIn,
+            'total_sold_qty'           => $totalSoldQty,
+            'total_wastage_qty'        => $totalWastageQty,
+            'total_adjustment_in'      => $totalAdjustmentIn,
+            'total_adjustment_out'     => $totalAdjustmentOut,
+            'net_adjustment_qty'       => $netAdjustmentQty,
+            'total_adjustments_count'  => $totalAdjustmentDetailsCount,
+            'total_adjustment_amount'  => $totalAdjustmentAmount,
+            'total_stock_out'          => $totalStockOut,
+            'current_stock'            => $currentStock,
+            'total_sales_amount'       => $totalSalesAmount,
+            'total_purchase_amount'    => $totalPurchaseAmount,
         ];
 
         $item->variants_breakdown = $variantsBreakdown;
         $item->price_history = $priceHistory;
         $item->recent_sales = $recentSales;
         $item->recent_purchases = $recentPurchases;
+        $item->recent_stock_adjustments = $recentStockAdjustments;
 
         return $item;
     }
