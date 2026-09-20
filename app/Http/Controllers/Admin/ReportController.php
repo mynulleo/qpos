@@ -49,19 +49,53 @@ class ReportController extends BaseController
             ? (int) $searchdata['low_threshold']
             : 5;
 
-        // 1. Fast Global Stock Counts in single query
-        $counts = DB::table('item_stock_summaries')
-            ->selectRaw("
-                COUNT(*) as all_count,
-                SUM(CASE WHEN current_stock > 0 AND current_stock <= {$lowThreshold} THEN 1 ELSE 0 END) as low_stock_count,
-                SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_of_stock_count,
-                SUM(CASE WHEN current_stock < 0 THEN 1 ELSE 0 END) as negative_stock_count,
-                SUM(CASE WHEN current_stock > 0 THEN 1 ELSE 0 END) as in_stock_count,
-                SUM(total_qty_in) as total_in,
-                SUM(total_qty_out) as total_out,
-                SUM(CASE WHEN current_stock > 0 THEN current_stock ELSE 0 END) as total_current_stock
-            ")
-            ->first();
+        $warehouseId = !empty($searchdata['warehouse_id']) ? $searchdata['warehouse_id'] : null;
+
+        // 1. Fast Stock Counts (by Warehouse or Global)
+        if ($warehouseId) {
+            $issSource = DB::table('stock_transactions')
+                ->where('status', 'active')
+                ->where('warehouse_id', $warehouseId)
+                ->select(
+                    'item_id',
+                    'color_id',
+                    'size_id',
+                    DB::raw('SUM(qty_in) as total_qty_in'),
+                    DB::raw('SUM(qty_out) as total_qty_out'),
+                    DB::raw('(SUM(qty_in) - SUM(qty_out)) as current_stock')
+                )
+                ->groupBy('item_id', 'color_id', 'size_id');
+
+            $counts = DB::query()->fromSub($issSource, 'iss')
+                ->selectRaw("
+                    COUNT(*) as all_count,
+                    SUM(CASE WHEN current_stock > 0 AND current_stock <= {$lowThreshold} THEN 1 ELSE 0 END) as low_stock_count,
+                    SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_of_stock_count,
+                    SUM(CASE WHEN current_stock < 0 THEN 1 ELSE 0 END) as negative_stock_count,
+                    SUM(CASE WHEN current_stock > 0 THEN 1 ELSE 0 END) as in_stock_count,
+                    SUM(total_qty_in) as total_in,
+                    SUM(total_qty_out) as total_out,
+                    SUM(CASE WHEN current_stock > 0 THEN current_stock ELSE 0 END) as total_current_stock
+                ")
+                ->first();
+
+            $query = DB::query()->fromSub($issSource, 'iss');
+        } else {
+            $counts = DB::table('item_stock_summaries')
+                ->selectRaw("
+                    COUNT(*) as all_count,
+                    SUM(CASE WHEN current_stock > 0 AND current_stock <= {$lowThreshold} THEN 1 ELSE 0 END) as low_stock_count,
+                    SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_of_stock_count,
+                    SUM(CASE WHEN current_stock < 0 THEN 1 ELSE 0 END) as negative_stock_count,
+                    SUM(CASE WHEN current_stock > 0 THEN 1 ELSE 0 END) as in_stock_count,
+                    SUM(total_qty_in) as total_in,
+                    SUM(total_qty_out) as total_out,
+                    SUM(CASE WHEN current_stock > 0 THEN current_stock ELSE 0 END) as total_current_stock
+                ")
+                ->first();
+
+            $query = DB::table('item_stock_summaries as iss');
+        }
 
         // 2. High-Performance Query with Single-Pass Pricing Resolution
         $latestPurchaseSub = DB::table('purchase_details')
@@ -73,9 +107,10 @@ class ReportController extends BaseController
                   ->groupBy('item_id', 'color_id', 'size_id');
             });
 
-        $query = DB::table('item_stock_summaries as iss')
-            ->join('items as i', 'i.id', '=', 'iss.item_id')
+        $query->join('items as i', 'i.id', '=', 'iss.item_id')
             ->leftJoin('categories as c', 'c.id', '=', 'i.category_id')
+            ->leftJoin('brands as b', 'b.id', '=', 'i.brand_id')
+            ->leftJoin('series as s', 's.id', '=', 'i.series_id')
             ->leftJoin('units as u', 'u.id', '=', 'i.unit_id')
             ->leftJoin('colors as col', 'col.id', '=', 'iss.color_id')
             ->leftJoin('sizes as sz', 'sz.id', '=', 'iss.size_id')
@@ -120,7 +155,12 @@ class ReportController extends BaseController
                 'i.title as item_title',
                 'i.barcode',
                 'i.category_id',
+                'i.brand_id',
+                'i.series_id',
+                'i.model_no',
                 'c.title as category_title',
+                'b.title as brand_title',
+                's.title as series_title',
                 'u.title as unit_title',
                 'col.title as color_title',
                 'sz.title as size_title',
@@ -143,6 +183,19 @@ class ReportController extends BaseController
         if (!empty($searchdata['category_id'])) {
             $query->where('i.category_id', $searchdata['category_id']);
         }
+        if (!empty($searchdata['brand_id'])) {
+            $query->where('i.brand_id', $searchdata['brand_id']);
+        }
+        if (!empty($searchdata['series_id'])) {
+            $query->where('i.series_id', $searchdata['series_id']);
+        }
+        if (!empty($searchdata['model_id'])) {
+            $query->where('i.series_id', $searchdata['model_id']);
+        }
+        if (!empty($searchdata['model_no'])) {
+            $m = trim($searchdata['model_no']);
+            $query->where('i.model_no', 'like', "%{$m}%");
+        }
         if (!empty($searchdata['item_id'])) {
             $query->where('iss.item_id', $searchdata['item_id']);
         }
@@ -159,7 +212,10 @@ class ReportController extends BaseController
             $kw = trim($searchdata['keyword']);
             $query->where(function ($q) use ($kw) {
                 $q->where('i.title', 'like', "%{$kw}%")
-                  ->orWhere('i.barcode', 'like', "%{$kw}%");
+                  ->orWhere('i.barcode', 'like', "%{$kw}%")
+                  ->orWhere('i.model_no', 'like', "%{$kw}%")
+                  ->orWhere('b.title', 'like', "%{$kw}%")
+                  ->orWhere('s.title', 'like', "%{$kw}%");
             });
         }
         if (isset($searchdata['from_qty']) && is_numeric($searchdata['from_qty'])) {
@@ -234,9 +290,16 @@ class ReportController extends BaseController
                 'title'       => $row->item_title,
                 'barcode'     => $row->barcode,
                 'category_id' => $row->category_id,
+                'brand_id'    => $row->brand_id,
+                'series_id'   => $row->series_id,
+                'model_no'    => $row->model_no,
+                'brand'       => $row->brand_title ? ['title' => $row->brand_title] : null,
+                'series'      => $row->series_title ? ['title' => $row->series_title] : null,
                 'category'    => $row->category_title ? ['title' => $row->category_title] : null,
                 'unit'        => $row->unit_title ? ['title' => $row->unit_title] : null,
             ];
+            $row->brand = $row->brand_title ? ['title' => $row->brand_title] : null;
+            $row->series = $row->series_title ? ['title' => $row->series_title] : null;
             $row->color = $row->color_title ? ['title' => $row->color_title] : null;
             $row->size  = $row->size_title ? ['title' => $row->size_title] : null;
 

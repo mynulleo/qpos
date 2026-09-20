@@ -1308,6 +1308,28 @@ const routes = [
                 component: () => import("./../views/admin/stockAdjustment/create"),
             },
 
+            // ------------------Quotation PORTION------------------
+            {
+                path: "/quotation",
+                name: "quotation.index",
+                component: () => import("./../views/admin/quotation/index"),
+            },
+            {
+                path: "/quotation/create",
+                name: "quotation.create",
+                component: () => import("./../views/admin/quotation/create"),
+            },
+            {
+                path: "/quotation/:id",
+                name: "quotation.show",
+                component: () => import("./../views/admin/quotation/view"),
+            },
+            {
+                path: "/quotation/:id/edit",
+                name: "quotation.edit",
+                component: () => import("./../views/admin/quotation/create"),
+            },
+
 
             // ------------------Report PORTION------------------
             {

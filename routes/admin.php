@@ -234,6 +234,8 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('grn', App\Http\Controllers\Admin\GrnController::class);
         Route::resource('stockAdjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
         Route::resource('stock-adjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
+        Route::post('quotation/{id}/change-status', [App\Http\Controllers\Admin\QuotationController::class, 'changeStatus'])->name('quotation.changeStatus');
+        Route::resource('quotation', App\Http\Controllers\Admin\QuotationController::class);
 
         // POS Terminal View Routes
         Route::get('pos', [App\Http\Controllers\Admin\PosController::class, 'index'])->name('pos.index');
