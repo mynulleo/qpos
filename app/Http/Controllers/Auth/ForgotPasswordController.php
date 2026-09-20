@@ -28,7 +28,7 @@ class ForgotPasswordController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $user = Admin::where('email', $request->input('email'))->first();
+        $user = Admin::withoutGlobalScopes()->where('email', $request->input('email'))->first();
 
         if ($user) {
             // Generate the password reset token

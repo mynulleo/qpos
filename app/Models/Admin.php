@@ -15,6 +15,9 @@ class Admin extends Authenticatable
 {
     use Notifiable, SoftDeletes, LogsActivity;
 
+    protected $connection = 'accessdb';
+    protected $table = 'organization_users';
+
     protected $guarded = ['id'];
 
     protected $logName = "Admin";
@@ -24,12 +27,101 @@ class Admin extends Authenticatable
         'remember_token',
     ];
 
-    protected $appends = ['is_delete', 'original_profile', 'profile_one', 'profile_two', 'profile_three'];
+    protected $appends = ['name', 'is_delete', 'original_profile', 'profile_one', 'profile_two', 'profile_three'];
+
+    private static bool $isResolvingScope = false;
+
+    public static function getActiveOrganizationId(): ?int
+    {
+        if (static::$isResolvingScope) {
+            return null;
+        }
+
+        static::$isResolvingScope = true;
+
+        $orgId = null;
+        try {
+            if (Auth::guard('admin')->hasUser()) {
+                $orgId = Auth::guard('admin')->user()->organization_id ?? null;
+            } elseif (Auth::hasUser()) {
+                $orgId = Auth::user()->organization_id ?? null;
+            } elseif (session()->has('organization_id')) {
+                $orgId = session('organization_id');
+            }
+        } catch (\Throwable $e) {
+            $orgId = null;
+        } finally {
+            static::$isResolvingScope = false;
+        }
+
+        return $orgId ? (int) $orgId : null;
+    }
+
+    protected static function booted()
+    {
+        static::addGlobalScope('organization', function ($builder) {
+            $orgId = static::getActiveOrganizationId();
+            if (!empty($orgId)) {
+                $builder->where($builder->getModel()->getTable() . '.organization_id', $orgId);
+            }
+        });
+
+        static::creating(function ($model) {
+            if (empty($model->organization_id)) {
+                $orgId = static::getActiveOrganizationId();
+                if (!empty($orgId)) {
+                    $model->organization_id = $orgId;
+                }
+            }
+        });
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['full_name'] ?? ($this->attributes['name'] ?? '');
+    }
+
+    public function setNameAttribute($value)
+    {
+        $this->attributes['full_name'] = $value;
+    }
+
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class, 'organization_id', 'id');
+    }
+
+    public function role()
+    {
+        return $this->hasOne(Role::class, 'id', 'role_id')->select('id', 'name');
+    }
+
+    public function getRoleAttribute()
+    {
+        if ($this->relationLoaded('role')) {
+            $r = $this->getRelation('role');
+            if ($r) return $r;
+        }
+
+        if (!empty($this->role_id)) {
+            try {
+                $conn = config('database.default', 'mysql');
+                return Role::on($conn)->select('id', 'name')->find($this->role_id);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
 
     public function getDescriptionForEvent(string $eventName): string
     {
         $guard = GlobalHelper::get_guard();
-        $name = Auth::guard($guard)->user()->name ?? '';
+        $name = '';
+        if (Auth::guard($guard)->hasUser()) {
+            $name = Auth::guard($guard)->user()->name ?? '';
+        }
 
         return "{$name} - {$eventName} this";
     }
@@ -41,11 +133,6 @@ class Admin extends Authenticatable
             ->logUnguarded(true)
             ->logOnly(['*'])
             ->useLogName($this->logName);
-    }
-
-    public function role()
-    {
-        return $this->hasOne(Role::class, 'id', 'role_id')->select('id', 'name');
     }
 
     public function getProfileAttribute($value)
