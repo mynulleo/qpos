@@ -140,7 +140,7 @@
               </span>
               <ul class="mb-0 ps-3 mt-1 small">
                 <li v-for="ec in verificationResult.existing_claims" :key="ec.id">
-                  <strong>{{ ec.claim_no }}</strong> ({{ ec.claim_date }}): Status: <span class="badge bg-secondary">{{ ec.current_status }}</span> - {{ ec.problem_description }}
+                  <strong>{{ ec.claim_no }}</strong> ({{ ec.claim_date }}): Status: <span class="badge bg-secondary">{{ formatStatusLabel(ec.current_status) }}</span> - {{ ec.problem_description }}
                 </li>
               </ul>
             </div>
@@ -320,10 +320,25 @@
                   </div>
 
                   <div class="col-md-3">
-                    <label class="form-label small fw-bold text-dark">Customer Charge (বিল)</label>
+                    <label class="form-label small fw-bold text-dark">
+                      <span>Customer Charge (বিল)</span>
+                    </label>
                     <div class="input-group input-group-sm">
                       <span class="input-group-text bg-light">Tk.</span>
-                      <input type="number" step="0.01" min="0" class="form-control form-control-sm font-monospace text-end" v-model.number="form.customer_charge" placeholder="0.00">
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        class="form-control form-control-sm font-monospace text-end" 
+                        :class="{ 'bg-light text-muted': (isEdit || !!form.payment_id) }"
+                        :readonly="isEdit || !!form.payment_id"
+                        v-model.number="form.customer_charge" 
+                        placeholder="0.00"
+                        :title="isEdit || form.payment_id ? 'Payment Received (Locked)' : ''"
+                      >
+                      <span v-if="isEdit || form.payment_id" class="input-group-text bg-light text-secondary border-start-0 px-2" title="Payment Received (Locked)">
+                        <i class="fas fa-lock fa-xs"></i>
+                      </span>
                     </div>
                   </div>
 
@@ -390,6 +405,8 @@ export default {
         expected_delivery_date: '',
         service_cost: 0,
         customer_charge: 0,
+        expense_id: null,
+        payment_id: null,
         initial_remarks: '',
       },
     };
@@ -519,6 +536,8 @@ export default {
             expected_delivery_date: d.expected_delivery_date,
             service_cost: d.service_cost,
             customer_charge: d.customer_charge,
+            expense_id: d.expense_id,
+            payment_id: d.payment_id,
             initial_remarks: '',
           };
         })
@@ -529,6 +548,24 @@ export default {
         .finally(() => {
           this.$root.submit = false;
         });
+    },
+    formatStatusLabel(status) {
+      if (!status) return 'Received';
+      const labels = {
+        received: 'Received',
+        in_progress: 'In Progress',
+        sent_to_vendor: 'Sent To Vendor',
+        in_service: 'In Service',
+        repaired: 'Repaired',
+        replaced: 'Replaced',
+        ready_for_delivery: 'Ready For Delivery',
+        delivered: 'Delivered',
+        rejected: 'Rejected',
+        cancelled: 'Cancelled',
+        pending: 'Pending',
+      };
+      if (labels[status]) return labels[status];
+      return String(status).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     },
   },
   created() {

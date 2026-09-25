@@ -440,11 +440,11 @@ class LibController extends Controller
 
     public function getItemsByCategory($categoryid = null)
     {
-        $query = DB::table('items')->where('status', 'active');
+        $query = \App\Models\Item::with('unit:id,title')->where('status', 'active');
         if (!empty($categoryid)) {
             $query->where('category_id', $categoryid);
         }
-        return $query->select('id', 'title')->get();
+        return $query->select('id', 'title', 'category_id', 'barcode', 'model_no', 'unit_id', 'warranty_type', 'is_serialized', 'opening_rate')->get();
     }
 
     public function getGroupAccounts()

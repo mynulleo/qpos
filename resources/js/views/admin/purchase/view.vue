@@ -29,7 +29,7 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
               <router-link :to="{ name: 'purchase.index' }" class="btn btn-outline-light btn-sm px-3 fw-semibold">
                 <i class="fas fa-arrow-left me-1"></i> Back to List
               </router-link>
@@ -40,6 +40,20 @@
               >
                 <i class="fas fa-clipboard-check me-1"></i> Receive Goods (GRN)
               </router-link>
+              <router-link
+                v-if="canEdit"
+                :to="{ name: 'purchase.edit', params: { id: data.id } }"
+                class="btn btn-warning btn-sm fw-bold px-3 shadow-sm text-dark"
+              >
+                <i class="fas fa-pencil-alt me-1"></i> Edit Purchase
+              </router-link>
+              <span
+                v-else
+                class="badge bg-light bg-opacity-25 text-white px-3 py-2 font-monospace"
+                title="GRN received for this Purchase Order. Edit is locked."
+              >
+                <i class="fas fa-lock me-1"></i> Edit Locked (GRN Received)
+              </span>
               <button type="button" class="btn btn-light btn-sm text-theme fw-bold px-3 shadow-sm" @click="printPurchaseVoucher">
                 <i class="fas fa-print me-1"></i> Print Bill
               </button>
@@ -274,6 +288,69 @@
           </div>
         </div>
       </div>
+
+      <!-- 📦 Linked Goods Receive Notes (GRN) Section (if any GRNs received) -->
+      <div class="card border-0 shadow-sm mt-4 info-card" v-if="data.grns && data.grns.length > 0">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="section-icon bg-success bg-opacity-10 text-success rounded d-flex align-items-center justify-content-center">
+              <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div>
+              <h6 class="fw-bold mb-0 text-dark">Goods Receive Notes (GRN) History</h6>
+              <small class="text-muted" style="font-size: 11px;">Shipments and inventory received against this purchase order</small>
+            </div>
+          </div>
+          <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-monospace px-2 py-1">
+            <i class="fas fa-boxes me-1"></i> {{ data.grns.length }} GRN Shipment(s)
+          </span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 custom-items-table">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-center" style="width: 50px;">#</th>
+                  <th>GRN Number</th>
+                  <th>GRN Date</th>
+                  <th>Destination Warehouse</th>
+                  <th class="text-center">Received Qty</th>
+                  <th class="text-end">GRN Valuation</th>
+                  <th class="text-center" style="width: 100px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(grn, gIdx) in data.grns" :key="gIdx">
+                  <td class="text-center font-monospace text-muted">{{ gIdx + 1 }}</td>
+                  <td>
+                    <router-link :to="{ name: 'grn.show', params: { id: grn.id } }" class="fw-bold font-monospace text-primary text-decoration-none">
+                      <i class="fas fa-file-invoice me-1"></i>{{ grn.grn_no }}
+                    </router-link>
+                  </td>
+                  <td class="font-monospace">{{ grn.grn_date || 'N/A' }}</td>
+                  <td>
+                    <span v-if="grn.warehouse" class="badge bg-secondary bg-opacity-10 text-dark border">
+                      <i class="fas fa-warehouse me-1 text-primary"></i>{{ grn.warehouse.name }}
+                    </span>
+                    <span v-else class="text-muted small">N/A</span>
+                  </td>
+                  <td class="text-center font-monospace fw-bold text-success">
+                    {{ Number(grn.total_qty || 0).toLocaleString() }} Units
+                  </td>
+                  <td class="text-end font-monospace fw-bold text-dark">
+                    ৳ {{ formatNum(grn.total_amount) }}
+                  </td>
+                  <td class="text-center">
+                    <router-link :to="{ name: 'grn.show', params: { id: grn.id } }" class="btn btn-xs btn-outline-primary shadow-none px-2 py-1">
+                      <i class="fas fa-eye me-1"></i> View GRN
+                    </router-link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 🔍 Serial Numbers Popup Modal -->
@@ -341,8 +418,21 @@ export default {
     };
   },
   computed: {
+    canEdit() {
+      if (this.data.can_edit !== undefined && this.data.can_edit !== null) {
+        return Boolean(this.data.can_edit);
+      }
+      if (this.data.grns_count > 0 || (this.data.grns && this.data.grns.length > 0)) {
+        return false;
+      }
+      if (this.data.receive_status && this.data.receive_status !== "Pending") {
+        return false;
+      }
+      return true;
+    },
     isElectronicsShop() {
-      return this.$root.site_setting?.shop_type === 'electronics' || this.data?.shop_type === 'electronics';
+      const shopType = (this.site?.shop_type || this.$root.site?.shop_type || this.$root.site_setting?.shop_type || this.data?.shop_type || "").toLowerCase();
+      return shopType === "electronics";
     },
     hasAnyVariants() {
       return this.data.purchase_details?.some(d => d.color_id || d.size_id || d.color?.title || d.size?.title);

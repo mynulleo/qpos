@@ -1479,6 +1479,19 @@ const routes = [
                 component: () =>
                     import("./../views/admin/system/update/index"),
             },
+            // ------------------DATABASE BACKUP & RESTORE PORTION------------------
+            {
+                path: "/database-backup",
+                name: "databasebackup.index",
+                component: () =>
+                    import("./../views/admin/system/backup/index"),
+            },
+            {
+                path: "/database/backup",
+                name: "database.backup",
+                component: () =>
+                    import("./../views/admin/system/backup/index"),
+            },
         ],
     },
 ];

@@ -11,6 +11,12 @@ use App\Models\InvoiceDetails;
 use App\Models\PurchaseDetail;
 use App\Models\WarrantyClaim;
 use App\Models\WarrantyClaimLog;
+use App\Models\Expense;
+use App\Models\ExpenseDetail;
+use App\Models\Payment;
+use App\Models\PaymentDetail;
+use App\Models\Account;
+use App\Traits\VoucherTrait;
 use App\Http\Resources\Resource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +24,7 @@ use App\Http\Controllers\Base\BaseController;
 
 class WarrantyClaimController extends BaseController
 {
+    use VoucherTrait;
     /**
      * Display a listing of warranty claims.
      */
@@ -29,7 +36,7 @@ class WarrantyClaimController extends BaseController
             'size:id,title',
             'client:id,name,mobile',
             'invoice:id,invoice_no,invoice_date',
-            'creator:id,name',
+            'creator:id,full_name,email',
         ])->latest();
 
         if ($request->filled('keyword')) {
@@ -341,6 +348,9 @@ class WarrantyClaimController extends BaseController
 
             $claim = WarrantyClaim::create($data);
 
+            // Synchronize financial transactions (Expense & Payment vouchers)
+            $this->syncFinancialTransactions($claim);
+
             // Log initial tracking status
             WarrantyClaimLog::create([
                 'warranty_claim_id' => $claim->id,
@@ -374,8 +384,10 @@ class WarrantyClaimController extends BaseController
             'size',
             'client',
             'invoice.client',
-            'logs.creator:id,name',
-            'creator:id,name',
+            'expense.expense_details.account',
+            'payment.payment_details.account',
+            'logs.creator:id,full_name,email',
+            'creator:id,full_name,email',
         ])->findOrFail($id);
 
         return response()->json($claim);
@@ -391,6 +403,11 @@ class WarrantyClaimController extends BaseController
 
             $claim = WarrantyClaim::findOrFail($id);
             $data = $request->all();
+
+            // If payment was already received for customer charge, protect customer_charge from being altered
+            if ($claim->payment_id) {
+                unset($data['customer_charge']);
+            }
 
             // Sanitize all date fields to Y-m-d or null
             $dateFields = ['sale_date', 'claim_date', 'warranty_expiry_date', 'expected_delivery_date'];
@@ -411,6 +428,9 @@ class WarrantyClaimController extends BaseController
 
             $oldStatus = $claim->current_status;
             $claim->fill($data)->save();
+
+            // Synchronize financial transactions (Expense & Payment vouchers)
+            $this->syncFinancialTransactions($claim);
 
             // If status was changed during edit, add a log entry automatically
             if (!empty($data['current_status']) && $data['current_status'] !== $oldStatus) {
@@ -467,17 +487,31 @@ class WarrantyClaimController extends BaseController
             if ($request->filled('service_cost')) {
                 $claim->service_cost = $request->input('service_cost');
             }
-            if ($request->filled('customer_charge')) {
+            // Only update customer_charge if payment has not yet been processed
+            if ($request->filled('customer_charge') && !$claim->payment_id) {
                 $claim->customer_charge = $request->input('customer_charge');
             }
             $claim->updated_by = auth('admin')->id();
             $claim->updated_ip = $request->ip();
             $claim->save();
 
+            // Synchronize financial transactions (Expense & Payment vouchers)
+            $this->syncFinancialTransactions($claim);
+
             DB::commit();
 
-            // Return refreshed claim with logs
-            $claim->load(['logs.creator:id,name']);
+            // Return refreshed claim with logs and financial relations
+            $claim->load([
+                'item.category',
+                'color',
+                'size',
+                'client',
+                'invoice.client',
+                'expense.expense_details.account',
+                'payment.payment_details.account',
+                'logs.creator:id,full_name,email',
+                'creator:id,full_name,email',
+            ]);
 
             return response()->json([
                 'message' => 'Tracking log added successfully',
@@ -486,6 +520,113 @@ class WarrantyClaimController extends BaseController
         } catch (Exception $ex) {
             DB::rollBack();
             return response()->json(['exception' => $ex->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Synchronize Office Expense and Payment Receive records for warranty claim financial amounts.
+     */
+    protected function syncFinancialTransactions(WarrantyClaim $claim)
+    {
+        // 1. Internal Service Cost (Office Expense & Expense Voucher)
+        if ($claim->service_cost > 0 && !$claim->expense_id) {
+            $expenseAccount = Account::where('account_type', 'Expense')
+                ->where(function ($q) {
+                    $q->where('system_key_name', 'Expense')
+                      ->orWhere('system_key_name', 'office-supplies-expense')
+                      ->orWhere('account_name', 'like', '%Office Expense%');
+                })->first() ?? Account::where('account_type', 'Expense')->first();
+
+            $expenseAccountId = $expenseAccount ? $expenseAccount->id : null;
+
+            $expense = Expense::create([
+                'expenseid'     => Expense::generateExpenseID(),
+                'expense_date'  => $claim->claim_date ? Carbon::parse($claim->claim_date)->format('Y-m-d') : date('Y-m-d'),
+                'total_amount'  => $claim->service_cost,
+                'approved_by'   => auth('admin')->id() ?? $claim->created_by,
+                'approved_date' => now(),
+                'status'        => 'active',
+                'created_by'    => auth('admin')->id() ?? $claim->created_by,
+                'created_ip'    => request()->ip() ?? '127.0.0.1',
+            ]);
+
+            $expenseDetail = $expense->expense_details()->create([
+                'account_id' => $expenseAccountId,
+                'amount'     => $claim->service_cost,
+                'narration'  => "Internal Service Cost for Warranty Claim #{$claim->claim_no} (Serial: {$claim->serial_no})",
+                'status'     => 'active',
+                'created_by' => auth('admin')->id() ?? $claim->created_by,
+                'created_ip' => request()->ip() ?? '127.0.0.1',
+            ]);
+
+            $vdata = [
+                'module'     => 'ExpenseDetail',
+                'date'       => $expense->expense_date,
+                'amount'     => $expenseDetail->amount,
+                'source_id'  => $expenseDetail->id,
+                'ref_id'     => $expense->employee_id ?? null,
+                'account_id' => $expenseDetail->account_id,
+            ];
+            $this->createPayableVoucher($vdata);
+
+            $claim->expense_id = $expense->id;
+            $claim->saveQuietly();
+        }
+
+        // 2. Customer Charge (Payment Receive & Voucher)
+        if ($claim->customer_charge > 0 && !$claim->payment_id) {
+            $fundAccount = Account::where('is_fund_account', 1)->where('system_key_name', 'Cash')->first()
+                ?? Account::where('is_fund_account', 1)->first()
+                ?? Account::where('system_key_name', 'Cash')->first();
+            $fundAccountId = $fundAccount ? $fundAccount->id : null;
+
+            $revenueAccount = Account::where('system_key_name', 'accounts-receivable')->first()
+                ?? Account::where('account_type', 'Income')->first()
+                ?? Account::where('account_name', 'like', '%Service%')->first();
+            $revenueAccountId = $revenueAccount ? $revenueAccount->id : null;
+
+            $clientId = $claim->client_id;
+            if (!$clientId && !empty($claim->customer_mobile)) {
+                $matchedClient = Client::where('mobile', $claim->customer_mobile)->first();
+                $clientId = $matchedClient ? $matchedClient->id : null;
+            }
+            if (!$clientId) {
+                $clientId = Client::first()?->id;
+            }
+
+            $detailAccountId = $clientId ? ($this->getClientAccount($clientId) ?? $revenueAccountId) : $revenueAccountId;
+
+            $payment = Payment::create([
+                'payslipno'       => Payment::getPaySlipNo(),
+                'payment_type'    => 'Receive',
+                'client_id'       => $clientId,
+                'payment_date'    => $claim->claim_date ? Carbon::parse($claim->claim_date)->format('Y-m-d') : date('Y-m-d'),
+                'discount'        => 0,
+                'amount'          => $claim->customer_charge,
+                'fund_account_id' => $fundAccountId,
+                'payment_method'  => 'Cash',
+                'status'          => 'active',
+                'created_by'      => auth('admin')->id() ?? $claim->created_by,
+                'created_ip'      => request()->ip() ?? '127.0.0.1',
+            ]);
+
+            $payment->payment_details()->create([
+                'payment_id'     => $payment->id,
+                'reference_type' => 'WarrantyClaim',
+                'reference_id'   => $claim->id,
+                'account_id'     => $detailAccountId,
+                'amount'         => $claim->customer_charge,
+                'is_closed'      => 1,
+                'status'         => 'active',
+                'created_by'     => auth('admin')->id() ?? $claim->created_by,
+                'created_ip'     => request()->ip() ?? '127.0.0.1',
+            ]);
+
+            $payment->load('payment_details');
+            $this->createVoucherFromPayment($payment, $payment->id);
+
+            $claim->payment_id = $payment->id;
+            $claim->saveQuietly();
         }
     }
 

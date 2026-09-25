@@ -40,7 +40,11 @@
               type="button"
               class="advance_filter_btn position-relative"
               @click="showAdvanced = !showAdvanced"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              data-bs-title="Advance Filter"
               title="Advance Filter"
+              v-x-tooltip
             >
               <i class="fas fa-sliders-h"></i>
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;" v-if="activeFilterCount > 0">
@@ -49,34 +53,54 @@
             </button>
 
             <!-- Export to Excel -->
-            <download-excel
+            <button
               v-if="table.datas && table.datas.length > 0"
-              class="btn btn-sm btn-outline-success cursor-pointer"
-              :data="exportData"
-              :fields="exportFields"
-              name="warranty_claims.xls"
+              type="button"
+              class="p_btn"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              data-bs-title="Export to Excel"
               title="Export to Excel"
+              v-x-tooltip
             >
-              <i class="fas fa-file-excel"></i>
-            </download-excel>
+              <download-excel
+                :data="exportData"
+                :fields="exportFields"
+                name="warranty_claims.xls"
+                title="Export to Excel"
+                class="d-flex align-items-center justify-content-center w-100 h-100 cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-excel">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                  <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" />
+                  <path d="M10 12l4 5" />
+                  <path d="M10 17l4 -5" />
+                </svg>
+              </download-excel>
+            </button>
 
             <!-- Print Table -->
             <button
               type="button"
-              class="btn btn-sm btn-outline-dark"
+              class="p_btn"
               @click="printTable"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              data-bs-title="Print Table"
               title="Print Table"
+              v-x-tooltip
             >
-              <i class="fas fa-print"></i>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" />
+                <path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" />
+                <path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" />
+              </svg>
             </button>
 
-            <!-- New Claim Button -->
-            <router-link :to="{ name: 'warrantyClaim.create' }" class="btn-theme-action shadow-sm" title="New Warranty Claim">
-              <span>
-                <i class="fas fa-plus-circle"></i>
-              </span>
-              New Claim
-            </router-link>
+            <!-- New Claim Button (Standard ERP Add Button) -->
+            <AddOrBackButton :route="'warrantyClaim.create'" :portion="'warrantyClaim'" :icon="'plus'" />
           </div>
         </div>
 
@@ -100,14 +124,15 @@
               <label class="form-label small fw-bold text-muted mb-1">Claim Status</label>
               <select class="form-select form-select-sm" v-model="search_data.current_status" @change="search">
                 <option value="">-- All Statuses --</option>
-                <option value="received">Received (গৃহীত)</option>
-                <option value="sent_to_vendor">Sent to Vendor (ভেন্ডরে)</option>
-                <option value="in_service">In Service (মেরামতে)</option>
-                <option value="repaired">Repaired (মেরামত সম্পন্ন)</option>
-                <option value="replaced">Replaced (নতুন পরিবর্তন)</option>
-                <option value="ready_for_delivery">Ready for Delivery (প্রস্তুত)</option>
-                <option value="delivered">Delivered (হস্তান্তরিত)</option>
-                <option value="rejected">Rejected (বাতিল)</option>
+                <option value="received">Received</option>
+                <option value="in_progress">In Progress</option>
+                <option value="sent_to_vendor">Sent To Vendor</option>
+                <option value="in_service">In Service</option>
+                <option value="repaired">Repaired</option>
+                <option value="replaced">Replaced</option>
+                <option value="ready_for_delivery">Ready For Delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="rejected">Rejected</option>
               </select>
             </div>
 
@@ -504,6 +529,7 @@ export default {
     getStatusBadgeClass(status) {
       const classes = {
         received: 'theme-bg text-white',
+        in_progress: 'bg-primary text-white',
         sent_to_vendor: 'bg-warning text-dark',
         in_service: 'bg-info text-dark',
         repaired: 'bg-success text-white',
@@ -511,21 +537,27 @@ export default {
         ready_for_delivery: 'theme-bg-soft theme-text border border-primary',
         delivered: 'bg-dark text-white',
         rejected: 'bg-danger text-white',
+        cancelled: 'bg-danger text-white',
       };
       return classes[status] || 'bg-secondary text-white';
     },
     formatStatusLabel(status) {
+      if (!status) return 'Received';
       const labels = {
-        received: 'Received (গৃহীত)',
-        sent_to_vendor: 'Sent to Vendor (ভেন্ডরে)',
-        in_service: 'In Service (মেরামতে)',
-        repaired: 'Repaired (মেরামত সম্পন্ন)',
-        replaced: 'Replaced (নতুন পরিবর্তন)',
-        ready_for_delivery: 'Ready (ডেলিভারি প্রস্তুত)',
-        delivered: 'Delivered (হস্তান্তরিত)',
-        rejected: 'Rejected (বাতিল)',
+        received: 'Received',
+        in_progress: 'In Progress',
+        sent_to_vendor: 'Sent To Vendor',
+        in_service: 'In Service',
+        repaired: 'Repaired',
+        replaced: 'Replaced',
+        ready_for_delivery: 'Ready For Delivery',
+        delivered: 'Delivered',
+        rejected: 'Rejected',
+        cancelled: 'Cancelled',
+        pending: 'Pending',
       };
-      return labels[status] || status;
+      if (labels[status]) return labels[status];
+      return String(status).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     },
   },
   created() {
@@ -564,44 +596,35 @@ export default {
   color: #ffffff !important;
 }
 
-.advance_filter_btn {
+.advance_filter_btn,
+.p_btn {
   background-color: #f1f5f9;
   color: rgb(17, 44, 70);
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  width: 31px;
-  height: 31px;
-  display: flex;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  padding: 0;
   transition: all 0.2s ease;
+  text-decoration: none;
 }
 
-.advance_filter_btn:hover {
+.advance_filter_btn:hover,
+.p_btn:hover {
   background-color: rgb(17, 44, 70);
   color: #ffffff;
   border-color: rgb(17, 44, 70);
 }
 
-.btn-theme-action {
-  background-color: rgb(17, 44, 70);
-  color: #ffffff;
-  border-radius: 6px;
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.btn-theme-action:hover {
-  background-color: #1a3d61;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(17, 44, 70, 0.3);
+.advance_filter_btn:hover i,
+.p_btn:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .filter-card, .table-card {

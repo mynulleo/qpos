@@ -51,6 +51,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('softwareupdate.run');
     Route::post('software-update/sync-only', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'synconly'])->name('softwareupdate.synconly');
 
+    
     // Category Route...
     Route::get('get-category/{type}', [App\Http\Controllers\Admin\CategoryController::class, 'getCategory']);
     Route::get('paynow/{invoiceid}', [App\Http\Controllers\Admin\InvoiceController::class, 'paynow']);
@@ -204,6 +205,8 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('financialYear', App\Http\Controllers\Admin\FinancialYearController::class);
         Route::resource('voucher', App\Http\Controllers\Admin\VoucherController::class);
         Route::resource('expense', App\Http\Controllers\Admin\ExpenseController::class);
+        Route::get('purchase/generate-invoiceno', [App\Http\Controllers\Admin\PurchaseController::class, 'generateInvoiceNo'])->name('purchase.generateInvoiceNo');
+        Route::get('purchase-generate-invoiceno', [App\Http\Controllers\Admin\PurchaseController::class, 'generateInvoiceNo'])->name('purchase.generateInvoiceNoLegacy');
         Route::resource('purchase', App\Http\Controllers\Admin\PurchaseController::class);
         Route::resource('item', App\Http\Controllers\Admin\ItemController::class);
         // Route::resource('issue', App\Http\Controllers\Admin\IssueController::class);
@@ -287,6 +290,17 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('loanInfo/approvalcancel', [App\Http\Controllers\Admin\LoanInfoController::class, 'approvalcancel'])->name('loanInfo.approvalcancel');
 
         // Resident Approval & Actions Start
+
+        // Database Backup & Restore Routes
+    Route::get('database-backup', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'index'])->name('databasebackup.index');
+    Route::get('database/backup', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'index'])->name('databasebackup.backup');
+    Route::get('database-backup/info', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'info'])->name('databasebackup.info');
+    Route::get('database-backup/download', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'download'])->name('databasebackup.download');
+    Route::post('database-backup/create', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'create'])->name('databasebackup.create');
+    Route::get('database-backup/download-file/{filename}', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'downloadfile'])->name('databasebackup.downloadfile');
+    Route::delete('database-backup/delete-file/{filename}', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'deletefile'])->name('databasebackup.deletefile');
+    Route::post('database-backup/restore', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'restore'])->name('databasebackup.restore');
+
 
     });
     Route::get('mediaValidator/{modelName}/getFields', [App\Http\Controllers\Admin\MediaValidatorController::class, 'getFields'])->name('mediaValidator.getFields');

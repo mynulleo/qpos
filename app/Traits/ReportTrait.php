@@ -2359,7 +2359,7 @@ trait ReportTrait
         $query = SalesReturn::with([
             'invoice:id,invoice_no,invoice_date,amount,paid_amount,created_at',
             'client:id,clientid,name,mobile,email,address',
-            'creator:id,name,email',
+            'creator:id,full_name,email',
             'payment:id,payslipno,payment_method,mbanking_type,trxid,amount,payment_date',
             'wastage:id,audit_number,audit_date,status',
             'details.item:id,title,barcode,category_id,unit_id',

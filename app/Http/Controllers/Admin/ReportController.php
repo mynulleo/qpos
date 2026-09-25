@@ -736,7 +736,7 @@ class ReportController extends BaseController
         ->get();
 
         // 3. Fetch all warranty claims grouped by serial_no
-        $claims = WarrantyClaim::with('creator:id,name')
+        $claims = WarrantyClaim::with('creator:id,full_name,email')
             ->latest('id')
             ->get()
             ->groupBy('serial_no');
@@ -1025,9 +1025,9 @@ class ReportController extends BaseController
             'size:id,title',
             'invoice:id,invoice_no,invoice_date,amount',
             'invoice.client:id,name,mobile,address',
-            'creator:id,name',
+            'creator:id,full_name,email',
             'logs' => function ($q) {
-                $q->with('creator:id,name')->latest('id');
+                $q->with('creator:id,full_name,email')->latest('id');
             }
         ]);
 
