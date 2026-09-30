@@ -306,6 +306,59 @@ class GrnController extends BaseController
     }
 
     /**
+     * Check if given serial numbers already exist in previous GRNs.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkSerials(Request $request)
+    {
+        $serials = $request->input('serials', []);
+        if (is_string($serials)) {
+            $serials = preg_split('/[\r\n,;\s]+/', $serials, -1, PREG_SPLIT_NO_EMPTY);
+        }
+        $currentGrnId = $request->input('grn_id');
+
+        if (empty($serials)) {
+            return response()->json(['has_duplicates' => false, 'duplicates' => []]);
+        }
+
+        $cleanSerials = array_values(array_unique(array_filter(array_map('trim', $serials))));
+        if (empty($cleanSerials)) {
+            return response()->json(['has_duplicates' => false, 'duplicates' => []]);
+        }
+
+        // Fetch serials from previous GRNs
+        $grnQuery = GrnDetail::with(['grn:id,grn_no', 'item:id,title'])
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '');
+        if (!empty($currentGrnId)) {
+            $grnQuery->where('grn_id', '!=', $currentGrnId);
+        }
+        $existingGrnDetails = $grnQuery->get(['id', 'grn_id', 'item_id', 'serial_no']);
+
+        $duplicates = [];
+        foreach ($existingGrnDetails as $gd) {
+            $gdSerials = preg_split('/[\r\n,;\s]+/', $gd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($gdSerials as $sn) {
+                $snTrim = trim($sn);
+                if (in_array($snTrim, $cleanSerials)) {
+                    $duplicates[] = [
+                        'serial_no' => $snTrim,
+                        'grn_no'    => $gd->grn ? $gd->grn->grn_no : ('GRN #' . $gd->grn_id),
+                        'item_name' => $gd->item ? $gd->item->title : ('Item #' . $gd->item_id),
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'has_duplicates' => count($duplicates) > 0,
+            'duplicates'     => $duplicates,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -657,6 +710,13 @@ class GrnController extends BaseController
                     $data['supplier_id'] = null;
                     $data['paid_amount'] = $totalAmount;
                     $data['is_closed'] = 1;
+                } elseif ($grnType === 'supplier') {
+                    $data['purchase_id'] = null;
+                    $data['paid_amount'] = floatval($data['paid_amount'] ?? 0);
+                    $data['is_closed'] = ($data['paid_amount'] >= $totalAmount && $totalAmount > 0) ? 1 : 0;
+                } else { // po
+                    $data['paid_amount'] = floatval($data['paid_amount'] ?? 0);
+                    $data['is_closed'] = ($data['paid_amount'] >= $totalAmount && $totalAmount > 0) ? 1 : 0;
                 }
 
                 $grn->fill($data)->save();

@@ -527,7 +527,7 @@ class WastageController extends BaseController
             return response()->json(['valid' => false, 'message' => 'Item ID and Serial number are required.'], 422);
         }
 
-        // 1. Check if serial number exists in Purchase records for this item
+        // 1. Check if serial number exists in Purchase or GRN records for this item
         $purchaseExists = \App\Models\PurchaseDetail::where('item_id', $itemId)
             ->whereNotNull('serial_no')
             ->where('serial_no', '!=', '')
@@ -540,11 +540,25 @@ class WastageController extends BaseController
                 return false;
             });
 
+        if (!$purchaseExists && \Illuminate\Support\Facades\Schema::hasTable('grn_details')) {
+            $purchaseExists = \App\Models\GrnDetail::where('item_id', $itemId)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->get()
+                ->contains(function ($gd) use ($serialNo) {
+                    $serials = preg_split('/[\r\n,]+/', $gd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                    foreach ($serials as $s) {
+                        if (strcasecmp(trim($s), $serialNo) === 0) return true;
+                    }
+                    return false;
+                });
+        }
+
         if (!$purchaseExists) {
             return response()->json([
                 'valid' => false,
                 'status' => 'not_purchased',
-                'message' => "Serial '{$serialNo}' was not found in purchase records for this item!"
+                'message' => "Serial '{$serialNo}' was not found in purchase or GRN records for this item!"
             ]);
         }
 

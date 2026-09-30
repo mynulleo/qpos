@@ -21,8 +21,11 @@ use App\Models\Wastage;
 use App\Models\WastageDetail;
 use App\Models\SalesReturn;
 use App\Models\SalesReturnDetail;
+use App\Models\PurchaseDetail;
+use App\Models\GrnDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\Base\BaseController;
 use App\Traits\PaymentTrait;
 use App\Traits\VoucherTrait;
@@ -105,10 +108,39 @@ class PosController extends BaseController
             return response()->json([]);
         }
 
+        // Check if term matches serial number in Purchase / GRN
+        $matchedItemIds = [];
+
+        if (Schema::hasTable('item_prices') && Schema::hasColumn('item_prices', 'barcode')) {
+            $priceItemIds = ItemPrice::where('barcode', 'like', "%{$term}%")->pluck('item_id')->toArray();
+            if (!empty($priceItemIds)) {
+                $matchedItemIds = array_merge($matchedItemIds, $priceItemIds);
+            }
+        }
+
+        $purchaseItemIds = PurchaseDetail::where('serial_no', 'like', "%{$term}%")->pluck('item_id')->toArray();
+        if (!empty($purchaseItemIds)) {
+            $matchedItemIds = array_merge($matchedItemIds, $purchaseItemIds);
+        }
+
+        if (Schema::hasTable('grn_details')) {
+            $grnItemIds = GrnDetail::where('serial_no', 'like', "%{$term}%")->pluck('item_id')->toArray();
+            if (!empty($grnItemIds)) {
+                $matchedItemIds = array_merge($matchedItemIds, $grnItemIds);
+            }
+        }
+
+        $matchedItemIds = array_unique($matchedItemIds);
+
         $itemsQuery = Item::where('status', 'active')
-            ->where(function ($q) use ($term) {
+            ->where(function ($q) use ($term, $matchedItemIds) {
                 $q->where('barcode', 'like', "%{$term}%")
-                  ->orWhere('title', 'like', "%{$term}%");
+                  ->orWhere('title', 'like', "%{$term}%")
+                  ->orWhere('sku', 'like', "%{$term}%")
+                  ->orWhere('model_no', 'like', "%{$term}%");
+                if (!empty($matchedItemIds)) {
+                    $q->orWhereIn('id', $matchedItemIds);
+                }
             });
 
         if ($request->filled('category_id')) {
@@ -129,15 +161,17 @@ class PosController extends BaseController
             ->get();
 
         $itemIds = $items->pluck('id')->toArray();
-        $itemsWithSerials = \App\Models\PurchaseDetail::whereIn('item_id', $itemIds)
+        $availableSerialsMap = $this->getAvailableSerialsForItems($itemIds);
+
+        $itemsWithPurchaseSerials = PurchaseDetail::whereIn('item_id', $itemIds)
             ->whereNotNull('serial_no')
             ->where('serial_no', '!=', '')
             ->distinct()
             ->pluck('item_id')
             ->toArray();
 
-        $grnSerialItemIds = \Illuminate\Support\Facades\Schema::hasTable('grn_details')
-            ? \Illuminate\Support\Facades\DB::table('grn_details')->whereIn('item_id', $itemIds)
+        $grnSerialItemIds = Schema::hasTable('grn_details')
+            ? GrnDetail::whereIn('item_id', $itemIds)
                 ->whereNotNull('serial_no')
                 ->where('serial_no', '!=', '')
                 ->distinct()
@@ -145,11 +179,13 @@ class PosController extends BaseController
                 ->toArray()
             : [];
 
-        $allSerialItemIds = array_unique(array_merge($itemsWithSerials, $grnSerialItemIds));
+        $allSerialItemIds = array_unique(array_merge($itemsWithPurchaseSerials, $grnSerialItemIds));
         $serialMap = array_flip($allSerialItemIds);
 
         foreach ($items as $item) {
-            $item->has_purchase_serials = isset($serialMap[$item->id]);
+            $itemAvailableSerials = $availableSerialsMap[$item->id] ?? [];
+            $item->available_serials = $itemAvailableSerials;
+            $item->has_purchase_serials = !empty($itemAvailableSerials) || isset($serialMap[$item->id]);
         }
 
         // Also fetch list of all colors & sizes for fallback selection
@@ -163,6 +199,134 @@ class PosController extends BaseController
         ]);
     }
 
+    /**
+     * Helper to compute available (unsold & non-wasted) serials for a list of items
+     */
+    public function getAvailableSerialsForItems(array $itemIds): array
+    {
+        if (empty($itemIds)) {
+            return [];
+        }
+
+        // 1. Fetch Purchase Serials
+        $purchaseDetails = PurchaseDetail::whereIn('item_id', $itemIds)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->get(['item_id', 'serial_no']);
+
+        // 2. Fetch GRN Serials
+        $grnDetails = collect();
+        if (Schema::hasTable('grn_details')) {
+            $grnDetails = GrnDetail::whereIn('item_id', $itemIds)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->get(['item_id', 'serial_no']);
+        }
+
+        // 3. Fetch Sold Serials
+        $soldDetails = InvoiceDetails::whereIn('item_id', $itemIds)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->get(['item_id', 'serial_no']);
+
+        // 4. Fetch Returned Serials (Sales Return)
+        $returnDetails = collect();
+        if (Schema::hasTable('sales_return_details')) {
+            $returnDetails = SalesReturnDetail::whereIn('item_id', $itemIds)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->where('status', 'active')
+                ->where('return_reason', '!=', 'Wastage')
+                ->whereNull('deleted_at')
+                ->get(['item_id', 'serial_no']);
+        }
+
+        // 5. Fetch Wasted Serials
+        $wastedDetails = collect();
+        if (Schema::hasTable('wastage_details')) {
+            $wastedDetails = WastageDetail::whereIn('item_id', $itemIds)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->whereNull('deleted_at')
+                ->get(['item_id', 'serial_no']);
+        }
+
+        // Aggregate Sold Map
+        $soldMap = [];
+        foreach ($soldDetails as $sd) {
+            $serials = preg_split('/[\r\n,]+/', $sd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                $clean = trim($s);
+                if (!empty($clean)) {
+                    $key = "{$sd->item_id}:" . strtolower($clean);
+                    $soldMap[$key] = ($soldMap[$key] ?? 0) + 1;
+                }
+            }
+        }
+
+        // Reduce Sold count for customer returns
+        foreach ($returnDetails as $rd) {
+            $serials = preg_split('/[\r\n,]+/', $rd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                $clean = trim($s);
+                if (!empty($clean)) {
+                    $key = "{$rd->item_id}:" . strtolower($clean);
+                    $soldMap[$key] = max(0, ($soldMap[$key] ?? 0) - 1);
+                }
+            }
+        }
+
+        // Wasted Map
+        $wastedMap = [];
+        foreach ($wastedDetails as $wd) {
+            $serials = preg_split('/[\r\n,]+/', $wd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                $clean = trim($s);
+                if (!empty($clean)) {
+                    $wastedMap["{$wd->item_id}:" . strtolower($clean)] = true;
+                }
+            }
+        }
+
+        // Aggregate Available Serials
+        $availableMap = [];
+        $incomingCollection = $purchaseDetails->concat($grnDetails);
+
+        foreach ($incomingCollection as $row) {
+            $serials = preg_split('/[\r\n,]+/', $row->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                $clean = trim($s);
+                if (empty($clean)) continue;
+                $key = "{$row->item_id}:" . strtolower($clean);
+
+                if (!empty($wastedMap[$key])) continue;
+                if (!empty($soldMap[$key]) && $soldMap[$key] > 0) continue;
+
+                if (!isset($availableMap[$row->item_id])) {
+                    $availableMap[$row->item_id] = [];
+                }
+                if (!in_array($clean, $availableMap[$row->item_id])) {
+                    $availableMap[$row->item_id][] = $clean;
+                }
+            }
+        }
+
+        return $availableMap;
+    }
+
+    /**
+     * Endpoint to get available serials for a specific item/variant
+     */
+    public function getItemSerials(Request $request, $item_id)
+    {
+        $serialsMap = $this->getAvailableSerialsForItems([(int)$item_id]);
+        return response()->json([
+            'available_serials' => $serialsMap[(int)$item_id] ?? []
+        ]);
+    }
+
     public function validateSerial(Request $request)
     {
         $itemId = $request->input('item_id');
@@ -172,28 +336,130 @@ class PosController extends BaseController
             return response()->json(['valid' => true]);
         }
 
-        // 1. Check if serial number exists in Purchase records (purchase_details)
-        $purchaseExists = \App\Models\PurchaseDetail::where('item_id', $itemId)
-            ->where('serial_no', 'like', "%{$serialNo}%")
-            ->exists();
+        // 1. Check if serial number exists in Purchase records (purchase_details) OR GRN records (grn_details)
+        $incomingExists = false;
 
-        if (!$purchaseExists) {
+        $purchaseDetails = PurchaseDetail::where('item_id', $itemId)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->get(['serial_no']);
+
+        foreach ($purchaseDetails as $pd) {
+            $serials = preg_split('/[\r\n,]+/', $pd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                if (strcasecmp(trim($s), $serialNo) === 0) {
+                    $incomingExists = true;
+                    break 2;
+                }
+            }
+        }
+
+        if (!$incomingExists && Schema::hasTable('grn_details')) {
+            $grnDetails = GrnDetail::where('item_id', $itemId)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->get(['serial_no']);
+
+            foreach ($grnDetails as $gd) {
+                $serials = preg_split('/[\r\n,]+/', $gd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($serials as $s) {
+                    if (strcasecmp(trim($s), $serialNo) === 0) {
+                        $incomingExists = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // If not in purchase or GRN, check if it was returned via sales return
+        if (!$incomingExists && Schema::hasTable('sales_return_details')) {
+            $returnDetails = SalesReturnDetail::where('item_id', $itemId)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->where('status', 'active')
+                ->get(['serial_no']);
+
+            foreach ($returnDetails as $rd) {
+                $serials = preg_split('/[\r\n,]+/', $rd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($serials as $s) {
+                    if (strcasecmp(trim($s), $serialNo) === 0) {
+                        $incomingExists = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (!$incomingExists) {
             return response()->json([
                 'valid' => false,
-                'message' => 'এই সিরিয়াল নম্বরটি ক্রয়কৃত রেকর্ডে (Purchase) পাওয়া যায়নি!'
+                'message' => "সিরিয়াল নম্বর '{$serialNo}' ক্রয় (Purchase) বা GRN রেকর্ডে পাওয়া যায়নি!"
             ]);
         }
 
-        // 2. Check if serial number has already been sold in Invoice Details (invoice_details)
-        $alreadySold = InvoiceDetails::where('item_id', $itemId)
-            ->where('serial_no', 'like', "%{$serialNo}%")
-            ->where('status', 'active')
-            ->exists();
+        // 2. Check if serial number is wasted
+        if (Schema::hasTable('wastage_details')) {
+            $wastedDetails = WastageDetail::where('item_id', $itemId)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->whereNull('deleted_at')
+                ->get(['serial_no']);
 
-        if ($alreadySold) {
+            foreach ($wastedDetails as $wd) {
+                $serials = preg_split('/[\r\n,]+/', $wd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($serials as $s) {
+                    if (strcasecmp(trim($s), $serialNo) === 0) {
+                        return response()->json([
+                            'valid' => false,
+                            'message' => "সিরিয়াল নম্বর '{$serialNo}' নষ্ট/ওয়েস্টেজ (Wastage) হিসেবে এন্ট্রি করা হয়েছে!"
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // 3. Check if serial number has already been sold in Invoice Details (invoice_details)
+        $soldDetails = InvoiceDetails::where('item_id', $itemId)
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->get(['serial_no']);
+
+        $soldCount = 0;
+        foreach ($soldDetails as $id) {
+            $serials = preg_split('/[\r\n,]+/', $id->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                if (strcasecmp(trim($s), $serialNo) === 0) {
+                    $soldCount++;
+                }
+            }
+        }
+
+        $returnCount = 0;
+        if ($soldCount > 0 && Schema::hasTable('sales_return_details')) {
+            $returnDetails = SalesReturnDetail::where('item_id', $itemId)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->where('status', 'active')
+                ->where('return_reason', '!=', 'Wastage')
+                ->whereNull('deleted_at')
+                ->get(['serial_no']);
+
+            foreach ($returnDetails as $rd) {
+                $serials = preg_split('/[\r\n,]+/', $rd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($serials as $s) {
+                    if (strcasecmp(trim($s), $serialNo) === 0) {
+                        $returnCount++;
+                    }
+                }
+            }
+        }
+
+        if (($soldCount - $returnCount) > 0) {
             return response()->json([
                 'valid' => false,
-                'message' => 'এই সিরিয়াল নম্বরটি ইতিপূর্বে বিক্রয় (Sold) হয়ে গেছে!'
+                'message' => "সিরিয়াল নম্বর '{$serialNo}' ইতিপূর্বে বিক্রয় (Sold) হয়ে গেছে!"
             ]);
         }
 
@@ -256,11 +522,12 @@ class PosController extends BaseController
 
             $discount = floatval($request->input('discount', 0));
             $vat = floatval($request->input('vat', 0));
+            $vatPercent = floatval($request->input('vat_percent', 0));
             $totalAmount = max(0, ($originalAmount - $discount) + $vat);
             $paidAmount = floatval($request->input('paid_amount', 0));
 
             // Create Invoice
-            $invoice = Invoice::create([
+            $invoiceData = [
                 'client_id' => $clientId,
                 'invoice_no' => $invoiceNo,
                 'invoice_date' => date('Y-m-d'),
@@ -272,7 +539,11 @@ class PosController extends BaseController
                 'is_previous_due' => 0,
                 'is_closed' => ($paidAmount >= $totalAmount) ? 1 : 0,
                 'status' => 'active',
-            ]);
+            ];
+            if (Schema::hasColumn('invoices', 'vat_percent')) {
+                $invoiceData['vat_percent'] = $vatPercent;
+            }
+            $invoice = Invoice::create($invoiceData);
 
             // Create Invoice Details & Stock Transactions
             foreach ($cart as $cartItem) {

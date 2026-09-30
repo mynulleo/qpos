@@ -122,6 +122,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
 
     // POS Terminal API Endpoints
     Route::get('pos/search-items', [App\Http\Controllers\Admin\PosController::class, 'searchItems']);
+    Route::get('pos/item-serials/{item_id}', [App\Http\Controllers\Admin\PosController::class, 'getItemSerials']);
     Route::get('pos/search-customer', [App\Http\Controllers\Admin\PosController::class, 'searchCustomer']);
     Route::get('pos/validate-serial', [App\Http\Controllers\Admin\PosController::class, 'validateSerial']);
     Route::post('pos/quick-customer', [App\Http\Controllers\Admin\PosController::class, 'quickCustomer']);
@@ -234,6 +235,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'pendingpurchases'])->name('grn.pendingpurchases');
         Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
         Route::get('grn/statistics', [App\Http\Controllers\Admin\GrnController::class, 'statistics'])->name('grn.statistics');
+        Route::post('grn/check-serials', [App\Http\Controllers\Admin\GrnController::class, 'checkSerials'])->name('grn.checkserials');
         Route::resource('grn', App\Http\Controllers\Admin\GrnController::class);
         Route::resource('stockAdjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
         Route::resource('stock-adjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
@@ -270,6 +272,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::get('report/warrantyClaim', [App\Http\Controllers\Admin\ReportController::class, 'warrantyclaim'])->name('report.warrantyClaim');
         Route::get('report/wastage', [App\Http\Controllers\Admin\ReportController::class, 'wastage'])->name('report.wastage');
         Route::get('report/disposal', [App\Http\Controllers\Admin\ReportController::class, 'wastage'])->name('report.disposal');
+        Route::get('report/vat', [App\Http\Controllers\Admin\ReportController::class, 'vat'])->name('report.vat');
 
         Route::post('expense/approved', [App\Http\Controllers\Admin\ExpenseController::class, 'approved'])->name('expense.approved');
         Route::post('expense/approvalcancel', [App\Http\Controllers\Admin\ExpenseController::class, 'approvalcancel'])->name('expense.approvalcancel');

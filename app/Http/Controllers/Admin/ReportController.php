@@ -14,6 +14,7 @@ use App\Models\Payment;
 use App\Models\Client;
 use App\Models\InvoiceDetails;
 use App\Models\PurchaseDetail;
+use App\Models\GrnDetail;
 use App\Models\WarrantyClaim;
 use App\Models\Item;
 use App\Models\ItemPrice;
@@ -619,6 +620,174 @@ class ReportController extends BaseController
         return $this->getCouponReport($searchdata);
     }
 
+    public function vat(Request $request)
+    {
+        if ($request->format() == 'html') {
+            return view('admin.layouts.admin_app');
+        }
+
+        $searchdata = $request->all();
+        return response()->json($this->getVatReport($searchdata));
+    }
+
+    public function getVatReport($searchdata)
+    {
+        $fromDate = !empty($searchdata['from_date']) ? vue_to_server_date($searchdata['from_date']) : null;
+        $toDate = !empty($searchdata['to_date']) ? vue_to_server_date($searchdata['to_date']) : null;
+        $clientId = !empty($searchdata['client_id']) ? $searchdata['client_id'] : null;
+        $invoiceNo = !empty($searchdata['invoice_no']) ? trim($searchdata['invoice_no']) : null;
+        $vatStatus = !empty($searchdata['vat_status']) ? $searchdata['vat_status'] : 'with_vat'; // 'with_vat', 'all', 'without_vat'
+        $paymentStatus = !empty($searchdata['payment_status']) ? $searchdata['payment_status'] : 'all'; // 'all', 'paid', 'due'
+        $saleType = !empty($searchdata['sale_type']) ? $searchdata['sale_type'] : 'all'; // 'all', 'pos', 'general'
+
+        $query = \App\Models\Invoice::with([
+            'client:id,clientid,name,mobile,address',
+            'details' => function ($q) {
+                $q->with('item:id,title,barcode');
+            }
+        ])
+        ->whereNull('deleted_at');
+
+        if ($fromDate && $toDate) {
+            $query->whereBetween('invoice_date', [$fromDate, $toDate]);
+        } elseif ($fromDate) {
+            $query->whereDate('invoice_date', '>=', $fromDate);
+        } elseif ($toDate) {
+            $query->whereDate('invoice_date', '<=', $toDate);
+        }
+
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($invoiceNo) {
+            $query->where('invoice_no', 'like', "%{$invoiceNo}%");
+        }
+
+        if ($vatStatus === 'with_vat') {
+            $query->where('vat', '>', 0);
+        } elseif ($vatStatus === 'without_vat') {
+            $query->where(function ($q) {
+                $q->where('vat', '<=', 0)->orWhereNull('vat');
+            });
+        }
+
+        if ($paymentStatus === 'paid') {
+            $query->where(function ($q) {
+                $q->where('is_closed', 1)
+                  ->orWhereRaw('COALESCE(paid_amount, 0) >= amount');
+            });
+        } elseif ($paymentStatus === 'due') {
+            $query->where('is_closed', 0)
+                  ->whereRaw('COALESCE(paid_amount, 0) < amount');
+        }
+
+        if ($saleType === 'pos') {
+            $query->whereHas('details', function ($q) {
+                $q->where('reference', 'POS Sale');
+            });
+        } elseif ($saleType === 'general') {
+            $query->whereDoesntHave('details', function ($q) {
+                $q->where('reference', 'POS Sale');
+            });
+        }
+
+        $allInvoices = (clone $query)->orderBy('id', 'desc')->get();
+
+        // Summary Calculations
+        $totalInvoicesCount = $allInvoices->count();
+        $withVatCount = $allInvoices->where('vat', '>', 0)->count();
+        $withoutVatCount = $totalInvoicesCount - $withVatCount;
+
+        $totalSubtotal = (float)$allInvoices->sum('original_amount');
+        $totalDiscount = (float)$allInvoices->sum('discount');
+        $totalTaxableSales = max(0, $totalSubtotal - $totalDiscount);
+        $totalVatCollected = (float)$allInvoices->sum('vat');
+        $totalGrossSales = (float)$allInvoices->sum('amount');
+        $totalPaid = (float)$allInvoices->sum('paid_amount');
+        $totalDue = max(0, $totalGrossSales - $totalPaid);
+
+        $effectiveVatRate = $totalTaxableSales > 0 ? round(($totalVatCollected / $totalTaxableSales) * 100, 2) : 0;
+
+        // Monthly Trend Aggregation
+        $monthlyTrend = $allInvoices->groupBy(function ($inv) {
+            try {
+                $rawDate = $inv->getRawOriginal('invoice_date') ?? $inv->invoice_date;
+                return Carbon::parse($rawDate)->format('Y-m');
+            } catch (\Exception $e) {
+                return 'Other';
+            }
+        })->map(function ($group, $monthKey) {
+            $sub = (float)$group->sum('original_amount');
+            $disc = (float)$group->sum('discount');
+            $taxable = max(0, $sub - $disc);
+            $vat = (float)$group->sum('vat');
+            $gross = (float)$group->sum('amount');
+            $monthTitle = $monthKey;
+            if ($monthKey !== 'Other') {
+                try {
+                    $monthTitle = Carbon::createFromFormat('Y-m', $monthKey)->format('F Y');
+                } catch (\Exception $e) {
+                    $monthTitle = $monthKey;
+                }
+            }
+            return [
+                'month' => $monthKey,
+                'month_name' => $monthTitle,
+                'invoices_count' => $group->count(),
+                'with_vat_count' => $group->where('vat', '>', 0)->count(),
+                'taxable_amount' => $taxable,
+                'vat_amount' => $vat,
+                'gross_amount' => $gross,
+            ];
+        })->values();
+
+        // Top Clients by VAT
+        $clientVatSummary = $allInvoices->where('vat', '>', 0)->groupBy('client_id')->map(function ($group) {
+            $first = $group->first();
+            $sub = (float)$group->sum('original_amount');
+            $disc = (float)$group->sum('discount');
+            $taxable = max(0, $sub - $disc);
+            $vat = (float)$group->sum('vat');
+            $gross = (float)$group->sum('amount');
+            return [
+                'client_id' => $first->client_id,
+                'client_name' => $first->client->name ?? 'Walk-in Customer',
+                'client_mobile' => $first->client->mobile ?? 'N/A',
+                'invoices_count' => $group->count(),
+                'taxable_amount' => $taxable,
+                'vat_amount' => $vat,
+                'gross_amount' => $gross,
+            ];
+        })->sortByDesc('vat_amount')->values()->take(10);
+
+        $siteSetting = SiteSetting::first();
+
+        return [
+            'invoices' => $allInvoices,
+            'summary' => [
+                'total_invoices' => $totalInvoicesCount,
+                'with_vat_invoices' => $withVatCount,
+                'without_vat_invoices' => $withoutVatCount,
+                'total_subtotal' => $totalSubtotal,
+                'total_discount' => $totalDiscount,
+                'total_taxable_sales' => $totalTaxableSales,
+                'total_vat_collected' => $totalVatCollected,
+                'total_gross_sales' => $totalGrossSales,
+                'total_paid' => $totalPaid,
+                'total_due' => $totalDue,
+                'effective_vat_rate' => $effectiveVatRate,
+            ],
+            'monthly_trend' => $monthlyTrend,
+            'client_vat_summary' => $clientVatSummary,
+            'site_vat_setting' => [
+                'default_vat' => floatval($siteSetting->default_vat ?? 0),
+                'vat_no' => $siteSetting->vat_no ?? '',
+                'sale_nature' => $siteSetting->sale_nature ?? 'both',
+            ]
+        ];
+    }
+
     public function getCouponReport($searchdata)
     {
         $fromDate = !empty($searchdata['from_date']) ? vue_to_server_date($searchdata['from_date']) : null;
@@ -723,7 +892,7 @@ class ReportController extends BaseController
         ->latest('id')
         ->get();
 
-        // 2. Fetch all purchased serial numbers from PurchaseDetail
+        // 2. Fetch all purchased and GRN serial numbers
         $purchaseRecords = PurchaseDetail::with([
             'purchase.supplier:id,org_name,name,mobile',
             'item.category:id,title',
@@ -734,6 +903,19 @@ class ReportController extends BaseController
         ->where('serial_no', '!=', '')
         ->latest('id')
         ->get();
+
+        $grnRecords = \Illuminate\Support\Facades\Schema::hasTable('grn_details')
+            ? GrnDetail::with([
+                'grn.supplier:id,org_name,name,mobile',
+                'item.category:id,title',
+                'color:id,title',
+                'size:id,title',
+            ])
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->latest('id')
+            ->get()
+            : collect();
 
         // 3. Fetch all warranty claims grouped by serial_no
         $claims = WarrantyClaim::with('creator:id,full_name,email')
@@ -753,7 +935,7 @@ class ReportController extends BaseController
             }
         }
 
-        // Map purchase serials
+        // Map purchase and GRN serials
         $purchaseMap = [];
         foreach ($purchaseRecords as $pr) {
             $serials = preg_split('/[\r\n,]+/', $pr->serial_no, -1, PREG_SPLIT_NO_EMPTY);
@@ -761,6 +943,15 @@ class ReportController extends BaseController
                 $clean = trim($s);
                 if (!empty($clean) && !isset($purchaseMap[$clean])) {
                     $purchaseMap[$clean] = $pr;
+                }
+            }
+        }
+        foreach ($grnRecords as $gr) {
+            $serials = preg_split('/[\r\n,]+/', $gr->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                $clean = trim($s);
+                if (!empty($clean) && !isset($purchaseMap[$clean])) {
+                    $purchaseMap[$clean] = $gr;
                 }
             }
         }

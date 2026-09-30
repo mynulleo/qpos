@@ -901,25 +901,46 @@ class ItemController extends BaseController
             }
         }
 
-        // Available serials (purchased serials not yet sold or wasted)
+        // Available serials (purchased or GRN serials not yet sold or wasted, plus returned serials)
         $purchasedSerials = \App\Models\PurchaseDetail::where('item_id', $item_id)
             ->whereNotNull('serial_no')
             ->where('serial_no', '!=', '')
             ->pluck('serial_no');
 
+        $grnSerials = \Illuminate\Support\Facades\Schema::hasTable('grn_details')
+            ? \App\Models\GrnDetail::where('item_id', $item_id)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->pluck('serial_no')
+            : collect();
+
         $soldSerials = \App\Models\InvoiceDetails::where('item_id', $item_id)
             ->whereNotNull('serial_no')
             ->where('serial_no', '!=', '')
             ->where('status', 'active')
+            ->whereNull('deleted_at')
             ->pluck('serial_no');
 
-        $wastedSerials = \App\Models\WastageDetail::where('item_id', $item_id)
-            ->whereNotNull('serial_no')
-            ->where('serial_no', '!=', '')
-            ->pluck('serial_no');
+        $returnedSerials = \Illuminate\Support\Facades\Schema::hasTable('sales_return_details')
+            ? \App\Models\SalesReturnDetail::where('item_id', $item_id)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->where('status', 'active')
+                ->where('return_reason', '!=', 'Wastage')
+                ->whereNull('deleted_at')
+                ->pluck('serial_no')
+            : collect();
+
+        $wastedSerials = \Illuminate\Support\Facades\Schema::hasTable('wastage_details')
+            ? \App\Models\WastageDetail::where('item_id', $item_id)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->whereNull('deleted_at')
+                ->pluck('serial_no')
+            : collect();
 
         $purchasedList = [];
-        foreach ($purchasedSerials as $s) {
+        foreach ($purchasedSerials->concat($grnSerials) as $s) {
             $split = preg_split('/[\r\n,]+/', $s, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($split as $sn) {
                 $t = trim($sn);
@@ -927,28 +948,46 @@ class ItemController extends BaseController
             }
         }
 
-        $usedList = [];
+        $soldCounts = [];
         $soldList = [];
         foreach ($soldSerials as $s) {
             $split = preg_split('/[\r\n,]+/', $s, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($split as $sn) {
                 $t = trim($sn);
                 if (!empty($t)) {
-                    $usedList[$t] = true;
+                    $soldCounts[$t] = ($soldCounts[$t] ?? 0) + 1;
                     $soldList[$t] = true;
                 }
             }
         }
+
+        foreach ($returnedSerials as $s) {
+            $split = preg_split('/[\r\n,]+/', $s, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($split as $sn) {
+                $t = trim($sn);
+                if (!empty($t) && isset($soldCounts[$t])) {
+                    $soldCounts[$t] = max(0, $soldCounts[$t] - 1);
+                }
+            }
+        }
+
+        $wastedList = [];
         foreach ($wastedSerials as $s) {
             $split = preg_split('/[\r\n,]+/', $s, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($split as $sn) {
                 $t = trim($sn);
-                if (!empty($t)) $usedList[$t] = true;
+                if (!empty($t)) $wastedList[$t] = true;
+            }
+        }
+
+        $availableSerials = [];
+        foreach (array_keys($purchasedList) as $sn) {
+            if (empty($wastedList[$sn]) && ($soldCounts[$sn] ?? 0) <= 0) {
+                $availableSerials[] = $sn;
             }
         }
 
         $hasPurchasedSerials = count($purchasedList) > 0;
-        $availableSerials = array_values(array_diff(array_keys($purchasedList), array_keys($usedList)));
 
         if ($request->has('details') || $request->has('color_id') || $request->has('size_id')) {
             return response()->json([
@@ -976,9 +1015,31 @@ class ItemController extends BaseController
 
         if ($request->has('term') && !empty($request->term)) {
             $term = $request->term;
-            $query->where(function ($q) use ($term) {
+
+            $matchedItemIds = [];
+            if (\Illuminate\Support\Facades\Schema::hasTable('item_prices') && \Illuminate\Support\Facades\Schema::hasColumn('item_prices', 'barcode')) {
+                $priceItemIds = \App\Models\ItemPrice::where('barcode', 'like', "%{$term}%")->pluck('item_id')->toArray();
+                if (!empty($priceItemIds)) $matchedItemIds = array_merge($matchedItemIds, $priceItemIds);
+            }
+
+            $purchaseItemIds = \App\Models\PurchaseDetail::where('serial_no', 'like', "%{$term}%")->pluck('item_id')->toArray();
+            if (!empty($purchaseItemIds)) $matchedItemIds = array_merge($matchedItemIds, $purchaseItemIds);
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('grn_details')) {
+                $grnItemIds = \App\Models\GrnDetail::where('serial_no', 'like', "%{$term}%")->pluck('item_id')->toArray();
+                if (!empty($grnItemIds)) $matchedItemIds = array_merge($matchedItemIds, $grnItemIds);
+            }
+
+            $matchedItemIds = array_unique($matchedItemIds);
+
+            $query->where(function ($q) use ($term, $matchedItemIds) {
                 $q->where('barcode', 'like', "%{$term}%")
-                  ->orWhere('title', 'like', "%{$term}%");
+                  ->orWhere('title', 'like', "%{$term}%")
+                  ->orWhere('sku', 'like', "%{$term}%")
+                  ->orWhere('model_no', 'like', "%{$term}%");
+                if (!empty($matchedItemIds)) {
+                    $q->orWhereIn('id', $matchedItemIds);
+                }
             });
         }
 

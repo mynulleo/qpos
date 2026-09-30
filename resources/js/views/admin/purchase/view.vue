@@ -16,9 +16,6 @@
                     <i :class="data.is_closed ? 'fas fa-check-circle me-1' : 'fas fa-clock me-1'"></i>
                     {{ data.is_closed ? 'Closed / Settled' : 'Open / Due' }}
                   </span>
-                  <span class="badge bg-light bg-opacity-25 text-white" v-if="hasAnySerials">
-                    <i class="fas fa-microchip me-1"></i> Serialized Stock
-                  </span>
                 </div>
                 <div class="d-flex align-items-center gap-3 mt-2 text-white-50 small flex-wrap font-monospace">
                   <span><i class="far fa-calendar-alt me-1"></i>Date: <strong class="text-white">{{ data.purchase_date || 'N/A' }}</strong></span>
@@ -28,11 +25,8 @@
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <router-link :to="{ name: 'purchase.index' }" class="btn btn-outline-light btn-sm px-3 fw-semibold">
-                <i class="fas fa-arrow-left me-1"></i> Back to List
-              </router-link>
+            <!-- Action Buttons (Right side: Receive Goods GRN only) -->
+            <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
               <router-link
                 v-if="data.receive_status !== 'Received'"
                 :to="{ name: 'grn.create', query: { purchase_id: data.id } }"
@@ -40,23 +34,12 @@
               >
                 <i class="fas fa-clipboard-check me-1"></i> Receive Goods (GRN)
               </router-link>
-              <router-link
-                v-if="canEdit"
-                :to="{ name: 'purchase.edit', params: { id: data.id } }"
-                class="btn btn-warning btn-sm fw-bold px-3 shadow-sm text-dark"
-              >
-                <i class="fas fa-pencil-alt me-1"></i> Edit Purchase
-              </router-link>
               <span
                 v-else
-                class="badge bg-light bg-opacity-25 text-white px-3 py-2 font-monospace"
-                title="GRN received for this Purchase Order. Edit is locked."
+                class="badge bg-success bg-opacity-75 text-white px-3 py-2 font-monospace"
               >
-                <i class="fas fa-lock me-1"></i> Edit Locked (GRN Received)
+                <i class="fas fa-check-double me-1"></i> All Goods Received
               </span>
-              <button type="button" class="btn btn-light btn-sm text-theme fw-bold px-3 shadow-sm" @click="printPurchaseVoucher">
-                <i class="fas fa-print me-1"></i> Print Bill
-              </button>
             </div>
           </div>
         </div>
@@ -184,7 +167,7 @@
           </div>
         </div>
 
-        <!-- Purchased Items & Serial Numbers Table (8-col) -->
+        <!-- Purchased Items Table -->
         <div class="col-xl-8 col-lg-12">
           <div class="card border-0 shadow-sm h-100 table-card">
             <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
@@ -194,7 +177,7 @@
                 </div>
                 <div>
                   <h6 class="fw-bold mb-0 text-dark">Purchased Products & Line Items</h6>
-                  <small class="text-muted" style="font-size: 11px;">Breakdown of quantities, unit costs, selling prices and serial numbers</small>
+                  <small class="text-muted" style="font-size: 11px;">Breakdown of quantities, unit costs, and selling prices</small>
                 </div>
               </div>
               <span class="badge theme-bg text-white font-monospace">
@@ -213,7 +196,6 @@
                       <th class="text-center">Qty</th>
                       <th class="text-end">Cost Price</th>
                       <th class="text-end">Selling Price</th>
-                      <th class="text-center" v-if="isElectronicsShop || hasAnySerials">Serial Numbers</th>
                       <th class="text-end" style="width: 120px;">Total Amount</th>
                     </tr>
                   </thead>
@@ -244,31 +226,13 @@
                         ৳ {{ formatNum(pdetail.selling_price) }}
                       </td>
 
-                      <!-- Serial Number Action / Badge -->
-                      <td class="text-center" v-if="isElectronicsShop || hasAnySerials">
-                        <template v-if="getSerialsList(pdetail.serial_no).length > 0">
-                          <button
-                            type="button"
-                            class="btn btn-xs btn-outline-theme d-inline-flex align-items-center gap-1 shadow-sm font-monospace"
-                            @click="openSerialModal(pdetail)"
-                            title="Click to view all Serial Numbers"
-                          >
-                            <i class="fas fa-barcode"></i>
-                            <strong>{{ getSerialsList(pdetail.serial_no).length }}</strong> Serials
-                          </button>
-                        </template>
-                        <template v-else>
-                          <span class="text-muted small font-monospace">-</span>
-                        </template>
-                      </td>
-
                       <td class="text-end font-monospace fw-bold text-theme">
                         ৳ {{ formatNum(pdetail.total_amount) }}
                       </td>
                     </tr>
 
                     <tr v-if="!data.purchase_details || data.purchase_details.length === 0">
-                      <td :colspan="hasAnyVariants ? 9 : 8" class="text-center py-4 text-muted">
+                      <td :colspan="hasAnyVariants ? 8 : 7" class="text-center py-4 text-muted">
                         No purchase items recorded in this voucher.
                       </td>
                     </tr>
@@ -277,8 +241,7 @@
                     <tr>
                       <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">Summary Totals:</td>
                       <td class="text-center font-monospace">{{ totalQty }}</td>
-                      <td colspan="2" v-if="!isElectronicsShop && !hasAnySerials"></td>
-                      <td colspan="3" v-else></td>
+                      <td colspan="2"></td>
                       <td class="text-end font-monospace text-theme fs-6">৳ {{ formatNum(data.total_amount) }}</td>
                     </tr>
                   </tfoot>
@@ -353,53 +316,6 @@
       </div>
     </div>
 
-    <!-- 🔍 Serial Numbers Popup Modal -->
-    <div v-if="activeSerialItem" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.55); z-index: 1060;">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 8px; overflow: hidden;">
-          <div class="modal-header py-3 px-4 theme-bg text-white border-0">
-            <div class="d-flex align-items-center gap-2">
-              <i class="fas fa-barcode fs-5"></i>
-              <div>
-                <h6 class="modal-title fw-bold mb-0 text-white">Serial Numbers & IMEI Tracking</h6>
-                <small class="text-white-50" style="font-size: 11px;">{{ activeSerialItem.item?.title || 'Product Serials' }}</small>
-              </div>
-            </div>
-            <button type="button" class="btn-close btn-close-white" @click="activeSerialItem = null"></button>
-          </div>
-          <div class="modal-body p-4">
-            <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border">
-              <span class="small fw-semibold text-dark">
-                Total Registered Serials: <strong class="theme-text font-monospace fs-6">{{ modalSerialsList.length }}</strong>
-              </span>
-              <button type="button" class="btn btn-xs btn-outline-secondary" @click="copyAllSerials">
-                <i class="fas fa-copy me-1"></i> Copy All
-              </button>
-            </div>
-
-            <!-- Serials Grid -->
-            <div class="p-3 border rounded bg-light" style="max-height: 280px; overflow-y: auto;">
-              <div class="row g-2">
-                <div class="col-md-6 col-sm-12" v-for="(sn, sIdx) in modalSerialsList" :key="sIdx">
-                  <div class="p-2 bg-white rounded border d-flex align-items-center justify-content-between shadow-sm">
-                    <div class="d-flex align-items-center gap-2 overflow-hidden">
-                      <span class="badge theme-bg text-white font-monospace" style="font-size: 10px;">#{{ sIdx + 1 }}</span>
-                      <span class="font-monospace fw-bold text-dark text-truncate" style="font-size: 12px;">{{ sn }}</span>
-                    </div>
-                    <button type="button" class="btn btn-xs btn-light border" @click="copySingleSerial(sn)" title="Copy Serial">
-                      <i class="far fa-copy text-muted"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer py-2 px-4 bg-light border-top">
-            <button type="button" class="btn btn-secondary btn-sm px-4" @click="activeSerialItem = null">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </view-page>
 </template>
 
@@ -413,7 +329,6 @@ export default {
       page_title: "Purchase Details",
       model: model,
       data: {},
-      activeSerialItem: null,
       fileColumns: [],
     };
   },
@@ -437,50 +352,16 @@ export default {
     hasAnyVariants() {
       return this.data.purchase_details?.some(d => d.color_id || d.size_id || d.color?.title || d.size?.title);
     },
-    hasAnySerials() {
-      return this.data.purchase_details?.some(d => Boolean(d.serial_no && String(d.serial_no).trim()));
-    },
     totalQty() {
       if (!this.data.purchase_details) return 0;
       return this.data.purchase_details.reduce((sum, d) => sum + (parseFloat(d.qty) || 0), 0);
     },
-    modalSerialsList() {
-      if (!this.activeSerialItem) return [];
-      return this.getSerialsList(this.activeSerialItem.serial_no);
-    }
   },
   methods: {
     formatNum(val) {
       const num = parseFloat(val);
       if (isNaN(num)) return "0.00";
       return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    },
-    getSerialsList(serialStr) {
-      if (!serialStr) return [];
-      if (Array.isArray(serialStr)) return serialStr;
-      try {
-        const parsed = JSON.parse(serialStr);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {}
-      return String(serialStr)
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean);
-    },
-    openSerialModal(item) {
-      this.activeSerialItem = item;
-    },
-    copyAllSerials() {
-      if (this.modalSerialsList.length === 0) return;
-      const text = this.modalSerialsList.join("\n");
-      navigator.clipboard.writeText(text).then(() => {
-        this.$toast("All serial numbers copied to clipboard", "success");
-      });
-    },
-    copySingleSerial(sn) {
-      navigator.clipboard.writeText(sn).then(() => {
-        this.$toast(`Copied: ${sn}`, "success");
-      });
     },
     printPurchaseVoucher() {
       window.print();

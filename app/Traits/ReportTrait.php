@@ -318,8 +318,8 @@ trait ReportTrait
                         WHEN st.reference_type = 'Issue' THEN cust.name
                         WHEN st.reference_type = 'GRN' THEN COALESCE(g_sup.org_name, g_sup.name)
                         WHEN st.reference_type = 'SalesReturn' OR st.reference_type = 'Return' THEN sr_cust.name
-                        WHEN st.reference_type = 'Wastage' THEN w_emp.full_name
-                        WHEN st.reference_type = 'StockAdjustment' OR st.reference_type = 'Adjustment' OR st.transaction_type = 'Adjustment' THEN CONCAT('Conducted: ', COALESCE(sa_emp.full_name, sa_emp.name, 'N/A'))
+                        WHEN st.reference_type = 'Wastage' THEN COALESCE(w_emp.full_name, w.audited_by, 'N/A')
+                        WHEN st.reference_type = 'StockAdjustment' OR st.reference_type = 'Adjustment' OR st.transaction_type = 'Adjustment' THEN CONCAT('Conducted: ', COALESCE(sa_emp.full_name, 'N/A'))
                         WHEN st.reference_type = 'Production' OR st.transaction_type = 'Production' THEN 'In-House Production'
                         ELSE NULL
                     END AS party_name
@@ -375,7 +375,9 @@ trait ReportTrait
             $gds = DB::table('grn_details')->whereIn('grn_id', $grnIds)->where('item_id', $itemid)->get();
             foreach ($gds as $gd) {
                 $k = $gd->grn_id . '_' . ($gd->color_id ?? 0) . '_' . ($gd->size_id ?? 0);
-                $grnDetailsMap[$k] = ['serial_no' => $gd->serial_no, 'rate' => floatval($gd->unit_cost), 'total' => floatval($gd->total_cost)];
+                $rate = $gd->unit_price ?? $gd->unit_cost ?? 0;
+                $total = $gd->total_amount ?? $gd->total_cost ?? 0;
+                $grnDetailsMap[$k] = ['serial_no' => $gd->serial_no ?? null, 'rate' => floatval($rate), 'total' => floatval($total)];
             }
         }
 
@@ -384,7 +386,9 @@ trait ReportTrait
             $pds = DB::table('purchase_details')->whereIn('purchase_id', $purchaseIds)->where('item_id', $itemid)->get();
             foreach ($pds as $pd) {
                 $k = $pd->purchase_id . '_' . ($pd->color_id ?? 0) . '_' . ($pd->size_id ?? 0);
-                $purchaseDetailsMap[$k] = ['serial_no' => $pd->serial_no, 'rate' => floatval($pd->price), 'total' => floatval($pd->total_amount)];
+                $rate = $pd->price ?? $pd->unit_price ?? 0;
+                $total = $pd->total_amount ?? $pd->total_price ?? 0;
+                $purchaseDetailsMap[$k] = ['serial_no' => $pd->serial_no ?? null, 'rate' => floatval($rate), 'total' => floatval($total)];
             }
         }
 
@@ -393,7 +397,9 @@ trait ReportTrait
             $inds = DB::table('invoice_details')->whereIn('invoice_id', $invoiceIds)->where('item_id', $itemid)->get();
             foreach ($inds as $ind) {
                 $k = $ind->invoice_id . '_' . ($ind->color_id ?? 0) . '_' . ($ind->size_id ?? 0);
-                $invoiceDetailsMap[$k] = ['serial_no' => $ind->serial_no, 'rate' => floatval($ind->amount), 'total' => floatval($ind->total_amount)];
+                $rate = $ind->amount ?? $ind->unit_price ?? 0;
+                $total = $ind->total_amount ?? 0;
+                $invoiceDetailsMap[$k] = ['serial_no' => $ind->serial_no ?? null, 'rate' => floatval($rate), 'total' => floatval($total)];
             }
         }
 
@@ -402,7 +408,9 @@ trait ReportTrait
             $srds = DB::table('sales_return_details')->whereIn('sales_return_id', $returnIds)->where('item_id', $itemid)->get();
             foreach ($srds as $srd) {
                 $k = $srd->sales_return_id . '_' . ($srd->color_id ?? 0) . '_' . ($srd->size_id ?? 0);
-                $returnDetailsMap[$k] = ['serial_no' => $srd->serial_no, 'rate' => floatval($srd->unit_price), 'total' => floatval($srd->total_amount)];
+                $rate = $srd->rate ?? $srd->unit_price ?? $srd->amount ?? 0;
+                $total = $srd->refund_amount ?? $srd->total_amount ?? 0;
+                $returnDetailsMap[$k] = ['serial_no' => $srd->serial_no ?? null, 'rate' => floatval($rate), 'total' => floatval($total)];
             }
         }
 
@@ -411,7 +419,9 @@ trait ReportTrait
             $wds = DB::table('wastage_details')->whereIn('wastage_id', $wastageIds)->where('item_id', $itemid)->get();
             foreach ($wds as $wd) {
                 $k = $wd->wastage_id . '_' . ($wd->color_id ?? 0) . '_' . ($wd->size_id ?? 0);
-                $wastageDetailsMap[$k] = ['serial_no' => $wd->serial_no, 'rate' => floatval($wd->unit_price), 'total' => floatval($wd->total_amount)];
+                $rate = $wd->unit_price ?? $wd->rate ?? 0;
+                $total = $wd->total_amount ?? 0;
+                $wastageDetailsMap[$k] = ['serial_no' => $wd->serial_no ?? null, 'rate' => floatval($rate), 'total' => floatval($total)];
             }
         }
 
@@ -421,7 +431,9 @@ trait ReportTrait
             $sads = DB::table('stock_adjustment_details')->whereIn('stock_adjustment_id', $adjustmentIds)->where('item_id', $itemid)->get();
             foreach ($sads as $sad) {
                 $k = $sad->stock_adjustment_id . '_' . ($sad->color_id ?? 0) . '_' . ($sad->size_id ?? 0);
-                $adjustmentDetailsMap[$k] = ['rate' => floatval($sad->unit_cost), 'total' => floatval($sad->total_amount)];
+                $rate = $sad->unit_price ?? $sad->unit_cost ?? 0;
+                $total = $sad->total_amount ?? 0;
+                $adjustmentDetailsMap[$k] = ['serial_no' => $sad->remarks ?? null, 'rate' => floatval($rate), 'total' => floatval($total)];
             }
         }
 

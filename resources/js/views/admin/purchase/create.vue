@@ -173,7 +173,7 @@
             </div>
             <div>
               <h6 class="fw-bold mb-0 text-dark">Purchase Items (ক্রয়কৃত পণ্যসমূহের তালিকা)</h6>
-              <span class="small text-muted">Manage items, pricing, unit quantities and serial numbers</span>
+              <span class="small text-muted">Manage products, variants, unit pricing and quantities</span>
             </div>
             <span class="badge theme-bg text-white rounded-pill px-2 py-1 ms-2 font-monospace">
               {{ data.purchase_details ? data.purchase_details.length : 0 }} Items
@@ -196,14 +196,13 @@
               <thead class="theme-table-header text-center">
                 <tr>
                   <th style="width: 4%;">#</th>
-                  <th style="width: 24%;" class="text-start ps-3">Product / Item (পণ্য)</th>
-                  <th style="width: 12%;">Variant (ভেরিয়েন্ট)</th>
+                  <th style="width: 28%;" class="text-start ps-3">Product / Item (পণ্য)</th>
+                  <th style="width: 14%;">Variant (ভেরিয়েন্ট)</th>
                   <th style="width: 8%;">Unit (একক)</th>
-                  <th style="width: 11%;" class="text-end">Cost Price (ক্রয়)</th>
-                  <th style="width: 11%;" class="text-end">Selling Price (বিক্রয়)</th>
+                  <th style="width: 13%;" class="text-end">Cost Price (ক্রয়)</th>
+                  <th style="width: 13%;" class="text-end">Selling Price (বিক্রয়)</th>
                   <th style="width: 8%;">Qty (পরিমাণ)</th>
-                  <th style="width: 11%;" v-if="isElectronicsShop">Serial Numbers</th>
-                  <th style="width: 11%;" class="text-end pe-3">Total Amount</th>
+                  <th style="width: 12%;" class="text-end pe-3">Total Amount</th>
                   <th style="width: 8%;">Actions</th>
                 </tr>
               </thead>
@@ -264,31 +263,6 @@
                     {{ pitem.qty }}
                   </td>
 
-                  <!-- Serial Numbers (for Electronics) -->
-                  <td class="text-center" v-if="isElectronicsShop">
-                    <template v-if="getSerialCount(pitem.serial_no) > 0">
-                      <button
-                        type="button"
-                        class="btn btn-xs btn-outline-primary d-inline-flex align-items-center gap-1 font-monospace"
-                        @click="openEditProductModal(index, pitem)"
-                        title="Click to view/edit serial numbers"
-                      >
-                        <i class="fas fa-barcode"></i>
-                        <span>{{ getSerialCount(pitem.serial_no) }} S/N</span>
-                      </button>
-                    </template>
-                    <template v-else>
-                      <button
-                        type="button"
-                        class="btn btn-xs btn-outline-secondary d-inline-flex align-items-center gap-1"
-                        @click="openEditProductModal(index, pitem)"
-                        title="Add Serial Numbers"
-                      >
-                        <i class="fas fa-plus"></i> Add S/N
-                      </button>
-                    </template>
-                  </td>
-
                   <!-- Row Total Amount -->
                   <td class="text-end font-monospace fw-bold text-theme pe-3 fs-6">
                     {{ formatCurrency(pitem.total_amount) }}
@@ -319,13 +293,13 @@
 
                 <!-- Empty State -->
                 <tr v-if="!data.purchase_details || data.purchase_details.length === 0">
-                  <td :colspan="isElectronicsShop ? 10 : 9" class="text-center py-5 text-muted bg-white">
+                  <td colspan="9" class="text-center py-5 text-muted bg-white">
                     <div class="empty-state-wrapper py-3">
                       <div class="empty-icon theme-bg-soft text-theme rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
                         <i class="fas fa-cart-plus fa-2x"></i>
                       </div>
                       <h6 class="fw-bold text-dark mb-1">No purchase items added yet</h6>
-                      <p class="text-muted small mb-3">Click "+ Add Product Row" button to configure products, pricing and serial numbers.</p>
+                      <p class="text-muted small mb-3">Click "+ Add Product Row" button to configure products, variants and pricing.</p>
                       <button
                         type="button"
                         class="btn btn-primary btn-sm px-4 fw-bold shadow-sm"
@@ -471,7 +445,7 @@
       </div>
     </template>
 
-    <!-- 🏷️ Professional Product Addition & Serial Entry Popup Modal -->
+    <!-- 🏷️ Professional Product Addition Popup Modal -->
     <div
       v-if="showProductModal"
       class="modal fade show d-block product-modal-backdrop"
@@ -490,7 +464,7 @@
                 <h5 class="modal-title fw-bold fs-6 mb-0 text-white">
                   {{ isEditingModal ? 'Edit Purchase Product (পণ্য সংশোধন)' : 'Add Purchase Product (পণ্য যোগ করুন)' }}
                 </h5>
-                <span class="small text-white-50">Select product, set costs, quantities and serial tracking</span>
+                <span class="small text-white-50">Select product, set costs, variants and quantities</span>
               </div>
             </div>
             <button type="button" class="btn-close btn-close-white" @click="closeProductModal"></button>
@@ -641,152 +615,6 @@
                   </span>
                 </div>
               </div>
-
-              <!-- 🏷️ Integrated Serial Number Entry Section (Show/Hide Toggle) -->
-              <div class="col-12 mt-2">
-                <div class="card border rounded-3 overflow-hidden shadow-none">
-                  <!-- Section Accordion Header -->
-                  <div
-                    class="card-header py-2 px-3 bg-light d-flex justify-content-between align-items-center cursor-pointer border-bottom"
-                    @click="modalForm.showSerialsSection = !modalForm.showSerialsSection"
-                  >
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="fas fa-barcode text-primary"></i>
-                      <span class="fw-bold text-dark small">Serial Numbers / IMEI Tracking (সিরিয়াল নম্বর সমূহ)</span>
-                      <span class="badge rounded-pill" :class="modalForm.serialsList.length > 0 ? 'bg-primary' : 'bg-secondary'">
-                        {{ modalForm.serialsList.length }} Serials
-                      </span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="badge bg-white text-muted border small">
-                        {{ modalForm.showSerialsSection ? 'Hide Section' : 'Show / Expand' }}
-                      </span>
-                      <i class="fas" :class="modalForm.showSerialsSection ? 'fa-chevron-up text-primary' : 'fa-chevron-down text-muted'"></i>
-                    </div>
-                  </div>
-
-                  <!-- Collapsible Section Body -->
-                  <div class="card-body p-3 bg-white" v-show="modalForm.showSerialsSection">
-                    <!-- Mode Switch & Action Buttons -->
-                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                      <div class="btn-group btn-group-sm" role="group">
-                        <button
-                          type="button"
-                          class="btn"
-                          :class="!modalForm.bulkMode ? 'btn-primary' : 'btn-outline-secondary'"
-                          @click="modalForm.bulkMode = false"
-                        >
-                          <i class="fas fa-keyboard me-1"></i> Quick / Barcode Entry
-                        </button>
-                        <button
-                          type="button"
-                          class="btn"
-                          :class="modalForm.bulkMode ? 'btn-primary' : 'btn-outline-secondary'"
-                          @click="modalForm.bulkMode = true"
-                        >
-                          <i class="fas fa-paste me-1"></i> Bulk Paste List
-                        </button>
-                      </div>
-
-                      <div class="d-flex align-items-center gap-2">
-                        <button
-                          type="button"
-                          class="btn btn-xs btn-outline-secondary"
-                          @click="copyAllModalSerials"
-                          :disabled="modalForm.serialsList.length === 0"
-                          title="Copy all serials"
-                        >
-                          <i class="fas fa-copy me-1"></i> Copy All
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-xs btn-outline-danger"
-                          @click="clearAllModalSerials"
-                          :disabled="modalForm.serialsList.length === 0"
-                          title="Clear all serials"
-                        >
-                          <i class="fas fa-trash-alt me-1"></i> Clear
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- 1. Single Scan Input -->
-                    <div v-if="!modalForm.bulkMode" class="mb-2">
-                      <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted"><i class="fas fa-barcode"></i></span>
-                        <input
-                          type="text"
-                          class="form-control font-monospace fw-bold"
-                          placeholder="Scan or type Serial No and press Enter..."
-                          v-model="modalForm.tempSerial"
-                          @keyup.enter.prevent="addModalSerial"
-                        />
-                        <button type="button" class="btn btn-primary fw-bold px-3" @click.prevent="addModalSerial">
-                          <i class="fas fa-plus me-1"></i> Add
-                        </button>
-                      </div>
-                      <small class="text-muted d-block mt-1">
-                        <i class="fas fa-info-circle me-1 text-primary"></i> Press <strong>Enter</strong> to instantly add each serial number.
-                      </small>
-                    </div>
-
-                    <!-- 2. Bulk Textarea -->
-                    <div v-else class="mb-2">
-                      <textarea
-                        class="form-control form-control-sm font-monospace"
-                        rows="3"
-                        v-model="modalForm.bulkSerialText"
-                        placeholder="Paste multiple serials separated by line break, comma, or space..."
-                      ></textarea>
-                      <div class="d-flex justify-content-end mt-1">
-                        <button type="button" class="btn btn-xs btn-primary fw-bold px-3" @click.prevent="processModalBulkSerials">
-                          <i class="fas fa-plus-circle me-1"></i> Add Extracted Serials
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Serial Chips Box -->
-                    <div class="serials-list-box p-2 border rounded bg-light mt-2">
-                      <div v-if="modalForm.serialsList.length > 0" class="d-flex flex-wrap gap-2">
-                        <span
-                          v-for="(sn, sIdx) in modalForm.serialsList"
-                          :key="sIdx"
-                          class="badge serial-badge font-monospace p-1 px-2 d-flex align-items-center gap-2 shadow-sm"
-                        >
-                          <span class="badge-num">#{{ sIdx + 1 }}</span>
-                          <span>{{ sn }}</span>
-                          <i
-                            class="fas fa-times delete-serial-btn"
-                            @click="removeModalSerial(sIdx)"
-                            title="Remove Serial"
-                          ></i>
-                        </span>
-                      </div>
-                      <div v-else class="text-center py-3 text-muted">
-                        <span class="small opacity-75">No serial numbers entered for this item yet.</span>
-                      </div>
-                    </div>
-
-                    <!-- Bottom Auto Sync Checkbox -->
-                    <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top">
-                      <div class="form-check form-switch mb-0">
-                        <input
-                          class="form-check-input"
-                          type="checkbox"
-                          id="syncQtyCheckModal"
-                          v-model="modalForm.syncQtyWithSerials"
-                        />
-                        <label class="form-check-label small fw-bold text-dark cursor-pointer" for="syncQtyCheckModal">
-                          Auto match Quantity to {{ modalForm.serialsList.length }}
-                        </label>
-                      </div>
-                      <span class="small text-muted">
-                        Total Serials: <strong class="text-theme font-monospace">{{ modalForm.serialsList.length }}</strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -859,14 +687,7 @@ export default {
         price: 0,
         selling_price: 0,
         qty: 1,
-        serial_no: "",
-        serialsList: [],
         total_amount: 0,
-        tempSerial: "",
-        bulkSerialText: "",
-        bulkMode: false,
-        showSerialsSection: true,
-        syncQtyWithSerials: true,
       },
     };
   },
@@ -949,20 +770,6 @@ export default {
       const found = this.units.find((u) => u.id === unitId);
       return found ? found.title : "Pcs";
     },
-    getSerialCount(serialStr) {
-      if (!serialStr) return 0;
-      return serialStr
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0).length;
-    },
-    getSerialsArray(serialStr) {
-      if (!serialStr) return [];
-      return serialStr
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-    },
     openAddProductModal() {
       this.isEditingModal = false;
       this.modalForm = {
@@ -978,14 +785,7 @@ export default {
         price: 0,
         selling_price: 0,
         qty: 1,
-        serial_no: "",
-        serialsList: [],
         total_amount: 0,
-        tempSerial: "",
-        bulkSerialText: "",
-        bulkMode: false,
-        showSerialsSection: this.isElectronicsShop,
-        syncQtyWithSerials: true,
       };
 
       if (this.modalForm.category_id) {
@@ -996,7 +796,6 @@ export default {
     },
     openEditProductModal(index, pitem) {
       this.isEditingModal = true;
-      const serials = this.getSerialsArray(pitem.serial_no);
       const price = parseFloat(pitem.price) || 0;
       const sellingPrice = parseFloat(pitem.selling_price) || 0;
       const qty = parseFloat(pitem.qty) || 1;
@@ -1015,14 +814,7 @@ export default {
         price: price,
         selling_price: sellingPrice,
         qty: qty,
-        serial_no: pitem.serial_no || "",
-        serialsList: [...serials],
         total_amount: totalAmount,
-        tempSerial: "",
-        bulkSerialText: "",
-        bulkMode: false,
-        showSerialsSection: this.isElectronicsShop || serials.length > 0,
-        syncQtyWithSerials: true,
       };
 
       if (pitem.category_id && (!pitem.items || pitem.items.length === 0)) {
@@ -1071,9 +863,6 @@ export default {
         if (selectedObj.opening_rate && (!this.modalForm.price || this.modalForm.price == 0)) {
           this.modalForm.price = parseFloat(selectedObj.opening_rate) || 0;
         }
-        if (selectedObj.is_serialized || selectedObj.warranty_type !== "none") {
-          this.modalForm.showSerialsSection = true;
-        }
         this.onModalPriceOrQtyChange();
       }
     },
@@ -1081,62 +870,6 @@ export default {
       const price = parseFloat(this.modalForm.price) || 0;
       const qty = parseFloat(this.modalForm.qty) || 0;
       this.modalForm.total_amount = Number((price * qty).toFixed(2));
-    },
-    addModalSerial() {
-      const sn = this.modalForm.tempSerial ? this.modalForm.tempSerial.trim() : "";
-      if (sn) {
-        if (!this.modalForm.serialsList.includes(sn)) {
-          this.modalForm.serialsList.push(sn);
-          if (this.modalForm.syncQtyWithSerials) {
-            this.modalForm.qty = this.modalForm.serialsList.length;
-            this.onModalPriceOrQtyChange();
-          }
-        } else {
-          this.$toast("Serial number already exists in list", "warning");
-        }
-        this.modalForm.tempSerial = "";
-      }
-    },
-    processModalBulkSerials() {
-      if (!this.modalForm.bulkSerialText) return;
-      const rawList = this.modalForm.bulkSerialText
-        .split(/[\n,;\s]+/)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-
-      let added = 0;
-      rawList.forEach((sn) => {
-        if (sn && !this.modalForm.serialsList.includes(sn)) {
-          this.modalForm.serialsList.push(sn);
-          added++;
-        }
-      });
-
-      if (this.modalForm.syncQtyWithSerials && this.modalForm.serialsList.length > 0) {
-        this.modalForm.qty = this.modalForm.serialsList.length;
-        this.onModalPriceOrQtyChange();
-      }
-
-      this.modalForm.bulkSerialText = "";
-      this.modalForm.bulkMode = false;
-      this.$toast(`${added} serial numbers added`, "success");
-    },
-    removeModalSerial(sIdx) {
-      this.modalForm.serialsList.splice(sIdx, 1);
-      if (this.modalForm.syncQtyWithSerials) {
-        this.modalForm.qty = Math.max(1, this.modalForm.serialsList.length);
-        this.onModalPriceOrQtyChange();
-      }
-    },
-    clearAllModalSerials() {
-      this.modalForm.serialsList = [];
-    },
-    copyAllModalSerials() {
-      if (this.modalForm.serialsList.length === 0) return;
-      const text = this.modalForm.serialsList.join(", ");
-      navigator.clipboard.writeText(text).then(() => {
-        this.$toast("Serials copied to clipboard", "success");
-      });
     },
     saveProductFromModal() {
       if (!this.modalForm.category_id) {
@@ -1153,7 +886,6 @@ export default {
       }
 
       const selectedItem = this.modalForm.items.find((i) => i.id === this.modalForm.item_id);
-      const serialStr = this.modalForm.serialsList.join(", ");
       const price = parseFloat(this.modalForm.price) || 0;
       const sellingPrice = parseFloat(this.modalForm.selling_price) || 0;
       const qty = parseFloat(this.modalForm.qty) || 1;
@@ -1171,7 +903,6 @@ export default {
         price: price,
         selling_price: sellingPrice,
         qty: qty,
-        serial_no: serialStr,
         total_amount: totalAmount,
       };
 
@@ -1503,37 +1234,6 @@ export default {
   color: #1e293b !important;
 }
 
-/* Serial Modal Chips */
-.serials-list-box {
-  min-height: 80px;
-  max-height: 180px;
-  overflow-y: auto;
-}
-
-.serial-badge {
-  background-color: #112C47;
-  color: #ffffff;
-  font-size: 12px;
-  border-radius: 6px;
-}
-
-.badge-num {
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 10px;
-}
-
-.delete-serial-btn {
-  color: #fca5a5;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-
-.delete-serial-btn:hover {
-  color: #ef4444;
-}
-
 /* Global vs dropdown styling */
 :global(.vs__dropdown-menu) {
   z-index: 999999 !important;
@@ -1553,16 +1253,5 @@ export default {
 :global(.vs__dropdown-option--highlight) {
   background-color: #112C47 !important;
   color: #ffffff !important;
-}
-
-/* Custom Scrollbars */
-.serials-list-box::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-.serials-list-box::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
-  border-radius: 3px;
 }
 </style>

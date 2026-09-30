@@ -520,6 +520,11 @@ const routes = [
                 component: () => import("./../views/admin/invoice/bill"),
             },
             {
+                path: "/invoice/mushak/:id",
+                name: "invoice.mushak",
+                component: () => import("./../views/admin/invoice/mushak"),
+            },
+            {
                 path: "/invoice/moneyreceipt/:id",
                 name: "invoice.moneyreceipt",
                 component: () =>
@@ -1465,6 +1470,12 @@ const routes = [
                 name: "report.disposal",
                 component: () =>
                     import("./../views/admin/report/wastage"),
+            },
+            {
+                path: "/report/vat",
+                name: "report.vat",
+                component: () =>
+                    import("./../views/admin/report/vat"),
             },
             // ------------------SOFTWARE UPDATE PORTION------------------
             {
