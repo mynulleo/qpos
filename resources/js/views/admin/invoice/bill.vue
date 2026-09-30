@@ -77,8 +77,8 @@
                                 <div class="invoice-from">
                                     <h2 class="fw-bold mb-1" style="color: #112C47; font-size: 22px; text-transform: uppercase;">{{ site?.title || 'QPOS STORE' }}</h2>
                                     <p class="mb-0 text-muted small" style="max-width: 450px;">{{ site?.address }}</p>
-                                    <p class="mb-0 text-muted small">Phone: {{ site?.mobile1 }} <span v-if="site?.mobile2">/ {{ site?.mobile2 }}</span></p>
-                                    <p class="mb-0 text-muted small" v-if="site?.contact_email || site?.email">Email: {{ site?.contact_email || site?.email }}</p>
+                                    <p class="mb-0 text-muted small"><strong>Phone:</strong> {{ site?.mobile1 }} <span v-if="site?.mobile2">/ {{ site?.mobile2 }}</span></p>
+                                    <p class="mb-0 text-muted small" v-if="site?.contact_email || site?.email"><strong>Email:</strong> {{ site?.contact_email || site?.email }}</p>
                                     <p class="mb-0 text-muted small" v-if="site?.bin_no || site?.vat_no"><strong>BIN / VAT Reg:</strong> {{ site?.bin_no || site?.vat_no }}</p>
                                 </div>
                             </div>
@@ -102,9 +102,9 @@
                             <div class="p-3 bg-light rounded border h-100">
                                 <div class="text-uppercase fw-bold text-muted small mb-1" style="color: #112C47 !important; font-size: 11px;">Invoice To (গ্রাহক):</div>
                                 <h6 class="fw-bold text-dark mb-1">{{ data.client?.name || 'Walk-in Customer' }}</h6>
-                                <p class="mb-0 text-muted small" v-if="data.client?.mobile"><i class="fas fa-phone-alt me-1 text-primary"></i>Phone: {{ data.client.mobile }}</p>
-                                <p class="mb-0 text-muted small" v-if="data.client?.address"><i class="fas fa-map-marker-alt me-1 text-danger"></i>Address: {{ data.client.address }}</p>
-                                <p class="mb-0 text-muted small" v-if="data.delivery_address"><i class="fas fa-truck me-1 text-info"></i>Delivery Address: {{ data.delivery_address }}</p>
+                                <p class="mb-0 text-muted small" v-if="data.client?.mobile"><i class="fas fa-phone-alt me-1 text-primary print-icon"></i>Phone: {{ data.client.mobile }}</p>
+                                <p class="mb-0 text-muted small" v-if="data.client?.address"><i class="fas fa-map-marker-alt me-1 text-danger print-icon"></i>Address: {{ data.client.address }}</p>
+                                <p class="mb-0 text-muted small" v-if="data.delivery_address"><i class="fas fa-truck me-1 text-info print-icon"></i>Delivery Address: {{ data.delivery_address }}</p>
                             </div>
                         </div>
                         <div class="col-md-5 col-sm-5">
@@ -126,27 +126,28 @@
                             <thead style="background-color: #112C47; color: #fff;">
                                 <tr>
                                     <th width="4%" class="text-center text-white">#</th>
-                                    <th width="44%" class="text-white">Item Description & Specifications</th>
-                                    <th width="16%" class="text-center text-white">Variant / Serial</th>
-                                    <th width="8%" class="text-center text-white">Qty</th>
-                                    <th width="14%" class="text-end text-white">Unit Rate (৳)</th>
-                                    <th width="14%" class="text-end text-white">Total Amount (৳)</th>
+                                    <th width="52%" class="text-white">Item Description & Specifications</th>
+                                    <th width="10%" class="text-center text-white">Qty</th>
+                                    <th width="17%" class="text-end text-white">Unit Rate (৳)</th>
+                                    <th width="17%" class="text-end text-white">Total Amount (৳)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="(invd, index) in getItemList(data)" :key="index">
                                     <td class="text-center text-muted">{{ index + 1 }}</td>
                                     <td>
-                                        <div class="fw-bold text-dark">{{ getItemTitle(invd) }}</div>
-                                        <small class="text-muted font-monospace" v-if="getItemBarcode(invd)">Barcode: {{ getItemBarcode(invd) }}</small>
-                                        <div v-if="getItemWarranty(invd)" class="small text-success fw-bold" style="font-size: 11px;">
-                                            <i class="fas fa-shield-alt me-1"></i>{{ getItemWarranty(invd) }}
+                                        <div class="fw-bold text-dark fs-6">{{ getItemTitle(invd) }}</div>
+                                        <!-- ⭐️ Dynamically render Model, Brand, Color, Size, Serial No, Warranty ONLY if present -->
+                                        <div class="d-flex flex-wrap gap-1 mt-1" v-if="getItemSpecs(invd).length > 0">
+                                            <span v-for="(spec, sIdx) in getItemSpecs(invd)" :key="sIdx" 
+                                                  class="badge bg-light text-dark border font-monospace" 
+                                                  style="font-size: 10.5px; font-weight: 500; padding: 2px 6px;">
+                                                <strong class="text-secondary">{{ spec.label }}:</strong> {{ spec.value }}
+                                            </span>
                                         </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-light text-dark border me-1" v-if="getItemVariant(invd)">{{ getItemVariant(invd) }}</span>
-                                        <div v-if="invd.serial_no" class="small text-primary font-monospace" style="font-size: 10px;">S/N: {{ invd.serial_no }}</div>
-                                        <span v-if="!getItemVariant(invd) && !invd.serial_no" class="text-muted small">-</span>
+                                        <div v-if="getItemBarcode(invd)" class="text-muted font-monospace mt-1" style="font-size: 10px;">
+                                            Barcode: {{ getItemBarcode(invd) }}
+                                        </div>
                                     </td>
                                     <td class="text-center font-monospace fw-bold fs-6">{{ invd.qty }}</td>
                                     <td class="text-end font-monospace">{{ formatPrice(invd.amount) }}</td>
@@ -187,9 +188,9 @@
                                         <th class="text-muted">VAT / Tax:</th>
                                         <td class="text-end font-monospace">+ ৳ {{ formatPrice(data.vat) }}</td>
                                     </tr>
-                                    <tr style="background-color: #f1f5f9; font-weight: bold; border-top: 2px solid #112C47;">
-                                        <th class="fs-6" style="color: #112C47;">TOTAL PAYABLE:</th>
-                                        <td class="text-end font-monospace fs-6" style="color: #112C47;">৳ {{ formatPrice(data.amount) }}</td>
+                                    <tr style="background-color: #f1f5f9; font-weight: bold; border-top: 2px solid #112C47; border-bottom: 2px solid #112C47;">
+                                        <th class="fs-6 fw-bold" style="color: #112C47 !important; padding: 6px 8px;">NET TOTAL PAYABLE:</th>
+                                        <td class="text-end font-monospace fs-6 fw-bold" style="color: #112C47 !important; padding: 6px 8px;">৳ {{ formatPrice(data.amount) }}</td>
                                     </tr>
                                     <tr>
                                         <th class="text-success fw-bold">Paid Amount:</th>
@@ -236,8 +237,8 @@
                                     <h2 class="fw-bold mb-1" style="font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">{{ site?.title || 'QPOS STORE' }}</h2>
                                     <p class="mb-1 text-muted small" style="max-width: 440px;">{{ site?.address }}</p>
                                     <div class="d-flex gap-3 flex-wrap text-muted small">
-                                        <span><i class="fas fa-phone-alt text-primary me-1"></i>{{ site?.mobile1 }}</span>
-                                        <span v-if="site?.contact_email || site?.email"><i class="fas fa-envelope text-primary me-1"></i>{{ site?.contact_email || site?.email }}</span>
+                                        <span><i class="fas fa-phone-alt text-primary me-1 print-icon" style="width: 11px; height: 11px; font-size: 11px;"></i>Phone: {{ site?.mobile1 }}</span>
+                                        <span v-if="site?.contact_email || site?.email"><i class="fas fa-envelope text-primary me-1 print-icon" style="width: 11px; height: 11px; font-size: 11px;"></i>Email: {{ site?.contact_email || site?.email }}</span>
                                         <span v-if="site?.bin_no || site?.vat_no"><strong>BIN:</strong> {{ site?.bin_no || site?.vat_no }}</span>
                                     </div>
                                 </div>
@@ -263,9 +264,9 @@
                             <div class="p-3 bg-light rounded border h-100">
                                 <div class="text-uppercase fw-bold small mb-1" style="color: #0284c7; font-size: 11px;">Bill To (ক্রেতা)</div>
                                 <h6 class="fw-bold text-dark mb-1">{{ data.client?.name || 'Walk-in Customer' }}</h6>
-                                <div class="small text-muted" v-if="data.client?.mobile"><i class="fas fa-phone-alt me-1 text-primary"></i>Phone: {{ data.client.mobile }}</div>
-                                <div class="small text-muted" v-if="data.client?.address"><i class="fas fa-map-marker-alt me-1 text-danger"></i>Address: {{ data.client.address }}</div>
-                                <div class="small text-muted" v-if="data.delivery_address"><i class="fas fa-truck me-1 text-info"></i>Delivery: {{ data.delivery_address }}</div>
+                                <div class="small text-muted" v-if="data.client?.mobile"><i class="fas fa-phone-alt me-1 text-primary print-icon" style="width: 11px; height: 11px; font-size: 11px;"></i>Phone: {{ data.client.mobile }}</div>
+                                <div class="small text-muted" v-if="data.client?.address"><i class="fas fa-map-marker-alt me-1 text-danger print-icon" style="width: 11px; height: 11px; font-size: 11px;"></i>Address: {{ data.client.address }}</div>
+                                <div class="small text-muted" v-if="data.delivery_address"><i class="fas fa-truck me-1 text-info print-icon" style="width: 11px; height: 11px; font-size: 11px;"></i>Delivery: {{ data.delivery_address }}</div>
                             </div>
                         </div>
                         <div class="col-md-6 col-sm-6">
@@ -293,27 +294,27 @@
                             <thead style="background-color: #f8fafc; border-bottom: 2px solid #0284c7; color: #334155;">
                                 <tr>
                                     <th width="4%" class="text-center">#</th>
-                                    <th width="44%">Item / Description</th>
-                                    <th width="16%" class="text-center">Variant / Serial</th>
-                                    <th width="8%" class="text-center">Qty</th>
-                                    <th width="14%" class="text-end">Price (৳)</th>
-                                    <th width="14%" class="text-end">Total (৳)</th>
+                                    <th width="52%">Item / Description</th>
+                                    <th width="10%" class="text-center">Qty</th>
+                                    <th width="17%" class="text-end">Price (৳)</th>
+                                    <th width="17%" class="text-end">Total (৳)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="(invd, index) in getItemList(data)" :key="index" style="border-bottom: 1px solid #f1f5f9;">
                                     <td class="text-center text-muted">{{ index + 1 }}</td>
                                     <td>
-                                        <div class="fw-bold text-dark">{{ getItemTitle(invd) }}</div>
-                                        <small class="text-muted font-monospace" v-if="getItemBarcode(invd)">Barcode: {{ getItemBarcode(invd) }}</small>
-                                        <div v-if="getItemWarranty(invd)" class="small text-primary fw-bold" style="font-size: 11px;">
-                                            <i class="fas fa-shield-alt me-1"></i>{{ getItemWarranty(invd) }}
+                                        <div class="fw-bold text-dark fs-6">{{ getItemTitle(invd) }}</div>
+                                        <!-- ⭐️ Dynamically render Model, Brand, Color, Size, Serial No, Warranty ONLY if present -->
+                                        <div class="d-flex flex-wrap gap-1 mt-1" v-if="getItemSpecs(invd).length > 0">
+                                            <span v-for="(spec, sIdx) in getItemSpecs(invd)" :key="sIdx" 
+                                                  style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 6px; font-size: 10.5px; color: #1e293b; display: inline-block;">
+                                                <strong style="color: #0284c7;">{{ spec.label }}:</strong> {{ spec.value }}
+                                            </span>
                                         </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-info bg-opacity-25 text-dark me-1" v-if="getItemVariant(invd)">{{ getItemVariant(invd) }}</span>
-                                        <div v-if="invd.serial_no" class="small text-primary font-monospace" style="font-size: 10px;">S/N: {{ invd.serial_no }}</div>
-                                        <span v-if="!getItemVariant(invd) && !invd.serial_no" class="text-muted small">-</span>
+                                        <div v-if="getItemBarcode(invd)" class="text-muted font-monospace mt-1" style="font-size: 10px;">
+                                            Barcode: {{ getItemBarcode(invd) }}
+                                        </div>
                                     </td>
                                     <td class="text-center font-monospace fw-bold fs-6">{{ invd.qty }}</td>
                                     <td class="text-end font-monospace">{{ formatPrice(invd.amount) }}</td>
@@ -352,9 +353,9 @@
                                     <span>VAT / Tax:</span>
                                     <span class="font-monospace text-dark">+ ৳ {{ formatPrice(data.vat) }}</span>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center p-2 rounded text-white mb-2" style="background-color: #0284c7;">
-                                    <span class="fw-bold" style="font-size: 12px;">NET PAYABLE:</span>
-                                    <span class="fs-5 fw-bold font-monospace">৳ {{ formatPrice(data.amount) }}</span>
+                                <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #0f172a !important; color: #ffffff !important; border: 1.5px solid #0f172a;">
+                                    <span class="fw-bold" style="font-size: 12px; color: #ffffff !important; letter-spacing: 0.5px;">NET TOTAL PAYABLE:</span>
+                                    <span class="fs-5 fw-bold font-monospace" style="color: #ffffff !important;">৳ {{ formatPrice(data.amount) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between small text-success fw-bold mb-1">
                                     <span>Paid Amount:</span>
@@ -433,11 +434,10 @@
                         <thead class="table-secondary border-dark">
                             <tr>
                                 <th width="4%" class="text-center">SL</th>
-                                <th width="44%">Item Description & Specifications</th>
-                                <th width="16%" class="text-center">Spec / Serial</th>
-                                <th width="8%" class="text-center">Qty</th>
-                                <th width="14%" class="text-end">Rate (৳)</th>
-                                <th width="14%" class="text-end">Amount (৳)</th>
+                                <th width="52%">Item Description & Specifications</th>
+                                <th width="10%" class="text-center">Qty</th>
+                                <th width="17%" class="text-end">Rate (৳)</th>
+                                <th width="17%" class="text-end">Amount (৳)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -445,13 +445,14 @@
                                 <td class="text-center">{{ index + 1 }}</td>
                                 <td>
                                     <div class="fw-bold">{{ getItemTitle(invd) }}</div>
-                                    <small class="text-muted" v-if="getItemBarcode(invd)">Barcode: {{ getItemBarcode(invd) }}</small>
-                                    <div v-if="getItemWarranty(invd)" class="text-success small" style="font-size: 10px;">{{ getItemWarranty(invd) }}</div>
-                                </td>
-                                <td class="text-center">
-                                    <span v-if="getItemVariant(invd)">{{ getItemVariant(invd) }}</span>
-                                    <div v-if="invd.serial_no" class="small font-monospace" style="font-size: 10px;">S/N: {{ invd.serial_no }}</div>
-                                    <span v-if="!getItemVariant(invd) && !invd.serial_no" class="text-muted">-</span>
+                                    <!-- ⭐️ Dynamically render Model, Brand, Color, Size, Serial No, Warranty ONLY if present -->
+                                    <div class="d-flex flex-wrap gap-1 mt-1" v-if="getItemSpecs(invd).length > 0">
+                                        <span v-for="(spec, sIdx) in getItemSpecs(invd)" :key="sIdx" 
+                                              style="background: #f8fafc; border: 1px solid #94a3b8; border-radius: 2px; padding: 1px 4px; font-size: 9.5px; color: #000; display: inline-block;">
+                                            <strong>{{ spec.label }}:</strong> {{ spec.value }}
+                                        </span>
+                                    </div>
+                                    <div v-if="getItemBarcode(invd)" class="text-muted small" style="font-size: 9.5px;">Barcode: {{ getItemBarcode(invd) }}</div>
                                 </td>
                                 <td class="text-center font-monospace fw-bold">{{ invd.qty }}</td>
                                 <td class="text-end font-monospace">{{ formatPrice(invd.amount) }}</td>
@@ -488,9 +489,9 @@
                                         <td>VAT / Tax:</td>
                                         <td class="text-end font-monospace">+ ৳ {{ formatPrice(data.vat) }}</td>
                                     </tr>
-                                    <tr class="table-secondary fw-bold">
-                                        <td>Grand Total:</td>
-                                        <td class="text-end font-monospace">৳ {{ formatPrice(data.amount) }}</td>
+                                    <tr class="table-secondary fw-bold" style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;">
+                                        <td style="font-weight: bold; color: #000;">NET TOTAL PAYABLE:</td>
+                                        <td class="text-end font-monospace" style="font-weight: bold; color: #000;">৳ {{ formatPrice(data.amount) }}</td>
                                     </tr>
                                     <tr>
                                         <td class="text-success fw-bold">Paid Amount:</td>
@@ -589,19 +590,64 @@ export default {
             return item.barcode || item.item?.barcode || '';
         },
         getItemWarranty(item) {
-            if (item.warranty_type && item.warranty_type !== 'none') {
-                const label = item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty';
-                return `${label}: ${item.warranty_period}`;
-            }
-            if (item.item?.warranty_type && item.item?.warranty_type !== 'none') {
-                const label = item.item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty';
-                return `${label}: ${item.item.warranty_period}`;
+            const wType = item.warranty_type || item.item?.warranty_type;
+            const wPeriod = item.warranty_period || item.item?.warranty_period;
+            if (wType && wType !== 'none' && wPeriod && typeof wPeriod === 'string' && wPeriod.trim() !== '') {
+                const label = wType === 'guarantee' ? 'Guarantee' : 'Warranty';
+                return `${label}: ${wPeriod.trim()}`;
             }
             return '';
         },
+        getItemSpecs(item) {
+            if (!item) return [];
+            const specs = [];
+
+            // 1. Brand
+            const brand = item.brand_title || item.brand?.title || item.item?.brand?.title;
+            if (brand && typeof brand === 'string' && brand.trim() !== '') {
+                specs.push({ label: 'Brand', value: brand.trim() });
+            }
+
+            // 2. Model
+            const model = item.model_no || item.model || item.item?.model_no || item.series_title || item.series?.title || item.item?.series?.title;
+            if (model && typeof model === 'string' && model.trim() !== '') {
+                specs.push({ label: 'Model', value: model.trim() });
+            }
+
+            // 3. Color
+            const color = item.color_title || item.color?.title || item.color?.name || item.item?.color?.title || item.item?.color?.name;
+            if (color && typeof color === 'string' && color.trim() !== '') {
+                specs.push({ label: 'Color', value: color.trim() });
+            }
+
+            // 4. Size
+            const size = item.size_title || item.size?.title || item.size?.name || item.item?.size?.title || item.item?.size?.name;
+            if (size && typeof size === 'string' && size.trim() !== '') {
+                specs.push({ label: 'Size', value: size.trim() });
+            }
+
+            // 5. Serial No
+            const serial = item.serial_no || item.serial || item.item_serial;
+            if (serial && typeof serial === 'string' && serial.trim() !== '') {
+                specs.push({ label: 'Serial No', value: serial.trim() });
+            }
+
+            // 6. Warranty / Guarantee
+            const warranty = this.getItemWarranty(item);
+            if (warranty && typeof warranty === 'string' && warranty.trim() !== '') {
+                const isGuarantee = warranty.toLowerCase().startsWith('guarantee');
+                const label = isGuarantee ? 'Guarantee' : 'Warranty';
+                const val = warranty.replace(/^(Warranty|Guarantee):\s*/i, '').trim();
+                if (val !== '') {
+                    specs.push({ label, value: val });
+                }
+            }
+
+            return specs;
+        },
         getItemVariant(item) {
-            const c = item.color_title || item.color?.title || '';
-            const s = item.size_title || item.size?.title || '';
+            const c = item.color_title || item.color?.title || item.color?.name || '';
+            const s = item.size_title || item.size?.title || item.size?.name || '';
             if (c && s) return `${c} / ${s}`;
             return c || s || '';
         },
@@ -660,11 +706,35 @@ export default {
     max-width: 1000px;
 }
 
+.print-icon {
+    width: 11px !important;
+    height: 11px !important;
+    max-width: 12px !important;
+    max-height: 12px !important;
+    font-size: 11px !important;
+    vertical-align: -1px !important;
+    display: inline-block !important;
+}
+
 @media print {
+    body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
     .invoice-box {
         box-shadow: none !important;
         border: none !important;
         padding: 0 !important;
+    }
+    i.fas, i.far, i.fab, i.fa, svg, .svg-inline--fa {
+        width: 11px !important;
+        height: 11px !important;
+        max-width: 12px !important;
+        max-height: 12px !important;
+        font-size: 11px !important;
+        vertical-align: -1px !important;
+        display: inline-block !important;
     }
 }
 </style>

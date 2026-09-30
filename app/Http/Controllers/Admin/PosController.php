@@ -494,6 +494,7 @@ class PosController extends BaseController
                 $clientId = $client->id;
             }
 
+            $isWalkIn = false;
             if (empty($clientId)) {
                 $walkin = Client::firstOrCreate(
                     ['mobile' => '00000000000'],
@@ -506,6 +507,17 @@ class PosController extends BaseController
                     ]
                 );
                 $clientId = $walkin->id;
+                $isWalkIn = true;
+            } else {
+                $checkClient = Client::find($clientId);
+                if ($checkClient && ($checkClient->mobile === '00000000000' || $checkClient->name === 'Walk-in Customer')) {
+                    $isWalkIn = true;
+                }
+            }
+
+            $paidAmount = floatval($request->input('paid_amount', 0));
+            if ($isWalkIn && $paidAmount <= 0) {
+                return response()->json(['exception' => 'Walk-in গ্রাহকের জন্য Paid Amount ০ রাখা যাবে না! অনুগ্রহ করে পেমেন্ট দিন অথবা কাস্টমার রেজিস্টার/সিলেক্ট করুন।'], 422);
             }
 
             // Generate Invoice No
@@ -524,7 +536,6 @@ class PosController extends BaseController
             $vat = floatval($request->input('vat', 0));
             $vatPercent = floatval($request->input('vat_percent', 0));
             $totalAmount = max(0, ($originalAmount - $discount) + $vat);
-            $paidAmount = floatval($request->input('paid_amount', 0));
 
             // Create Invoice
             $invoiceData = [

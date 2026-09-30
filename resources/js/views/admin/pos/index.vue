@@ -322,19 +322,22 @@
                 </select>
               </div>
               <div class="col-6">
-                <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">Paid Amount (প্রদত্ত টাকা)</label>
-                <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace fw-bold text-primary py-1" style="height: 32px; font-size: 14px;" v-model.number="paid_amount">
+                <div class="d-flex justify-content-between align-items-center mb-0">
+                  <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">Paid Amount (প্রদত্ত টাকা)</label>
+                  <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none font-monospace fw-bold text-primary" style="font-size: 10px;" @click="paid_amount = netPayable" title="Pay Full Amount">Full Pay</button>
+                </div>
+                <input type="number" step="0.01" min="0" class="form-control form-control-sm text-end font-monospace fw-bold text-primary py-1" style="height: 32px; font-size: 14px;" v-model.number="paid_amount" placeholder="0.00">
               </div>
               <div class="col-12" v-if="payment_method !== 'Cash'">
                 <input type="text" class="form-control form-control-sm font-monospace py-1" style="height: 28px;" placeholder="TrxID / Reference No." v-model="trxid">
               </div>
             </div>
 
-            <!-- Change Return Amount (Compact Line) -->
+            <!-- Due / Change Return Amount (Compact Line) -->
             <div class="d-flex justify-content-between align-items-center p-2 bg-light border rounded mb-3">
-              <span class="text-muted fw-bold small">Change (ফেরত):</span>
-              <span class="fw-bold font-monospace fs-6" :class="changeAmount >= 0 ? 'text-success' : 'text-danger'">
-                Tk. {{ formatPrice(changeAmount) }}
+              <span class="text-muted fw-bold small">{{ (paid_amount || 0) >= netPayable ? 'Change (ফেরত):' : 'Due Amount (বকেয়া):' }}</span>
+              <span class="fw-bold font-monospace fs-6" :class="(paid_amount || 0) >= netPayable ? 'text-success' : 'text-danger'">
+                Tk. {{ formatPrice((paid_amount || 0) >= netPayable ? ((paid_amount || 0) - netPayable) : (netPayable - (paid_amount || 0))) }}
               </span>
             </div>
 
@@ -806,7 +809,7 @@
           <div style="text-align: right;">
             <div><strong>Payment Method:</strong> {{ completedInvoice.payment_method || 'Cash' }}</div>
             <div v-if="completedInvoice.trxid"><strong>TrxID:</strong> {{ completedInvoice.trxid }}</div>
-            <div><strong>Status:</strong> <span style="font-weight: bold; color: green;">PAID</span></div>
+            <div><strong>Status:</strong> <span style="font-weight: bold;" :style="{ color: completedInvoice.amount <= completedInvoice.paid_amount ? '#166534' : '#dc2626' }">{{ completedInvoice.amount <= completedInvoice.paid_amount ? 'PAID' : (completedInvoice.paid_amount > 0 ? 'PARTIAL DUE' : 'DUE / BOKEYA') }}</span></div>
           </div>
         </div>
 
@@ -933,8 +936,8 @@
           </div>
           <div style="text-align: right;">
             <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Transaction Status:</div>
-            <span style="display: inline-block; background: #dcfce7; color: #166534; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; border: 1px solid #bbf7d0;">
-              PAID & COMPLETED
+            <span style="display: inline-block; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px;" :style="{ background: completedInvoice.amount <= completedInvoice.paid_amount ? '#dcfce7' : '#fee2e2', color: completedInvoice.amount <= completedInvoice.paid_amount ? '#166534' : '#dc2626', border: completedInvoice.amount <= completedInvoice.paid_amount ? '1px solid #bbf7d0' : '1px solid #fecaca' }">
+              {{ completedInvoice.amount <= completedInvoice.paid_amount ? 'PAID IN FULL' : (completedInvoice.paid_amount > 0 ? 'PARTIALLY PAID' : 'DUE / UNPAID') }}
             </span>
             <div style="font-size: 11px; color: #475569; margin-top: 4px;" v-if="completedInvoice.trxid"><strong>TrxID:</strong> {{ completedInvoice.trxid }}</div>
           </div>
@@ -1202,9 +1205,6 @@ export default {
     },
   },
   watch: {
-    netPayable(val) {
-      this.paid_amount = val;
-    },
     cartSubtotal() {
       if (this.is_vat_applicable && floatval(this.vat_percent) > 0) {
         this.calculateVatAmount();
@@ -1847,6 +1847,14 @@ export default {
     submitCheckout() {
       if (this.cart.length === 0) {
         this.$toast('Cart is empty', 'warning');
+        return;
+      }
+
+      // 1. Walk-in customer validation: Paid amount cannot be 0
+      const isWalkIn = !this.client.id || this.client.mobile === '00000000000' || this.client.name === 'Walk-in Customer';
+      const paidVal = floatval(this.paid_amount);
+      if (isWalkIn && paidVal <= 0) {
+        this.$toast('Walk-in কাস্টমারের জন্য Paid Amount ০ রাখা যাবে না! অনুগ্রহ করে পেমেন্ট দিন অথবা কাস্টমার রেজিস্টার/সিলেক্ট করুন।', 'warning');
         return;
       }
 
