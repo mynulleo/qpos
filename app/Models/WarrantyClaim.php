@@ -67,4 +67,14 @@ class WarrantyClaim extends BaseModel
     {
         return $this->belongsTo(Admin::class, 'created_by');
     }
+
+    public function expense()
+    {
+        return $this->belongsTo(Expense::class, 'expense_id');
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class, 'payment_id');
+    }
 }

@@ -60,12 +60,12 @@
               <small class="text-secondary" style="font-size: 11px;">পণ্য গ্রহণ</small>
             </div>
 
-            <div class="pipeline-step text-center position-relative" style="z-index: 2;" :class="{ 'active': isStepActive('in_service') || isStepActive('sent_to_vendor') }">
-              <div class="step-icon rounded-circle mx-auto d-flex align-items-center justify-content-center mb-1" :class="(isStepActive('in_service') || isStepActive('sent_to_vendor')) ? 'theme-bg text-white' : 'bg-light text-secondary border'">
+            <div class="pipeline-step text-center position-relative" style="z-index: 2;" :class="{ 'active': isStepActive('in_progress') || isStepActive('in_service') || isStepActive('sent_to_vendor') }">
+              <div class="step-icon rounded-circle mx-auto d-flex align-items-center justify-content-center mb-1" :class="(isStepActive('in_progress') || isStepActive('in_service') || isStepActive('sent_to_vendor')) ? 'theme-bg text-white' : 'bg-light text-secondary border'">
                 <i class="fas fa-tools"></i>
               </div>
-              <span class="small fw-bold d-block text-dark">2. In Service / Vendor</span>
-              <small class="text-secondary" style="font-size: 11px;">সার্ভিসিং চলছে</small>
+              <span class="small fw-bold d-block text-dark">2. In Progress / Service</span>
+              <small class="text-secondary" style="font-size: 11px;">সার্ভিসিং ও প্রসেসিং</small>
             </div>
 
             <div class="pipeline-step text-center position-relative" style="z-index: 2;" :class="{ 'active': isStepActive('repaired') || isStepActive('replaced') }">
@@ -80,7 +80,7 @@
               <div class="step-icon rounded-circle mx-auto d-flex align-items-center justify-content-center mb-1" :class="isStepActive('ready_for_delivery') ? 'theme-bg text-white' : 'bg-light text-secondary border'">
                 <i class="fas fa-box-open"></i>
               </div>
-              <span class="small fw-bold d-block text-dark">4. Ready for Delivery</span>
+              <span class="small fw-bold d-block text-dark">4. Ready For Delivery</span>
               <small class="text-secondary" style="font-size: 11px;">ডেলিভারি প্রস্তুত</small>
             </div>
 
@@ -224,12 +224,22 @@
               </span>
             </div>
             <div class="card-body p-3">
-              <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                <span class="small fw-bold text-dark">Internal Service Cost (দোকানের খরচ):</span>
+              <div class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom">
+                <div>
+                  <span class="small fw-bold text-dark d-block">Internal Service Cost (দোকানের খরচ):</span>
+                  <span v-if="claim.expense_id" class="badge bg-danger-subtle text-danger border border-danger-subtle small mt-1 font-monospace">
+                    <i class="fas fa-file-invoice-dollar me-1"></i>Expense #{{ claim.expense ? claim.expense.expenseid : claim.expense_id }} Voucher Posted
+                  </span>
+                </div>
                 <strong class="font-monospace text-dark">Tk. {{ formatPrice(claim.service_cost) }}</strong>
               </div>
-              <div class="d-flex justify-content-between align-items-center">
-                <span class="small fw-bold text-dark">Customer Service Charge (গ্রাহক বিল):</span>
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <span class="small fw-bold text-dark d-block">Customer Service Charge (গ্রাহক বিল):</span>
+                  <span v-if="claim.payment_id" class="badge bg-success-subtle text-success border border-success-subtle small mt-1 font-monospace">
+                    <i class="fas fa-check-circle me-1"></i>Payment #{{ claim.payment ? claim.payment.payslipno : claim.payment_id }} Received & Voucher Posted
+                  </span>
+                </div>
                 <strong class="font-monospace theme-text fs-6 fw-bold">Tk. {{ formatPrice(claim.customer_charge) }}</strong>
               </div>
             </div>
@@ -238,7 +248,7 @@
 
         <!-- 👉 Right Column: Compact Status Update + Sleek Activity Feed Timeline -->
         <div class="col-lg-7 col-md-12 d-flex flex-column gap-3">
-          <!-- 📝 1. Compact Status Update Box with Quick Status Chips -->
+          <!-- 📝 1. Status Update Box with Quick Status Chips -->
           <div class="card border-0 shadow-sm form-section-card">
             <div class="card-header theme-bg text-white py-2 px-3 d-flex justify-content-between align-items-center">
               <span class="fw-bold small">
@@ -250,13 +260,13 @@
             <div class="card-body p-3 bg-light">
               <form @submit.prevent="addTrackingLog">
                 <!-- Quick Status Selector Chips -->
-                <div class="mb-2">
+                <div class="mb-3">
                   <label class="form-label small fw-bold text-dark mb-1">Select Next Status (স্ট্যাটাস নির্বাচন করুন):</label>
                   <div class="d-flex flex-wrap gap-1">
                     <button
                       type="button"
                       class="btn btn-sm status-pill-btn"
-                      :class="logForm.status === 'received' ? 'btn-primary active' : 'btn-outline-secondary'"
+                      :class="logForm.status === 'received' ? 'btn-secondary text-white active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'received'"
                     >
                       <i class="fas fa-inbox me-1"></i><span>Received</span>
@@ -264,10 +274,18 @@
                     <button
                       type="button"
                       class="btn btn-sm status-pill-btn"
+                      :class="logForm.status === 'in_progress' ? 'btn-primary text-white active' : 'btn-outline-secondary'"
+                      @click="logForm.status = 'in_progress'"
+                    >
+                      <i class="fas fa-spinner me-1"></i><span>In Progress</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm status-pill-btn"
                       :class="logForm.status === 'sent_to_vendor' ? 'btn-warning text-dark active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'sent_to_vendor'"
                     >
-                      <i class="fas fa-truck me-1"></i><span>Vendor</span>
+                      <i class="fas fa-truck me-1"></i><span>Sent To Vendor</span>
                     </button>
                     <button
                       type="button"
@@ -288,10 +306,18 @@
                     <button
                       type="button"
                       class="btn btn-sm status-pill-btn"
+                      :class="logForm.status === 'replaced' ? 'btn-success active' : 'btn-outline-secondary'"
+                      @click="logForm.status = 'replaced'"
+                    >
+                      <i class="fas fa-sync-alt me-1"></i><span>Replaced</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm status-pill-btn"
                       :class="logForm.status === 'ready_for_delivery' ? 'btn-theme active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'ready_for_delivery'"
                     >
-                      <i class="fas fa-box-open me-1"></i><span>Ready</span>
+                      <i class="fas fa-box-open me-1"></i><span>Ready For Delivery</span>
                     </button>
                     <button
                       type="button"
@@ -312,36 +338,58 @@
                   </div>
                 </div>
 
-                <!-- Compact Form Inputs -->
-                <div class="row g-2">
-                  <div class="col-12">
-                    <textarea
-                      class="form-control form-control-sm"
-                      rows="2"
-                      v-model="logForm.remarks"
-                      required
-                      placeholder="Write progress note or remarks (e.g. Sent to service center, IC repaired, customer notified)..."
-                    ></textarea>
-                  </div>
+                <!-- Progress Note Textarea -->
+                <div class="mb-3">
+                  <label class="form-label small fw-bold text-dark mb-1">Status Note & Remarks (প্রগ্রেস নোট / মন্তব্য):</label>
+                  <textarea
+                    class="form-control"
+                    rows="2"
+                    v-model="logForm.remarks"
+                    required
+                    placeholder="Write progress note or remarks (e.g. Sent to authorized service center, IC repaired, customer notified)..."
+                    style="font-size: 13.5px;"
+                  ></textarea>
+                </div>
 
+                <!-- Bottom Row: Reminder Date, Customer Charge & Prominent Save Button -->
+                <div class="row g-2 align-items-end">
                   <div class="col-md-4">
-                    <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-white small" title="Follow-up Reminder Date">
+                    <label class="form-label small fw-bold text-secondary mb-1">Follow-up Reminder:</label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-white" title="Follow-up Reminder Date">
                         <i class="fas fa-bell text-warning"></i>
                       </span>
-                      <input type="date" class="form-control form-control-sm" v-model="logForm.reminder_date" placeholder="Reminder">
+                      <input type="date" class="form-control" v-model="logForm.reminder_date" placeholder="Reminder Date">
                     </div>
                   </div>
 
                   <div class="col-md-4">
-                    <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-white small">Bill Tk.</span>
-                      <input type="number" step="0.01" min="0" class="form-control form-control-sm font-monospace text-end" v-model.number="logForm.customer_charge" placeholder="Charge">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                      <span>Customer Charge:</span>
+                      <i v-if="claim.payment_id || claim.customer_charge > 0" class="fas fa-lock text-secondary ms-1" title="Payment Received (Locked)"></i>
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-white fw-bold">৳</span>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        class="form-control font-monospace text-end" 
+                        :class="{ 'bg-light text-muted': (claim.payment_id || claim.customer_charge > 0) }"
+                        :readonly="claim.payment_id || claim.customer_charge > 0"
+                        v-model.number="logForm.customer_charge" 
+                        placeholder="0.00"
+                        :title="claim.payment_id || claim.customer_charge > 0 ? 'Payment Received (Locked)' : ''"
+                      >
+                      <span v-if="claim.payment_id || claim.customer_charge > 0" class="input-group-text bg-light text-secondary border-start-0 px-2" title="Payment Received (Locked)">
+                        <i class="fas fa-lock fa-xs"></i>
+                      </span>
                     </div>
                   </div>
 
-                  <div class="col-md-4 text-end">
-                    <button type="submit" class="btn btn-theme btn-sm w-100 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-1" :disabled="addingLog">
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold text-transparent mb-1 d-none d-md-block">&nbsp;</label>
+                    <button type="submit" class="btn btn-theme w-100 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 status-save-btn" :disabled="addingLog">
                       <i :class="addingLog ? 'fas fa-spinner fa-spin' : 'fas fa-paper-plane'"></i>
                       <span>Save Status Note</span>
                     </button>
@@ -727,8 +775,9 @@ export default {
       if (!this.claim) return 0;
       const statusMap = {
         received: 10,
-        sent_to_vendor: 30,
-        in_service: 45,
+        in_progress: 25,
+        sent_to_vendor: 35,
+        in_service: 50,
         repaired: 70,
         replaced: 75,
         ready_for_delivery: 85,
@@ -789,7 +838,7 @@ export default {
     },
     isStepActive(step) {
       if (!this.claim) return false;
-      const hierarchy = ['received', 'sent_to_vendor', 'in_service', 'repaired', 'replaced', 'ready_for_delivery', 'delivered'];
+      const hierarchy = ['received', 'in_progress', 'sent_to_vendor', 'in_service', 'repaired', 'replaced', 'ready_for_delivery', 'delivered'];
       const currentIdx = hierarchy.indexOf(this.claim.current_status);
       const stepIdx = hierarchy.indexOf(step);
       return currentIdx >= stepIdx;
@@ -807,6 +856,7 @@ export default {
     getStatusBadgeClass(status) {
       const classes = {
         received: 'theme-bg text-white',
+        in_progress: 'bg-primary text-white',
         sent_to_vendor: 'bg-warning text-dark',
         in_service: 'bg-info text-dark',
         repaired: 'bg-success text-white',
@@ -814,12 +864,14 @@ export default {
         ready_for_delivery: 'theme-bg-soft theme-text border border-primary',
         delivered: 'bg-dark text-white',
         rejected: 'bg-danger text-white',
+        cancelled: 'bg-danger text-white',
       };
       return classes[status] || 'bg-secondary text-white';
     },
     getStatusIcon(status) {
       const icons = {
         received: 'fas fa-inbox',
+        in_progress: 'fas fa-spinner',
         sent_to_vendor: 'fas fa-truck',
         in_service: 'fas fa-tools',
         repaired: 'fas fa-check-circle',
@@ -827,12 +879,14 @@ export default {
         ready_for_delivery: 'fas fa-box-open',
         delivered: 'fas fa-handshake',
         rejected: 'fas fa-ban',
+        cancelled: 'fas fa-times-circle',
       };
       return icons[status] || 'fas fa-circle';
     },
     getRemarksBorderClass(status) {
       const borders = {
         received: 'border-primary',
+        in_progress: 'border-primary',
         sent_to_vendor: 'border-warning',
         in_service: 'border-info',
         repaired: 'border-success',
@@ -840,21 +894,27 @@ export default {
         ready_for_delivery: 'border-primary',
         delivered: 'border-dark',
         rejected: 'border-danger',
+        cancelled: 'border-danger',
       };
       return borders[status] || 'border-secondary';
     },
     formatStatusLabel(status) {
+      if (!status) return 'Received';
       const labels = {
-        received: 'Received (গৃহীত)',
-        sent_to_vendor: 'Sent to Vendor (ভেন্ডরে প্রেরিত)',
-        in_service: 'In Service / Repair (মেরামতে আছে)',
-        repaired: 'Repaired (মেরামত সম্পন্ন)',
-        replaced: 'Replaced (নতুন পরিবর্তন)',
-        ready_for_delivery: 'Ready for Delivery (ডেলিভারি প্রস্তুত)',
-        delivered: 'Delivered (গ্রাহককে হস্তান্তর)',
-        rejected: 'Rejected (বাতিল)',
+        received: 'Received',
+        in_progress: 'In Progress',
+        sent_to_vendor: 'Sent To Vendor',
+        in_service: 'In Service',
+        repaired: 'Repaired',
+        replaced: 'Replaced',
+        ready_for_delivery: 'Ready For Delivery',
+        delivered: 'Delivered',
+        rejected: 'Rejected',
+        cancelled: 'Cancelled',
+        pending: 'Pending',
       };
-      return labels[status] || status;
+      if (labels[status]) return labels[status];
+      return String(status).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     },
     printClaimSlip() {
       const printContents = document.getElementById('warranty-claim-print-slip');
@@ -1055,5 +1115,18 @@ export default {
 .timeline-remarks-text {
   font-size: 12.5px;
   line-height: 1.4;
+}
+
+.status-save-btn {
+  height: 38px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease-in-out;
+}
+
+.status-save-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(17, 44, 70, 0.25) !important;
 }
 </style>

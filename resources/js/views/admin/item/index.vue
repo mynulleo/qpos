@@ -21,6 +21,10 @@
         <v-select v-model="search_data.brand_id" label="title" :reduce="(obj) => obj.id" :options="brands"
           :placeholder="search_data.category_id ? '--Select Brand--' : '--All Brands--'" :closeOnSelect="true"></v-select>
       </v-select-container>
+      <v-select-container title="Series" field="search_data.series_id" col="3" v-if="isElectronicsShop">
+        <v-select v-model="search_data.series_id" label="title" :reduce="(obj) => obj.id" :options="seriesList"
+          :placeholder="search_data.brand_id ? '--Select Series--' : '--All Series--'" :closeOnSelect="true"></v-select>
+      </v-select-container>
       <v-select-container title="Color" field="search_data.color_id" col="3">
         <v-select v-model="search_data.color_id" label="title" :reduce="(obj) => obj.id" :options="colors"
           placeholder="--Select Color--" :closeOnSelect="true"></v-select>
@@ -44,19 +48,18 @@ const tableColumns = [
   { field: "brand_id", title: "Brand", subfield: "brand.title" },
   { field: "title", title: "Title" },
   { field: "unit_id", title: "Unit", subfield: "unit.title" },
-  { field: "opening_qty", title: "Opening Qty" },
-  { field: "opening_rate", title: "Opening Rate" },
+  { field: "current_stock", title: "Current Stock", align: "center" },
   { field: "status", title: "Status", align: "center" },
 ];
 
 const json_fields = {
   "Barcode": "barcode",
-  "Category Id": "category_id",
+  "Category": "category.title",
+  "Brand": "brand.title",
   "Title": "title",
-  "Unit Id": "unit_id",
+  "Unit": "unit.title",
   "Description": "description",
-  "Opening Qty": "opening_qty",
-  "Opening Rate": "opening_rate",
+  "Current Stock": "current_stock",
 };
 
 export default {
@@ -80,6 +83,7 @@ export default {
         status: this.$route.query.status ?? "",
         category_id: this.$route.query.category_id ?? "",
         brand_id: this.$route.query.brand_id ?? "",
+        series_id: this.$route.query.series_id ?? "",
         color_id: this.$route.query.color_id ?? "",
         size_id: this.$route.query.size_id ?? "",
       },
@@ -92,6 +96,7 @@ export default {
       },
       categories: [],
       brands: [],
+      seriesList: [],
       colors: [],
       sizes: [],
     };
@@ -102,6 +107,14 @@ export default {
       this.getBrands(newVal);
       if (oldVal && newVal !== oldVal) {
         this.search_data.brand_id = "";
+        this.search_data.series_id = "";
+        this.seriesList = [];
+      }
+    },
+    'search_data.brand_id'(newVal, oldVal) {
+      this.getSeries(newVal);
+      if (oldVal && newVal !== oldVal) {
+        this.search_data.series_id = "";
       }
     },
   },
@@ -132,9 +145,11 @@ export default {
       this.search_data.status = "";
       this.search_data.category_id = "";
       this.search_data.brand_id = "";
+      this.search_data.series_id = "";
       this.search_data.color_id = "";
       this.search_data.size_id = "";
       this.getBrands();
+      this.getSeries();
     },
     getCategories() {
       let module = 'Item';
@@ -151,6 +166,14 @@ export default {
           this.brands = response.data;
         });
     },
+    getSeries(brandId = null) {
+      const bId = brandId || this.search_data.brand_id;
+      const url = bId ? `getseries/${bId}` : 'getseries';
+      axios.get(url)
+        .then((response) => {
+          this.seriesList = response.data;
+        });
+    },
     getColorsAndSizes() {
       axios.get('color?allData=true').then(res => { this.colors = res.data; });
       if (!this.isElectronicsShop) {
@@ -165,6 +188,7 @@ export default {
     this.search();
     this.getCategories();
     this.getBrands(this.search_data.category_id);
+    this.getSeries(this.search_data.brand_id);
     this.getColorsAndSizes();
   },
 

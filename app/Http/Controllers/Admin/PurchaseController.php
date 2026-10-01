@@ -32,16 +32,44 @@ class PurchaseController extends BaseController
      */
     public function index(Request $request)
     {
-        $query  = Purchase::with('supplier:id,org_name')->latest();
-        if ($request->field_name && $request->value) {
-            $query->whereLike($request->field_name, $request->value);
+        $query = Purchase::with([
+            'supplier:id,org_name,mobile',
+            'grns:id,purchase_id,grn_no,grn_date,total_qty,total_amount,status'
+        ])
+        ->withCount('grns')
+        ->latest('id');
+
+        if ($request->filled('value') && $request->value !== 'null' && $request->value !== 'undefined') {
+            $val = trim($request->value);
+            if ($request->filled('field_name') && !in_array($request->field_name, ['default', 'null', 'undefined', ''])) {
+                if ($request->field_name === 'invoiceno') {
+                    $query->where('invoiceno', 'like', "%{$val}%");
+                } elseif ($request->field_name === 'supplier') {
+                    $query->whereHas('supplier', function ($sq) use ($val) {
+                        $sq->where('org_name', 'like', "%{$val}%")
+                           ->orWhere('name', 'like', "%{$val}%")
+                           ->orWhere('mobile', 'like', "%{$val}%");
+                    });
+                } else {
+                    $query->where($request->field_name, 'like', "%{$val}%");
+                }
+            } else {
+                $query->where(function ($q) use ($val) {
+                    $q->where('invoiceno', 'like', "%{$val}%")
+                      ->orWhereHas('supplier', function ($sq) use ($val) {
+                          $sq->where('org_name', 'like', "%{$val}%")
+                             ->orWhere('name', 'like', "%{$val}%")
+                             ->orWhere('mobile', 'like', "%{$val}%");
+                      });
+                });
+            }
         }
 
-        if ($request->supplier_id) {
+        if ($request->filled('supplier_id') && !in_array($request->supplier_id, ['null', 'undefined', ''])) {
             $query->where('supplier_id', $request->supplier_id);
         }
 
-        if ($request->category_id) {
+        if ($request->filled('category_id') && !in_array($request->category_id, ['null', 'undefined', ''])) {
             $query->whereHas('purchase_details', function ($q) use ($request) {
                 $q->where('category_id', $request->category_id)
                   ->orWhereHas('item', function ($iq) use ($request) {
@@ -50,21 +78,72 @@ class PurchaseController extends BaseController
             });
         }
 
-        if ($request->item_id) {
+        if ($request->filled('item_id') && !in_array($request->item_id, ['null', 'undefined', ''])) {
             $query->whereHas('purchase_details', function ($q) use ($request) {
                 $q->where('item_id', $request->item_id);
             });
         }
 
-        if ($request->status) {
+        if ($request->filled('status') && !in_array($request->status, ['null', 'undefined', ''])) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('receive_status') && !in_array($request->receive_status, ['null', 'undefined', ''])) {
+            if ($request->receive_status === 'Pending') {
+                $query->where(function ($q) {
+                    $q->where('receive_status', 'Pending')
+                      ->orWhereNull('receive_status');
+                });
+            } else {
+                $query->where('receive_status', $request->receive_status);
+            }
+        }
+
+        if ($request->filled('from_date') && !in_array($request->from_date, ['null', 'undefined', ''])) {
+            $from = date('Y-m-d', strtotime($request->from_date));
+            if ($from && $from !== '1970-01-01') {
+                $query->whereDate('purchase_date', '>=', $from);
+            }
+        }
+
+        if ($request->filled('to_date') && !in_array($request->to_date, ['null', 'undefined', ''])) {
+            $to = date('Y-m-d', strtotime($request->to_date));
+            if ($to && $to !== '1970-01-01') {
+                $query->whereDate('purchase_date', '<=', $to);
+            }
         }
 
         if ($request->allData) {
             return $query->get();
         } else {
+            // Compute KPI summary on the filtered dataset
+            $summaryQuery = clone $query;
+            $total_pos = (clone $summaryQuery)->count();
+            $total_amount = (clone $summaryQuery)->sum('total_amount');
+            $total_discount = (clone $summaryQuery)->sum('discount');
+            $total_tax = (clone $summaryQuery)->sum('tax');
+
+            $pending_count = (clone $summaryQuery)->where(function ($q) {
+                $q->where('receive_status', 'Pending')->orWhereNull('receive_status');
+            })->count();
+            $partial_count = (clone $summaryQuery)->where('receive_status', 'Partial')->count();
+            $received_count = (clone $summaryQuery)->where('receive_status', 'Received')->count();
+
+            $summary = [
+                'total_pos' => $total_pos,
+                'total_amount' => (float)$total_amount,
+                'total_discount' => (float)$total_discount,
+                'total_tax' => (float)$total_tax,
+                'pending_count' => $pending_count,
+                'partial_count' => $partial_count,
+                'received_count' => $received_count,
+            ];
+
             $datas = $query->paginate($request->pagination ?? 10);
-            return new Resource($datas);
+            $resource = new Resource($datas);
+            $resource->additional(['summary' => $summary]);
+
+            return $resource;
         }
     }
 
@@ -78,6 +157,12 @@ class PurchaseController extends BaseController
         return view('layouts.backend_app');
     }
 
+    public function generateInvoiceNo()
+    {
+        $invoiceNo = Purchase::generateInvoiceNo();
+        return response()->json($invoiceNo);
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -89,6 +174,9 @@ class PurchaseController extends BaseController
         if ($this->validateCheck($request)) {
             try {
                 $data = $request->all();
+                if (empty($data['invoiceno'])) {
+                    $data['invoiceno'] = Purchase::generateInvoiceNo();
+                }
                 $purchasedetails = $data['purchase_details'];
                 $data['purchase_date'] = date('Y-m-d', strtotime($data['purchase_date']));
                 unset($data['purchase_details']);
@@ -151,23 +239,30 @@ class PurchaseController extends BaseController
         if ($request->format() == 'html') {
             return view('layouts.backend_app');
         }
-        $purchase = Purchase::with(
+        $purchase = Purchase::with([
             'supplier',
+            'grns.warehouse',
             'purchase_details.item',
             'purchase_details.category',
             'purchase_details.unit',
             'purchase_details.color',
             'purchase_details.size'
-        )->find($id);
+        ])->withCount('grns')->find($id);
 
-        // 🔥 each row তে category wise items attach
-        $purchase->purchase_details->transform(function ($detail) {
-            $detail->items = Item::where('category_id', $detail->category_id)
-                ->select('id', 'title')
-                ->get();
+        if (!$purchase) {
+            return response()->json(['message' => 'Purchase not found'], 404);
+        }
 
-            return $detail;
-        });
+        // each row category wise items attach
+        if ($purchase->purchase_details) {
+            $purchase->purchase_details->transform(function ($detail) {
+                $detail->items = Item::where('category_id', $detail->category_id)
+                    ->select('id', 'title')
+                    ->get();
+
+                return $detail;
+            });
+        }
 
         return $purchase;
     }
@@ -192,7 +287,21 @@ class PurchaseController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $purchase = Purchase::find($id);
+        $purchase = Purchase::withCount('grns')->find($id);
+        if (!$purchase) {
+            return response()->json(['message' => 'Purchase not found'], 404);
+        }
+
+        // ========================================================
+        // 🔒 Check if GRN received (Edit is strictly locked if GRN exists)
+        // ========================================================
+        $hasGrn = \App\Models\Grn::where('purchase_id', $purchase->id)->exists();
+        if ($hasGrn || $purchase->grns_count > 0 || in_array($purchase->receive_status, ['Partial', 'Received'])) {
+            return response()->json([
+                'message' => 'This Purchase Order has already been received via GRN and cannot be edited.'
+            ], 422);
+        }
+
         if ($this->validateCheck($request, $purchase->id)) {
             try {
                 $data = $request->all();
@@ -260,13 +369,16 @@ class PurchaseController extends BaseController
         DB::beginTransaction();
 
         try {
-            $purchase = Purchase::find($id);
+            $purchase = Purchase::withCount('grns')->find($id);
+            if (!$purchase) {
+                return response()->json(['message' => 'Purchase not found'], 404);
+            }
 
             // =========================
             // 1️⃣ Check if GRN exists
             // =========================
             $hasGrn = \App\Models\Grn::where('purchase_id', $purchase->id)->exists();
-            if ($hasGrn) {
+            if ($hasGrn || $purchase->grns_count > 0 || in_array($purchase->receive_status, ['Partial', 'Received'])) {
                 return response()->json([
                     'message' => 'This Purchase has Goods Receive Notes (GRN). Delete is not allowed.'
                 ], 422);

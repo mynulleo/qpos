@@ -48,6 +48,16 @@ class SiteSettingController extends BaseController
                         $table->string('label_preset', 50)->default('4x2')->nullable();
                     });
                 }
+                if (!Schema::hasColumn('site_settings', 'default_vat')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->decimal('default_vat', 8, 2)->default(0)->nullable();
+                    });
+                }
+                if (!Schema::hasColumn('site_settings', 'sale_nature')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->string('sale_nature', 50)->default('both')->nullable();
+                    });
+                }
             }
         } catch (\Exception $e) {
             // Ignore if columns exist or connection issue
@@ -219,6 +229,8 @@ class SiteSettingController extends BaseController
             'normal_paper_size' => ['nullable', 'string'],
             'thermal_paper_size' => ['nullable', 'string'],
             'label_preset' => ['nullable', 'string'],
+            'default_vat' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'sale_nature' => ['nullable', 'string'],
             'logo_base64' => ['nullable', 'string', new Base64Image()],
             'logo_resize_value' => ['nullable', 'string'],
             'logo_small_base64' => ['nullable', 'string', new Base64Image()],

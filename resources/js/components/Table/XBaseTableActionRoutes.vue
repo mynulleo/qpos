@@ -52,34 +52,56 @@
                 </router-link>
 
                 <!-- Edit Action (Icon only) -->
-                <router-link
-                    v-if="tableRoutes.edit && $root.checkPermission(tableRoutes.edit)"
-                    :to="{
-                        name: tableRoutes.edit,
-                        params: { id: item.id },
-                        query: { page: $route.query.page },
-                    }"
-                    class="btn btn-xs btn-outline-success border-0"
-                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit" v-x-tooltip
-                >
-                    <i class="fas fa-pencil-alt"></i>
-                </router-link>
+                <template v-if="tableRoutes.edit && $root.checkPermission(tableRoutes.edit)">
+                    <router-link
+                        v-if="canEditItem(item)"
+                        :to="{
+                            name: tableRoutes.edit,
+                            params: { id: item.id },
+                            query: { page: $route.query.page },
+                        }"
+                        class="btn btn-xs btn-outline-success border-0"
+                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit" v-x-tooltip
+                    >
+                        <i class="fas fa-pencil-alt"></i>
+                    </router-link>
+                    <span
+                        v-else
+                        class="btn btn-xs btn-outline-secondary border-0 text-muted opacity-50 cursor-not-allowed"
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        :data-bs-title="editDisabledReason(item)"
+                        v-x-tooltip
+                    >
+                        <i class="fas fa-pencil-alt"></i>
+                    </span>
+                </template>
 
                 <!-- Delete Action (Icon only) -->
-                <a
-                    href="javascript:void(0)"
-                    v-if="tableRoutes.destroy && $root.checkPermission(tableRoutes.destroy)"
-                    @click.stop="$parent.destroy(item, item.is_delete ?? null)"
-                    class="btn btn-xs btn-outline-danger border-0"
-                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Delete" v-x-tooltip
-                >
-                    <span v-if="item.is_delete">
-                        <i class="fa-solid fa-send-back"></i>
-                    </span>
-                    <span v-else>
+                <template v-if="tableRoutes.destroy && $root.checkPermission(tableRoutes.destroy)">
+                    <a
+                        href="javascript:void(0)"
+                        v-if="canDeleteItem(item)"
+                        @click.stop="$parent.destroy(item, item.is_delete ?? null)"
+                        class="btn btn-xs btn-outline-danger border-0"
+                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Delete" v-x-tooltip
+                    >
+                        <span v-if="item.is_delete">
+                            <i class="fa-solid fa-send-back"></i>
+                        </span>
+                        <span v-else>
+                            <i class="fas fa-trash-alt"></i>
+                        </span>
+                    </a>
+                    <span
+                        v-else
+                        class="btn btn-xs btn-outline-secondary border-0 text-muted opacity-50 cursor-not-allowed"
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        :data-bs-title="deleteDisabledReason(item)"
+                        v-x-tooltip
+                    >
                         <i class="fas fa-trash-alt"></i>
                     </span>
-                </a>
+                </template>
             </template>
         </div>
     </div>
@@ -100,6 +122,57 @@ export default {
     },
 
     methods: {
+        canEditItem(item) {
+            if (!item) return true;
+            if (typeof this.tableRoutes.canEdit === "function") {
+                return Boolean(this.tableRoutes.canEdit(item));
+            }
+            if (item.can_edit !== undefined && item.can_edit !== null) {
+                return Boolean(item.can_edit);
+            }
+            if (item.grns_count > 0 || (item.receive_status && item.receive_status !== 'Pending')) {
+                return false;
+            }
+            return true;
+        },
+
+        editDisabledReason(item) {
+            if (typeof this.tableRoutes.editDisabledReason === "function") {
+                return this.tableRoutes.editDisabledReason(item);
+            }
+            if (item && (item.grns_count > 0 || (item.receive_status && item.receive_status !== 'Pending'))) {
+                return "GRN received for this Purchase Order. Edit is locked.";
+            }
+            return "Edit not allowed";
+        },
+
+        canDeleteItem(item) {
+            if (!item) return true;
+            if (typeof this.tableRoutes.canDestroy === "function") {
+                return Boolean(this.tableRoutes.canDestroy(item));
+            }
+            if (typeof this.tableRoutes.canDelete === "function") {
+                return Boolean(this.tableRoutes.canDelete(item));
+            }
+            if (item.can_delete !== undefined && item.can_delete !== null) {
+                return Boolean(item.can_delete);
+            }
+            if (item.grns_count > 0 || (item.receive_status && item.receive_status !== 'Pending')) {
+                return false;
+            }
+            return true;
+        },
+
+        deleteDisabledReason(item) {
+            if (typeof this.tableRoutes.deleteDisabledReason === "function") {
+                return this.tableRoutes.deleteDisabledReason(item);
+            }
+            if (item && (item.grns_count > 0 || (item.receive_status && item.receive_status !== 'Pending'))) {
+                return "GRN received for this Purchase Order. Delete is locked.";
+            }
+            return "Delete not allowed";
+        },
+
         generateRoute(route) {
             let params = {};
             let query = {};
@@ -170,5 +243,9 @@ export default {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+.cursor-not-allowed {
+    cursor: not-allowed !important;
+    pointer-events: auto;
 }
 </style>

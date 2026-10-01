@@ -36,11 +36,8 @@
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="d-flex align-items-center gap-2">
-              <router-link :to="{ name: 'grn.index' }" class="btn btn-outline-light btn-sm px-3 fw-semibold">
-                <i class="fas fa-arrow-left me-1"></i> Back to List
-              </router-link>
+            <!-- Action Buttons (Right Side: Print GRN Note) -->
+            <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
               <button type="button" class="btn btn-light btn-sm text-theme fw-bold px-3 shadow-sm" @click="printGrnVoucher">
                 <i class="fas fa-print me-1"></i> Print GRN Note
               </button>
@@ -215,8 +212,7 @@
                   <thead class="table-light">
                     <tr>
                       <th class="text-center" style="width: 45px;">#</th>
-                      <th>Product Details</th>
-                      <th style="width: 120px;">Category</th>
+                      <th>Product Details (পণ্য ও বিবরণ)</th>
                       <th style="width: 110px;" v-if="hasAnyVariants">Variant</th>
                       <th class="text-center" style="width: 80px;">Ordered</th>
                       <th class="text-center" style="width: 110px;">Received Qty</th>
@@ -229,13 +225,15 @@
                     <tr v-for="(gdetail, index) in data.grn_details" :key="index">
                       <td class="text-center font-monospace text-muted">{{ index + 1 }}</td>
                       <td>
-                        <div class="fw-bold text-dark">{{ gdetail.item?.title || 'Item #' + gdetail.item_id }}</div>
-                        <small class="text-muted font-monospace" style="font-size: 11px;">
-                          <i class="fas fa-barcode me-1"></i>{{ gdetail.item?.barcode || '-' }}
-                        </small>
-                      </td>
-                      <td>
-                        <span class="badge bg-light text-dark border">{{ gdetail.category?.title || gdetail.item?.category?.title || 'General' }}</span>
+                        <div class="fw-bold text-dark fs-6">{{ gdetail.item?.title || 'Item #' + gdetail.item_id }}</div>
+                        <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+                          <span class="badge bg-light text-dark border px-2 py-0.5" style="font-size: 11px;">
+                            {{ gdetail.category?.title || gdetail.item?.category?.title || 'General' }}
+                          </span>
+                          <small class="text-muted font-monospace" v-if="gdetail.item?.barcode" style="font-size: 11px;">
+                            <i class="fas fa-barcode me-1"></i>{{ gdetail.item.barcode }}
+                          </small>
+                        </div>
                       </td>
                       <td v-if="hasAnyVariants">
                         <div class="d-flex align-items-center gap-1 flex-wrap">
@@ -278,14 +276,14 @@
                     </tr>
 
                     <tr v-if="!data.grn_details || data.grn_details.length === 0">
-                      <td :colspan="totalTableCols" class="text-center py-4 text-muted">
+                      <td :colspan="hasAnySerials ? (hasAnyVariants ? 7 : 6) : (hasAnyVariants ? 6 : 5)" class="text-center py-4 text-muted">
                         No goods receive items found.
                       </td>
                     </tr>
                   </tbody>
                   <tfoot class="table-light fw-bold">
                     <tr>
-                      <td :colspan="hasAnyVariants ? 5 : 4" class="text-end">Summary Totals:</td>
+                      <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">Summary Totals:</td>
                       <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
                       <td v-if="!hasAnySerials"></td>
                       <td colspan="2" v-else></td>
@@ -405,7 +403,6 @@
             <tr>
               <th class="text-center" style="width: 35px;">#</th>
               <th>Product Details & Barcode</th>
-              <th style="width: 110px;">Category</th>
               <th style="width: 90px;" v-if="hasAnyVariants">Variant</th>
               <th class="text-center" style="width: 75px;">Ordered</th>
               <th class="text-center" style="width: 90px;">Received</th>
@@ -419,11 +416,11 @@
               <td class="text-center font-monospace">{{ index + 1 }}</td>
               <td>
                 <div class="fw-bold text-dark">{{ gdetail.item?.title || 'Item #' + gdetail.item_id }}</div>
-                <small class="text-muted font-monospace" v-if="gdetail.item?.barcode">
-                  Barcode: {{ gdetail.item?.barcode }}
-                </small>
+                <div class="small text-muted mt-1">
+                  <span class="badge bg-light text-dark border me-1">{{ gdetail.category?.title || gdetail.item?.category?.title || 'General' }}</span>
+                  <span v-if="gdetail.item?.barcode" class="font-monospace">Barcode: {{ gdetail.item?.barcode }}</span>
+                </div>
               </td>
-              <td>{{ gdetail.category?.title || gdetail.item?.category?.title || 'General' }}</td>
               <td v-if="hasAnyVariants">
                 <span v-if="gdetail.color?.title">{{ gdetail.color?.title }}</span>
                 <span v-if="gdetail.size?.title"> / {{ gdetail.size?.title }}</span>
@@ -440,7 +437,7 @@
           </tbody>
           <tfoot class="table-light fw-bold">
             <tr>
-              <td :colspan="hasAnyVariants ? 5 : 4" class="text-end">Summary Totals:</td>
+              <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">Summary Totals:</td>
               <td class="text-center font-monospace fs-6">{{ data.total_qty }}</td>
               <td v-if="!hasAnySerials"></td>
               <td colspan="2" v-else></td>

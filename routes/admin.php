@@ -51,6 +51,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::post('software-update/run', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'run'])->name('softwareupdate.run');
     Route::post('software-update/sync-only', [App\Http\Controllers\Admin\System\SoftwareUpdateController::class, 'synconly'])->name('softwareupdate.synconly');
 
+    
     // Category Route...
     Route::get('get-category/{type}', [App\Http\Controllers\Admin\CategoryController::class, 'getCategory']);
     Route::get('paynow/{invoiceid}', [App\Http\Controllers\Admin\InvoiceController::class, 'paynow']);
@@ -75,6 +76,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('backend-parent-menus', [App\Http\Controllers\Admin\System\MenuController::class, 'getParentMenu'])->name('backendParentMenu');
     Route::get('getcategories/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getcategories'])->name('getcategories');
     Route::get('getbrands/{category_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getbrands'])->name('getbrands');
+    Route::get('getseries/{brand_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getseries'])->name('getseries');
     Route::get('getunits/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getunits'])->name('getunits');
     Route::get('getlabelpresets', [App\Http\Controllers\Admin\System\LibController::class, 'getLabelPresets'])->name('getlabelpresets');
     Route::get('getpackages/{serviceid?}', [App\Http\Controllers\Admin\System\LibController::class, 'getPackages'])->name('getpackages');
@@ -120,6 +122,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
 
     // POS Terminal API Endpoints
     Route::get('pos/search-items', [App\Http\Controllers\Admin\PosController::class, 'searchItems']);
+    Route::get('pos/item-serials/{item_id}', [App\Http\Controllers\Admin\PosController::class, 'getItemSerials']);
     Route::get('pos/search-customer', [App\Http\Controllers\Admin\PosController::class, 'searchCustomer']);
     Route::get('pos/validate-serial', [App\Http\Controllers\Admin\PosController::class, 'validateSerial']);
     Route::post('pos/quick-customer', [App\Http\Controllers\Admin\PosController::class, 'quickCustomer']);
@@ -203,6 +206,8 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('financialYear', App\Http\Controllers\Admin\FinancialYearController::class);
         Route::resource('voucher', App\Http\Controllers\Admin\VoucherController::class);
         Route::resource('expense', App\Http\Controllers\Admin\ExpenseController::class);
+        Route::get('purchase/generate-invoiceno', [App\Http\Controllers\Admin\PurchaseController::class, 'generateInvoiceNo'])->name('purchase.generateInvoiceNo');
+        Route::get('purchase-generate-invoiceno', [App\Http\Controllers\Admin\PurchaseController::class, 'generateInvoiceNo'])->name('purchase.generateInvoiceNoLegacy');
         Route::resource('purchase', App\Http\Controllers\Admin\PurchaseController::class);
         Route::resource('item', App\Http\Controllers\Admin\ItemController::class);
         // Route::resource('issue', App\Http\Controllers\Admin\IssueController::class);
@@ -221,6 +226,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('color', App\Http\Controllers\Admin\ColorController::class);
         Route::resource('size', App\Http\Controllers\Admin\SizeController::class);
         Route::resource('brand', App\Http\Controllers\Admin\BrandController::class);
+        Route::resource('series', App\Http\Controllers\Admin\SeriesController::class);
         Route::resource('wastage', App\Http\Controllers\Admin\WastageController::class);
         Route::get('warrantyClaim/check-serial', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'checkSerial'])->name('warrantyClaim.checkSerial');
         Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');
@@ -229,7 +235,12 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'pendingpurchases'])->name('grn.pendingpurchases');
         Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
         Route::get('grn/statistics', [App\Http\Controllers\Admin\GrnController::class, 'statistics'])->name('grn.statistics');
+        Route::post('grn/check-serials', [App\Http\Controllers\Admin\GrnController::class, 'checkSerials'])->name('grn.checkserials');
         Route::resource('grn', App\Http\Controllers\Admin\GrnController::class);
+        Route::resource('stockAdjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
+        Route::resource('stock-adjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
+        Route::post('quotation/{id}/change-status', [App\Http\Controllers\Admin\QuotationController::class, 'changeStatus'])->name('quotation.changeStatus');
+        Route::resource('quotation', App\Http\Controllers\Admin\QuotationController::class);
 
         // POS Terminal View Routes
         Route::get('pos', [App\Http\Controllers\Admin\PosController::class, 'index'])->name('pos.index');
@@ -261,6 +272,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::get('report/warrantyClaim', [App\Http\Controllers\Admin\ReportController::class, 'warrantyclaim'])->name('report.warrantyClaim');
         Route::get('report/wastage', [App\Http\Controllers\Admin\ReportController::class, 'wastage'])->name('report.wastage');
         Route::get('report/disposal', [App\Http\Controllers\Admin\ReportController::class, 'wastage'])->name('report.disposal');
+        Route::get('report/vat', [App\Http\Controllers\Admin\ReportController::class, 'vat'])->name('report.vat');
 
         Route::post('expense/approved', [App\Http\Controllers\Admin\ExpenseController::class, 'approved'])->name('expense.approved');
         Route::post('expense/approvalcancel', [App\Http\Controllers\Admin\ExpenseController::class, 'approvalcancel'])->name('expense.approvalcancel');
@@ -281,6 +293,17 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('loanInfo/approvalcancel', [App\Http\Controllers\Admin\LoanInfoController::class, 'approvalcancel'])->name('loanInfo.approvalcancel');
 
         // Resident Approval & Actions Start
+
+        // Database Backup & Restore Routes
+    Route::get('database-backup', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'index'])->name('databasebackup.index');
+    Route::get('database/backup', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'index'])->name('databasebackup.backup');
+    Route::get('database-backup/info', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'info'])->name('databasebackup.info');
+    Route::get('database-backup/download', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'download'])->name('databasebackup.download');
+    Route::post('database-backup/create', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'create'])->name('databasebackup.create');
+    Route::get('database-backup/download-file/{filename}', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'downloadfile'])->name('databasebackup.downloadfile');
+    Route::delete('database-backup/delete-file/{filename}', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'deletefile'])->name('databasebackup.deletefile');
+    Route::post('database-backup/restore', [App\Http\Controllers\Admin\System\DatabaseBackupController::class, 'restore'])->name('databasebackup.restore');
+
 
     });
     Route::get('mediaValidator/{modelName}/getFields', [App\Http\Controllers\Admin\MediaValidatorController::class, 'getFields'])->name('mediaValidator.getFields');

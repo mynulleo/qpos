@@ -14,6 +14,7 @@ use App\Models\Payment;
 use App\Models\Client;
 use App\Models\InvoiceDetails;
 use App\Models\PurchaseDetail;
+use App\Models\GrnDetail;
 use App\Models\WarrantyClaim;
 use App\Models\Item;
 use App\Models\ItemPrice;
@@ -33,19 +34,9 @@ class ReportController extends BaseController
         if ($request->format() == 'html') {
             return view('admin.layouts.admin_app');
         }
-        $from_date = null;
-        $to_date = null;
-
-        $itemid = null;
         $searchdata = $request->all();
-        if ($searchdata && array_key_exists('item_id', $searchdata)) {
-            $itemid = $searchdata['item_id'];
-            $from_date = vue_to_server_date($searchdata['start_date']);
-            $to_date = vue_to_server_date($searchdata['end_date']);
-        }
-
-        $stockledger = $this->getItemLadger($itemid, $from_date, $to_date);
-        return $stockledger;
+        $stockledger = $this->getItemLadger($searchdata);
+        return response()->json($stockledger);
     }
 
     public function availablestock(Request $request)
@@ -59,19 +50,53 @@ class ReportController extends BaseController
             ? (int) $searchdata['low_threshold']
             : 5;
 
-        // 1. Fast Global Stock Counts in single query
-        $counts = DB::table('item_stock_summaries')
-            ->selectRaw("
-                COUNT(*) as all_count,
-                SUM(CASE WHEN current_stock > 0 AND current_stock <= {$lowThreshold} THEN 1 ELSE 0 END) as low_stock_count,
-                SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_of_stock_count,
-                SUM(CASE WHEN current_stock < 0 THEN 1 ELSE 0 END) as negative_stock_count,
-                SUM(CASE WHEN current_stock > 0 THEN 1 ELSE 0 END) as in_stock_count,
-                SUM(total_qty_in) as total_in,
-                SUM(total_qty_out) as total_out,
-                SUM(CASE WHEN current_stock > 0 THEN current_stock ELSE 0 END) as total_current_stock
-            ")
-            ->first();
+        $warehouseId = !empty($searchdata['warehouse_id']) ? $searchdata['warehouse_id'] : null;
+
+        // 1. Fast Stock Counts (by Warehouse or Global)
+        if ($warehouseId) {
+            $issSource = DB::table('stock_transactions')
+                ->where('status', 'active')
+                ->where('warehouse_id', $warehouseId)
+                ->select(
+                    'item_id',
+                    'color_id',
+                    'size_id',
+                    DB::raw('SUM(qty_in) as total_qty_in'),
+                    DB::raw('SUM(qty_out) as total_qty_out'),
+                    DB::raw('(SUM(qty_in) - SUM(qty_out)) as current_stock')
+                )
+                ->groupBy('item_id', 'color_id', 'size_id');
+
+            $counts = DB::query()->fromSub($issSource, 'iss')
+                ->selectRaw("
+                    COUNT(*) as all_count,
+                    SUM(CASE WHEN current_stock > 0 AND current_stock <= {$lowThreshold} THEN 1 ELSE 0 END) as low_stock_count,
+                    SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_of_stock_count,
+                    SUM(CASE WHEN current_stock < 0 THEN 1 ELSE 0 END) as negative_stock_count,
+                    SUM(CASE WHEN current_stock > 0 THEN 1 ELSE 0 END) as in_stock_count,
+                    SUM(total_qty_in) as total_in,
+                    SUM(total_qty_out) as total_out,
+                    SUM(CASE WHEN current_stock > 0 THEN current_stock ELSE 0 END) as total_current_stock
+                ")
+                ->first();
+
+            $query = DB::query()->fromSub($issSource, 'iss');
+        } else {
+            $counts = DB::table('item_stock_summaries')
+                ->selectRaw("
+                    COUNT(*) as all_count,
+                    SUM(CASE WHEN current_stock > 0 AND current_stock <= {$lowThreshold} THEN 1 ELSE 0 END) as low_stock_count,
+                    SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_of_stock_count,
+                    SUM(CASE WHEN current_stock < 0 THEN 1 ELSE 0 END) as negative_stock_count,
+                    SUM(CASE WHEN current_stock > 0 THEN 1 ELSE 0 END) as in_stock_count,
+                    SUM(total_qty_in) as total_in,
+                    SUM(total_qty_out) as total_out,
+                    SUM(CASE WHEN current_stock > 0 THEN current_stock ELSE 0 END) as total_current_stock
+                ")
+                ->first();
+
+            $query = DB::table('item_stock_summaries as iss');
+        }
 
         // 2. High-Performance Query with Single-Pass Pricing Resolution
         $latestPurchaseSub = DB::table('purchase_details')
@@ -83,9 +108,10 @@ class ReportController extends BaseController
                   ->groupBy('item_id', 'color_id', 'size_id');
             });
 
-        $query = DB::table('item_stock_summaries as iss')
-            ->join('items as i', 'i.id', '=', 'iss.item_id')
+        $query->join('items as i', 'i.id', '=', 'iss.item_id')
             ->leftJoin('categories as c', 'c.id', '=', 'i.category_id')
+            ->leftJoin('brands as b', 'b.id', '=', 'i.brand_id')
+            ->leftJoin('series as s', 's.id', '=', 'i.series_id')
             ->leftJoin('units as u', 'u.id', '=', 'i.unit_id')
             ->leftJoin('colors as col', 'col.id', '=', 'iss.color_id')
             ->leftJoin('sizes as sz', 'sz.id', '=', 'iss.size_id')
@@ -130,7 +156,12 @@ class ReportController extends BaseController
                 'i.title as item_title',
                 'i.barcode',
                 'i.category_id',
+                'i.brand_id',
+                'i.series_id',
+                'i.model_no',
                 'c.title as category_title',
+                'b.title as brand_title',
+                's.title as series_title',
                 'u.title as unit_title',
                 'col.title as color_title',
                 'sz.title as size_title',
@@ -153,6 +184,19 @@ class ReportController extends BaseController
         if (!empty($searchdata['category_id'])) {
             $query->where('i.category_id', $searchdata['category_id']);
         }
+        if (!empty($searchdata['brand_id'])) {
+            $query->where('i.brand_id', $searchdata['brand_id']);
+        }
+        if (!empty($searchdata['series_id'])) {
+            $query->where('i.series_id', $searchdata['series_id']);
+        }
+        if (!empty($searchdata['model_id'])) {
+            $query->where('i.series_id', $searchdata['model_id']);
+        }
+        if (!empty($searchdata['model_no'])) {
+            $m = trim($searchdata['model_no']);
+            $query->where('i.model_no', 'like', "%{$m}%");
+        }
         if (!empty($searchdata['item_id'])) {
             $query->where('iss.item_id', $searchdata['item_id']);
         }
@@ -169,7 +213,10 @@ class ReportController extends BaseController
             $kw = trim($searchdata['keyword']);
             $query->where(function ($q) use ($kw) {
                 $q->where('i.title', 'like', "%{$kw}%")
-                  ->orWhere('i.barcode', 'like', "%{$kw}%");
+                  ->orWhere('i.barcode', 'like', "%{$kw}%")
+                  ->orWhere('i.model_no', 'like', "%{$kw}%")
+                  ->orWhere('b.title', 'like', "%{$kw}%")
+                  ->orWhere('s.title', 'like', "%{$kw}%");
             });
         }
         if (isset($searchdata['from_qty']) && is_numeric($searchdata['from_qty'])) {
@@ -244,9 +291,16 @@ class ReportController extends BaseController
                 'title'       => $row->item_title,
                 'barcode'     => $row->barcode,
                 'category_id' => $row->category_id,
+                'brand_id'    => $row->brand_id,
+                'series_id'   => $row->series_id,
+                'model_no'    => $row->model_no,
+                'brand'       => $row->brand_title ? ['title' => $row->brand_title] : null,
+                'series'      => $row->series_title ? ['title' => $row->series_title] : null,
                 'category'    => $row->category_title ? ['title' => $row->category_title] : null,
                 'unit'        => $row->unit_title ? ['title' => $row->unit_title] : null,
             ];
+            $row->brand = $row->brand_title ? ['title' => $row->brand_title] : null;
+            $row->series = $row->series_title ? ['title' => $row->series_title] : null;
             $row->color = $row->color_title ? ['title' => $row->color_title] : null;
             $row->size  = $row->size_title ? ['title' => $row->size_title] : null;
 
@@ -566,6 +620,174 @@ class ReportController extends BaseController
         return $this->getCouponReport($searchdata);
     }
 
+    public function vat(Request $request)
+    {
+        if ($request->format() == 'html') {
+            return view('admin.layouts.admin_app');
+        }
+
+        $searchdata = $request->all();
+        return response()->json($this->getVatReport($searchdata));
+    }
+
+    public function getVatReport($searchdata)
+    {
+        $fromDate = !empty($searchdata['from_date']) ? vue_to_server_date($searchdata['from_date']) : null;
+        $toDate = !empty($searchdata['to_date']) ? vue_to_server_date($searchdata['to_date']) : null;
+        $clientId = !empty($searchdata['client_id']) ? $searchdata['client_id'] : null;
+        $invoiceNo = !empty($searchdata['invoice_no']) ? trim($searchdata['invoice_no']) : null;
+        $vatStatus = !empty($searchdata['vat_status']) ? $searchdata['vat_status'] : 'with_vat'; // 'with_vat', 'all', 'without_vat'
+        $paymentStatus = !empty($searchdata['payment_status']) ? $searchdata['payment_status'] : 'all'; // 'all', 'paid', 'due'
+        $saleType = !empty($searchdata['sale_type']) ? $searchdata['sale_type'] : 'all'; // 'all', 'pos', 'general'
+
+        $query = \App\Models\Invoice::with([
+            'client:id,clientid,name,mobile,address',
+            'details' => function ($q) {
+                $q->with('item:id,title,barcode');
+            }
+        ])
+        ->whereNull('deleted_at');
+
+        if ($fromDate && $toDate) {
+            $query->whereBetween('invoice_date', [$fromDate, $toDate]);
+        } elseif ($fromDate) {
+            $query->whereDate('invoice_date', '>=', $fromDate);
+        } elseif ($toDate) {
+            $query->whereDate('invoice_date', '<=', $toDate);
+        }
+
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($invoiceNo) {
+            $query->where('invoice_no', 'like', "%{$invoiceNo}%");
+        }
+
+        if ($vatStatus === 'with_vat') {
+            $query->where('vat', '>', 0);
+        } elseif ($vatStatus === 'without_vat') {
+            $query->where(function ($q) {
+                $q->where('vat', '<=', 0)->orWhereNull('vat');
+            });
+        }
+
+        if ($paymentStatus === 'paid') {
+            $query->where(function ($q) {
+                $q->where('is_closed', 1)
+                  ->orWhereRaw('COALESCE(paid_amount, 0) >= amount');
+            });
+        } elseif ($paymentStatus === 'due') {
+            $query->where('is_closed', 0)
+                  ->whereRaw('COALESCE(paid_amount, 0) < amount');
+        }
+
+        if ($saleType === 'pos') {
+            $query->whereHas('details', function ($q) {
+                $q->where('reference', 'POS Sale');
+            });
+        } elseif ($saleType === 'general') {
+            $query->whereDoesntHave('details', function ($q) {
+                $q->where('reference', 'POS Sale');
+            });
+        }
+
+        $allInvoices = (clone $query)->orderBy('id', 'desc')->get();
+
+        // Summary Calculations
+        $totalInvoicesCount = $allInvoices->count();
+        $withVatCount = $allInvoices->where('vat', '>', 0)->count();
+        $withoutVatCount = $totalInvoicesCount - $withVatCount;
+
+        $totalSubtotal = (float)$allInvoices->sum('original_amount');
+        $totalDiscount = (float)$allInvoices->sum('discount');
+        $totalTaxableSales = max(0, $totalSubtotal - $totalDiscount);
+        $totalVatCollected = (float)$allInvoices->sum('vat');
+        $totalGrossSales = (float)$allInvoices->sum('amount');
+        $totalPaid = (float)$allInvoices->sum('paid_amount');
+        $totalDue = max(0, $totalGrossSales - $totalPaid);
+
+        $effectiveVatRate = $totalTaxableSales > 0 ? round(($totalVatCollected / $totalTaxableSales) * 100, 2) : 0;
+
+        // Monthly Trend Aggregation
+        $monthlyTrend = $allInvoices->groupBy(function ($inv) {
+            try {
+                $rawDate = $inv->getRawOriginal('invoice_date') ?? $inv->invoice_date;
+                return Carbon::parse($rawDate)->format('Y-m');
+            } catch (\Exception $e) {
+                return 'Other';
+            }
+        })->map(function ($group, $monthKey) {
+            $sub = (float)$group->sum('original_amount');
+            $disc = (float)$group->sum('discount');
+            $taxable = max(0, $sub - $disc);
+            $vat = (float)$group->sum('vat');
+            $gross = (float)$group->sum('amount');
+            $monthTitle = $monthKey;
+            if ($monthKey !== 'Other') {
+                try {
+                    $monthTitle = Carbon::createFromFormat('Y-m', $monthKey)->format('F Y');
+                } catch (\Exception $e) {
+                    $monthTitle = $monthKey;
+                }
+            }
+            return [
+                'month' => $monthKey,
+                'month_name' => $monthTitle,
+                'invoices_count' => $group->count(),
+                'with_vat_count' => $group->where('vat', '>', 0)->count(),
+                'taxable_amount' => $taxable,
+                'vat_amount' => $vat,
+                'gross_amount' => $gross,
+            ];
+        })->values();
+
+        // Top Clients by VAT
+        $clientVatSummary = $allInvoices->where('vat', '>', 0)->groupBy('client_id')->map(function ($group) {
+            $first = $group->first();
+            $sub = (float)$group->sum('original_amount');
+            $disc = (float)$group->sum('discount');
+            $taxable = max(0, $sub - $disc);
+            $vat = (float)$group->sum('vat');
+            $gross = (float)$group->sum('amount');
+            return [
+                'client_id' => $first->client_id,
+                'client_name' => $first->client->name ?? 'Walk-in Customer',
+                'client_mobile' => $first->client->mobile ?? 'N/A',
+                'invoices_count' => $group->count(),
+                'taxable_amount' => $taxable,
+                'vat_amount' => $vat,
+                'gross_amount' => $gross,
+            ];
+        })->sortByDesc('vat_amount')->values()->take(10);
+
+        $siteSetting = SiteSetting::first();
+
+        return [
+            'invoices' => $allInvoices,
+            'summary' => [
+                'total_invoices' => $totalInvoicesCount,
+                'with_vat_invoices' => $withVatCount,
+                'without_vat_invoices' => $withoutVatCount,
+                'total_subtotal' => $totalSubtotal,
+                'total_discount' => $totalDiscount,
+                'total_taxable_sales' => $totalTaxableSales,
+                'total_vat_collected' => $totalVatCollected,
+                'total_gross_sales' => $totalGrossSales,
+                'total_paid' => $totalPaid,
+                'total_due' => $totalDue,
+                'effective_vat_rate' => $effectiveVatRate,
+            ],
+            'monthly_trend' => $monthlyTrend,
+            'client_vat_summary' => $clientVatSummary,
+            'site_vat_setting' => [
+                'default_vat' => floatval($siteSetting->default_vat ?? 0),
+                'vat_no' => $siteSetting->vat_no ?? '',
+                'sale_nature' => $siteSetting->sale_nature ?? 'both',
+            ]
+        ];
+    }
+
     public function getCouponReport($searchdata)
     {
         $fromDate = !empty($searchdata['from_date']) ? vue_to_server_date($searchdata['from_date']) : null;
@@ -670,7 +892,7 @@ class ReportController extends BaseController
         ->latest('id')
         ->get();
 
-        // 2. Fetch all purchased serial numbers from PurchaseDetail
+        // 2. Fetch all purchased and GRN serial numbers
         $purchaseRecords = PurchaseDetail::with([
             'purchase.supplier:id,org_name,name,mobile',
             'item.category:id,title',
@@ -682,8 +904,21 @@ class ReportController extends BaseController
         ->latest('id')
         ->get();
 
+        $grnRecords = \Illuminate\Support\Facades\Schema::hasTable('grn_details')
+            ? GrnDetail::with([
+                'grn.supplier:id,org_name,name,mobile',
+                'item.category:id,title',
+                'color:id,title',
+                'size:id,title',
+            ])
+            ->whereNotNull('serial_no')
+            ->where('serial_no', '!=', '')
+            ->latest('id')
+            ->get()
+            : collect();
+
         // 3. Fetch all warranty claims grouped by serial_no
-        $claims = WarrantyClaim::with('creator:id,name')
+        $claims = WarrantyClaim::with('creator:id,full_name,email')
             ->latest('id')
             ->get()
             ->groupBy('serial_no');
@@ -700,7 +935,7 @@ class ReportController extends BaseController
             }
         }
 
-        // Map purchase serials
+        // Map purchase and GRN serials
         $purchaseMap = [];
         foreach ($purchaseRecords as $pr) {
             $serials = preg_split('/[\r\n,]+/', $pr->serial_no, -1, PREG_SPLIT_NO_EMPTY);
@@ -708,6 +943,15 @@ class ReportController extends BaseController
                 $clean = trim($s);
                 if (!empty($clean) && !isset($purchaseMap[$clean])) {
                     $purchaseMap[$clean] = $pr;
+                }
+            }
+        }
+        foreach ($grnRecords as $gr) {
+            $serials = preg_split('/[\r\n,]+/', $gr->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($serials as $s) {
+                $clean = trim($s);
+                if (!empty($clean) && !isset($purchaseMap[$clean])) {
+                    $purchaseMap[$clean] = $gr;
                 }
             }
         }
@@ -972,9 +1216,9 @@ class ReportController extends BaseController
             'size:id,title',
             'invoice:id,invoice_no,invoice_date,amount',
             'invoice.client:id,name,mobile,address',
-            'creator:id,name',
+            'creator:id,full_name,email',
             'logs' => function ($q) {
-                $q->with('creator:id,name')->latest('id');
+                $q->with('creator:id,full_name,email')->latest('id');
             }
         ]);
 

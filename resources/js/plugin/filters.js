@@ -63,87 +63,89 @@ let filters = {
     },
 
     numberToBanglaWords(number) {
-        const ones = {
-            0: "",
-            1: "এক",
-            2: "দুই",
-            3: "তিন",
-            4: "চার",
-            5: "পাঁচ",
-            6: "ছয়",
-            7: "সাত",
-            8: "আট",
-            9: "নয়",
-            10: "দশ",
-            11: "এগারো",
-            12: "বারো",
-            13: "তেরো",
-            14: "চৌদ্দ",
-            15: "পনেরো",
-            16: "ষোল",
-            17: "সতেরো",
-            18: "আঠারো",
-            19: "উনিশ",
-        };
+        if (number === undefined || number === null || isNaN(number)) return "";
 
-        const tens = {
-            2: "বিশ",
-            3: "ত্রিশ",
-            4: "চল্লিশ",
-            5: "পঞ্চাশ",
-            6: "ষাট",
-            7: "সত্তর",
-            8: "আশি",
-            9: "নব্বই",
-        };
-
-        const units = [
-            { value: 10000000, label: "কোটি" },
-            { value: 100000, label: "লক্ষ" },
-            { value: 1000, label: "হাজার" },
-            { value: 100, label: "শত" },
+        const bangla0to99 = [
+            "", "এক", "দুই", "তিন", "চার", "পাঁচ", "ছয়", "সাত", "আট", "নয়", "দশ",
+            "এগারো", "বারো", "তেরো", "চৌদ্দ", "পনেরো", "ষোল", "সতেরো", "আঠারো", "উনিশ", "বিশ",
+            "একুশ", "বাইশ", "তেইশ", "চব্বিশ", "পঁচিশ", "ছাব্বিশ", "সাতাশ", "আটাশ", "উনত্রিশ", "ত্রিশ",
+            "একত্রিশ", "বত্রিশ", "তেত্রিশ", "চৌত্রিশ", "পঁয়ত্রিশ", "ছত্রিশ", "সাঁইত্রিশ", "আটত্রিশ", "ঊনচল্লিশ", "চল্লিশ",
+            "একচল্লিশ", "বিয়াল্লিশ", "তেতাল্লিশ", "চুয়াল্লিশ", "পঁয়তাল্লিশ", "ছেচল্লিশ", "সাতচল্লিশ", "আটচল্লিশ", "ঊনপঞ্চাশ", "পঞ্চাশ",
+            "একান্ন", "বায়ান্ন", "তিপ্পান্ন", "চুয়ান্ন", "পঞ্চান্ন", "ছাপ্পান্ন", "সাতান্ন", "আটান্ন", "ঊনষাট", "ষাট",
+            "একষট্টি", "বাষট্টি", "তেষট্টি", "চৌষট্টি", "পঁয়ষট্টি", "ছেষট্টি", "সাতষট্টি", "আটষট্টি", "ঊনসত্তর", "সত্তর",
+            "একাত্তর", "বাহাত্তর", "তিয়াত্তর", "চুয়াত্তর", "পঁচাত্তর", "ছিয়াত্তর", "সাতাত্তর", "আটাত্তর", "ঊনআশি", "আশি",
+            "একাশি", "বিরাশি", "তিরাশি", "চুরাশি", "পঁচাশি", "ছিয়াশি", "সাতাশি", "আটাশি", "ঊননব্বই", "নব্বই",
+            "একানব্বই", "বানব্বই", "তিরানব্বই", "চুরানব্বই", "পঁচানব্বই", "ছিয়ানব্বই", "সাতানব্বই", "আটানব্বই", "নিরানব্বই"
         ];
 
-        function convert(n) {
-            n = parseInt(n);
+        const hundreds = [
+            "", "একশত", "দুইশত", "তিনশত", "চারশত", "পাঁচশত", "ছয়শত", "সাতশত", "আটশত", "নয়শত"
+        ];
 
-            if (n < 20) return ones[n];
+        function convertNumber(n) {
+            n = parseInt(n, 10);
+            if (n <= 0) return "";
+            if (n < 100) return bangla0to99[n] || "";
 
-            if (n < 100) {
-                return (
-                    tens[Math.floor(n / 10)] +
-                    (n % 10 ? " " + ones[n % 10] : "")
-                );
+            let words = [];
+
+            // কোটি (Crore - 1,00,00,000)
+            if (n >= 10000000) {
+                const crore = Math.floor(n / 10000000);
+                words.push(convertNumber(crore) + " কোটি");
+                n = n % 10000000;
             }
 
-            for (let i = 0; i < units.length; i++) {
-                if (n >= units[i].value) {
-                    let count = Math.floor(n / units[i].value);
-                    let remainder = n % units[i].value;
-
-                    return (
-                        convert(count) +
-                        " " +
-                        units[i].label +
-                        (remainder ? " " + convert(remainder) : "")
-                    );
-                }
+            // লক্ষ (Lakh - 1,00,000)
+            if (n >= 100000) {
+                const lakh = Math.floor(n / 100000);
+                words.push(bangla0to99[lakh] + " লক্ষ");
+                n = n % 100000;
             }
+
+            // হাজার (Thousand - 1,000)
+            if (n >= 1000) {
+                const thousand = Math.floor(n / 1000);
+                words.push(bangla0to99[thousand] + " হাজার");
+                n = n % 1000;
+            }
+
+            // শত (Hundred - 100)
+            if (n >= 100) {
+                const hundred = Math.floor(n / 100);
+                words.push(hundreds[hundred] || (bangla0to99[hundred] + " শত"));
+                n = n % 100;
+            }
+
+            // 1 to 99
+            if (n > 0) {
+                words.push(bangla0to99[n]);
+            }
+
+            return words.join(" ");
         }
 
         // =========================
         // Split taka & paisa
         // =========================
-        number = Number(number).toFixed(2);
-        let [taka, paisa] = number.split(".");
+        const numFixed = Number(number).toFixed(2);
+        const [takaStr, paisaStr] = numFixed.split(".");
 
-        taka = parseInt(taka);
-        paisa = parseInt(paisa);
+        const taka = parseInt(takaStr, 10) || 0;
+        const paisa = parseInt(paisaStr, 10) || 0;
 
-        let takaWords = taka > 0 ? convert(taka) + " টাকা" : "";
-        let paisaWords = paisa > 0 ? " " + convert(paisa) + " পয়সা" : "";
+        let result = "";
+        if (taka > 0) {
+            result += convertNumber(taka) + " টাকা";
+        } else if (paisa === 0) {
+            result = "শূন্য টাকা";
+        }
 
-        return (takaWords + paisaWords).trim() + ".";
+        if (paisa > 0) {
+            result += (result ? " " : "") + bangla0to99[paisa] + " পয়সা";
+        }
+
+        return result.trim() ? result.trim() + "।" : "";
     },
 
     numberToEnglishBD(amount) {

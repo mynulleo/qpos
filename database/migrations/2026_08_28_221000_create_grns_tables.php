@@ -26,8 +26,8 @@ return new class extends Migration
                 $table->id();
                 $table->string('grn_no', 64)->unique();
                 $table->date('grn_date');
-                $table->unsignedBigInteger('purchase_id')->index();
-                $table->unsignedBigInteger('supplier_id')->index();
+                $table->unsignedBigInteger('purchase_id')->nullable()->index();
+                $table->unsignedBigInteger('supplier_id')->nullable()->index();
                 $table->unsignedBigInteger('warehouse_id')->index();
                 $table->string('challan_no', 100)->nullable();
                 $table->date('challan_date')->nullable();

@@ -221,6 +221,15 @@
                     >
                       <i class="fas fa-print"></i>
                     </router-link>
+
+                    <!-- Mushak 6.3 Invoice -->
+                    <router-link
+                      :to="{ name: 'invoice.mushak', params: { id: inv.id } }"
+                      class="btn btn-xs btn-outline-success border-0 fw-bold"
+                      title="Print [মূসক-৬.৩] Invoice"
+                    >
+                      <span style="font-size: 10px;">[৬.৩]</span>
+                    </router-link>
                   </div>
                 </div>
               </td>

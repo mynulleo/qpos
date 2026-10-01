@@ -12,6 +12,10 @@
                 </p>
             </div>
             <div class="d-flex gap-2">
+                <router-link :to="{ name: 'databasebackup.index' }" class="btn btn-outline-primary btn-sm px-3 d-flex align-items-center gap-2 shadow-sm">
+                    <i class="fas fa-database"></i>
+                    <span>DB Backup & Restore</span>
+                </router-link>
                 <button type="button" class="btn btn-outline-secondary btn-sm px-3 d-flex align-items-center gap-2 shadow-sm" :disabled="loading || updating" @click="fetchStatus">
                     <i class="fas fa-redo" :class="{ 'fa-spin': loading }"></i>
                     <span>Check Again</span>

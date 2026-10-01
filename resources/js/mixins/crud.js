@@ -359,7 +359,13 @@ export default {
                         this.$toast(res.data.message, "error");
                     }
                 })
-                .catch((error) => console.log(error))
+                .catch((error) => {
+                    if (error.response && error.response.data && error.response.data.message) {
+                        this.$toast(error.response.data.message, "error");
+                    } else {
+                        console.log(error);
+                    }
+                })
                 .then((alw) =>
                     setTimeout(() => (this.$root.tableSpinner = false), 200),
                 );

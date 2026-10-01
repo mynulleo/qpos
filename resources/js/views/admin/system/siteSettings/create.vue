@@ -33,6 +33,18 @@
                             <div class="col-md-6">
                                 <x-tel-input title="Secondary Mobile" field="data.mobile2" v-model="data.mobile2" @phoneValidate="x_tel_validates.mobile2 = $event" :req="false" col="12" />
                             </div>
+                            <div class="col-12 border-top pt-2">
+                                <Textarea title="Primary Store Address (মূল ঠিকানা)" field="data.address" v-model="data.address" :req="false" col="12" rows="2" placeholder="Street, City, Post Code" />
+                            </div>
+                            <div class="col-12">
+                                <Textarea title="Primary Google Maps Embed Link (ঐচ্ছিক)" field="data.map" v-model="data.map" :req="false" col="12" rows="2" placeholder="https://maps.google.com/..." />
+                            </div>
+                            <div class="col-12">
+                                <Textarea title="Secondary Address (শাখা ঠিকানা - ঐচ্ছিক)" field="data.address_two" v-model="data.address_two" :req="false" col="12" rows="2" placeholder="Branch Address" />
+                            </div>
+                            <div class="col-12">
+                                <Textarea title="Secondary Google Maps Link (ঐচ্ছিক)" field="data.map_two" v-model="data.map_two" :req="false" col="12" rows="2" placeholder="https://maps.google.com/..." />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,6 +138,95 @@
                                                     <div class="fw-bold small"><i class="fas fa-boxes text-secondary me-1"></i> General Retail (সাধারণ রিটেইল)</div>
                                                     <div class="text-muted" style="font-size: 11px;">Standard inventory (স্ট্যান্ডার্ড ইনভেন্টরি)</div>
                                                 </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sale Nature Selector -->
+                            <div class="col-12 border-top pt-3">
+                                <label class="form-label fw-bold small text-dark mb-2">
+                                    <i class="fas fa-tags text-theme me-1"></i> Sale Nature (বিক্রয়ের ধরণ / প্রকৃতি):
+                                </label>
+                                <div class="row g-2">
+                                    <!-- Retail -->
+                                    <div class="col-12 col-md-4">
+                                        <div class="shop-type-option p-2 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': data.sale_nature === 'retail' }"
+                                            @click="data.sale_nature = 'retail'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="natureRetail" value="retail" v-model="data.sale_nature">
+                                                <label class="form-check-label cursor-pointer text-dark w-100" for="natureRetail">
+                                                    <div class="fw-bold small text-primary"><i class="fas fa-shopping-bag me-1"></i> Retail (খুচরা)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">Direct consumer sales</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Whole Sale -->
+                                    <div class="col-12 col-md-4">
+                                        <div class="shop-type-option p-2 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': data.sale_nature === 'wholesale' }"
+                                            @click="data.sale_nature = 'wholesale'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="natureWholesale" value="wholesale" v-model="data.sale_nature">
+                                                <label class="form-check-label cursor-pointer text-dark w-100" for="natureWholesale">
+                                                    <div class="fw-bold small text-success"><i class="fas fa-warehouse me-1"></i> Whole Sale (পাইকারি)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">Bulk dealer & agent sales</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Both -->
+                                    <div class="col-12 col-md-4">
+                                        <div class="shop-type-option p-2 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': !data.sale_nature || data.sale_nature === 'both' }"
+                                            @click="data.sale_nature = 'both'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="natureBoth" value="both" v-model="data.sale_nature">
+                                                <label class="form-check-label cursor-pointer text-dark w-100" for="natureBoth">
+                                                    <div class="fw-bold small text-dark"><i class="fas fa-layer-group text-warning me-1"></i> Both (উভয়ই)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">Retail & wholesale together</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Default VAT Rate Configuration -->
+                            <div class="col-12 border-top pt-3">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
+                                            <i class="fas fa-percent text-theme"></i> Default VAT Rate (%) (ডিফল্ট ভ্যাট শতকরা হার):
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" min="0" max="100" class="form-control fw-bold font-monospace"
+                                                v-model.number="data.default_vat" placeholder="0.00">
+                                            <span class="input-group-text bg-light fw-bold">%</span>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                            <i class="fas fa-info-circle text-primary me-1"></i>
+                                            Set <strong>0</strong> for no default VAT. When &gt; 0, POS calculates this % on invoice total automatically.
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-2 px-3 rounded border" :class="Number(data.default_vat) > 0 ? 'bg-primary bg-opacity-10 border-primary' : 'bg-light'">
+                                            <div class="small fw-bold text-dark d-flex align-items-center justify-content-between mb-1">
+                                                <span><i class="fas fa-calculator me-1 text-primary"></i> POS Calculation Preview:</span>
+                                                <span class="badge" :class="Number(data.default_vat) > 0 ? 'bg-primary' : 'bg-secondary'">
+                                                    {{ Number(data.default_vat) > 0 ? data.default_vat + '% Active' : '0% (No VAT)' }}
+                                                </span>
+                                            </div>
+                                            <div class="text-muted font-monospace" style="font-size: 11.5px;" v-if="Number(data.default_vat) > 0">
+                                                On <strong>Tk. 1,000</strong> sale &rarr; VAT = <strong>Tk. {{ ((1000 * Number(data.default_vat)) / 100).toFixed(2) }}</strong> (Net: Tk. {{ (1000 + (1000 * Number(data.default_vat)) / 100).toFixed(2) }})
+                                            </div>
+                                            <div class="text-muted" style="font-size: 11.5px;" v-else>
+                                                VAT calculation will be <strong>Tk. 0.00</strong> on POS sales by default. Cashier can toggle switch anytime.
                                             </div>
                                         </div>
                                     </div>
@@ -396,8 +497,8 @@
             </div>
 
             <!-- 🖼️ 4. Brand Media & Logo Upload -->
-            <div class="col-12">
-                <div class="card border-0 shadow-sm form-section-card">
+            <div class="col-xl-6 col-lg-12">
+                <div class="card border-0 shadow-sm h-100 form-section-card">
                     <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
                         <div class="section-icon-box theme-bg-soft text-theme rounded d-flex align-items-center justify-content-center">
                             <i class="fas fa-images"></i>
@@ -410,7 +511,7 @@
                     <div class="card-body p-3">
                         <div class="row g-3">
                             <!-- Main Logo -->
-                            <div class="col-xl-4 col-md-6">
+                            <div class="col-12">
                                 <div class="p-3 border rounded bg-light h-100">
                                     <File title="Main Logo (প্রাইমারি লোগো)" cropModalId="logo_crop_modal" field="data.original_logo" mime="img"
                                         fileClassName="file2" accept=".jpg, .jpeg, .png" :showCrop="true"
@@ -428,7 +529,7 @@
                             </div>
 
                             <!-- Small Logo -->
-                            <div class="col-xl-4 col-md-6">
+                            <div class="col-md-6 col-12">
                                 <div class="p-3 border rounded bg-light h-100">
                                     <File title="Small Logo (সংক্ষিপ্ত লোগো)" cropModalId="logo_small_crop_modal"
                                         field="data.original_logo_small" mime="img" fileClassName="file2"
@@ -447,7 +548,7 @@
                             </div>
 
                             <!-- Favicon -->
-                            <div class="col-xl-4 col-md-6">
+                            <div class="col-md-6 col-12">
                                 <div class="p-3 border rounded bg-light h-100">
                                     <File title="Favicon (ট্যাব আইকন)" field="data.favicon" mime="img" fileClassName="file3"
                                         vHeight="50" vWidth="50" vSizeInKb="300" :deleteButton="false" col="12" :req="true" />
@@ -458,38 +559,7 @@
                 </div>
             </div>
 
-            <!-- 📍 5. Store Address & Physical Location -->
-            <div class="col-xl-6 col-lg-12">
-                <div class="card border-0 shadow-sm h-100 form-section-card">
-                    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
-                        <div class="section-icon-box theme-bg-soft text-theme rounded d-flex align-items-center justify-content-center">
-                            <i class="fas fa-map-marked-alt"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-0 text-dark">Store Addresses & Map Links</h6>
-                            <small class="text-muted" style="font-size: 11px;">Primary and secondary outlet locations</small>
-                        </div>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <Textarea title="Primary Store Address (মূল ঠিকানা)" field="data.address" v-model="data.address" :req="false" col="12" rows="2" placeholder="Street, City, Post Code" />
-                            </div>
-                            <div class="col-12">
-                                <Textarea title="Primary Google Maps Embed Link (ঐচ্ছিক)" field="data.map" v-model="data.map" :req="false" col="12" rows="2" placeholder="https://maps.google.com/..." />
-                            </div>
-                            <div class="col-12">
-                                <Textarea title="Secondary Address (শাখা ঠিকানা - ঐচ্ছিক)" field="data.address_two" v-model="data.address_two" :req="false" col="12" rows="2" placeholder="Branch Address" />
-                            </div>
-                            <div class="col-12">
-                                <Textarea title="Secondary Google Maps Link (ঐচ্ছিক)" field="data.map_two" v-model="data.map_two" :req="false" col="12" rows="2" placeholder="https://maps.google.com/..." />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 💳 6. Banking, Invoicing & Tax Info -->
+            <!-- 💳 5. Banking, Invoicing & Tax Details -->
             <div class="col-xl-6 col-lg-12">
                 <div class="card border-0 shadow-sm h-100 form-section-card">
                     <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
@@ -551,10 +621,16 @@ export default {
                 favicon: "",
                 default_currency_id: 1,
                 shop_type: "clothing",
+                sale_nature: "both",
+                default_vat: 0,
                 printer_type: "thermal",
                 normal_paper_size: "A4",
                 thermal_paper_size: "80mm",
                 label_preset: "4x2",
+                address: "",
+                address_two: "",
+                map: "",
+                map_two: "",
                 coupon_enabled: 0,
                 point_earn_rate: 1,
                 point_redeem_rate: 10,
@@ -593,6 +669,8 @@ export default {
                     formData.append("logo_base64", this.data.original_logo || "");
                     formData.append("system_mode", this.data.system_mode || "live");
                     formData.append("shop_type", this.data.shop_type || "clothing");
+                    formData.append("sale_nature", this.data.sale_nature || "both");
+                    formData.append("default_vat", this.data.default_vat ?? 0);
                     formData.append("printer_type", this.data.printer_type || "thermal");
                     formData.append("normal_paper_size", this.data.normal_paper_size || "A4");
                     formData.append("thermal_paper_size", this.data.thermal_paper_size || "80mm");
@@ -625,6 +703,8 @@ export default {
                 .get(`${this.model}`)
                 .then((res) => {
                     this.data = res.data || {};
+                    if (!this.data.sale_nature) this.data.sale_nature = "both";
+                    if (this.data.default_vat === undefined || this.data.default_vat === null) this.data.default_vat = 0;
                     if (!this.data.printer_type) this.data.printer_type = "thermal";
                     if (!this.data.normal_paper_size) this.data.normal_paper_size = "A4";
                     if (!this.data.thermal_paper_size) this.data.thermal_paper_size = "80mm";

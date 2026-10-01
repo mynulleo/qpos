@@ -227,7 +227,7 @@
                   <!-- Refund Method -->
                   <div class="col-md-3">
                     <label class="form-label fw-bold small text-muted mb-1">
-                      <i class="fas fa-wallet me-1 text-primary"></i> Refund Method (টাকা ফেরতের মাধ্যম)
+                      <i class="fas fa-wallet me-1 text-primary"></i> Refund Method (ফেরত)
                     </label>
                     <select class="form-select form-select-sm font-monospace fw-bold" v-model="payment_method">
                       <option value="Cash">Cash (নগদ ফেরত)</option>

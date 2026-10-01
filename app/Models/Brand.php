@@ -19,6 +19,11 @@ class Brand extends BaseModel
         return $this->belongsTo(Category::class, 'category_id', 'id');
     }
 
+    public function series()
+    {
+        return $this->hasMany(Series::class, 'brand_id', 'id');
+    }
+
     public function items()
     {
         return $this->hasMany(Item::class);

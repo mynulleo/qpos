@@ -47,6 +47,22 @@
                                         <i class="fas fa-money-bill-wave me-1"></i> {{ data?.currency?.title || 'BDT' }} ({{ data?.currency?.short_name || '৳' }})
                                     </span>
 
+                                    <!-- Sale Nature Badge -->
+                                    <span class="badge bg-light bg-opacity-25 text-white" v-if="data?.sale_nature === 'retail'">
+                                        <i class="fas fa-shopping-bag me-1"></i> Nature: Retail
+                                    </span>
+                                    <span class="badge bg-light bg-opacity-25 text-white" v-else-if="data?.sale_nature === 'wholesale'">
+                                        <i class="fas fa-warehouse me-1"></i> Nature: Wholesale
+                                    </span>
+                                    <span class="badge bg-light bg-opacity-25 text-white" v-else>
+                                        <i class="fas fa-layer-group me-1"></i> Nature: Retail & Wholesale
+                                    </span>
+
+                                    <!-- Default VAT Badge -->
+                                    <span class="badge" :class="Number(data?.default_vat) > 0 ? 'bg-primary text-white' : 'bg-light bg-opacity-25 text-white'">
+                                        <i class="fas fa-percent me-1"></i> VAT: {{ Number(data?.default_vat) > 0 ? data?.default_vat + '%' : '0% (Disabled)' }}
+                                    </span>
+
                                     <!-- Mode Badge -->
                                     <span class="badge bg-light bg-opacity-25 text-white">
                                         <i class="fas fa-server me-1"></i> Mode: {{ getSystemModeName(data?.system_mode) }}
@@ -58,16 +74,6 @@
                                     </span>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Edit Button -->
-                        <div>
-                            <router-link
-                                :to="{ name: 'siteSetting.edit', params: { id: data?.id || 1 } }"
-                                class="btn btn-light fw-bold text-theme px-3 py-2 shadow-sm d-flex align-items-center gap-2"
-                            >
-                                <i class="fas fa-edit"></i> Edit Site Settings
-                            </router-link>
                         </div>
                     </div>
                 </div>
@@ -189,6 +195,22 @@
                                             <div v-else class="d-flex align-items-center gap-2">
                                                 <span class="badge bg-secondary"><i class="fas fa-boxes me-1"></i> General Retail</span>
                                             </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="spec-label"><i class="fas fa-tags me-2 text-muted"></i>Sale Nature (বিক্রয়ের ধরণ)</td>
+                                        <td class="spec-value">
+                                            <span class="badge bg-primary" v-if="data?.sale_nature === 'retail'"><i class="fas fa-shopping-bag me-1"></i> Retail (খুচরা)</span>
+                                            <span class="badge bg-success" v-else-if="data?.sale_nature === 'wholesale'"><i class="fas fa-warehouse me-1"></i> Wholesale (পাইকারি)</span>
+                                            <span class="badge bg-dark" v-else><i class="fas fa-layer-group me-1"></i> Both Retail & Wholesale (খুচরা ও পাইকারি)</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="spec-label"><i class="fas fa-percent me-2 text-muted"></i>Default POS VAT Rate</td>
+                                        <td class="spec-value">
+                                            <span class="badge font-monospace fw-bold" :class="Number(data?.default_vat) > 0 ? 'bg-primary' : 'bg-secondary'">
+                                                {{ Number(data?.default_vat) > 0 ? data?.default_vat + '% (Active on POS)' : '0.00% (No default VAT)' }}
+                                            </span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -454,6 +476,12 @@
                                     <tr>
                                         <td class="spec-label"><i class="fas fa-file-invoice me-2 text-muted"></i>VAT / BIN Registration No</td>
                                         <td class="spec-value font-monospace fw-bold text-dark">{{ data?.vat_no || 'N/A' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="spec-label"><i class="fas fa-percent me-2 text-muted"></i>Default VAT Rate (%)</td>
+                                        <td class="spec-value font-monospace fw-bold" :class="Number(data?.default_vat) > 0 ? 'text-primary' : 'text-muted'">
+                                            {{ Number(data?.default_vat) > 0 ? data?.default_vat + '%' : '0% (Disabled)' }}
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td class="spec-label"><i class="fas fa-barcode me-2 text-muted"></i>HS Code</td>

@@ -14,6 +14,9 @@ class TenantDB
     {
         $user = Auth::guard('admin')->user() ?? Auth::user();
         if ($user) {
+            if (!empty($user->organization_id) && session('organization_id') != $user->organization_id) {
+                session(['organization_id' => $user->organization_id]);
+            }
             $organization = null;
             if (!empty($user->organization_id)) {
                 $organization = \App\Models\Organization::find($user->organization_id);

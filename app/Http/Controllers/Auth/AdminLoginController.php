@@ -141,7 +141,7 @@ class AdminLoginController extends Controller
         $attempt = 6 - $inc;
         if ($attempt == 0) {
             Session::forget($email);
-            Admin::where('id', $id)->update(['block' => 1]);
+            Admin::withoutGlobalScopes()->where('id', $id)->update(['block' => 1]);
         }
 
         return $attempt;

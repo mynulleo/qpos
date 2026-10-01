@@ -360,6 +360,7 @@ class InvoiceController extends BaseController
             'original_amount' => floatval($invoice->original_amount),
             'discount' => floatval($invoice->discount),
             'vat' => floatval($invoice->vat ?? 0),
+            'vat_percent' => floatval($invoice->vat_percent ?? 0),
             'amount' => floatval($invoice->amount),
             'paid_amount' => floatval($invoice->paid_amount),
             'due_amount' => $dueAmount,

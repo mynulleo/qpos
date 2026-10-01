@@ -274,9 +274,32 @@
                 </div>
               </div>
 
-              <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                <span class="text-muted small">VAT / Tax:</span>
-                <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace py-0 px-2" style="max-width: 110px; height: 28px;" v-model.number="vat" placeholder="0.00">
+              <!-- 🏷 VAT / Tax Switch & Calculation -->
+              <div class="py-1 px-2 my-1 rounded border transition-all" :class="is_vat_applicable ? 'bg-primary bg-opacity-10 border-primary' : 'bg-white border-light'">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="form-check form-switch m-0 p-0 d-flex align-items-center gap-1">
+                    <input class="form-check-input ms-0 cursor-pointer" type="checkbox" id="posVatSwitch"
+                      v-model="is_vat_applicable" @change="onVatSwitchToggle"
+                      style="transform: scale(1.1); cursor: pointer;">
+                    <label class="form-check-label fw-bold cursor-pointer small mb-0" for="posVatSwitch" :class="is_vat_applicable ? 'text-primary' : 'text-muted'" style="font-size: 11px;">
+                      <i class="fas fa-file-invoice-dollar me-1"></i>{{ is_vat_applicable ? 'With VAT (ভ্যাট সহ)' : 'Without VAT (ভ্যাট ছাড়া)' }}
+                    </label>
+                  </div>
+
+                  <!-- Rate & Calculated Amount in one clean line -->
+                  <div v-if="is_vat_applicable" class="d-flex align-items-center gap-1">
+                    <div class="input-group input-group-sm" style="max-width: 68px;" title="VAT Percentage Rate">
+                      <input type="number" step="0.1" min="0" max="100" class="form-control form-control-sm text-center font-monospace py-0 px-1"
+                        style="height: 24px; font-size: 11px;" v-model.number="vat_percent" @input="calculateVatAmount" placeholder="0">
+                      <span class="input-group-text bg-white small py-0 px-1" style="font-size: 9.5px;">%</span>
+                    </div>
+                    <input type="number" step="0.01" min="0" class="form-control form-control-sm text-end font-monospace fw-bold text-primary py-0 px-2"
+                      style="max-width: 88px; height: 24px; font-size: 12px;" v-model.number="vat" placeholder="0.00">
+                  </div>
+                  <div v-else class="text-muted font-monospace small" style="font-size: 11px;">
+                    Tk. 0.00
+                  </div>
+                </div>
               </div>
 
               <div class="d-flex justify-content-between align-items-center pt-2">
@@ -480,15 +503,40 @@
 
               <!-- Serial No (For items with purchase serials or serialized items) -->
               <div class="col-12" v-if="activeItem && (activeItem.has_purchase_serials || activeItem.is_serialized || isElectronicsShop)">
-                <label class="form-label fw-bold small text-muted">Serial No. (সিরিয়াল নং)</label>
-                <input
-                  ref="modalSerialInput"
-                  type="text"
-                  class="form-control form-control-sm font-monospace"
-                  placeholder="Enter Serial No if applicable"
-                  v-model="modalSelection.serial_no"
-                  @keydown.enter.prevent="focusNextModalInput('qty')"
-                >
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label fw-bold small text-muted mb-0">Serial No. (সিরিয়াল নং)</label>
+                  <span class="badge bg-info text-dark" v-if="modalAvailableSerials && modalAvailableSerials.length > 0">
+                    {{ modalAvailableSerials.length }} available in stock
+                  </span>
+                </div>
+                <div class="input-group input-group-sm">
+                  <input
+                    ref="modalSerialInput"
+                    type="text"
+                    list="availableSerialsDatalist"
+                    class="form-control form-control-sm font-monospace"
+                    placeholder="Enter or select Serial No"
+                    v-model="modalSelection.serial_no"
+                    @keydown.enter.prevent="focusNextModalInput('qty')"
+                  >
+                  <datalist id="availableSerialsDatalist">
+                    <option v-for="sn in modalAvailableSerials" :key="sn" :value="sn">{{ sn }}</option>
+                  </datalist>
+                </div>
+                <!-- Quick select badges for available serials -->
+                <div class="mt-1 d-flex flex-wrap gap-1" v-if="modalAvailableSerials && modalAvailableSerials.length > 0" style="max-height: 80px; overflow-y: auto;">
+                  <button
+                    type="button"
+                    v-for="sn in modalAvailableSerials"
+                    :key="sn"
+                    class="btn btn-xs py-0 px-1 font-monospace"
+                    :class="modalSelection.serial_no === sn ? 'btn-primary' : 'btn-outline-secondary'"
+                    style="font-size: 11px;"
+                    @click="modalSelection.serial_no = sn"
+                  >
+                    {{ sn }}
+                  </button>
+                </div>
               </div>
 
               <!-- Selling Price (Editable) -->
@@ -1039,6 +1087,7 @@ export default {
 
       showItemModal: false,
       activeItem: null,
+      modalAvailableSerials: [],
       modalSelection: {
         color_id: null,
         size_id: null,
@@ -1056,6 +1105,8 @@ export default {
       cart: [],
       discount: 0,
       points_to_redeem: 0,
+      is_vat_applicable: false,
+      vat_percent: 0,
       vat: 0,
       payment_method: 'Cash',
       mbanking_type: '',
@@ -1153,6 +1204,25 @@ export default {
   watch: {
     netPayable(val) {
       this.paid_amount = val;
+    },
+    cartSubtotal() {
+      if (this.is_vat_applicable && floatval(this.vat_percent) > 0) {
+        this.calculateVatAmount();
+      }
+    },
+    totalDiscount() {
+      if (this.is_vat_applicable && floatval(this.vat_percent) > 0) {
+        this.calculateVatAmount();
+      }
+    },
+    '$root.site': {
+      immediate: true,
+      deep: true,
+      handler(site) {
+        if (site && site.default_vat !== undefined && site.default_vat !== null) {
+          this.initVatFromSettings();
+        }
+      }
     }
   },
   methods: {
@@ -1387,12 +1457,12 @@ export default {
       if (!item) return;
       this.processSelectedItem(item);
     },
-    processSelectedItem(item) {
+    processSelectedItem(item, scannedSerial = '') {
       if (!item) return;
-      if (this.isSimpleProduct(item)) {
+      if (this.isSimpleProduct(item) && !scannedSerial) {
         this.addSimpleItemToCart(item);
       } else {
-        this.openItemModal(item);
+        this.openItemModal(item, scannedSerial);
       }
     },
     addSimpleItemToCart(item) {
@@ -1534,7 +1604,9 @@ export default {
             }
 
             if (items.length === 1) {
-              this.processSelectedItem(items[0]);
+              const singleItem = items[0];
+              const isSerialSearch = term && singleItem.barcode !== term && singleItem.title !== term;
+              this.processSelectedItem(singleItem, isSerialSearch ? term : '');
             } else {
               this.duplicateBarcodeItems = items;
               this.duplicateBarcodeScanned = term;
@@ -1553,11 +1625,12 @@ export default {
       this.searchResults = [];
       this.selectedSearchIndex = -1;
     },
-    openItemModal(item) {
+    openItemModal(item, scannedSerial = '') {
       this.activeItem = item;
       this.searchResults = [];
       this.selectedSearchIndex = -1;
       this.searchTerm = '';
+      this.modalAvailableSerials = item.available_serials || [];
 
       let defaultColorId = null;
       let defaultSizeId = null;
@@ -1594,7 +1667,7 @@ export default {
       this.modalSelection = {
         color_id: defaultColorId,
         size_id: defaultSizeId,
-        serial_no: '',
+        serial_no: scannedSerial || '',
         qty: 1,
         rate: defaultRate,
         available_stock: defaultStock
@@ -1789,6 +1862,7 @@ export default {
         manual_discount: this.discount,
         points_redeemed: this.points_to_redeem,
         vat: this.vat,
+        vat_percent: this.is_vat_applicable ? this.vat_percent : 0,
         payment_method: this.payment_method,
         mbanking_type: this.mbanking_type,
         trxid: this.trxid,
@@ -1820,7 +1894,7 @@ export default {
       this.cart = [];
       this.discount = 0;
       this.points_to_redeem = 0;
-      this.vat = 0;
+      this.initVatFromSettings();
       this.paid_amount = 0;
       this.trxid = '';
       this.payment_method = 'Cash';
@@ -1910,10 +1984,44 @@ export default {
       } else if (e.key === 'Escape') {
         this.clearSearch();
       }
-    }
+    },
+    initVatFromSettings() {
+      const defaultVat = floatval(this.$root.site?.default_vat || 0);
+      this.vat_percent = defaultVat;
+      if (defaultVat > 0) {
+        this.is_vat_applicable = true;
+        this.calculateVatAmount();
+      } else {
+        this.is_vat_applicable = false;
+        this.vat = 0;
+      }
+    },
+    onVatSwitchToggle() {
+      if (this.is_vat_applicable) {
+        const defaultVat = floatval(this.$root.site?.default_vat || 0);
+        if (floatval(this.vat_percent) <= 0 && defaultVat > 0) {
+          this.vat_percent = defaultVat;
+        } else if (floatval(this.vat_percent) <= 0) {
+          this.vat_percent = 5;
+        }
+        this.calculateVatAmount();
+      } else {
+        this.vat = 0;
+      }
+    },
+    calculateVatAmount() {
+      if (!this.is_vat_applicable || floatval(this.vat_percent) <= 0) {
+        this.vat = 0;
+        return;
+      }
+      const taxableBase = Math.max(0, this.cartSubtotal - this.totalDiscount);
+      const calculated = (taxableBase * floatval(this.vat_percent)) / 100;
+      this.vat = Number(calculated.toFixed(2));
+    },
   },
   mounted() {
     window.addEventListener('keydown', this.handleKeydown);
+    this.initVatFromSettings();
   },
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleKeydown);

@@ -520,6 +520,11 @@ const routes = [
                 component: () => import("./../views/admin/invoice/bill"),
             },
             {
+                path: "/invoice/mushak/:id",
+                name: "invoice.mushak",
+                component: () => import("./../views/admin/invoice/mushak"),
+            },
+            {
                 path: "/invoice/moneyreceipt/:id",
                 name: "invoice.moneyreceipt",
                 component: () =>
@@ -1220,6 +1225,27 @@ const routes = [
                 name: "brand.edit",
                 component: () => import("./../views/admin/brand/create"),
             },
+            // ------------------Series PORTION------------------
+            {
+                path: "/series",
+                name: "series.index",
+                component: () => import("./../views/admin/series/index"),
+            },
+            {
+                path: "/series/create",
+                name: "series.create",
+                component: () => import("./../views/admin/series/create"),
+            },
+            {
+                path: "/series/:id",
+                name: "series.show",
+                component: () => import("./../views/admin/series/view"),
+            },
+            {
+                path: "/series/:id/edit",
+                name: "series.edit",
+                component: () => import("./../views/admin/series/create"),
+            },
 
             // ------------------Warranty Claim PORTION------------------
             {
@@ -1264,6 +1290,51 @@ const routes = [
                 name: "wastage.edit",
                 component: () => import("./../views/admin/wastage/create"),
             },
+
+            // ------------------Stock Adjustment PORTION------------------
+            {
+                path: "/stockAdjustment",
+                name: "stockAdjustment.index",
+                component: () => import("./../views/admin/stockAdjustment/index"),
+            },
+            {
+                path: "/stockAdjustment/create",
+                name: "stockAdjustment.create",
+                component: () => import("./../views/admin/stockAdjustment/create"),
+            },
+            {
+                path: "/stockAdjustment/:id",
+                name: "stockAdjustment.show",
+                component: () => import("./../views/admin/stockAdjustment/view"),
+            },
+            {
+                path: "/stockAdjustment/:id/edit",
+                name: "stockAdjustment.edit",
+                component: () => import("./../views/admin/stockAdjustment/create"),
+            },
+
+            // ------------------Quotation PORTION------------------
+            {
+                path: "/quotation",
+                name: "quotation.index",
+                component: () => import("./../views/admin/quotation/index"),
+            },
+            {
+                path: "/quotation/create",
+                name: "quotation.create",
+                component: () => import("./../views/admin/quotation/create"),
+            },
+            {
+                path: "/quotation/:id",
+                name: "quotation.show",
+                component: () => import("./../views/admin/quotation/view"),
+            },
+            {
+                path: "/quotation/:id/edit",
+                name: "quotation.edit",
+                component: () => import("./../views/admin/quotation/create"),
+            },
+
 
             // ------------------Report PORTION------------------
             {
@@ -1400,6 +1471,12 @@ const routes = [
                 component: () =>
                     import("./../views/admin/report/wastage"),
             },
+            {
+                path: "/report/vat",
+                name: "report.vat",
+                component: () =>
+                    import("./../views/admin/report/vat"),
+            },
             // ------------------SOFTWARE UPDATE PORTION------------------
             {
                 path: "/software-update",
@@ -1412,6 +1489,19 @@ const routes = [
                 name: "software.update",
                 component: () =>
                     import("./../views/admin/system/update/index"),
+            },
+            // ------------------DATABASE BACKUP & RESTORE PORTION------------------
+            {
+                path: "/database-backup",
+                name: "databasebackup.index",
+                component: () =>
+                    import("./../views/admin/system/backup/index"),
+            },
+            {
+                path: "/database/backup",
+                name: "database.backup",
+                component: () =>
+                    import("./../views/admin/system/backup/index"),
             },
         ],
     },

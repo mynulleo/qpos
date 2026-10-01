@@ -293,7 +293,7 @@
             </div>
 
             <!-- Remarks / Note -->
-            <div :class="activeTab === 'direct' ? 'col-md-10' : 'col-md-10'">
+            <div class="col-md-10">
               <Input
                 v-model="data.note"
                 col="12"
@@ -426,7 +426,7 @@
         </div>
       </div>
 
-      <!-- 📦 SECTION 2 & 3: Dynamic Item Entry Table (Supplier Based & Direct Purchase) -->
+      <!-- 📦 SECTION 2 & 3: Product Summary Table (Supplier Based & Direct Purchase) -->
       <div v-if="activeTab === 'supplier' || activeTab === 'direct'" class="card border-0 shadow-sm mb-4 form-card items-table-card">
         <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
@@ -437,20 +437,20 @@
               <h6 class="fw-bold mb-0 text-dark">
                 {{ activeTab === 'supplier' ? 'Supplier Received Products (পণ্য তালিকা)' : 'Direct Purchase Products (ক্রয়কৃত পণ্য তালিকা)' }}
               </h6>
-              <span class="small text-muted">Select category, product, variant specifications, price and quantity</span>
+              <span class="small text-muted">Manage products, variants, unit pricing, quantities and serial tracking</span>
             </div>
             <span class="badge theme-bg text-white rounded-pill px-2 py-1 ms-2 font-monospace">
-              {{ data.grn_details ? data.grn_details.length : 0 }} Item(s)
+              {{ data.grn_details ? data.grn_details.length : 0 }} Items
             </span>
           </div>
 
-          <!-- Add Item Row Button -->
+          <!-- Add Product Button (Opens Popup Modal) -->
           <button
             type="button"
-            class="btn btn-sm btn-primary d-flex align-items-center gap-2 px-3 fw-semibold shadow-sm"
-            @click.prevent="addDynamicItemRow()"
+            class="btn btn-sm btn-primary d-flex align-items-center gap-2 px-3 py-2 fw-semibold shadow-sm"
+            @click.prevent="openAddProductModal"
           >
-            <i class="fas fa-plus-circle"></i> Add Product Row
+            <i class="fas fa-plus-circle"></i> Add Product Row (পণ্য যোগ করুন)
           </button>
         </div>
 
@@ -459,184 +459,158 @@
             <table class="table custom-items-table table-hover align-middle mb-0">
               <thead class="theme-table-header text-center">
                 <tr>
-                  <th style="min-width: 40px; width: 40px;">#</th>
-                  <th style="min-width: 170px;">Category</th>
-                  <th style="min-width: 220px;">Item / Product</th>
-                  <th style="min-width: 110px;">Color</th>
-                  <th style="min-width: 110px;" v-if="!isElectronicsShop">Size</th>
-                  <th style="min-width: 100px;">Unit</th>
-                  <th style="min-width: 125px;">Purchase Price</th>
-                  <th style="min-width: 125px;">Selling Price</th>
-                  <th style="min-width: 85px;">Qty</th>
-                  <th style="min-width: 110px;" v-if="isElectronicsShop">Serials</th>
-                  <th style="min-width: 120px;">Total (৳)</th>
-                  <th style="min-width: 50px; width: 50px;">Action</th>
+                  <th style="width: 4%;">#</th>
+                  <th style="width: 28%;" class="text-start ps-3">Product / Item (পণ্য ও বিবরণ)</th>
+                  <th style="width: 14%;">Variant (ভেরিয়েন্ট)</th>
+                  <th style="width: 8%;">Unit (একক)</th>
+                  <th style="width: 12%;" class="text-end">Cost Price (ক্রয়)</th>
+                  <th style="width: 12%;" class="text-end">Selling Price (বিক্রয়)</th>
+                  <th style="width: 8%;">Qty (পরিমাণ)</th>
+                  <th style="width: 10%;" v-if="isElectronicsShop">Serials</th>
+                  <th style="width: 12%;" class="text-end pe-3">Total Amount</th>
+                  <th style="width: 8%;">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(pitem, index) in data.grn_details" :key="index" class="item-row">
-                  <!-- Serial Number -->
+                  <!-- Row Index -->
                   <td class="text-center fw-bold text-muted font-monospace">{{ index + 1 }}</td>
 
-                  <!-- Category -->
-                  <td>
-                    <div class="table-vselect-wrapper">
-                      <v-select
-                        v-model="pitem.category_id"
-                        label="title"
-                        :reduce="(obj) => obj.id"
-                        :options="categories"
-                        placeholder="-- Category --"
-                        :closeOnSelect="true"
-                        :appendToBody="true"
-                        @update:modelValue="onDynamicCategoryChange(pitem)"
-                      />
+                  <!-- Product / Item info -->
+                  <td class="text-start ps-3">
+                    <div class="d-flex flex-column">
+                      <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <span class="badge bg-light text-dark border px-2 py-0.5 small">
+                          {{ getCategoryTitle(pitem.category_id, pitem) }}
+                        </span>
+                        <span class="fw-bold text-dark fs-6">{{ getItemTitle(pitem) }}</span>
+                      </div>
+                      <small class="text-muted font-monospace" v-if="getItemBarcode(pitem)">
+                        <i class="fas fa-barcode me-1"></i>Barcode: {{ getItemBarcode(pitem) }}
+                      </small>
                     </div>
                   </td>
 
-                  <!-- Product / Item -->
-                  <td>
-                    <div class="table-vselect-wrapper">
-                      <v-select
-                        v-model="pitem.item_id"
-                        label="title"
-                        :reduce="(obj) => obj.id"
-                        :options="pitem.items || []"
-                        placeholder="-- Select Product --"
-                        :closeOnSelect="true"
-                        :appendToBody="true"
-                        :disabled="!pitem.category_id"
-                      />
+                  <!-- Variant (Color / Size) -->
+                  <td class="text-center">
+                    <div class="d-flex align-items-center justify-content-center gap-1 flex-wrap">
+                      <span class="badge bg-secondary" v-if="getColorTitle(pitem.color_id, pitem)">
+                        <i class="fas fa-palette me-1"></i>{{ getColorTitle(pitem.color_id, pitem) }}
+                      </span>
+                      <span class="badge bg-info text-dark" v-if="!isElectronicsShop && getSizeTitle(pitem.size_id, pitem)">
+                        <i class="fas fa-ruler me-1"></i>{{ getSizeTitle(pitem.size_id, pitem) }}
+                      </span>
+                      <span class="text-muted small" v-if="!getColorTitle(pitem.color_id, pitem) && (isElectronicsShop || !getSizeTitle(pitem.size_id, pitem))">
+                        Standard
+                      </span>
                     </div>
                   </td>
 
-                  <!-- Color -->
-                  <td>
-                    <select class="form-select form-select-sm table-compact-input" v-model="pitem.color_id">
-                      <option :value="null">-- Standard --</option>
-                      <option v-for="c in colors" :key="c.id" :value="c.id">{{ c.title }}</option>
-                    </select>
+                  <!-- Unit (Auto Detected) -->
+                  <td class="text-center">
+                    <span class="badge bg-light text-primary border font-monospace px-2 py-1">
+                      {{ getUnitTitle(pitem.unit_id, pitem) }}
+                    </span>
                   </td>
 
-                  <!-- Size Variant (Non-electronics) -->
-                  <td v-if="!isElectronicsShop">
-                    <select class="form-select form-select-sm table-compact-input" v-model="pitem.size_id">
-                      <option :value="null">-- Standard --</option>
-                      <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.title }}</option>
-                    </select>
-                  </td>
-
-                  <!-- Unit -->
-                  <td>
-                    <select class="form-select form-select-sm table-compact-input" v-model="pitem.unit_id">
-                      <option :value="null">-- Unit --</option>
-                      <option v-for="u in units" :key="u.id" :value="u.id">{{ u.title }}</option>
-                    </select>
-                  </td>
-
-                  <!-- Purchase Price -->
-                  <td>
-                    <div class="input-group input-group-sm flex-nowrap">
-                      <span class="input-group-text bg-light text-muted px-1">৳</span>
-                      <input
-                        type="number"
-                        step="any"
-                        min="0"
-                        class="form-control form-control-sm text-end font-monospace table-compact-input"
-                        placeholder="0.00"
-                        v-model.number="pitem.unit_price"
-                        @input="onDynamicRowChange(pitem)"
-                      />
-                    </div>
+                  <!-- Cost Price -->
+                  <td class="text-end font-monospace text-muted fw-semibold">
+                    ৳ {{ formatNum(pitem.unit_price) }}
                   </td>
 
                   <!-- Selling Price -->
-                  <td>
-                    <div class="input-group input-group-sm flex-nowrap">
-                      <span class="input-group-text bg-light text-muted px-1">৳</span>
-                      <input
-                        type="number"
-                        step="any"
-                        min="0"
-                        class="form-control form-control-sm text-end font-monospace table-compact-input"
-                        placeholder="0.00"
-                        v-model.number="pitem.selling_price"
-                      />
-                    </div>
+                  <td class="text-end font-monospace text-success fw-semibold">
+                    ৳ {{ formatNum(pitem.selling_price) }}
                   </td>
 
                   <!-- Quantity -->
-                  <td>
-                    <input
-                      type="number"
-                      step="any"
-                      min="1"
-                      class="form-control form-control-sm text-center fw-bold font-monospace table-compact-input"
-                      placeholder="1"
-                      v-model.number="pitem.received_qty"
-                      @input="onDynamicRowChange(pitem)"
-                    />
+                  <td class="text-center font-monospace fw-bold fs-6 text-dark">
+                    {{ pitem.received_qty }}
                   </td>
 
-                  <!-- Serials (Electronics) -->
+                  <!-- Serials (Electronics Shop) -->
                   <td class="text-center" v-if="isElectronicsShop">
                     <button
                       type="button"
-                      class="btn btn-sm btn-outline-primary position-relative px-2 py-1 serial-btn w-100"
+                      class="btn btn-sm btn-outline-primary position-relative px-2 py-1 serial-btn"
                       :class="{ 'active-serial': getSerialCount(pitem.serial_no) > 0 }"
-                      @click="openSerialModal(index, pitem)"
-                      title="Scan / Add Serial Numbers"
+                      @click="openEditProductModal(index, pitem)"
+                      title="View / Edit Serial Numbers"
                     >
                       <i class="fas fa-barcode me-1"></i> Serials
                       <span class="badge bg-danger ms-1" v-if="getSerialCount(pitem.serial_no) > 0">{{ getSerialCount(pitem.serial_no) }}</span>
                     </button>
                   </td>
 
-                  <!-- Line Total -->
-                  <td class="text-end font-monospace fw-bold text-success text-nowrap">
+                  <!-- Row Total Amount -->
+                  <td class="text-end font-monospace fw-bold text-theme pe-3 fs-6">
                     {{ formatCurrency(pitem.total_amount) }}
                   </td>
 
-                  <!-- Action / Delete -->
+                  <!-- Actions (Edit & Delete) -->
                   <td class="text-center">
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-danger btn-action-delete"
-                      @click="removeDynamicItemRow(index)"
-                      :disabled="data.grn_details.length <= 1"
-                      title="Remove Item"
-                    >
-                      <i class="fas fa-trash-alt"></i>
-                    </button>
+                    <div class="d-flex align-items-center justify-content-center gap-1">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary btn-action"
+                        @click="openEditProductModal(index, pitem)"
+                        title="Edit Product (সংশোধন করুন)"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger btn-action"
+                        @click="removeDynamicItemRow(index)"
+                        title="Remove Product (মুছে ফেলুন)"
+                      >
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Empty State -->
+                <tr v-if="!data.grn_details || data.grn_details.length === 0">
+                  <td :colspan="isElectronicsShop ? 10 : 9" class="text-center py-5 text-muted bg-white">
+                    <div class="empty-state-wrapper py-3">
+                      <div class="empty-icon theme-bg-soft text-theme rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-cart-plus fa-2x"></i>
+                      </div>
+                      <h6 class="fw-bold text-dark mb-1">No products added yet</h6>
+                      <p class="text-muted small mb-3">Click "+ Add Product Row" button to configure product specifications, pricing, quantities and serials.</p>
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-sm px-4 fw-bold shadow-sm"
+                        @click="openAddProductModal"
+                      >
+                        <i class="fas fa-plus-circle me-1"></i> Add First Product (পণ্য যোগ করুন)
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
               <tfoot class="table-light" v-if="data.grn_details && data.grn_details.length > 0">
                 <tr class="fw-bold align-middle">
-                  <td :colspan="isElectronicsShop ? 7 : 8" class="text-end text-dark pe-3">Summary Totals:</td>
+                  <td :colspan="6" class="text-end text-dark pe-3">Summary Totals:</td>
                   <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
                   <td v-if="isElectronicsShop" class="text-center text-muted small">-</td>
-                  <td class="text-end font-monospace text-success fs-6 text-nowrap">{{ formatCurrency(data.sub_total || data.total_amount) }}</td>
+                  <td class="text-end font-monospace text-success fs-6 text-nowrap pe-3">{{ formatCurrency(data.sub_total || data.total_amount) }}</td>
                   <td></td>
                 </tr>
               </tfoot>
             </table>
           </div>
 
-          <!-- Add row bottom trigger -->
-          <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <!-- Bottom Add Row Bar -->
+          <div class="p-3 bg-light border-top text-center" v-if="data.grn_details && data.grn_details.length > 0">
             <button
               type="button"
-              class="btn btn-sm dashed-btn d-flex align-items-center gap-2 px-3 fw-semibold"
-              @click.prevent="addDynamicItemRow()"
+              class="btn btn-outline-secondary btn-sm px-4 fw-bold dashed-btn"
+              @click.prevent="openAddProductModal"
             >
-              <i class="fas fa-plus"></i> Add Another Product Line
+              <i class="fas fa-plus me-1 text-primary"></i> Add Another Product Row (আরও পণ্য যোগ করুন)
             </button>
-            <div class="d-flex align-items-center gap-3">
-              <span class="text-muted fw-bold">Total Items: <strong class="text-dark font-monospace">{{ data.grn_details.length }}</strong></span>
-              <span class="text-muted fw-bold">Total Qty: <strong class="text-primary font-monospace">{{ data.total_qty }}</strong></span>
-              <span class="text-muted fw-bold text-nowrap">Total: <strong class="text-success font-monospace fs-6">{{ formatCurrency(data.sub_total || data.total_amount) }}</strong></span>
-            </div>
           </div>
         </div>
       </div>
@@ -842,7 +816,337 @@
       </div>
     </template>
 
-    <!-- 🏷️ Enhanced Multiple Serial Number Entry Modal -->
+    <!-- 🏷️ Professional Product Addition & Serial Entry Popup Modal (Supplier & Direct Mode) -->
+    <div
+      v-if="showProductModal"
+      class="modal fade show d-block product-modal-backdrop"
+      tabindex="-1"
+      style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px); z-index: 1055;"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-2xl border-0 rounded-3 overflow-hidden">
+          <!-- Modal Header -->
+          <div class="modal-header theme-bg text-white py-3 px-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-white bg-opacity-20 rounded p-2 text-white">
+                <i class="fas" :class="isEditingModal ? 'fa-edit fs-5' : 'fa-cart-plus fs-5'"></i>
+              </div>
+              <div>
+                <h5 class="modal-title fw-bold fs-6 mb-0 text-white">
+                  {{ isEditingModal ? 'Edit Received Product (পণ্য সংশোধন)' : 'Add Received Product (পণ্য যোগ করুন)' }}
+                </h5>
+                <span class="small text-white-50">Select product, set costs, variants, quantities and serial tracking</span>
+              </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" @click="closeProductModal"></button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body p-4 bg-white" style="max-height: 80vh; overflow-y: auto;">
+            <div class="row g-3">
+              <!-- Category Selection with appendToBody -->
+              <div class="col-md-6">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  Category (ক্যাটাগরি) <span class="text-danger">*</span>
+                </label>
+                <v-select
+                  v-model="modalForm.category_id"
+                  label="title"
+                  :reduce="(obj) => obj.id"
+                  :options="categories"
+                  placeholder="-- Select Category --"
+                  :closeOnSelect="true"
+                  :appendToBody="true"
+                  @update:modelValue="onModalCategoryChange"
+                  class="modal-vselect"
+                />
+              </div>
+
+              <!-- Product / Item Selection with appendToBody -->
+              <div class="col-md-6">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  Product / Item (পণ্য) <span class="text-danger">*</span>
+                </label>
+                <v-select
+                  v-model="modalForm.item_id"
+                  label="title"
+                  :reduce="(obj) => obj.id"
+                  :options="modalForm.items"
+                  placeholder="-- Select Product --"
+                  :closeOnSelect="true"
+                  :appendToBody="true"
+                  :disabled="!modalForm.category_id"
+                  @option:selected="onModalItemChange"
+                  @update:modelValue="onModalItemChange"
+                  class="modal-vselect"
+                />
+              </div>
+
+              <!-- Color Variant -->
+              <div :class="isElectronicsShop ? 'col-md-6' : 'col-md-4'">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  Color (রং)
+                </label>
+                <select class="form-select form-select-sm" v-model="modalForm.color_id">
+                  <option :value="null">-- Standard / None --</option>
+                  <option v-for="c in colors" :key="c.id" :value="c.id">{{ c.title }}</option>
+                </select>
+              </div>
+
+              <!-- Size Variant (Hidden for Electronics) -->
+              <div class="col-md-4" v-if="!isElectronicsShop">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  Size (সাইজ)
+                </label>
+                <select class="form-select form-select-sm" v-model="modalForm.size_id">
+                  <option :value="null">-- Standard / None --</option>
+                  <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.title }}</option>
+                </select>
+              </div>
+
+              <!-- Auto-detected Unit Display Badge -->
+              <div :class="isElectronicsShop ? 'col-md-6' : 'col-md-4'">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  Unit (একক - অটোমেটিক)
+                </label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light text-muted"><i class="fas fa-balance-scale"></i></span>
+                  <input
+                    type="text"
+                    class="form-control form-control-sm bg-light fw-bold text-primary font-monospace"
+                    :value="modalForm.unit_title || 'Pcs (Default)'"
+                    readonly
+                  />
+                </div>
+              </div>
+
+              <!-- Purchase Price (ক্রয় মূল্য) -->
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  Purchase Cost (ক্রয় মূল্য ৳) <span class="text-danger">*</span>
+                </label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light text-muted">৳</span>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    class="form-control form-control-sm text-end font-monospace fw-bold"
+                    placeholder="0.00"
+                    v-model.number="modalForm.unit_price"
+                    @input="onModalPriceOrQtyChange"
+                  />
+                </div>
+              </div>
+
+              <!-- Selling Price (বিক্রয় মূল্য) -->
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  Selling Price (বিক্রয় মূল্য ৳)
+                </label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light text-muted">৳</span>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    class="form-control form-control-sm text-end font-monospace text-success fw-bold"
+                    placeholder="0.00"
+                    v-model.number="modalForm.selling_price"
+                  />
+                </div>
+              </div>
+
+              <!-- Quantity (পরিমাণ) -->
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  Received Qty (পরিমাণ) <span class="text-danger">*</span>
+                </label>
+                <div class="input-group input-group-sm">
+                  <input
+                    type="number"
+                    step="any"
+                    min="1"
+                    class="form-control form-control-sm text-center font-monospace fw-bold fs-6"
+                    placeholder="1"
+                    v-model.number="modalForm.received_qty"
+                    @input="onModalPriceOrQtyChange"
+                  />
+                  <span class="input-group-text bg-light text-muted">{{ modalForm.unit_title || 'Pcs' }}</span>
+                </div>
+              </div>
+
+              <!-- Line Total Amount Preview Banner -->
+              <div class="col-12">
+                <div class="p-2 px-3 rounded bg-light border d-flex justify-content-between align-items-center">
+                  <span class="small fw-bold text-muted text-uppercase">Line Total Calculation (মোট):</span>
+                  <span class="fw-bold font-monospace fs-6 text-theme">
+                    {{ modalForm.received_qty || 0 }} {{ modalForm.unit_title || 'Pcs' }} × ৳ {{ formatNum(modalForm.unit_price || 0) }} = 
+                    <span class="text-primary">{{ formatCurrency(modalForm.total_amount) }}</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- 🏷️ Serial Numbers / IMEI Tracking (Collapsible Accordion for Electronics Shop) -->
+              <div class="col-12" v-if="isElectronicsShop">
+                <div class="border rounded-3 overflow-hidden shadow-xs">
+                  <!-- Accordion Header (Click to toggle) -->
+                  <div
+                    class="p-3 bg-light d-flex align-items-center justify-content-between cursor-pointer border-bottom-0"
+                    :class="{ 'border-bottom': modalForm.showSerialsSection }"
+                    @click="modalForm.showSerialsSection = !modalForm.showSerialsSection"
+                    style="user-select: none;"
+                  >
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="text-primary fs-6">
+                        <i class="fas fa-barcode"></i>
+                      </div>
+                      <div>
+                        <strong class="text-dark small d-block">Serial Numbers / IMEI Tracking (সিরিয়াল নম্বর সমূহ)</strong>
+                        <span class="text-muted" style="font-size: 11px;">
+                          {{ modalForm.showSerialsSection ? 'Click to collapse serial entry section' : 'Click to expand and scan/add device serial numbers' }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge rounded-pill font-monospace" :class="modalForm.serialsList.length > 0 ? 'bg-primary text-white' : 'bg-secondary bg-opacity-25 text-dark'">
+                        {{ modalForm.serialsList.length }} Serials
+                      </span>
+                      <i class="fas fa-chevron-down text-muted transition-transform" :class="{ 'fa-rotate-180': modalForm.showSerialsSection }"></i>
+                    </div>
+                  </div>
+
+                  <!-- Accordion Body -->
+                  <div v-show="modalForm.showSerialsSection" class="p-3 bg-white">
+                    <!-- Mode Switch & Action Bar -->
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button
+                          type="button"
+                          class="btn"
+                          :class="!modalForm.bulkMode ? 'btn-primary' : 'btn-outline-secondary'"
+                          @click="modalForm.bulkMode = false"
+                        >
+                          <i class="fas fa-barcode me-1"></i> Quick / Scan Mode
+                        </button>
+                        <button
+                          type="button"
+                          class="btn"
+                          :class="modalForm.bulkMode ? 'btn-primary' : 'btn-outline-secondary'"
+                          @click="modalForm.bulkMode = true"
+                        >
+                          <i class="fas fa-paste me-1"></i> Bulk Paste Mode
+                        </button>
+                      </div>
+
+                      <div class="d-flex align-items-center gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-xs btn-outline-secondary"
+                          @click="copyAllModalSerials"
+                          :disabled="modalForm.serialsList.length === 0"
+                          title="Copy all serials to clipboard"
+                        >
+                          <i class="fas fa-copy me-1"></i> Copy All
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-xs btn-outline-danger"
+                          @click="clearAllModalSerials"
+                          :disabled="modalForm.serialsList.length === 0"
+                          title="Clear serials list"
+                        >
+                          <i class="fas fa-trash-alt me-1"></i> Clear
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- 1. Single Scan Input -->
+                    <div v-if="!modalForm.bulkMode" class="mb-3">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-muted"><i class="fas fa-barcode"></i></span>
+                        <input
+                          ref="modalSerialInput"
+                          type="text"
+                          class="form-control font-monospace fw-bold"
+                          placeholder="Type or scan serial/IMEI and press Enter..."
+                          v-model="modalForm.tempSerial"
+                          @keyup.enter.prevent="addModalSerial"
+                        />
+                        <button type="button" class="btn btn-primary fw-bold px-3" @click.prevent="addModalSerial">
+                          <i class="fas fa-plus me-1"></i> Add
+                        </button>
+                      </div>
+                      <small class="text-muted mt-1 d-block" style="font-size: 11px;">
+                        <i class="fas fa-info-circle me-1 text-primary"></i> Press <strong>Enter</strong> to instantly add serials one by one.
+                      </small>
+                    </div>
+
+                    <!-- 2. Bulk Paste Textarea -->
+                    <div v-else class="mb-3">
+                      <textarea
+                        class="form-control form-control-sm font-monospace"
+                        rows="3"
+                        v-model="modalForm.bulkSerialText"
+                        placeholder="Paste multiple serials separated by line break, comma, or space (e.g. SN001&#10;SN002&#10;SN003)..."
+                      ></textarea>
+                      <div class="d-flex justify-content-end mt-2">
+                        <button type="button" class="btn btn-xs btn-primary fw-bold px-3" @click.prevent="processModalBulkSerials">
+                          <i class="fas fa-plus-circle me-1"></i> Add Extracted Serials
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Serials Chips List Box -->
+                    <div class="serials-list-box p-2 border rounded bg-light mb-2" style="max-height: 140px; overflow-y: auto;">
+                      <div v-if="modalForm.serialsList.length > 0" class="d-flex flex-wrap gap-2">
+                        <span
+                          v-for="(sn, sIdx) in modalForm.serialsList"
+                          :key="sIdx"
+                          class="badge serial-badge font-monospace p-2 d-flex align-items-center gap-2 shadow-xs"
+                        >
+                          <span class="badge-num">#{{ sIdx + 1 }}</span>
+                          <span class="fw-bold">{{ sn }}</span>
+                          <i class="fas fa-times delete-serial-btn ms-1" @click="removeModalSerial(sIdx)" title="Remove Serial"></i>
+                        </span>
+                      </div>
+                      <div v-else class="text-center py-3 text-muted">
+                        <i class="fas fa-barcode fa-lg mb-1 text-secondary opacity-50 d-block"></i>
+                        <span class="small">No serial numbers entered yet.</span>
+                      </div>
+                    </div>
+
+                    <!-- Sync Qty Checkbox -->
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                      <span class="small fw-bold text-dark">
+                        Total Serials:
+                        <span class="text-primary font-monospace fs-6">{{ modalForm.serialsList.length }}</span>
+                      </span>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="modalSyncQtyCheck" v-model="modalForm.syncQtyWithSerials" />
+                        <label class="form-check-label small fw-bold" for="modalSyncQtyCheck">Auto sync Received Qty to {{ modalForm.serialsList.length }}</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="modal-footer py-2 px-4 bg-light border-top d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary btn-sm px-3" @click="closeProductModal">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-primary btn-sm px-4 fw-bold shadow-sm" @click="saveProductFromModal">
+              <i class="fas fa-check me-1"></i> {{ isEditingModal ? 'Update Product' : 'Add to Received List' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🏷️ Enhanced Multiple Serial Number Entry Modal (PO Based Tab) -->
     <div
       v-if="showSerialModal"
       class="modal fade show d-block serial-modal-backdrop"
@@ -904,7 +1208,7 @@
                 <button
                   type="button"
                   class="btn btn-xs btn-outline-secondary"
-                  @click="copyAllModalSerials"
+                  @click="copyAllModalSerialsStandalone"
                   :disabled="modalSerials.length === 0"
                   title="Copy all serials to clipboard"
                 >
@@ -913,7 +1217,7 @@
                 <button
                   type="button"
                   class="btn btn-xs btn-outline-danger"
-                  @click="clearAllModalSerials"
+                  @click="clearAllModalSerialsStandalone"
                   :disabled="modalSerials.length === 0"
                   title="Clear list"
                 >
@@ -1103,7 +1407,33 @@ export default {
         grn_details: [],
       },
 
-      // Serial modal state
+      // Product addition/editing popup modal state
+      showProductModal: false,
+      isEditingModal: false,
+      modalForm: {
+        rowIndex: null,
+        category_id: null,
+        item_id: null,
+        item_title: '',
+        items: [],
+        color_id: null,
+        size_id: null,
+        unit_id: null,
+        unit_title: '',
+        unit_price: 0,
+        selling_price: 0,
+        received_qty: 1,
+        total_amount: 0,
+        serial_no: '',
+        serialsList: [],
+        tempSerial: '',
+        bulkSerialText: '',
+        bulkMode: false,
+        showSerialsSection: false,
+        syncQtyWithSerials: true,
+      },
+
+      // Standalone Serial modal state (PO mode)
       showSerialModal: false,
       activeRowIndex: null,
       tempSerial: '',
@@ -1132,11 +1462,80 @@ export default {
       );
     },
 
+    formatNum(n) {
+      const val = parseFloat(n) || 0;
+      return val.toLocaleString('en-BD', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    },
+
     formatDate(dateStr) {
       if (!dateStr) return '-';
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
       return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    },
+
+    getCategoryTitle(catId, item = null) {
+      if (item && item.category && item.category.title) return item.category.title;
+      if (catId && this.categories.length) {
+        const found = this.categories.find((c) => c.id === catId);
+        if (found) return found.title;
+      }
+      return 'Category';
+    },
+
+    getItemTitle(item) {
+      if (!item) return 'Product';
+      if (item.item && item.item.title) return item.item.title;
+      if (item.items && item.item_id) {
+        const found = item.items.find((i) => i.id === item.item_id);
+        if (found) return found.title;
+      }
+      if (this.modalForm?.items && item.item_id) {
+        const found = this.modalForm.items.find((i) => i.id === item.item_id);
+        if (found) return found.title;
+      }
+      return item.item_id ? `Product #${item.item_id}` : 'Product';
+    },
+
+    getItemBarcode(item) {
+      if (!item) return '';
+      if (item.item && item.item.barcode) return item.item.barcode;
+      if (item.items && item.item_id) {
+        const found = item.items.find((i) => i.id === item.item_id);
+        if (found && found.barcode) return found.barcode;
+      }
+      return '';
+    },
+
+    getColorTitle(colorId, item = null) {
+      if (item && item.color && item.color.title) return item.color.title;
+      if (colorId && this.colors.length) {
+        const found = this.colors.find((c) => c.id === colorId);
+        if (found) return found.title;
+      }
+      return '';
+    },
+
+    getSizeTitle(sizeId, item = null) {
+      if (item && item.size && item.size.title) return item.size.title;
+      if (sizeId && this.sizes.length) {
+        const found = this.sizes.find((s) => s.id === sizeId);
+        if (found) return found.title;
+      }
+      return '';
+    },
+
+    getUnitTitle(unitId, item = null) {
+      if (item && item.unit && item.unit.title) return item.unit.title;
+      if (item && item.unit_title) return item.unit_title;
+      if (unitId && this.units.length) {
+        const found = this.units.find((u) => u.id === unitId);
+        if (found) return found.title;
+      }
+      return 'Pcs';
     },
 
     filterPoOptions(option, label, search) {
@@ -1171,14 +1570,12 @@ export default {
         this.data.fund_account_id = null;
         this.data.discount = 0;
         this.data.grn_details = [];
-        this.addDynamicItemRow();
         this.calculateDynamicTotals();
       } else if (tab === 'direct') {
         this.data.purchase_id = null;
         this.data.supplier_id = null;
         this.selectedSupplierName = '';
         this.data.grn_details = [];
-        this.addDynamicItemRow();
         if (this.fundaccounts.length > 0 && !this.data.fund_account_id) {
           this.data.fund_account_id = this.fundaccounts[0].id;
           this.onFundAccountChange(this.data.fund_account_id);
@@ -1302,54 +1699,306 @@ export default {
       this.data.total_amount = Number(totalAmount.toFixed(2));
     },
 
-    // Dynamic items row management (Supplier & Direct Purchase)
-    addDynamicItemRow() {
-      if (!this.data.grn_details) {
-        this.data.grn_details = [];
-      }
-      this.data.grn_details.push({
+    // 🌟 Product Popup Modal Handlers (Supplier & Direct Purchase)
+    openAddProductModal() {
+      this.isEditingModal = false;
+      this.modalForm = {
+        rowIndex: null,
         category_id: null,
-        items: [],
         item_id: null,
+        item_title: '',
+        items: [],
         color_id: null,
         size_id: null,
         unit_id: null,
+        unit_title: '',
         unit_price: 0,
         selling_price: 0,
         received_qty: 1,
-        serial_no: '',
         total_amount: 0,
-      });
-      this.calculateDynamicTotals();
+        serial_no: '',
+        serialsList: [],
+        tempSerial: '',
+        bulkSerialText: '',
+        bulkMode: false,
+        showSerialsSection: false, // collapsed by default!
+        syncQtyWithSerials: true,
+      };
+      this.showProductModal = true;
     },
 
-    removeDynamicItemRow(index) {
-      if (this.data.grn_details && this.data.grn_details.length > 1) {
-        this.data.grn_details.splice(index, 1);
-        this.calculateDynamicTotals();
+    openEditProductModal(index, pitem) {
+      this.isEditingModal = true;
+      const unitPrice = parseFloat(pitem.unit_price) || 0;
+      const sellingPrice = parseFloat(pitem.selling_price) || 0;
+      const qty = parseFloat(pitem.received_qty) || 1;
+      const totalAmount = parseFloat(pitem.total_amount) || Number((unitPrice * qty).toFixed(2));
+      const serials = pitem.serial_no ? pitem.serial_no.split(',').map((s) => s.trim()).filter((s) => s.length > 0) : [];
+
+      this.modalForm = {
+        rowIndex: index,
+        category_id: pitem.category_id,
+        item_id: pitem.item_id,
+        item_title: this.getItemTitle(pitem),
+        items: pitem.items || [],
+        color_id: pitem.color_id || null,
+        size_id: pitem.size_id || null,
+        unit_id: pitem.unit_id || null,
+        unit_title: this.getUnitTitle(pitem.unit_id, pitem),
+        unit_price: unitPrice,
+        selling_price: sellingPrice,
+        received_qty: qty,
+        total_amount: totalAmount,
+        serial_no: pitem.serial_no || '',
+        serialsList: serials,
+        tempSerial: '',
+        bulkSerialText: '',
+        bulkMode: false,
+        showSerialsSection: serials.length > 0, // open if already has serials
+        syncQtyWithSerials: true,
+      };
+
+      if (pitem.category_id && (!pitem.items || pitem.items.length === 0)) {
+        axios.get(`getitemsbycategory/${pitem.category_id}`).then((res) => {
+          this.modalForm.items = res.data || [];
+          const found = this.modalForm.items.find((i) => i.id === pitem.item_id);
+          if (found && !this.modalForm.unit_title) {
+            this.modalForm.unit_id = found.unit_id;
+            this.modalForm.unit_title = found.unit?.title || this.getUnitTitle(found.unit_id);
+          }
+        });
       }
+
+      this.showProductModal = true;
     },
 
-    onDynamicCategoryChange(pitem) {
-      pitem.item_id = null;
-      pitem.items = [];
+    closeProductModal() {
+      this.showProductModal = false;
+      this.isEditingModal = false;
+    },
 
-      if (!pitem.category_id) return;
+    onModalCategoryChange() {
+      this.modalForm.item_id = null;
+      this.modalForm.items = [];
+      this.modalForm.unit_id = null;
+      this.modalForm.unit_title = '';
 
-      axios.get(`getitemsbycategory/${pitem.category_id}`)
-        .then((res) => {
-          pitem.items = res.data || [];
+      if (!this.modalForm.category_id) return;
+
+      axios
+        .get(`getitemsbycategory/${this.modalForm.category_id}`)
+        .then((response) => {
+          this.modalForm.items = response.data || [];
         })
         .catch(() => {
-          pitem.items = [];
+          this.modalForm.items = [];
         });
     },
 
-    onDynamicRowChange(pitem) {
-      const price = parseFloat(pitem.unit_price) || 0;
-      const qty = parseFloat(pitem.received_qty) || 0;
-      pitem.total_amount = Number((price * qty).toFixed(2));
+    onModalItemChange(selectedObj = null) {
+      if (!selectedObj || typeof selectedObj !== 'object') {
+        selectedObj = this.modalForm.items.find((i) => i.id === this.modalForm.item_id);
+      }
+      if (selectedObj) {
+        this.modalForm.item_id = selectedObj.id;
+        this.modalForm.item_title = selectedObj.title;
+        this.modalForm.unit_id = selectedObj.unit_id || null;
+        this.modalForm.unit_title = selectedObj.unit?.title || this.getUnitTitle(selectedObj.unit_id);
+        if (selectedObj.opening_rate && (!this.modalForm.unit_price || this.modalForm.unit_price == 0)) {
+          this.modalForm.unit_price = parseFloat(selectedObj.opening_rate) || 0;
+        }
+        this.onModalPriceOrQtyChange();
+      }
+    },
+
+    onModalPriceOrQtyChange() {
+      const price = parseFloat(this.modalForm.unit_price) || 0;
+      const qty = parseFloat(this.modalForm.received_qty) || 0;
+      this.modalForm.total_amount = Number((price * qty).toFixed(2));
+    },
+
+    // 🔍 Check Serial Duplicates in Database
+    async checkSerialDatabase(sn) {
+      try {
+        const res = await axios.post('grn/check-serials', {
+          serials: [sn],
+          grn_id: this.data.id || null,
+        });
+        if (res.data?.has_duplicates && res.data.duplicates.length > 0) {
+          const dup = res.data.duplicates[0];
+          this.$toast(`⚠️ Warning: Serial "${sn}" already exists in ${dup.grn_no} (${dup.item_name})!`, 'error');
+          return false;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      return true;
+    },
+
+    async checkBulkSerialsDatabase(serials) {
+      try {
+        const res = await axios.post('grn/check-serials', {
+          serials: serials,
+          grn_id: this.data.id || null,
+        });
+        if (res.data?.has_duplicates && res.data.duplicates.length > 0) {
+          res.data.duplicates.forEach((dup) => {
+            this.$toast(`⚠️ Warning: Serial "${dup.serial_no}" already exists in ${dup.grn_no} (${dup.item_name})!`, 'error');
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    // Serial Entry in Modal Form
+    async addModalSerial() {
+      const sn = this.modalForm.tempSerial ? this.modalForm.tempSerial.trim() : '';
+      if (!sn) return;
+
+      if (this.modalForm.serialsList.includes(sn)) {
+        this.$toast(`Serial number "${sn}" already added in this list`, 'warning');
+        this.modalForm.tempSerial = '';
+        return;
+      }
+
+      // Check if serial is in another row
+      if (this.data.grn_details) {
+        for (let idx = 0; idx < this.data.grn_details.length; idx++) {
+          if (this.modalForm.rowIndex !== null && idx === this.modalForm.rowIndex) continue;
+          const otherSerials = (this.data.grn_details[idx].serial_no || '').split(',').map((s) => s.trim());
+          if (otherSerials.includes(sn)) {
+            this.$toast(`Serial "${sn}" is already entered in Row #${idx + 1}!`, 'error');
+          }
+        }
+      }
+
+      // Check database
+      await this.checkSerialDatabase(sn);
+
+      this.modalForm.serialsList.push(sn);
+      this.modalForm.tempSerial = '';
+
+      if (this.modalForm.syncQtyWithSerials) {
+        this.modalForm.received_qty = this.modalForm.serialsList.length;
+        this.onModalPriceOrQtyChange();
+      }
+    },
+
+    async processModalBulkSerials() {
+      if (!this.modalForm.bulkSerialText) return;
+      const rawList = this.modalForm.bulkSerialText
+        .split(/[\n,;\s]+/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+      if (rawList.length === 0) return;
+
+      const toAdd = [];
+      rawList.forEach((sn) => {
+        if (!this.modalForm.serialsList.includes(sn) && !toAdd.includes(sn)) {
+          toAdd.push(sn);
+        }
+      });
+
+      if (toAdd.length > 0) {
+        await this.checkBulkSerialsDatabase(toAdd);
+        this.modalForm.serialsList.push(...toAdd);
+        this.$toast(`${toAdd.length} serial numbers added to list`, 'success');
+
+        if (this.modalForm.syncQtyWithSerials) {
+          this.modalForm.received_qty = this.modalForm.serialsList.length;
+          this.onModalPriceOrQtyChange();
+        }
+      }
+
+      this.modalForm.bulkSerialText = '';
+      this.modalForm.bulkMode = false;
+    },
+
+    removeModalSerial(index) {
+      this.modalForm.serialsList.splice(index, 1);
+      if (this.modalForm.syncQtyWithSerials && this.modalForm.serialsList.length > 0) {
+        this.modalForm.received_qty = this.modalForm.serialsList.length;
+        this.onModalPriceOrQtyChange();
+      }
+    },
+
+    clearAllModalSerials() {
+      this.modalForm.serialsList = [];
+    },
+
+    copyAllModalSerials() {
+      if (this.modalForm.serialsList.length === 0) return;
+      const text = this.modalForm.serialsList.join(', ');
+      navigator.clipboard.writeText(text).then(() => {
+        this.$toast('Serials copied to clipboard', 'success');
+      });
+    },
+
+    saveProductFromModal() {
+      if (!this.modalForm.category_id) {
+        this.$toast('Please select Category (ক্যাটাগরি নির্বাচন করুন)', 'warning');
+        return;
+      }
+      if (!this.modalForm.item_id) {
+        this.$toast('Please select Product / Item (পণ্য নির্বাচন করুন)', 'warning');
+        return;
+      }
+      if (!this.modalForm.received_qty || parseFloat(this.modalForm.received_qty) <= 0) {
+        this.$toast('Quantity must be greater than 0 (পরিমাণ অন্তত ১ হতে হবে)', 'warning');
+        return;
+      }
+
+      const selectedItem = this.modalForm.items.find((i) => i.id === this.modalForm.item_id);
+      const unitPrice = parseFloat(this.modalForm.unit_price) || 0;
+      const sellingPrice = parseFloat(this.modalForm.selling_price) || 0;
+      const qty = parseFloat(this.modalForm.received_qty) || 1;
+      const totalAmount = Number((unitPrice * qty).toFixed(2));
+      const serialStr = this.modalForm.serialsList.join(', ');
+
+      const newRow = {
+        category_id: this.modalForm.category_id,
+        category: { id: this.modalForm.category_id, title: this.getCategoryTitle(this.modalForm.category_id) },
+        item_id: this.modalForm.item_id,
+        item: selectedItem || { id: this.modalForm.item_id, title: this.modalForm.item_title },
+        items: this.modalForm.items,
+        color_id: this.modalForm.color_id || null,
+        size_id: this.modalForm.size_id || null,
+        unit_id: this.modalForm.unit_id || (selectedItem ? selectedItem.unit_id : null),
+        unit_title: this.modalForm.unit_title || (selectedItem?.unit?.title || 'Pcs'),
+        unit_price: unitPrice,
+        selling_price: sellingPrice,
+        received_qty: qty,
+        ordered_qty: qty,
+        previously_received_qty: 0,
+        remaining_qty: 0,
+        total_amount: totalAmount,
+        serial_no: serialStr,
+      };
+
+      if (!this.data.grn_details) {
+        this.data.grn_details = [];
+      }
+
+      if (this.modalForm.rowIndex !== null && this.modalForm.rowIndex >= 0) {
+        this.data.grn_details.splice(this.modalForm.rowIndex, 1, newRow);
+        this.$toast('Product updated successfully (পণ্য সফলভাবে আপডেট হয়েছে)', 'success');
+      } else {
+        this.data.grn_details.push(newRow);
+        this.$toast('Product added to receive list (পণ্য তালিকায় যুক্ত হয়েছে)', 'success');
+      }
+
       this.calculateDynamicTotals();
+      this.closeProductModal();
+    },
+
+    removeDynamicItemRow(index) {
+      if (this.data.grn_details) {
+        this.data.grn_details.splice(index, 1);
+        this.calculateDynamicTotals();
+        this.$toast('Product removed from list', 'info');
+      }
     },
 
     calculateDynamicTotals() {
@@ -1387,6 +2036,7 @@ export default {
       return serialStr.split(',').map((s) => s.trim()).filter((s) => s.length > 0).length;
     },
 
+    // Standalone Serial Modal (for PO mode)
     openSerialModal(index, pitem) {
       this.activeRowIndex = index;
       this.tempSerial = '';
@@ -1414,47 +2064,69 @@ export default {
       this.bulkSerialText = '';
     },
 
-    addSerialFromInput() {
+    async addSerialFromInput() {
       const sn = this.tempSerial ? this.tempSerial.trim() : '';
       if (sn) {
-        if (!this.modalSerials.includes(sn)) {
-          this.modalSerials.push(sn);
-        } else {
-          this.$toast('Serial number already added in list', 'warning');
+        if (this.modalSerials.includes(sn)) {
+          this.$toast(`Serial number "${sn}" already added in list`, 'warning');
+          this.tempSerial = '';
+          return;
         }
+
+        // Check if serial is in another row
+        if (this.data.grn_details) {
+          for (let idx = 0; idx < this.data.grn_details.length; idx++) {
+            if (this.activeRowIndex !== null && idx === this.activeRowIndex) continue;
+            const otherSerials = (this.data.grn_details[idx].serial_no || '').split(',').map((s) => s.trim());
+            if (otherSerials.includes(sn)) {
+              this.$toast(`Serial "${sn}" is already entered in Row #${idx + 1}!`, 'error');
+            }
+          }
+        }
+
+        // Check database
+        await this.checkSerialDatabase(sn);
+
+        this.modalSerials.push(sn);
         this.tempSerial = '';
       }
     },
 
-    processBulkSerials() {
+    async processBulkSerials() {
       if (!this.bulkSerialText) return;
       const rawList = this.bulkSerialText
         .split(/[\n,;\s]+/)
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
 
-      let addedCount = 0;
+      if (rawList.length === 0) return;
+
+      const toAdd = [];
       rawList.forEach((sn) => {
-        if (sn && !this.modalSerials.includes(sn)) {
-          this.modalSerials.push(sn);
-          addedCount++;
+        if (!this.modalSerials.includes(sn) && !toAdd.includes(sn)) {
+          toAdd.push(sn);
         }
       });
 
+      if (toAdd.length > 0) {
+        await this.checkBulkSerialsDatabase(toAdd);
+        this.modalSerials.push(...toAdd);
+        this.$toast(`${toAdd.length} serial numbers added to list`, 'success');
+      }
+
       this.bulkSerialText = '';
       this.bulkEntryMode = false;
-      this.$toast(`${addedCount} serial numbers added`, 'success');
     },
 
     removeSerial(index) {
       this.modalSerials.splice(index, 1);
     },
 
-    clearAllModalSerials() {
+    clearAllModalSerialsStandalone() {
       this.modalSerials = [];
     },
 
-    copyAllModalSerials() {
+    copyAllModalSerialsStandalone() {
       if (this.modalSerials.length === 0) return;
       const text = this.modalSerials.join(', ');
       navigator.clipboard.writeText(text).then(() => {
@@ -1474,7 +2146,7 @@ export default {
             this.onPoQtyChange(row);
           } else {
             row.received_qty = this.modalSerials.length;
-            this.onDynamicRowChange(row);
+            this.calculateDynamicTotals();
           }
         }
       }
@@ -1514,6 +2186,11 @@ export default {
             return false;
           }
 
+          if (!this.data.grn_details || this.data.grn_details.length === 0) {
+            this.$toast('Please add at least one product row (পণ্য যোগ করুন)।', 'warning');
+            return false;
+          }
+
           const hasEmptyProduct = this.data.grn_details.some((item) => !item.item_id);
           if (hasEmptyProduct) {
             this.$toast('Please select a product for all rows.', 'warning');
@@ -1522,6 +2199,11 @@ export default {
         } else if (this.activeTab === 'direct') {
           if (!this.data.fund_account_id) {
             this.$toast('Please select a Fund Account for payment settlement.', 'warning');
+            return false;
+          }
+
+          if (!this.data.grn_details || this.data.grn_details.length === 0) {
+            this.$toast('Please add at least one product row (পণ্য যোগ করুন)।', 'warning');
             return false;
           }
 
@@ -1643,6 +2325,18 @@ export default {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.theme-bg {
+  background-color: #112C47 !important;
+}
+
+.text-theme {
+  color: #112C47 !important;
+}
+
+.theme-bg-soft {
+  background-color: rgba(17, 44, 71, 0.08) !important;
+}
+
 .theme-table-header {
   background-color: #112C47;
   color: #ffffff;
@@ -1717,64 +2411,7 @@ export default {
   box-shadow: 0 0 0 2px rgba(17, 44, 71, 0.15);
 }
 
-.table-vselect-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.table-vselect-wrapper :deep(.v-select) {
-  background-color: #ffffff;
-  width: 100%;
-}
-
-.table-vselect-wrapper :deep(.vs__dropdown-toggle) {
-  min-height: 36px !important;
-  height: 36px !important;
-  padding: 0 6px !important;
-  border-radius: 6px !important;
-  border-color: #cbd5e1 !important;
-  font-size: 13px !important;
-  background: #ffffff !important;
-  display: flex !important;
-  align-items: center !important;
-  flex-wrap: nowrap !important;
-}
-
-.table-vselect-wrapper :deep(.vs__selected-options) {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  overflow: hidden !important;
-  white-space: nowrap !important;
-  max-width: calc(100% - 22px) !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-.table-vselect-wrapper :deep(.vs__selected) {
-  margin: 0 !important;
-  padding: 0 2px !important;
-  font-size: 13px !important;
-  color: #1e293b !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  max-width: 100% !important;
-  display: inline-block !important;
-}
-
-.table-vselect-wrapper :deep(.vs__search) {
-  margin: 0 !important;
-  padding: 0 2px !important;
-  font-size: 13px !important;
-  border: none !important;
-  min-width: 30px !important;
-}
-
-.table-vselect-wrapper :deep(.vs__actions) {
-  padding: 0 2px !important;
-}
-
-.btn-action-delete {
+.btn-action {
   width: 32px;
   height: 32px;
   padding: 0;
@@ -1786,7 +2423,8 @@ export default {
 }
 
 .serial-btn {
-  height: 34px;
+  height: 32px;
+  font-size: 12px;
 }
 
 .serial-btn.active-serial {
@@ -1819,25 +2457,42 @@ export default {
   box-shadow: 0 4px 12px rgba(17, 44, 71, 0.15);
 }
 
+/* Product Modal Backdrop */
+.product-modal-backdrop {
+  z-index: 1055 !important;
+}
+
+.modal-vselect :deep(.vs__dropdown-toggle) {
+  min-height: 38px !important;
+  border-radius: 6px !important;
+  border-color: #cbd5e1 !important;
+  font-size: 13px !important;
+}
+
+.modal-vselect :deep(.vs__selected) {
+  font-size: 13px !important;
+  color: #1e293b !important;
+}
+
 /* Serial Modal Chips */
 .serials-list-box {
-  min-height: 140px;
-  max-height: 240px;
+  min-height: 80px;
+  max-height: 180px;
   overflow-y: auto;
 }
 
 .serial-badge {
   background-color: #112C47;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 12px;
   border-radius: 6px;
 }
 
 .badge-num {
   background-color: rgba(255, 255, 255, 0.2);
-  padding: 2px 6px;
+  padding: 1px 5px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .delete-serial-btn {
@@ -1848,6 +2503,18 @@ export default {
 
 .delete-serial-btn:hover {
   color: #ef4444;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+.fa-rotate-180 {
+  transform: rotate(180deg);
 }
 
 .btn-xs {

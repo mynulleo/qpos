@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Base\BaseController;
 use App\Models\ItemStockSummary;
+use App\Models\ItemPrice;
 use App\Models\StockTransaction;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +27,23 @@ class ItemController extends BaseController
      */
     public function index(Request $request)
     {
-        $query  = Item::with('category:id,title', 'brand:id,title', 'unit:id,title')->latest();
+        $stockSub = DB::table('stock_transactions')
+            ->selectRaw('COALESCE(SUM(qty_in - qty_out), 0)')
+            ->whereColumn('stock_transactions.item_id', 'items.id')
+            ->where('stock_transactions.status', 'active');
+
+        if (!empty($request->color_id)) {
+            $stockSub->where('stock_transactions.color_id', $request->color_id);
+        }
+
+        if (!empty($request->size_id)) {
+            $stockSub->where('stock_transactions.size_id', $request->size_id);
+        }
+
+        $query  = Item::select('items.*')
+            ->selectSub($stockSub, 'current_stock')
+            ->with('category:id,title', 'brand:id,title', 'series:id,title', 'unit:id,title')
+            ->latest('items.id');
 
         if ($request->field_name && $request->value) {
             $query->whereLike($request->field_name, $request->value);
@@ -38,6 +55,10 @@ class ItemController extends BaseController
 
         if (!empty($request->brand_id)) {
             $query->where('brand_id', $request->brand_id);
+        }
+
+        if (!empty($request->series_id)) {
+            $query->where('series_id', $request->series_id);
         }
 
         if (!empty($request->color_id)) {
@@ -195,6 +216,7 @@ class ItemController extends BaseController
         $item = Item::with([
             'category:id,title',
             'brand:id,title',
+            'series:id,title',
             'unit:id,title',
             'itemPrices.color:id,title',
             'itemPrices.size:id,title',
@@ -225,6 +247,38 @@ class ItemController extends BaseController
                 $q->where('transaction_type', 'Wastage')->orWhere('reference_type', 'Wastage');
             })
             ->sum('qty_out');
+
+        $totalAdjustmentIn = (float) DB::table('stock_transactions')
+            ->where('item_id', $id)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->where('transaction_type', 'Adjustment')
+                  ->orWhere('reference_type', 'StockAdjustment')
+                  ->orWhere('reference_type', 'Adjustment');
+            })
+            ->sum('qty_in');
+
+        $totalAdjustmentOut = (float) DB::table('stock_transactions')
+            ->where('item_id', $id)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->where('transaction_type', 'Adjustment')
+                  ->orWhere('reference_type', 'StockAdjustment')
+                  ->orWhere('reference_type', 'Adjustment');
+            })
+            ->sum('qty_out');
+
+        $netAdjustmentQty = $totalAdjustmentIn - $totalAdjustmentOut;
+
+        $totalAdjustmentDetailsCount = DB::table('stock_adjustment_details')
+            ->where('item_id', $id)
+            ->where('status', 'active')
+            ->count();
+
+        $totalAdjustmentAmount = (float) DB::table('stock_adjustment_details')
+            ->where('item_id', $id)
+            ->where('status', 'active')
+            ->sum('total_amount');
 
         $totalStockOut = (float) DB::table('stock_transactions')
             ->where('item_id', $id)
@@ -346,6 +400,44 @@ class ItemController extends BaseController
                 })
                 ->sum('qty_out');
 
+            $vAdjustmentIn = (float) DB::table('stock_transactions')
+                ->where('item_id', $id)
+                ->where('status', 'active')
+                ->where(function($q) use ($cId) {
+                    if ($cId) $q->where('color_id', $cId);
+                    else $q->whereNull('color_id');
+                })
+                ->where(function($q) use ($sId) {
+                    if ($sId) $q->where('size_id', $sId);
+                    else $q->whereNull('size_id');
+                })
+                ->where(function($q) {
+                    $q->where('transaction_type', 'Adjustment')
+                      ->orWhere('reference_type', 'StockAdjustment')
+                      ->orWhere('reference_type', 'Adjustment');
+                })
+                ->sum('qty_in');
+
+            $vAdjustmentOut = (float) DB::table('stock_transactions')
+                ->where('item_id', $id)
+                ->where('status', 'active')
+                ->where(function($q) use ($cId) {
+                    if ($cId) $q->where('color_id', $cId);
+                    else $q->whereNull('color_id');
+                })
+                ->where(function($q) use ($sId) {
+                    if ($sId) $q->where('size_id', $sId);
+                    else $q->whereNull('size_id');
+                })
+                ->where(function($q) {
+                    $q->where('transaction_type', 'Adjustment')
+                      ->orWhere('reference_type', 'StockAdjustment')
+                      ->orWhere('reference_type', 'Adjustment');
+                })
+                ->sum('qty_out');
+
+            $vNetAdjustment = $vAdjustmentIn - $vAdjustmentOut;
+
             $vTotalOut = (float) DB::table('stock_transactions')
                 ->where('item_id', $id)
                 ->where('status', 'active')
@@ -375,6 +467,9 @@ class ItemController extends BaseController
                 'total_qty_in'    => $vQtyIn,
                 'total_sold'      => $vSoldQty,
                 'total_wastage'   => $vWastageQty,
+                'adjustment_in'   => $vAdjustmentIn,
+                'adjustment_out'  => $vAdjustmentOut,
+                'net_adjustment'  => $vNetAdjustment,
                 'current_stock'   => $vStock,
                 'last_updated'    => $v['updated_at'] ? date('d M, Y h:i A', strtotime($v['updated_at'])) : ($v['created_at'] ? date('d M, Y h:i A', strtotime($v['created_at'])) : null),
             ];
@@ -429,10 +524,6 @@ class ItemController extends BaseController
             ];
         }
 
-        usort($priceHistory, function ($a, $b) {
-            return strtotime($b['created_at']) <=> strtotime($a['created_at']);
-        });
-
         // 4. Recent Sales History (Last 10)
         $recentSales = DB::table('invoice_details as ind')
             ->join('invoices as inv', 'inv.id', '=', 'ind.invoice_id')
@@ -458,20 +549,75 @@ class ItemController extends BaseController
             ->limit(10)
             ->get();
 
+        // 5. Recent Stock Adjustments (Last 20)
+        $recentStockAdjustments = DB::table('stock_adjustment_details as sad')
+            ->join('stock_adjustments as sa', 'sa.id', '=', 'sad.stock_adjustment_id')
+            ->leftJoin('employees as emp', 'emp.id', '=', 'sa.conducted_by')
+            ->leftJoin('warehouses as wh', 'wh.id', '=', 'sad.warehouse_id')
+            ->leftJoin('colors as c', 'c.id', '=', 'sad.color_id')
+            ->leftJoin('sizes as sz', 'sz.id', '=', 'sad.size_id')
+            ->where('sad.item_id', $id)
+            ->where('sad.status', 'active')
+            ->select(
+                'sad.id',
+                'sad.stock_adjustment_id',
+                'sa.adjustment_no',
+                'sa.adjustment_type',
+                'sa.adjustment_date',
+                DB::raw("COALESCE(emp.full_name, 'N/A') as conducted_by_name"),
+                'wh.name as warehouse_name',
+                'c.title as color_title',
+                'sz.title as size_title',
+                'sad.system_qty',
+                'sad.physical_qty',
+                'sad.difference_qty',
+                'sad.unit_cost',
+                'sad.total_amount',
+                'sad.remarks',
+                'sad.created_at'
+            )
+            ->orderBy('sad.id', 'desc')
+            ->limit(20)
+            ->get();
+
+        foreach ($recentStockAdjustments as $adj) {
+            if ($adj->unit_cost > 0) {
+                $priceHistory[] = [
+                    'type'           => 'Stock Adjustment (' . ($adj->adjustment_no ?: 'N/A') . ')',
+                    'color_title'    => $adj->color_title ?: 'Standard',
+                    'size_title'     => $adj->size_title ?: 'Standard',
+                    'purchase_price' => (float)$adj->unit_cost,
+                    'selling_price'  => null,
+                    'date'           => date('d M, Y', strtotime($adj->adjustment_date ?: $adj->created_at)),
+                    'created_at'     => $adj->created_at,
+                ];
+            }
+        }
+
+        usort($priceHistory, function ($a, $b) {
+            return strtotime($b['created_at']) <=> strtotime($a['created_at']);
+        });
+
         $item->metrics = [
-            'total_stock_in'        => $totalQtyIn,
-            'total_sold_qty'        => $totalSoldQty,
-            'total_wastage_qty'     => $totalWastageQty,
-            'total_stock_out'       => $totalStockOut,
-            'current_stock'         => $currentStock,
-            'total_sales_amount'    => $totalSalesAmount,
-            'total_purchase_amount' => $totalPurchaseAmount,
+            'total_stock_in'           => $totalQtyIn,
+            'total_sold_qty'           => $totalSoldQty,
+            'total_wastage_qty'        => $totalWastageQty,
+            'total_adjustment_in'      => $totalAdjustmentIn,
+            'total_adjustment_out'     => $totalAdjustmentOut,
+            'net_adjustment_qty'       => $netAdjustmentQty,
+            'total_adjustments_count'  => $totalAdjustmentDetailsCount,
+            'total_adjustment_amount'  => $totalAdjustmentAmount,
+            'total_stock_out'          => $totalStockOut,
+            'current_stock'            => $currentStock,
+            'total_sales_amount'       => $totalSalesAmount,
+            'total_purchase_amount'    => $totalPurchaseAmount,
         ];
 
         $item->variants_breakdown = $variantsBreakdown;
         $item->price_history = $priceHistory;
         $item->recent_sales = $recentSales;
         $item->recent_purchases = $recentPurchases;
+        $item->recent_stock_adjustments = $recentStockAdjustments;
 
         return $item;
     }
@@ -497,6 +643,10 @@ class ItemController extends BaseController
     public function update(Request $request, $id)
     {
         $item = Item::find($id);
+        if (!$item) {
+            return response()->json(['type' => 'error', 'message' => 'Item not found!'], 404);
+        }
+
         if ($this->validateCheck($request, $item->id)) {
             try {
                 DB::beginTransaction();
@@ -518,20 +668,19 @@ class ItemController extends BaseController
                 }
                 $item->fill($data)->save();
 
-                // Check for Price Modification or New Purchase
-                $isPriceModification = filter_var($request->input('is_price_modification'), FILTER_VALIDATE_BOOLEAN);
+                // Process Variants (Prices & Stock Additions)
                 $variants = $request->input('variants');
                 if (is_string($variants)) {
                     $variants = json_decode($variants, true);
                 }
 
-                if ($isPriceModification && is_array($variants)) {
+                if (is_array($variants) && !empty($variants)) {
                     foreach ($variants as $variant) {
                         $colorId = !empty($variant['color_id']) ? $variant['color_id'] : null;
                         $sizeId = !empty($variant['size_id']) ? $variant['size_id'] : null;
                         $purchasePrice = isset($variant['purchase_price']) ? floatval($variant['purchase_price']) : 0;
                         $sellingPrice = isset($variant['selling_price']) ? floatval($variant['selling_price']) : 0;
-                        $qty = isset($variant['qty']) ? intval($variant['qty']) : 0;
+                        $qty = isset($variant['qty']) ? floatval($variant['qty']) : 0;
 
                         if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0) {
                             \App\Models\ItemPrice::updateOrCreate(
@@ -553,8 +702,8 @@ class ItemController extends BaseController
                                     'color_id' => $colorId,
                                     'size_id' => $sizeId,
                                     'transaction_date' => date('Y-m-d'),
-                                    'transaction_type' => 'Purchase',
-                                    'reference_type' => 'Purchase',
+                                    'transaction_type' => 'Production',
+                                    'reference_type' => 'Production',
                                     'qty_in' => $qty,
                                     'qty_out' => 0,
                                     'status' => 'active',
@@ -565,7 +714,7 @@ class ItemController extends BaseController
                 }
 
                 DB::commit();
-                return $this->responseReturn("update", $item);
+                return $this->responseReturn("update", $item, null, true);
             } catch (Exception $ex) {
                 DB::rollBack();
                 return response()->json(['exception' => $ex->errorInfo ?? $ex->getMessage()], 422);
@@ -582,16 +731,80 @@ class ItemController extends BaseController
     public function destroy($id)
     {
         $item = Item::find($id);
-        // delete
-        app("deleteAction")->arrayImages($item->image);
-        $old = $this->oldFile($item->image);
-        if (Storage::disk("public")->exists($old)) {
-            Storage::delete($old);
+        if (!$item) {
+            return response()->json([
+                'type' => 'error',
+                'message' => 'Item not found!',
+            ], 422);
         }
 
+        // Check if item is used in any other tables
+        $usedIn = [];
+        if (DB::table('invoice_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Sales Invoice (বিক্রয় চালান)';
+        }
+        if (DB::table('purchase_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Purchase (ক্রয় চালান)';
+        }
+        if (DB::table('grn_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'GRN (পণ্য গ্রহণ)';
+        }
+        if (DB::table('sales_return_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Sales Return (বিক্রয় ফেরত)';
+        }
+        if (DB::table('wastage_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Wastage (অপচয়)';
+        }
+        if (DB::table('warranty_claims')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Warranty Claim (ওয়ারেন্টি ক্লেইম)';
+        }
+        if (DB::table('workorder_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Work Order (ওয়ার্ক অর্ডার)';
+        }
+        if (DB::table('challan_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Challan (চালান)';
+        }
+        if (DB::table('stock_adjustment_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Stock Adjustment (স্টক সমন্বয়)';
+        }
+        if (DB::table('issue_details')->where('item_id', $id)->exists()) {
+            $usedIn[] = 'Issue (পণ্য ইস্যু)';
+        }
+        if (DB::table('stock_transactions')->where('item_id', $id)->whereNotIn('transaction_type', ['Opening'])->exists()) {
+            $usedIn[] = 'Stock Transactions (স্টক লেনদেন)';
+        }
 
-        $res = $item->delete();
-        return $this->responseReturn("delete", $res);
+        if (!empty($usedIn)) {
+            $msg = 'এই আইটেমটি ডিলিট করা সম্ভব নয়! কারণ এটি ইতিমধ্যে ' . implode(', ', $usedIn) . ' টেবিলে ব্যবহৃত হয়েছে।';
+            return response()->json([
+                'type' => 'error',
+                'message' => $msg,
+            ], 202);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Clean up item opening stock transactions & prices
+            DB::table('stock_transactions')->where('item_id', $id)->delete();
+            DB::table('item_prices')->where('item_id', $id)->delete();
+            DB::table('item_stock_summaries')->where('item_id', $id)->delete();
+
+            // Delete item image
+            if (!empty($item->image)) {
+                $old = $this->oldFile($item->image);
+                if (Storage::disk("public")->exists($old)) {
+                    Storage::delete($old);
+                }
+            }
+
+            $res = $item->delete();
+            DB::commit();
+            return $this->responseReturn("delete", $res);
+        } catch (Exception $ex) {
+            DB::rollBack();
+            return response()->json(['type' => 'error', 'message' => $ex->getMessage()], 422);
+        }
     }
 
     public function getItemStock(Request $request, $item_id)
@@ -612,14 +825,29 @@ class ItemController extends BaseController
         $defaultSizeId  = $bestVariant ? $bestVariant->size_id : null;
         $defaultStock   = $bestVariant ? (float)$bestVariant->current_stock : $totalStock;
 
-        // Build list of variants with stock
-        $variants = $allSummaries->map(function ($row) {
+        $item = Item::with('category:id,title', 'unit:id,title')->find($item_id);
+
+        // Fetch prices map from ItemPrice
+        $itemPrices = ItemPrice::where('item_id', $item_id)->get();
+        $priceMap = [];
+        foreach ($itemPrices as $ip) {
+            $key = ($ip->color_id ?? '0') . '_' . ($ip->size_id ?? '0');
+            $priceMap[$key] = (float)($ip->purchase_price ?? 0);
+        }
+
+        // Build list of variants with stock and variant unit cost
+        $variants = $allSummaries->map(function ($row) use ($priceMap, $item) {
+            $key = ($row->color_id ?? '0') . '_' . ($row->size_id ?? '0');
+            $cost = isset($priceMap[$key]) && $priceMap[$key] > 0 
+                ? $priceMap[$key] 
+                : (float)($item->purchase_price ?? $item->opening_rate ?? 0);
             return [
                 'color_id'    => $row->color_id,
-                'color_title' => $row->color ? $row->color->title : 'Standard',
+                'color_title' => $row->color ? $row->color->title : null,
                 'size_id'     => $row->size_id,
-                'size_title'  => $row->size ? $row->size->title : 'Standard',
+                'size_title'  => $row->size ? $row->size->title : null,
                 'stock'       => (float)$row->current_stock,
+                'unit_cost'   => $cost,
             ];
         })->values();
 
@@ -649,47 +877,70 @@ class ItemController extends BaseController
             $stock = $defaultStock;
         }
 
-        // Fetch item details and purchase price
-        $item = Item::with('category:id,title', 'unit:id,title')->find($item_id);
-        $cost = $item ? (float)($item->purchase_price ?? $item->price ?? 0) : 0;
+        // Fetch item purchase price
+        $cost = $item ? (float)($item->purchase_price ?? $item->opening_rate ?? 0) : 0;
 
         // Fetch variant-specific purchase price from ItemPrice
         $targetColorId = $request->filled('color_id') ? $request->color_id : ($request->has('color_id') ? null : $defaultColorId);
         $targetSizeId  = $request->filled('size_id') ? $request->size_id : ($request->has('size_id') ? null : $defaultSizeId);
 
-        if ($targetColorId || $targetSizeId) {
-            $ipQuery = \App\Models\ItemPrice::where('item_id', $item_id);
-            if ($targetColorId) {
-                $ipQuery->where('color_id', $targetColorId);
-            }
-            if ($targetSizeId) {
-                $ipQuery->where('size_id', $targetSizeId);
-            }
-            $varPrice = $ipQuery->first();
-            if ($varPrice && !empty($varPrice->purchase_price)) {
-                $cost = (float)$varPrice->purchase_price;
+        $ipQuery = \App\Models\ItemPrice::where('item_id', $item_id);
+        if ($targetColorId) {
+            $ipQuery->where('color_id', $targetColorId);
+        }
+        if ($targetSizeId) {
+            $ipQuery->where('size_id', $targetSizeId);
+        }
+        $varPrice = $ipQuery->first();
+        if ($varPrice && !empty($varPrice->purchase_price)) {
+            $cost = (float)$varPrice->purchase_price;
+        } elseif ($cost <= 0) {
+            $firstPrice = \App\Models\ItemPrice::where('item_id', $item_id)->whereNotNull('purchase_price')->where('purchase_price', '>', 0)->first();
+            if ($firstPrice) {
+                $cost = (float)$firstPrice->purchase_price;
             }
         }
 
-        // Available serials (purchased serials not yet sold or wasted)
+        // Available serials (purchased or GRN serials not yet sold or wasted, plus returned serials)
         $purchasedSerials = \App\Models\PurchaseDetail::where('item_id', $item_id)
             ->whereNotNull('serial_no')
             ->where('serial_no', '!=', '')
             ->pluck('serial_no');
 
+        $grnSerials = \Illuminate\Support\Facades\Schema::hasTable('grn_details')
+            ? \App\Models\GrnDetail::where('item_id', $item_id)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->pluck('serial_no')
+            : collect();
+
         $soldSerials = \App\Models\InvoiceDetails::where('item_id', $item_id)
             ->whereNotNull('serial_no')
             ->where('serial_no', '!=', '')
             ->where('status', 'active')
+            ->whereNull('deleted_at')
             ->pluck('serial_no');
 
-        $wastedSerials = \App\Models\WastageDetail::where('item_id', $item_id)
-            ->whereNotNull('serial_no')
-            ->where('serial_no', '!=', '')
-            ->pluck('serial_no');
+        $returnedSerials = \Illuminate\Support\Facades\Schema::hasTable('sales_return_details')
+            ? \App\Models\SalesReturnDetail::where('item_id', $item_id)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->where('status', 'active')
+                ->where('return_reason', '!=', 'Wastage')
+                ->whereNull('deleted_at')
+                ->pluck('serial_no')
+            : collect();
+
+        $wastedSerials = \Illuminate\Support\Facades\Schema::hasTable('wastage_details')
+            ? \App\Models\WastageDetail::where('item_id', $item_id)
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->whereNull('deleted_at')
+                ->pluck('serial_no')
+            : collect();
 
         $purchasedList = [];
-        foreach ($purchasedSerials as $s) {
+        foreach ($purchasedSerials->concat($grnSerials) as $s) {
             $split = preg_split('/[\r\n,]+/', $s, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($split as $sn) {
                 $t = trim($sn);
@@ -697,28 +948,46 @@ class ItemController extends BaseController
             }
         }
 
-        $usedList = [];
+        $soldCounts = [];
         $soldList = [];
         foreach ($soldSerials as $s) {
             $split = preg_split('/[\r\n,]+/', $s, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($split as $sn) {
                 $t = trim($sn);
                 if (!empty($t)) {
-                    $usedList[$t] = true;
+                    $soldCounts[$t] = ($soldCounts[$t] ?? 0) + 1;
                     $soldList[$t] = true;
                 }
             }
         }
+
+        foreach ($returnedSerials as $s) {
+            $split = preg_split('/[\r\n,]+/', $s, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($split as $sn) {
+                $t = trim($sn);
+                if (!empty($t) && isset($soldCounts[$t])) {
+                    $soldCounts[$t] = max(0, $soldCounts[$t] - 1);
+                }
+            }
+        }
+
+        $wastedList = [];
         foreach ($wastedSerials as $s) {
             $split = preg_split('/[\r\n,]+/', $s, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($split as $sn) {
                 $t = trim($sn);
-                if (!empty($t)) $usedList[$t] = true;
+                if (!empty($t)) $wastedList[$t] = true;
+            }
+        }
+
+        $availableSerials = [];
+        foreach (array_keys($purchasedList) as $sn) {
+            if (empty($wastedList[$sn]) && ($soldCounts[$sn] ?? 0) <= 0) {
+                $availableSerials[] = $sn;
             }
         }
 
         $hasPurchasedSerials = count($purchasedList) > 0;
-        $availableSerials = array_values(array_diff(array_keys($purchasedList), array_keys($usedList)));
 
         if ($request->has('details') || $request->has('color_id') || $request->has('size_id')) {
             return response()->json([
@@ -746,9 +1015,31 @@ class ItemController extends BaseController
 
         if ($request->has('term') && !empty($request->term)) {
             $term = $request->term;
-            $query->where(function ($q) use ($term) {
+
+            $matchedItemIds = [];
+            if (\Illuminate\Support\Facades\Schema::hasTable('item_prices') && \Illuminate\Support\Facades\Schema::hasColumn('item_prices', 'barcode')) {
+                $priceItemIds = \App\Models\ItemPrice::where('barcode', 'like', "%{$term}%")->pluck('item_id')->toArray();
+                if (!empty($priceItemIds)) $matchedItemIds = array_merge($matchedItemIds, $priceItemIds);
+            }
+
+            $purchaseItemIds = \App\Models\PurchaseDetail::where('serial_no', 'like', "%{$term}%")->pluck('item_id')->toArray();
+            if (!empty($purchaseItemIds)) $matchedItemIds = array_merge($matchedItemIds, $purchaseItemIds);
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('grn_details')) {
+                $grnItemIds = \App\Models\GrnDetail::where('serial_no', 'like', "%{$term}%")->pluck('item_id')->toArray();
+                if (!empty($grnItemIds)) $matchedItemIds = array_merge($matchedItemIds, $grnItemIds);
+            }
+
+            $matchedItemIds = array_unique($matchedItemIds);
+
+            $query->where(function ($q) use ($term, $matchedItemIds) {
                 $q->where('barcode', 'like', "%{$term}%")
-                  ->orWhere('title', 'like', "%{$term}%");
+                  ->orWhere('title', 'like', "%{$term}%")
+                  ->orWhere('sku', 'like', "%{$term}%")
+                  ->orWhere('model_no', 'like', "%{$term}%");
+                if (!empty($matchedItemIds)) {
+                    $q->orWhereIn('id', $matchedItemIds);
+                }
             });
         }
 

@@ -24,11 +24,17 @@ class AdminController extends BaseController
     public function index(Request $request)
     {
         $query = Admin::with('role:id,name')
-            ->where('id', '!=', 2)
-            ->select('id', 'profile', 'name', 'email', 'mobile', 'role_id', 'status', 'created_at')
+            ->select('id', 'profile', 'organization_id', 'full_name', 'email', 'mobile', 'role_id', 'status', 'created_at')
             ->latest();
 
-        $query->whereLike($request->field_name, $request->value);
+        if ($request->field_name === 'name' || $request->field_name === 'full_name') {
+            if (!empty($request->value)) {
+                $query->where('full_name', 'like', '%' . $request->value . '%');
+            }
+        } else {
+            $query->whereLike($request->field_name, $request->value);
+        }
+
         if ($request->status) {
             $query->where('status', $request->status);
         }
@@ -66,13 +72,19 @@ class AdminController extends BaseController
                 $profile = $request->profile_base64;
                 if (!empty($profile)) {
                     $resizeValue = $data['profile_resize_value'] ?? '600x600,300x300,50x50';
-                    // $data['profile'] = cloudflare(file: $profile, folder: 'profile', resizeSize: $resizeValue, base64: true);
                     $profilePaths = cloudflare(file: $profile, folder: 'profile', resizeSize: $resizeValue, base64: true);
-
                     $data['profile'] = json_encode($profilePaths);
                 }
-                // dd($data);
+
+                $data['full_name'] = $request->name ?? $request->full_name;
                 $data['password'] = Hash::make($request->password);
+                $data['status'] = empty($data['status']) ? 'active' : $data['status'];
+
+                $orgId = Auth::guard('admin')->user()->organization_id ?? session('organization_id');
+                if ($orgId) {
+                    $data['organization_id'] = $orgId;
+                }
+
                 unset($data['block']);
                 $res = Admin::create($data);
                 return $this->responseReturn('create', $res);
@@ -85,7 +97,7 @@ class AdminController extends BaseController
     /**
      * Display the specified resource.
      *
-     * @param  \App\Admin  $admin
+     * @param  \App\Models\Admin  $admin
      * @return \Illuminate\Http\Response
      */
     public function show(Request $request, Admin $admin)
@@ -93,17 +105,19 @@ class AdminController extends BaseController
         if ($request->format() == 'html') {
             return view('layouts.backend_app');
         }
-        if (Auth::guard('admin')->user()->role_id == 1) {
+
+        $authUser = Auth::guard('admin')->user();
+        if ($authUser && $authUser->role_id == 1) {
             return Admin::with('role')->find($admin->id);
         }
 
-        return Admin::with('role')->find(Auth::guard('admin')->user()->id);
+        return Admin::with('role')->find($authUser ? $authUser->id : $admin->id);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Admin  $admin
+     * @param  \App\Models\Admin  $admin
      * @return \Illuminate\Http\Response
      */
     public function edit(Admin $admin)
@@ -114,11 +128,9 @@ class AdminController extends BaseController
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Admin  $admin
+     * @param  \App\Models\Admin  $admin
      * @return \Illuminate\Http\Response
      */
-    // public function update(Request $request, Admin $admin)
-
     public function update(Request $request, DeleteAction $deleteAction, Admin $admin)
     {
         if ($this->validateCheck($request, $admin)) {
@@ -136,14 +148,14 @@ class AdminController extends BaseController
                     $data['profile'] = $admin->profile && $admin->profile != 'null' ? $admin->profile : null;
                 }
 
-                $data = [
-                    'name' => $request->name,
+                $updateData = [
+                    'full_name' => $request->name ?? $request->full_name ?? $admin->full_name,
                     'role_id' => $request->role_id ?? $admin->role_id,
                     'mobile' => $request->mobile,
                     'address' => $request->address,
                     'gender' => $request->gender,
                     'description' => $request->description,
-                    'birth_date' => $request->birth_date,
+                    'birth_date' => $request->birth_date ? vue_to_server_date($request->birth_date) : null,
                     'city' => $request->city,
                     'state' => $request->state,
                     'zip_code' => $request->zip_code,
@@ -152,22 +164,15 @@ class AdminController extends BaseController
                     'status' => empty($data['status']) ? 'active' : $data['status'],
                 ];
 
-                if ($request->block) {
-                    if ($request->block == true) {
-                        $data['block'] = 1;
-                    }
-                    if ($request->block == 'false') {
-                        $data['block'] = 0;
-                    }
-                } else {
-                    unset($data['block']);
+                if ($request->has('block')) {
+                    $updateData['block'] = ($request->block === true || $request->block == '1' || $request->block === 'true') ? 1 : 0;
                 }
 
                 if ($request->password) {
-                    $data['password'] = Hash::make($request->password);
+                    $updateData['password'] = Hash::make($request->password);
                 }
 
-                $admin->update($data);
+                $admin->update($updateData);
 
                 return $this->responseReturn('update', $admin);
             } catch (Exception $ex) {
@@ -179,7 +184,7 @@ class AdminController extends BaseController
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Admin  $admin
+     * @param  \App\Models\Admin  $admin
      * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request, $id)
@@ -187,7 +192,7 @@ class AdminController extends BaseController
         $authenticatedId = auth('admin')->user()->id ?? '';
 
         $admin = Admin::withTrashed()->find($id);
-        if ($admin->deleted_at != null) {
+        if ($admin && $admin->deleted_at != null) {
             Admin::withTrashed()->where('id', $id)->update(['deleted_at' => null]);
             return $this->responseReturn('delete', false);
         }
@@ -201,9 +206,8 @@ class AdminController extends BaseController
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Check old password
      *
-     * @param  \App\Admin  $admin
      * @return \Illuminate\Http\Response
      */
     public function checkOldPassword(Request $request)
@@ -258,7 +262,7 @@ class AdminController extends BaseController
     {
         return $request->validate([
             'name' => ['required', 'min:3', 'max:60'],
-            'email' => ['nullable', Rule::requiredIf(!$model), 'min:3', 'max:100', Rule::unique(Admin::class, 'email')->ignore($model?->id, 'id')],
+            'email' => ['nullable', Rule::requiredIf(!$model), 'min:3', 'max:100', Rule::unique('accessdb.organization_users', 'email')->ignore($model?->id, 'id')],
             'password' => ['nullable', Rule::requiredIf(!$model), Password::min(6), 'max:30'],
             'role_id' => ['nullable', Rule::requiredIf(!$request->is_profile_route), 'numeric', 'min:1'],
             'mobile' => ['nullable', 'numeric', 'digits:11'],
@@ -294,7 +298,7 @@ class AdminController extends BaseController
                 }
 
                 $data = [
-                    'name' => $request->name,
+                    'full_name' => $request->name ?? $request->full_name ?? $admin->full_name,
                     'gender' => $request->gender,
                     'mobile' => $request->mobile,
                     'birth_date' => $request->birth_date ? vue_to_server_date($request->birth_date) : null,

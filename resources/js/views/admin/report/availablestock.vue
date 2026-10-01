@@ -2,10 +2,28 @@
     <index-page :defaultTable="false" :show_status="false">
         <!-- 🔍 Search & Filter Section -->
         <template v-slot:search-field>
+            <!-- Warehouse Filter -->
+            <v-select-container title="Warehouse (গুদাম)" field="search_data.warehouse_id" col="3 mb-3">
+                <v-select v-model="search_data.warehouse_id" label="name" :reduce="obj => obj.id" :options="warehouses"
+                    placeholder="-- All Warehouses --" :closeOnSelect="true" />
+            </v-select-container>
+
             <!-- Category Filter -->
             <v-select-container title="Category (ক্যাটাগরি)" field="search_data.category_id" col="3 mb-3">
                 <v-select v-model="search_data.category_id" label="title" :reduce="obj => obj.id" :options="categories"
                     placeholder="-- All Categories --" :closeOnSelect="true" />
+            </v-select-container>
+
+            <!-- Brand Filter (Dependent on shop type or available brands) -->
+            <v-select-container title="Brand (ব্র্যান্ড)" field="search_data.brand_id" col="3 mb-3" v-if="showBrandFilter">
+                <v-select v-model="search_data.brand_id" label="title" :reduce="obj => obj.id" :options="brands"
+                    :placeholder="search_data.category_id ? '-- Select Brand --' : '-- All Brands --'" :closeOnSelect="true" />
+            </v-select-container>
+
+            <!-- Model / Series Filter (Dependent on shop type: electronics) -->
+            <v-select-container title="Series (সিরিজ)" field="search_data.series_id" col="3 mb-3" v-if="showModelFilter">
+                <v-select v-model="search_data.series_id" label="title" :reduce="obj => obj.id" :options="seriesList"
+                    :placeholder="search_data.brand_id ? '-- Select Model/Series --' : '-- All Models/Series --'" :closeOnSelect="true" />
             </v-select-container>
 
             <!-- Item Filter -->
@@ -28,7 +46,7 @@
             </v-select-container>
 
             <!-- Size Filter -->
-            <v-select-container title="Size (সাইজ)" field="search_data.size_id" col="3 mb-3">
+            <v-select-container title="Size (সাইজ)" field="search_data.size_id" col="3 mb-3" v-if="!isElectronicsShop">
                 <v-select v-model="search_data.size_id" label="title" :reduce="obj => obj.id" :options="sizes"
                     placeholder="-- All Sizes --" :closeOnSelect="true" />
             </v-select-container>
@@ -67,8 +85,8 @@
             </div>
 
             <!-- Keyword / Barcode Search -->
-            <Input v-model="search_data.keyword" field="search_data.keyword" title="Barcode / Item Name"
-                placeholder="Type barcode or name..." col="3 mb-3" :req="false" />
+            <Input v-model="search_data.keyword" field="search_data.keyword" title="Barcode / Item Name / Model"
+                placeholder="Type barcode, model or name..." col="3 mb-3" :req="false" />
 
             <!-- From Qty -->
             <Input v-model="search_data.from_qty" field="search_data.from_qty" type="number" title="Min Qty (From)"
@@ -353,12 +371,18 @@
                                     <td class="text-center small">{{ stock.category_title || (stock.item && stock.item.category ? stock.item.category.title : 'N/A') }}</td>
                                     <td class="text-center font-monospace small">{{ stock.barcode || (stock.item ? stock.item.barcode : 'N/A') }}</td>
 
-                                    <!-- Item Name + Unit + Color + Size Merged Under Item Name -->
+                                    <!-- Item Name + Unit + Brand + Model/Series + Color + Size Merged Under Item Name -->
                                     <td>
                                         <div class="fw-bold text-dark">{{ stock.item_title || (stock.item ? stock.item.title : 'N/A') }}</div>
                                         <div class="d-flex flex-wrap gap-1 mt-1 align-items-center">
                                             <span class="badge bg-light text-secondary border px-2 py-1 small">
                                                 <i class="fas fa-box-open me-1 text-muted"></i>{{ stock.unit_title || (stock.item && stock.item.unit ? stock.item.unit.title : 'Pcs') }}
+                                            </span>
+                                            <span v-if="stock.brand_title || (stock.brand && stock.brand.title)" class="badge bg-light text-primary border px-2 py-1 small">
+                                                <i class="fas fa-tag me-1 text-primary"></i>{{ stock.brand_title || (stock.brand ? stock.brand.title : '') }}
+                                            </span>
+                                            <span v-if="stock.series_title || (stock.series && stock.series.title) || stock.model_no" class="badge bg-light text-dark border font-monospace px-2 py-1 small">
+                                                <i class="fas fa-microchip me-1 text-secondary"></i>{{ stock.series_title || (stock.series ? stock.series.title : '') }} {{ stock.model_no ? '(' + stock.model_no + ')' : '' }}
                                             </span>
                                             <span v-if="stock.color_title || (stock.color && stock.color.title)" class="badge bg-light text-dark border px-2 py-1 small">
                                                 <i class="fas fa-palette me-1 text-primary"></i>{{ stock.color_title || (stock.color ? stock.color.title : '') }}
@@ -524,7 +548,10 @@ export default {
             currentPage: 1, // Current pagination page
             perPage: 50, // Rows per page
             search_data: {
+                warehouse_id: null,
                 category_id: null,
+                brand_id: null,
+                series_id: null,
                 item_id: null,
                 color_id: null,
                 size_id: null,
@@ -556,6 +583,9 @@ export default {
             json_fields: {
                 "SL": "sl",
                 "Category": "category",
+                "Brand": "brand",
+                "Model / Series": "series",
+                "Model No": "model_no",
                 "Barcode": "barcode",
                 "Item Name": "item_title",
                 "Color": "color",
@@ -578,7 +608,10 @@ export default {
                 links: [],
             },
             datas: [], // Store available stock records
+            warehouses: [], // Store warehouses for dropdown
             categories: [], // Store categories for dropdown
+            brands: [], // Store brands for dropdown
+            seriesList: [], // Store series/models for dropdown
             items: [], // Store items for dropdown
             colors: [], // Store colors for dropdown
             sizes: [], // Store sizes for dropdown
@@ -587,8 +620,23 @@ export default {
 
     watch: {
         'search_data.category_id': {
-            handler() {
+            handler(newVal, oldVal) {
                 this.onCategoryChange();
+                this.getBrands(newVal);
+                if (oldVal && newVal !== oldVal) {
+                    this.search_data.brand_id = null;
+                    this.search_data.series_id = null;
+                    this.seriesList = [];
+                }
+            },
+            deep: true
+        },
+        'search_data.brand_id': {
+            handler(newVal, oldVal) {
+                this.getSeries(newVal);
+                if (oldVal && newVal !== oldVal) {
+                    this.search_data.series_id = null;
+                }
             },
             deep: true
         }
@@ -607,6 +655,19 @@ export default {
     },
 
     computed: {
+        isElectronicsShop() {
+            const shopType = this.site?.shop_type || this.$root.site?.shop_type;
+            return shopType === 'electronics';
+        },
+
+        showBrandFilter() {
+            return this.isElectronicsShop || (this.brands && this.brands.length > 0);
+        },
+
+        showModelFilter() {
+            return this.isElectronicsShop || (this.seriesList && this.seriesList.length > 0);
+        },
+
         activeFilterTitle() {
             const titles = {
                 'low_stock': 'Low Stock Alert (কম স্টক)',
@@ -618,7 +679,10 @@ export default {
 
         isFiltered() {
             return !!(
+                this.search_data.warehouse_id ||
                 this.search_data.category_id ||
+                this.search_data.brand_id ||
+                this.search_data.series_id ||
                 this.search_data.item_id ||
                 this.search_data.color_id ||
                 this.search_data.size_id ||
@@ -722,6 +786,9 @@ export default {
                 return {
                     sl: index + 1,
                     category: stock.category_title || (stock.item && stock.item.category ? stock.item.category.title : 'N/A'),
+                    brand: stock.brand_title || (stock.item && stock.item.brand ? stock.item.brand.title : (stock.brand ? stock.brand.title : '-')),
+                    series: stock.series_title || (stock.item && stock.item.series ? stock.item.series.title : (stock.series ? stock.series.title : '-')),
+                    model_no: stock.model_no || (stock.item ? stock.item.model_no : '-'),
                     barcode: stock.barcode || (stock.item ? stock.item.barcode : 'N/A'),
                     item_title: stock.item_title || (stock.item ? stock.item.title : 'N/A'),
                     color: stock.color_title || (stock.color ? stock.color.title : '-'),
@@ -783,7 +850,10 @@ export default {
             this.activeTab = "low_stock";
             this.currentPage = 1;
             this.search_data = {
+                warehouse_id: null,
                 category_id: null,
+                brand_id: null,
+                series_id: null,
                 item_id: null,
                 color_id: null,
                 size_id: null,
@@ -795,7 +865,44 @@ export default {
                 from_qty: null,
                 to_qty: null
             };
+            this.getBrands();
+            this.getSeries();
+            this.fetchDropdownItems();
             this.getAvailableStock();
+        },
+
+        getWarehouses() {
+            axios.get(`warehouse?allData=true`)
+                .then((response) => {
+                    this.warehouses = response.data || [];
+                })
+                .catch(() => {
+                    this.warehouses = [];
+                });
+        },
+
+        getBrands(categoryId = null) {
+            const catId = categoryId || this.search_data.category_id;
+            const url = catId ? `getbrands/${catId}` : 'getbrands';
+            axios.get(url)
+                .then((response) => {
+                    this.brands = response.data || [];
+                })
+                .catch(() => {
+                    this.brands = [];
+                });
+        },
+
+        getSeries(brandId = null) {
+            const bId = brandId || this.search_data.brand_id;
+            const url = bId ? `getseries/${bId}` : 'getseries';
+            axios.get(url)
+                .then((response) => {
+                    this.seriesList = response.data || [];
+                })
+                .catch(() => {
+                    this.seriesList = [];
+                });
         },
 
         onCategoryChange() {
@@ -885,7 +992,10 @@ export default {
     },
 
     created() {
+        this.getWarehouses();
         this.getCategories();
+        this.getBrands(this.search_data.category_id);
+        this.getSeries(this.search_data.brand_id);
         this.fetchDropdownItems();
         this.getColors();
         this.getSizes();
