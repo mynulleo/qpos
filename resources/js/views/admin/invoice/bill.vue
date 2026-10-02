@@ -115,7 +115,7 @@
                                     <span class="badge bg-danger font-monospace fs-6 px-3 py-1" v-else>DUE AMOUNT PENDING</span>
                                 </div>
                                 <div class="text-muted small" v-if="data.vehicle_info"><strong>Vehicle / Info:</strong> {{ data.vehicle_info }}</div>
-                                <div class="text-muted small"><strong>Served By:</strong> {{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}</div>
+                                <div class="text-muted small"><strong>Sold By:</strong> {{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}</div>
                             </div>
                         </div>
                     </div>
@@ -281,7 +281,7 @@
                                     <strong class="text-dark">{{ data.vehicle_info }}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between small text-muted">
-                                    <span>Prepared By:</span>
+                                    <span>Sold By:</span>
                                     <strong class="text-dark">{{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}</strong>
                                 </div>
                             </div>
@@ -422,8 +422,11 @@
                                     <strong>Customer:</strong> {{ data.client?.name || 'Walk-in Customer' }}
                                     <span v-if="data.client?.mobile" class="ms-1 text-muted">({{ data.client.mobile }})</span>
                                 </td>
-                                <td colspan="2">
+                                <td>
                                     <strong>Address:</strong> {{ data.delivery_address || (data.client?.address || 'N/A') }}
+                                </td>
+                                <td>
+                                    <strong>Sold By:</strong> {{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}
                                 </td>
                             </tr>
                         </tbody>

@@ -360,6 +360,25 @@ const routes = [
                 component: () =>
                     import("./../views/admin/system/siteSettings/create"),
             },
+            // ------------------TERMS & CONDITIONS PORTION------------------
+            {
+                path: "/termsCondition",
+                name: "termsCondition.index",
+                component: () =>
+                    import("./../views/admin/termsCondition/index"),
+            },
+            {
+                path: "/termsCondition/create",
+                name: "termsCondition.create",
+                component: () =>
+                    import("./../views/admin/termsCondition/create"),
+            },
+            {
+                path: "/termsCondition/:id/edit",
+                name: "termsCondition.edit",
+                component: () =>
+                    import("./../views/admin/termsCondition/create"),
+            },
             // ------------------MODULE PORTION------------------
             {
                 path: "/module",

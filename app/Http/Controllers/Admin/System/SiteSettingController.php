@@ -58,6 +58,21 @@ class SiteSettingController extends BaseController
                         $table->string('sale_nature', 50)->default('both')->nullable();
                     });
                 }
+                if (!Schema::hasColumn('site_settings', 'invoice_prefix')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->string('invoice_prefix', 50)->default('POS')->nullable();
+                    });
+                }
+                if (!Schema::hasColumn('site_settings', 'show_pos_terms')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->boolean('show_pos_terms')->default(1)->nullable();
+                    });
+                }
+                if (!Schema::hasColumn('site_settings', 'memberships')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->longText('memberships')->nullable();
+                    });
+                }
             }
         } catch (\Exception $e) {
             // Ignore if columns exist or connection issue
@@ -231,6 +246,9 @@ class SiteSettingController extends BaseController
             'label_preset' => ['nullable', 'string'],
             'default_vat' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'sale_nature' => ['nullable', 'string'],
+            'invoice_prefix' => ['nullable', 'string', 'max:50'],
+            'show_pos_terms' => ['nullable'],
+            'memberships' => ['nullable'],
             'logo_base64' => ['nullable', 'string', new Base64Image()],
             'logo_resize_value' => ['nullable', 'string'],
             'logo_small_base64' => ['nullable', 'string', new Base64Image()],

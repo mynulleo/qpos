@@ -364,6 +364,30 @@ class InvoiceController extends BaseController
             $paymentStatus = 'Due';
         }
 
+        // 5. Creator / Salesperson resolution
+        $creator = null;
+        if (!empty($invoice->created_by)) {
+            $creator = \App\Models\Admin::find($invoice->created_by);
+        }
+        if (!$creator && !empty($invoice->admin_id)) {
+            $creator = \App\Models\Admin::find($invoice->admin_id);
+        }
+        if (!$creator && !empty($invoice->employee_id)) {
+            $creator = \App\Models\Admin::find($invoice->employee_id);
+        }
+        if (!$creator) {
+            $activity = \Spatie\Activitylog\Models\Activity::where('subject_type', \App\Models\Invoice::class)
+                ->where('subject_id', $invoice->id)
+                ->where('event', 'created')
+                ->first();
+            if ($activity && $activity->causer_id) {
+                $creator = \App\Models\Admin::find($activity->causer_id);
+            }
+        }
+        if (!$creator) {
+            $creator = auth()->guard('admin')->user() ?? auth()->user() ?? \App\Models\Admin::first();
+        }
+
         return response()->json([
             'id' => $invoice->id,
             'invoice_no' => $invoice->invoice_no,
@@ -380,6 +404,12 @@ class InvoiceController extends BaseController
             'is_closed' => $invoice->is_closed,
             'status' => $invoice->status,
             'client' => $invoice->client,
+            'creator' => $creator ? [
+                'id' => $creator->id,
+                'name' => $creator->name ?? ($creator->full_name ?? 'Cashier'),
+                'email' => $creator->email ?? '',
+                'mobile' => $creator->mobile ?? '',
+            ] : null,
             'client_history' => $clientHistory,
             'loyalty_points' => $loyaltyPoints,
             'details' => $details,

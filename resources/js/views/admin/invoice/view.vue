@@ -674,7 +674,7 @@
                 <strong>Vehicle / Note:</strong> {{ data.vehicle_info }}
               </div>
               <div style="color: #64748b; margin-top: 2px;">
-                <strong>Served By:</strong> {{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}
+                <strong>Sold By:</strong> {{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}
               </div>
             </div>
           </div>
@@ -825,7 +825,7 @@
                 <strong style="color: #0f172a;">{{ data.vehicle_info }}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569;">
-                <span>Prepared By:</span>
+                <span>Sold By:</span>
                 <strong style="color: #0f172a;">{{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}</strong>
               </div>
             </div>

@@ -17,6 +17,18 @@ class Invoice extends BaseModel
     protected $guarded = ['id'];
     protected $logName = "Invoice";
 
+    protected $casts = [
+        'terms_conditions' => 'array',
+    ];
+
+    public function getTermsConditionsAttribute($value)
+    {
+        if (empty($value)) return [];
+        if (is_array($value)) return $value;
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
     protected static function booted()
     {
         static::created(function ($invoice) {
@@ -58,16 +70,13 @@ class Invoice extends BaseModel
     // file image push
     public static function generateInvoiceNumber()
     {
-        $invoiceno = 111;
-        // invoices টেবিল থেকে সর্বশেষ ইনভয়েস নাম্বার বের করা
+        $siteSetting = \App\Models\System\SiteSetting::first();
+        $prefix = !empty($siteSetting->invoice_prefix) ? trim($siteSetting->invoice_prefix) : 'POS';
+        $prefix = rtrim($prefix, '-');
+
         $lastInvoice = self::orderBy('id', 'desc')->first();
-        if ($lastInvoice) {
-            // last invoice number integer এ কনভার্ট
-            $lastNumber = intval($lastInvoice->invoice_no);
-            // ১ যোগ করে নতুন নাম্বার রিটার্ন করা
-            $invoiceno =  $lastNumber + 1;
-        }
-        return $invoiceno;
+        $nextId = $lastInvoice ? $lastInvoice->id + 1 : 1;
+        return $prefix . '-' . date('Ymd') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
     }
     // date format
 
@@ -107,5 +116,10 @@ class Invoice extends BaseModel
         return $this->hasMany(PaymentDetail::class, 'reference_id', 'id')
             ->where('reference_type', 'Invoice')
             ->oldest('id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(Admin::class, 'created_by', 'id');
     }
 }

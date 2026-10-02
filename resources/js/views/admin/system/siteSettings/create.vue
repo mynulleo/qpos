@@ -232,6 +232,116 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- 🧾 Invoice Prefix & POS Terms Switch -->
+                            <div class="col-12 border-top pt-3">
+                                <div class="row g-3">
+                                    <!-- 1. Invoice Prefix -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
+                                            <i class="fas fa-receipt text-theme"></i> Invoice Prefix (ইনভয়েস প্রিফিক্স):
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control font-monospace fw-bold text-uppercase"
+                                                v-model="data.invoice_prefix" placeholder="e.g. POS, INV, QPOS" maxlength="20">
+                                            <span class="input-group-text bg-light text-muted font-monospace small">
+                                                {{ (data.invoice_prefix || 'POS') }}-20261001-0001
+                                            </span>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                            <i class="fas fa-info-circle text-primary me-1"></i>
+                                            ইনভয়েস নম্বরের শুরুতে এই প্রিফিক্সটি ডাইনামিক ভাবে বসবে (যেমনঃ <strong>{{ (data.invoice_prefix || 'POS') }}-20261001-0001</strong>)।
+                                        </small>
+                                    </div>
+
+                                    <!-- 2. POS Terminal Terms & Condition Toggle Switch -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
+                                            <i class="fas fa-file-contract text-theme"></i> Sale Terminal Terms & Conditions (টার্মিনালে শর্তাবলী প্রদর্শন):
+                                        </label>
+                                        <div class="p-2 px-3 border rounded bg-light d-flex align-items-center justify-content-between h-auto">
+                                            <div>
+                                                <span class="small fw-bold text-dark d-block">Show in Sale Terminal / POS</span>
+                                                <small class="text-muted" style="font-size: 10.5px;">টার্মিনালে শর্তাবলী এডিট ও প্রিন্ট সুবিধা</small>
+                                            </div>
+                                            <div class="form-check form-switch m-0 p-0">
+                                                <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch"
+                                                    id="siteShowPosTermsSwitch" v-model="data.show_pos_terms" :true-value="1" :false-value="0"
+                                                    style="transform: scale(1.3); cursor: pointer;">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                            <i class="fas fa-info-circle text-primary me-1"></i>
+                                            সক্রিয় থাকলে পিওএস টার্মিনালে চেকআউটের সময় প্রতিটি শর্তের জন্য চেকবক্স ও ইনপুট বক্স শো করবে।
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🏛️ 3. Organization Memberships & Associations (Electronics / General Feature) -->
+            <div class="col-12" v-if="data.shop_type === 'electronics' || (memberships && memberships.length > 0)">
+                <div class="card border-0 shadow-sm form-section-card">
+                    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="section-icon-box bg-info bg-opacity-10 text-info rounded d-flex align-items-center justify-content-center">
+                                <i class="fas fa-award"></i>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h6 class="fw-bold mb-0 text-dark">Organization Memberships & Associations (অর্গানাইজেশন মেম্বারশিপ)</h6>
+                                    <span class="badge bg-primary font-monospace" v-if="data.shop_type === 'electronics'">Electronics Feature</span>
+                                </div>
+                                <small class="text-muted" style="font-size: 11px;">Add trade bodies and associations (e.g. BCS, BASIS, ECAB) with logos to display on invoice bills</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1 shadow-sm px-3" @click="openMembershipModal('create')">
+                            <i class="fas fa-plus-circle"></i> Add Membership (মেম্বারশিপ যোগ করুন)
+                        </button>
+                    </div>
+                    <div class="card-body p-3">
+                        <div v-if="memberships && memberships.length > 0" class="row g-3">
+                            <div class="col-xl-4 col-md-6" v-for="(m, idx) in memberships" :key="idx">
+                                <div class="p-3 border rounded bg-light h-100 position-relative membership-card d-flex align-items-center justify-content-between gap-3 shadow-xs">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <!-- Logo Frame -->
+                                        <div class="bg-white p-1 rounded border d-flex align-items-center justify-content-center shadow-xs" style="width: 54px; height: 54px; min-width: 54px;">
+                                            <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo" class="img-fluid rounded" style="max-height: 44px; max-width: 44px; object-fit: contain;" alt="Logo" />
+                                            <i v-else class="fas fa-building fs-4 text-muted opacity-50"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-1 fs-6">{{ m.org_name }}</h6>
+                                            <div class="form-check form-switch m-0 p-0 d-flex align-items-center gap-1">
+                                                <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch"
+                                                    :id="`invShow_${idx}`" v-model="m.show_in_invoice" :true-value="1" :false-value="0"
+                                                    @change="toggleMembershipInvoice(idx)"
+                                                    style="transform: scale(0.9);">
+                                                <label class="form-check-label small cursor-pointer" :for="`invShow_${idx}`" :class="m.show_in_invoice ? 'text-success fw-bold' : 'text-muted'">
+                                                    {{ m.show_in_invoice ? 'Show in Invoice' : 'Hidden in Invoice' }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column gap-1">
+                                        <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" @click="openMembershipModal('edit', idx)" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" @click="deleteMembership(idx)" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-4 bg-light rounded border border-dashed">
+                            <i class="fas fa-award fs-2 text-muted opacity-25 mb-2"></i>
+                            <p class="text-muted small mb-2">No organization memberships added yet (e.g. Bangladesh Computer Samity, BASIS, ECAB).</p>
+                            <button type="button" class="btn btn-sm btn-primary px-3 shadow-sm" @click="openMembershipModal('create')">
+                                <i class="fas fa-plus me-1"></i> Add Organization Membership
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -598,6 +708,71 @@
                     </div>
                 </div>
             </div>
+            <!-- 🏛️ Membership Add/Edit Modal (Bootstrap/Custom Dialog) -->
+            <div v-if="showMembershipModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.55); z-index: 1060;" @click.self="closeMembershipModal">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content shadow-lg border-0 rounded-3">
+                        <div class="modal-header bg-light py-3 border-bottom">
+                            <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                <i class="fas fa-award text-primary"></i>
+                                {{ membershipModalMode === 'create' ? 'Add Organization Membership' : 'Edit Organization Membership' }}
+                            </h6>
+                            <button type="button" class="btn-close" @click="closeMembershipModal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <!-- Organization Name -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-dark">
+                                    Organization Name (সংস্থার নাম) <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" v-model.trim="membershipForm.org_name"
+                                    placeholder="e.g. Bangladesh Computer Samity (BCS), BASIS, ECAB" required />
+                                <small class="text-muted" style="font-size: 11px;">Enter the official name of the trade association or board</small>
+                            </div>
+
+                            <!-- Logo Upload -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-dark">
+                                    Organization Logo (লোগো)
+                                </label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="border rounded p-1 bg-light d-flex align-items-center justify-content-center"
+                                        style="width: 70px; height: 70px; min-width: 70px;">
+                                        <img v-if="membershipForm.logo_url || membershipForm.logo"
+                                            :src="membershipForm.logo_url || membershipForm.logo"
+                                            class="img-fluid rounded" style="max-height: 60px; max-width: 60px; object-fit: contain;" alt="Preview" />
+                                        <i v-else class="fas fa-image fs-3 text-muted opacity-50"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <input type="file" class="form-control form-control-sm" accept="image/*" @change="onMembershipLogoChange" />
+                                        <small class="text-muted d-block mt-1" style="font-size: 10.5px;">Recommended size: Square PNG or JPG with transparent background</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Show in Invoice Toggle -->
+                            <div class="p-3 border rounded bg-light d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="small fw-bold text-dark d-block">Show in Invoice (ইনভয়েসে প্রদর্শন)</span>
+                                    <small class="text-muted" style="font-size: 11px;">ইনভয়েস বিলের নিচে অর্গানাইজেশনের লোগো এবং নাম শো করবে</small>
+                                </div>
+                                <div class="form-check form-switch m-0 p-0">
+                                    <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch"
+                                        id="modalShowInInvoice" v-model="membershipForm.show_in_invoice" :true-value="1" :false-value="0"
+                                        style="transform: scale(1.3); cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light py-2 px-3 border-top d-flex justify-content-between">
+                            <button type="button" class="btn btn-sm btn-secondary" @click="closeMembershipModal">Cancel</button>
+                            <button type="button" class="btn btn-sm btn-primary px-4 fw-bold" :disabled="!membershipForm.org_name" @click="saveMembershipModal">
+                                <i class="fas fa-check me-1"></i> Save Membership
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </create-form>
 </template>
@@ -623,6 +798,8 @@ export default {
                 shop_type: "clothing",
                 sale_nature: "both",
                 default_vat: 0,
+                invoice_prefix: "POS",
+                show_pos_terms: 0,
                 printer_type: "thermal",
                 normal_paper_size: "A4",
                 thermal_paper_size: "80mm",
@@ -635,6 +812,17 @@ export default {
                 point_earn_rate: 1,
                 point_redeem_rate: 10,
                 min_points_to_redeem: 10,
+            },
+            memberships: [],
+            showMembershipModal: false,
+            membershipModalMode: "create",
+            editingMembershipIndex: -1,
+            membershipForm: {
+                id: null,
+                org_name: "",
+                logo: "",
+                logo_url: "",
+                show_in_invoice: 1,
             },
             image: {},
             x_tel_validates: {},
@@ -649,6 +837,101 @@ export default {
         };
     },
     methods: {
+        // Membership Modal Handlers
+        openMembershipModal(mode = "create", idx = -1) {
+            this.membershipModalMode = mode;
+            this.editingMembershipIndex = idx;
+            if (mode === "edit" && idx >= 0 && this.memberships[idx]) {
+                const item = this.memberships[idx];
+                this.membershipForm = {
+                    id: item.id || null,
+                    org_name: item.org_name || "",
+                    logo: item.logo || "",
+                    logo_url: item.logo_url || item.logo || "",
+                    show_in_invoice: item.show_in_invoice !== undefined ? (item.show_in_invoice ? 1 : 0) : 1,
+                };
+            } else {
+                this.membershipForm = {
+                    id: null,
+                    org_name: "",
+                    logo: "",
+                    logo_url: "",
+                    show_in_invoice: 1,
+                };
+            }
+            this.showMembershipModal = true;
+        },
+
+        closeMembershipModal() {
+            this.showMembershipModal = false;
+            this.membershipForm = {
+                id: null,
+                org_name: "",
+                logo: "",
+                logo_url: "",
+                show_in_invoice: 1,
+            };
+            this.editingMembershipIndex = -1;
+        },
+
+        onMembershipLogoChange(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            // Preview & Base64
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                this.membershipForm.logo = event.target.result;
+                this.membershipForm.logo_url = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
+
+        saveMembershipModal() {
+            if (!this.membershipForm.org_name) {
+                this.$toast("Organization Name is required", "warning");
+                return;
+            }
+
+            if (!Array.isArray(this.memberships)) {
+                this.memberships = [];
+            }
+
+            const payload = {
+                id: this.membershipForm.id,
+                org_name: this.membershipForm.org_name,
+                logo: this.membershipForm.logo,
+                logo_url: this.membershipForm.logo_url,
+                show_in_invoice: this.membershipForm.show_in_invoice ? 1 : 0,
+            };
+
+            if (this.membershipModalMode === "edit" && this.editingMembershipIndex >= 0) {
+                this.$set(this.memberships, this.editingMembershipIndex, payload);
+            } else {
+                this.memberships.push(payload);
+            }
+
+            this.closeMembershipModal();
+            this.$toast("Membership saved successfully", "success");
+        },
+
+        deleteMembership(idx) {
+            if (confirm("Are you sure you want to remove this organization membership?")) {
+                this.memberships.splice(idx, 1);
+                this.$toast("Membership removed", "info");
+            }
+        },
+
+        toggleMembershipInvoice(idx) {
+            // Local reactivity update
+            if (this.memberships[idx]) {
+                this.$toast(
+                    this.memberships[idx].show_in_invoice ? "Will show in invoice bills" : "Hidden from invoice bills",
+                    "info"
+                );
+            }
+        },
+
         submit: function (e) {
             this.$validate().then((res) => {
                 const error = this.validation.countErrors();
@@ -671,6 +954,9 @@ export default {
                     formData.append("shop_type", this.data.shop_type || "clothing");
                     formData.append("sale_nature", this.data.sale_nature || "both");
                     formData.append("default_vat", this.data.default_vat ?? 0);
+                    formData.append("invoice_prefix", this.data.invoice_prefix || "POS");
+                    formData.append("show_pos_terms", this.data.show_pos_terms ? 1 : 0);
+                    formData.append("memberships", JSON.stringify(this.memberships || []));
                     formData.append("printer_type", this.data.printer_type || "thermal");
                     formData.append("normal_paper_size", this.data.normal_paper_size || "A4");
                     formData.append("thermal_paper_size", this.data.thermal_paper_size || "80mm");
@@ -705,10 +991,25 @@ export default {
                     this.data = res.data || {};
                     if (!this.data.sale_nature) this.data.sale_nature = "both";
                     if (this.data.default_vat === undefined || this.data.default_vat === null) this.data.default_vat = 0;
+                    if (!this.data.invoice_prefix) this.data.invoice_prefix = "POS";
+                    if (this.data.show_pos_terms === undefined || this.data.show_pos_terms === null) this.data.show_pos_terms = 0;
                     if (!this.data.printer_type) this.data.printer_type = "thermal";
                     if (!this.data.normal_paper_size) this.data.normal_paper_size = "A4";
                     if (!this.data.thermal_paper_size) this.data.thermal_paper_size = "80mm";
                     if (!this.data.label_preset) this.data.label_preset = "4x2";
+
+                    // Initialize memberships array
+                    if (Array.isArray(this.data.memberships)) {
+                        this.memberships = this.data.memberships;
+                    } else if (typeof this.data.memberships === "string") {
+                        try {
+                            this.memberships = JSON.parse(this.data.memberships) || [];
+                        } catch (e) {
+                            this.memberships = [];
+                        }
+                    } else {
+                        this.memberships = [];
+                    }
                 })
                 .catch((error) => {
                     this.$toast(

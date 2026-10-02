@@ -520,10 +520,14 @@ class PosController extends BaseController
                 return response()->json(['exception' => 'Walk-in গ্রাহকের জন্য Paid Amount ০ রাখা যাবে না! অনুগ্রহ করে পেমেন্ট দিন অথবা কাস্টমার রেজিস্টার/সিলেক্ট করুন।'], 422);
             }
 
-            // Generate Invoice No
+            // Generate Invoice No using dynamic site prefix
+            $siteSetting = SiteSetting::first();
+            $prefix = !empty($siteSetting->invoice_prefix) ? trim($siteSetting->invoice_prefix) : 'POS';
+            $prefix = rtrim($prefix, '-');
+
             $lastInvoice = Invoice::latest('id')->first();
             $nextId = $lastInvoice ? $lastInvoice->id + 1 : 1;
-            $invoiceNo = 'POS-' . date('Ymd') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+            $invoiceNo = $prefix . '-' . date('Ymd') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 
             $cart = $request->input('cart');
             $originalAmount = 0;
@@ -536,6 +540,14 @@ class PosController extends BaseController
             $vat = floatval($request->input('vat', 0));
             $vatPercent = floatval($request->input('vat_percent', 0));
             $totalAmount = max(0, ($originalAmount - $discount) + $vat);
+
+            $authAdmin = auth()->guard('admin')->user() ?? auth()->user();
+            $createdBy = $authAdmin ? $authAdmin->id : 1;
+
+            $termsConditions = $request->input('terms_conditions');
+            if (is_array($termsConditions)) {
+                $termsConditions = json_encode($termsConditions, JSON_UNESCAPED_UNICODE);
+            }
 
             // Create Invoice
             $invoiceData = [
@@ -551,8 +563,14 @@ class PosController extends BaseController
                 'is_closed' => ($paidAmount >= $totalAmount) ? 1 : 0,
                 'status' => 'active',
             ];
+            if (Schema::hasColumn('invoices', 'created_by')) {
+                $invoiceData['created_by'] = $createdBy;
+            }
             if (Schema::hasColumn('invoices', 'vat_percent')) {
                 $invoiceData['vat_percent'] = $vatPercent;
+            }
+            if (Schema::hasColumn('invoices', 'terms_conditions') && !empty($termsConditions)) {
+                $invoiceData['terms_conditions'] = $termsConditions;
             }
             $invoice = Invoice::create($invoiceData);
 

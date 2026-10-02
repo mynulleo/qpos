@@ -334,11 +334,57 @@
             </div>
 
             <!-- Due / Change Return Amount (Compact Line) -->
-            <div class="d-flex justify-content-between align-items-center p-2 bg-light border rounded mb-3">
+            <div class="d-flex justify-content-between align-items-center p-2 bg-light border rounded mb-2">
               <span class="text-muted fw-bold small">{{ (paid_amount || 0) >= netPayable ? 'Change (ফেরত):' : 'Due Amount (বকেয়া):' }}</span>
               <span class="fw-bold font-monospace fs-6" :class="(paid_amount || 0) >= netPayable ? 'text-success' : 'text-danger'">
                 Tk. {{ formatPrice((paid_amount || 0) >= netPayable ? ((paid_amount || 0) - netPayable) : (netPayable - (paid_amount || 0))) }}
               </span>
+            </div>
+
+            <!-- 📜 Terms & Conditions Configuration for this Invoice (Dependent on Site Setting) -->
+            <div v-if="showPosTermsConfig" class="card border mb-3 shadow-2xs">
+              <div class="card-header bg-light py-1 px-2 d-flex align-items-center justify-content-between cursor-pointer" @click="showTermsSection = !showTermsSection">
+                <div class="d-flex align-items-center gap-1">
+                  <i class="fas fa-file-contract text-primary" style="font-size: 11px;"></i>
+                  <span class="fw-bold small text-dark" style="font-size: 11px;">Terms & Conditions (শর্তাবলী)</span>
+                  <span class="badge bg-primary rounded-pill font-monospace" style="font-size: 9px;">
+                    {{ selectedTermsList.length }} active
+                  </span>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                  <button type="button" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 9px;" @click.stop="addCustomTerm" title="Add another condition">
+                    <i class="fas fa-plus me-1"></i>Add
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 9px;" @click.stop="resetInvoiceTerms" title="Reset to default terms">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                  <i class="fas fa-chevron-down text-muted transition-all ms-1" :style="{ transform: showTermsSection ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '9px' }"></i>
+                </div>
+              </div>
+              <div v-show="showTermsSection" class="card-body p-2 bg-white" style="max-height: 160px; overflow-y: auto;">
+                <div v-if="invoiceTerms.length > 0" class="d-flex flex-column gap-1">
+                  <div v-for="(term, tIdx) in invoiceTerms" :key="tIdx" class="d-flex align-items-center gap-1 p-1 rounded border bg-light bg-opacity-50">
+                    <!-- Checkbox -->
+                    <input type="checkbox" class="form-check-input mt-0 ms-1 cursor-pointer"
+                      v-model="term.selected" style="min-width: 14px; height: 14px;" :title="term.selected ? 'Included in Invoice' : 'Excluded from Invoice'">
+                    
+                    <!-- Editable Input Box -->
+                    <input type="text" class="form-control form-control-sm py-0 px-2 font-monospace"
+                      :class="term.selected ? 'fw-semibold text-dark' : 'text-muted text-decoration-line-through opacity-75'"
+                      style="height: 24px; font-size: 11px;"
+                      v-model="term.condition"
+                      placeholder="Condition text...">
+                    
+                    <!-- Delete button -->
+                    <button type="button" class="btn btn-xs btn-outline-danger border-0 py-0 px-1 text-muted" @click="removeCustomTerm(tIdx)" title="Remove this condition">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+                <div v-else class="text-center text-muted small py-2 font-monospace" style="font-size: 10px;">
+                  No conditions. Click <strong>+Add</strong> to write condition for this invoice.
+                </div>
+              </div>
             </div>
 
             <!-- ⭐️ Complete Sale & Print Button (Prominent & Always Visible) -->
@@ -686,9 +732,28 @@
           </div>
         </div>
 
-        <div style="text-align: center; margin-top: 12px; border-top: 1px dashed #000; padding-top: 6px; font-size: 9.5px; line-height: 1.3;">
+        <!-- 📜 Terms & Conditions in Thermal 80mm -->
+        <div v-if="completedInvoice.terms_conditions && completedInvoice.terms_conditions.length > 0" style="margin-top: 8px; border-top: 1px dashed #000; padding-top: 4px; font-size: 8.5px; line-height: 1.25;">
+          <div style="font-weight: bold; margin-bottom: 2px;">TERMS & CONDITIONS:</div>
+          <div v-for="(tc, tcIdx) in completedInvoice.terms_conditions" :key="tcIdx">
+            • {{ tc }}
+          </div>
+        </div>
+
+        <!-- 🏛️ Organization Memberships in Thermal 80mm -->
+        <div v-if="siteMembershipsForInvoice && siteMembershipsForInvoice.length > 0" style="margin-top: 6px; border-top: 1px dashed #000; padding-top: 4px; text-align: center;">
+          <div style="font-size: 8px; font-weight: bold; margin-bottom: 3px; text-transform: uppercase;">Member / Affiliated With</div>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div v-for="(m, mIdx) in siteMembershipsForInvoice" :key="mIdx" style="display: inline-flex; align-items: center; gap: 3px; font-size: 8px;">
+              <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo" style="max-height: 18px; max-width: 25px; object-fit: contain;" />
+              <span>{{ m.org_name }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 6px; font-size: 9.5px; line-height: 1.3;">
           <div style="font-weight: bold;">Thank you for shopping with us!</div>
-          <div>Please preserve this receipt for warranty and returns within 7 days.</div>
+          <div v-if="!completedInvoice.terms_conditions || completedInvoice.terms_conditions.length === 0">Please preserve this receipt for warranty and returns within 7 days.</div>
           <div style="font-size: 8.5px; color: #555; margin-top: 3px;">Software by QPOS</div>
         </div>
       </div>
@@ -773,9 +838,24 @@
           </div>
         </div>
 
-        <div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 4px; font-size: 8px;">
+        <!-- Terms & Conditions in Thermal 60mm -->
+        <div v-if="completedInvoice.terms_conditions && completedInvoice.terms_conditions.length > 0" style="margin-top: 5px; border-top: 1px dashed #000; padding-top: 3px; font-size: 7.5px; line-height: 1.2;">
+          <div style="font-weight: bold; margin-bottom: 1px;">Terms:</div>
+          <div v-for="(tc, tcIdx) in completedInvoice.terms_conditions" :key="tcIdx">
+            - {{ tc }}
+          </div>
+        </div>
+
+        <!-- Organization Memberships in Thermal 60mm -->
+        <div v-if="siteMembershipsForInvoice && siteMembershipsForInvoice.length > 0" style="margin-top: 4px; border-top: 1px dashed #000; padding-top: 2px; text-align: center; font-size: 7.5px;">
+          <div v-for="(m, mIdx) in siteMembershipsForInvoice" :key="mIdx" style="display: inline-block; margin: 1px 3px;">
+            {{ m.org_name }}
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 6px; border-top: 1px dashed #000; padding-top: 4px; font-size: 8px;">
           <div>Thanks for visiting!</div>
-          <div>Preserve receipt for returns.</div>
+          <div v-if="!completedInvoice.terms_conditions || completedInvoice.terms_conditions.length === 0">Preserve receipt for returns.</div>
         </div>
       </div>
 
@@ -848,15 +928,36 @@
 
         <!-- Summary & Totals -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; font-size: 10px;">
-          <!-- Left Notes & Loyalty Points -->
+          <!-- Left Notes & Loyalty Points & Terms -->
           <div style="width: 52%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;">
             <div v-if="completedInvoice.coupon_enabled" style="margin-bottom: 4px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
               <strong style="color: #d97706;">Loyalty Points:</strong>
               Earned: <strong>+{{ completedInvoice.points_earned }}</strong> | Balance: <strong>{{ formatPrice(completedInvoice.points_balance) }} Pts</strong>
             </div>
-            <div style="font-size: 8.5px; color: #64748b; line-height: 1.2;">
+
+            <!-- Dynamic Terms & Conditions in A5 -->
+            <div v-if="completedInvoice.terms_conditions && completedInvoice.terms_conditions.length > 0" style="margin-bottom: 4px;">
+              <div style="font-weight: bold; color: #334155; font-size: 9.5px; margin-bottom: 2px;">Terms & Conditions:</div>
+              <div style="font-size: 8.5px; color: #64748b; line-height: 1.25;">
+                <div v-for="(tc, tcIdx) in completedInvoice.terms_conditions" :key="tcIdx">
+                  {{ tcIdx + 1 }}. {{ tc }}
+                </div>
+              </div>
+            </div>
+            <div v-else style="font-size: 8.5px; color: #64748b; line-height: 1.2;">
               <div>* Goods once sold cannot be returned without original cash memo within 7 days.</div>
               <div>* Physical and liquid damage will void any item warranty.</div>
+            </div>
+
+            <!-- Organization Membership Badges in A5 -->
+            <div v-if="siteMembershipsForInvoice && siteMembershipsForInvoice.length > 0" style="margin-top: 6px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+              <div style="font-size: 8px; font-weight: bold; color: #475569; margin-bottom: 2px;">Affiliated Memberships:</div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div v-for="(m, mIdx) in siteMembershipsForInvoice" :key="mIdx" style="display: inline-flex; align-items: center; gap: 4px; font-size: 8px; color: #334155;">
+                  <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo" style="max-height: 16px; max-width: 24px; object-fit: contain;" />
+                  <span>{{ m.org_name }}</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -990,14 +1091,31 @@
               </div>
             </div>
 
-            <div style="font-weight: bold; color: #334155; margin-bottom: 2px;">Terms & Conditions:</div>
-            <div style="color: #64748b; font-size: 9.5px; line-height: 1.35;">
+            <!-- Dynamic Terms & Conditions in A4 -->
+            <div style="font-weight: bold; color: #334155; margin-bottom: 3px;">Terms & Conditions:</div>
+            <div style="color: #64748b; font-size: 9.5px; line-height: 1.35;" v-if="completedInvoice.terms_conditions && completedInvoice.terms_conditions.length > 0">
+              <div v-for="(tc, tcIdx) in completedInvoice.terms_conditions" :key="tcIdx">
+                {{ tcIdx + 1 }}. {{ tc }}
+              </div>
+            </div>
+            <div style="color: #64748b; font-size: 9.5px; line-height: 1.35;" v-else>
               <div>1. Please preserve this invoice for any warranty claims and exchange within 7 days.</div>
               <div>2. Warranty does not cover physical damage, burn, liquid ingress, or broken warranty seals.</div>
               <div>3. Disputed items will be inspected according to company service policy.</div>
             </div>
 
-            <div v-if="$root.site?.bank_name" style="margin-top: 6px; font-size: 9.5px; color: #475569; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+            <!-- Organization Membership Badges in A4 -->
+            <div v-if="siteMembershipsForInvoice && siteMembershipsForInvoice.length > 0" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+              <div style="font-size: 9.5px; font-weight: bold; color: #334155; margin-bottom: 4px;">Affiliated Memberships & Associations:</div>
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div v-for="(m, mIdx) in siteMembershipsForInvoice" :key="mIdx" style="display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 9.5px; font-weight: 500;">
+                  <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo" style="max-height: 20px; max-width: 30px; object-fit: contain;" />
+                  <span>{{ m.org_name }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="$root.site?.bank_name" style="margin-top: 8px; font-size: 9.5px; color: #475569; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
               <strong>Bank Info:</strong> {{ $root.site?.bank_name }} | A/C: {{ $root.site?.account_number }} | Branch: {{ $root.site?.branch_name }}
             </div>
           </div>
@@ -1116,11 +1234,38 @@ export default {
       trxid: '',
       paid_amount: 0,
 
+      // 📜 Terms & Conditions State
+      invoiceTerms: [],
+      rawDefaultTerms: [],
+      showTermsSection: true,
+
       isSubmitting: false,
       completedInvoice: null,
     };
   },
   computed: {
+    showPosTermsConfig() {
+      return !!(this.$root.site?.show_pos_terms == 1 || this.$root.site?.show_pos_terms === true || this.$root.site?.show_pos_terms === '1');
+    },
+    selectedTermsList() {
+      return (this.invoiceTerms || [])
+        .filter(t => t.selected && t.condition && t.condition.trim() !== '')
+        .map(t => t.condition.trim());
+    },
+    siteMembershipsForInvoice() {
+      const mem = this.$root.site?.memberships;
+      let list = [];
+      if (Array.isArray(mem)) {
+        list = mem;
+      } else if (typeof mem === 'string') {
+        try {
+          list = JSON.parse(mem) || [];
+        } catch (e) {
+          list = [];
+        }
+      }
+      return list.filter(m => m && (m.show_in_invoice === 1 || m.show_in_invoice === true || m.show_in_invoice === '1'));
+    },
     cartTotalQty() {
       return this.cart.reduce((sum, i) => sum + (floatval(i.qty) || 0), 0);
     },
@@ -1226,6 +1371,60 @@ export default {
     }
   },
   methods: {
+    loadInvoiceTerms() {
+      axios.get('termsCondition/by-module/Invoice')
+        .then(res => {
+          const list = res.data || [];
+          if (list.length > 0) {
+            this.rawDefaultTerms = JSON.parse(JSON.stringify(list));
+            this.invoiceTerms = list.map(item => ({
+              id: item.id,
+              condition: item.condition,
+              selected: item.is_default ? true : false,
+              is_default: item.is_default,
+            }));
+          } else {
+            this.invoiceTerms = [
+              { id: null, condition: 'Goods once sold cannot be returned without cash memo within 7 days.', selected: true, is_default: 1 },
+              { id: null, condition: 'Physical damage, liquid damage or burn voids warranty.', selected: true, is_default: 1 },
+              { id: null, condition: 'Disputed items are inspected as per company service policy.', selected: true, is_default: 1 }
+            ];
+            this.rawDefaultTerms = JSON.parse(JSON.stringify(this.invoiceTerms));
+          }
+        })
+        .catch(err => {
+          console.error('Failed to load invoice terms:', err);
+          this.invoiceTerms = [
+            { id: null, condition: 'Goods once sold cannot be returned without cash memo within 7 days.', selected: true, is_default: 1 },
+            { id: null, condition: 'Physical damage, liquid damage or burn voids warranty.', selected: true, is_default: 1 },
+            { id: null, condition: 'Disputed items are inspected as per company service policy.', selected: true, is_default: 1 }
+          ];
+          this.rawDefaultTerms = JSON.parse(JSON.stringify(this.invoiceTerms));
+        });
+    },
+    addCustomTerm() {
+      this.invoiceTerms.push({
+        id: null,
+        condition: '',
+        selected: true,
+        is_default: 0
+      });
+      this.showTermsSection = true;
+    },
+    removeCustomTerm(idx) {
+      this.invoiceTerms.splice(idx, 1);
+    },
+    resetInvoiceTerms() {
+      if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
+        this.invoiceTerms = JSON.parse(JSON.stringify(this.rawDefaultTerms)).map(item => ({
+          id: item.id,
+          condition: item.condition,
+          selected: item.is_default ? true : false,
+          is_default: item.is_default,
+        }));
+      }
+      this.$toast('Invoice terms reset to default', 'info');
+    },
     openHelpModal() {
       this.showHelpModal = true;
       if (!this.posHelpContent) {
@@ -1860,6 +2059,10 @@ export default {
 
       this.isSubmitting = true;
 
+      const termsPayload = (this.invoiceTerms || [])
+        .filter(t => t.selected && t.condition && t.condition.trim() !== '')
+        .map(t => t.condition.trim());
+
       const payload = {
         client_id: this.client.id,
         client_mobile: this.client.mobile,
@@ -1875,6 +2078,7 @@ export default {
         mbanking_type: this.mbanking_type,
         trxid: this.trxid,
         paid_amount: this.paid_amount,
+        terms_conditions: termsPayload,
       };
 
       axios.post('pos/checkout', payload)
@@ -1913,6 +2117,16 @@ export default {
       this.duplicateBarcodeItems = [];
       this.duplicateBarcodeScanned = '';
       this.selectedDuplicateIndex = 0;
+
+      // Reset terms conditions to defaults
+      if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
+        this.invoiceTerms = JSON.parse(JSON.stringify(this.rawDefaultTerms)).map(item => ({
+          id: item.id,
+          condition: item.condition,
+          selected: item.is_default ? true : false,
+          is_default: item.is_default,
+        }));
+      }
     },
     handleKeydown(e) {
       if (e.target === this.$refs.itemSearchInput && e.key === 'Enter') {
@@ -2030,6 +2244,7 @@ export default {
   mounted() {
     window.addEventListener('keydown', this.handleKeydown);
     this.initVatFromSettings();
+    this.loadInvoiceTerms();
   },
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleKeydown);

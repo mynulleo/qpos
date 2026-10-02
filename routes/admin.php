@@ -242,6 +242,16 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('quotation/{id}/change-status', [App\Http\Controllers\Admin\QuotationController::class, 'changeStatus'])->name('quotation.changeStatus');
         Route::resource('quotation', App\Http\Controllers\Admin\QuotationController::class);
 
+        // Terms & Conditions Module Routes
+        Route::get('termsCondition/by-module/{module}', [App\Http\Controllers\Admin\TermsConditionController::class, 'byModule'])->name('termsCondition.byModule');
+        Route::post('termsCondition/{id}/toggle-status', [App\Http\Controllers\Admin\TermsConditionController::class, 'toggleStatus'])->name('termsCondition.toggleStatus');
+        Route::post('termsCondition/{id}/toggle-default', [App\Http\Controllers\Admin\TermsConditionController::class, 'toggleDefault'])->name('termsCondition.toggleDefault');
+        Route::resource('termsCondition', App\Http\Controllers\Admin\TermsConditionController::class);
+
+        // Organization Memberships (Electronics Shop Type & Invoicing)
+        Route::post('organizationMembership/{id}/toggle-show-in-invoice', [App\Http\Controllers\Admin\OrganizationMembershipController::class, 'toggleInvoiceShow'])->name('organizationMembership.toggleInvoiceShow');
+        Route::resource('organizationMembership', App\Http\Controllers\Admin\OrganizationMembershipController::class);
+
         // POS Terminal View Routes
         Route::get('pos', [App\Http\Controllers\Admin\PosController::class, 'index'])->name('pos.index');
         Route::get('pos/return', [App\Http\Controllers\Admin\PosController::class, 'return'])->name('pos.return');
