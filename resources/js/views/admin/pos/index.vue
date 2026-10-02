@@ -241,6 +241,58 @@
             </button>
           </div>
         </div>
+
+        <!-- 📜 Terms & Conditions Configuration below Cart (Active when site setting show_pos_terms is enabled) -->
+        <div v-if="showPosTermsConfig" class="card border-0 shadow-sm mb-3">
+          <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between border-bottom cursor-pointer" @click="showTermsSection = !showTermsSection">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fas fa-file-contract text-primary"></i>
+              <span class="fw-bold small text-dark">Terms & Conditions (ইনভয়েস শর্তাবলী)</span>
+              <span class="badge bg-primary font-monospace" style="font-size: 10px;">
+                {{ selectedTermsList.length }} selected
+              </span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-semibold" @click.stop="addCustomTerm" title="Add another condition">
+                <i class="fas fa-plus me-1"></i>Add Condition
+              </button>
+              <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" @click.stop="resetInvoiceTerms" title="Reset to default terms">
+                <i class="fas fa-sync-alt me-1"></i>Reset
+              </button>
+              <i class="fas fa-chevron-down text-muted transition-all" :style="{ transform: showTermsSection ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '11px' }"></i>
+            </div>
+          </div>
+          <div v-show="showTermsSection" class="card-body p-2 bg-white" style="max-height: 180px; overflow-y: auto;">
+            <div v-if="invoiceTerms.length > 0" class="d-flex flex-column gap-2">
+              <div v-for="(term, tIdx) in invoiceTerms" :key="tIdx" class="d-flex align-items-center gap-2 p-1 px-2 rounded border" :class="term.selected ? 'bg-light border-primary border-opacity-25' : 'bg-white border-light opacity-75'">
+                <!-- Checkbox -->
+                <div class="form-check m-0">
+                  <input type="checkbox" class="form-check-input cursor-pointer"
+                    v-model="term.selected" :id="'pos_term_' + tIdx"
+                    :title="term.selected ? 'Included in Invoice' : 'Excluded from Invoice'">
+                </div>
+                
+                <!-- Editable Input Box -->
+                <input type="text" class="form-control form-control-sm font-monospace"
+                  :class="term.selected ? 'fw-semibold text-dark' : 'text-muted text-decoration-line-through'"
+                  style="font-size: 12px; height: 28px;"
+                  v-model="term.condition"
+                  placeholder="Condition text...">
+                
+                <!-- Delete / Remove button -->
+                <button type="button" class="btn btn-xs btn-outline-danger border-0 p-1 text-muted" @click="removeCustomTerm(tIdx)" title="Remove this condition">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <div v-else class="text-center text-muted small py-3">
+              <p class="mb-1">No conditions loaded for Invoice module.</p>
+              <button type="button" class="btn btn-xs btn-primary theme_btn px-2" @click="addCustomTerm">
+                <i class="fas fa-plus me-1"></i> Add Custom Condition
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Right Column: Payment & Checkout Summary (Flat & Space-Optimized) -->
@@ -334,57 +386,11 @@
             </div>
 
             <!-- Due / Change Return Amount (Compact Line) -->
-            <div class="d-flex justify-content-between align-items-center p-2 bg-light border rounded mb-2">
+            <div class="d-flex justify-content-between align-items-center p-2 bg-light border rounded mb-3">
               <span class="text-muted fw-bold small">{{ (paid_amount || 0) >= netPayable ? 'Change (ফেরত):' : 'Due Amount (বকেয়া):' }}</span>
               <span class="fw-bold font-monospace fs-6" :class="(paid_amount || 0) >= netPayable ? 'text-success' : 'text-danger'">
                 Tk. {{ formatPrice((paid_amount || 0) >= netPayable ? ((paid_amount || 0) - netPayable) : (netPayable - (paid_amount || 0))) }}
               </span>
-            </div>
-
-            <!-- 📜 Terms & Conditions Configuration for this Invoice (Dependent on Site Setting) -->
-            <div v-if="showPosTermsConfig" class="card border mb-3 shadow-2xs">
-              <div class="card-header bg-light py-1 px-2 d-flex align-items-center justify-content-between cursor-pointer" @click="showTermsSection = !showTermsSection">
-                <div class="d-flex align-items-center gap-1">
-                  <i class="fas fa-file-contract text-primary" style="font-size: 11px;"></i>
-                  <span class="fw-bold small text-dark" style="font-size: 11px;">Terms & Conditions (শর্তাবলী)</span>
-                  <span class="badge bg-primary rounded-pill font-monospace" style="font-size: 9px;">
-                    {{ selectedTermsList.length }} active
-                  </span>
-                </div>
-                <div class="d-flex align-items-center gap-1">
-                  <button type="button" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 9px;" @click.stop="addCustomTerm" title="Add another condition">
-                    <i class="fas fa-plus me-1"></i>Add
-                  </button>
-                  <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 9px;" @click.stop="resetInvoiceTerms" title="Reset to default terms">
-                    <i class="fas fa-sync-alt"></i>
-                  </button>
-                  <i class="fas fa-chevron-down text-muted transition-all ms-1" :style="{ transform: showTermsSection ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '9px' }"></i>
-                </div>
-              </div>
-              <div v-show="showTermsSection" class="card-body p-2 bg-white" style="max-height: 160px; overflow-y: auto;">
-                <div v-if="invoiceTerms.length > 0" class="d-flex flex-column gap-1">
-                  <div v-for="(term, tIdx) in invoiceTerms" :key="tIdx" class="d-flex align-items-center gap-1 p-1 rounded border bg-light bg-opacity-50">
-                    <!-- Checkbox -->
-                    <input type="checkbox" class="form-check-input mt-0 ms-1 cursor-pointer"
-                      v-model="term.selected" style="min-width: 14px; height: 14px;" :title="term.selected ? 'Included in Invoice' : 'Excluded from Invoice'">
-                    
-                    <!-- Editable Input Box -->
-                    <input type="text" class="form-control form-control-sm py-0 px-2 font-monospace"
-                      :class="term.selected ? 'fw-semibold text-dark' : 'text-muted text-decoration-line-through opacity-75'"
-                      style="height: 24px; font-size: 11px;"
-                      v-model="term.condition"
-                      placeholder="Condition text...">
-                    
-                    <!-- Delete button -->
-                    <button type="button" class="btn btn-xs btn-outline-danger border-0 py-0 px-1 text-muted" @click="removeCustomTerm(tIdx)" title="Remove this condition">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-                <div v-else class="text-center text-muted small py-2 font-monospace" style="font-size: 10px;">
-                  No conditions. Click <strong>+Add</strong> to write condition for this invoice.
-                </div>
-              </div>
             </div>
 
             <!-- ⭐️ Complete Sale & Print Button (Prominent & Always Visible) -->
@@ -1379,27 +1385,17 @@ export default {
             this.rawDefaultTerms = JSON.parse(JSON.stringify(list));
             this.invoiceTerms = list.map(item => ({
               id: item.id,
-              condition: item.condition,
-              selected: item.is_default ? true : false,
-              is_default: item.is_default,
+              condition: item.condition_text || item.condition || '',
+              selected: item.is_default == 1 || item.is_default === true,
+              is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
             }));
           } else {
-            this.invoiceTerms = [
-              { id: null, condition: 'Goods once sold cannot be returned without cash memo within 7 days.', selected: true, is_default: 1 },
-              { id: null, condition: 'Physical damage, liquid damage or burn voids warranty.', selected: true, is_default: 1 },
-              { id: null, condition: 'Disputed items are inspected as per company service policy.', selected: true, is_default: 1 }
-            ];
-            this.rawDefaultTerms = JSON.parse(JSON.stringify(this.invoiceTerms));
+            this.invoiceTerms = [];
+            this.rawDefaultTerms = [];
           }
         })
         .catch(err => {
           console.error('Failed to load invoice terms:', err);
-          this.invoiceTerms = [
-            { id: null, condition: 'Goods once sold cannot be returned without cash memo within 7 days.', selected: true, is_default: 1 },
-            { id: null, condition: 'Physical damage, liquid damage or burn voids warranty.', selected: true, is_default: 1 },
-            { id: null, condition: 'Disputed items are inspected as per company service policy.', selected: true, is_default: 1 }
-          ];
-          this.rawDefaultTerms = JSON.parse(JSON.stringify(this.invoiceTerms));
         });
     },
     addCustomTerm() {
@@ -1418,12 +1414,12 @@ export default {
       if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
         this.invoiceTerms = JSON.parse(JSON.stringify(this.rawDefaultTerms)).map(item => ({
           id: item.id,
-          condition: item.condition,
-          selected: item.is_default ? true : false,
-          is_default: item.is_default,
+          condition: item.condition_text || item.condition || '',
+          selected: item.is_default == 1 || item.is_default === true,
+          is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
         }));
+        this.$toast('Invoice terms reset to default', 'info');
       }
-      this.$toast('Invoice terms reset to default', 'info');
     },
     openHelpModal() {
       this.showHelpModal = true;
@@ -2122,9 +2118,9 @@ export default {
       if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
         this.invoiceTerms = JSON.parse(JSON.stringify(this.rawDefaultTerms)).map(item => ({
           id: item.id,
-          condition: item.condition,
-          selected: item.is_default ? true : false,
-          is_default: item.is_default,
+          condition: item.condition_text || item.condition || '',
+          selected: item.is_default == 1 || item.is_default === true,
+          is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
         }));
       }
     },

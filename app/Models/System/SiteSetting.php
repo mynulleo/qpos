@@ -27,8 +27,17 @@ class SiteSetting extends BaseModel
     public function getMembershipsAttribute($value)
     {
         if (empty($value)) return [];
-        if (is_array($value)) return $value;
+        if (is_array($value)) {
+            if (count($value) === 1 && is_string($value[0]) && (str_starts_with(trim($value[0]), '[') || str_starts_with(trim($value[0]), '{'))) {
+                $sub = json_decode($value[0], true);
+                if (is_array($sub)) return $sub;
+            }
+            return $value;
+        }
         $decoded = json_decode($value, true);
+        if (is_string($decoded)) {
+            $decoded = json_decode($decoded, true);
+        }
         return is_array($decoded) ? $decoded : [];
     }
     public function getOriginalLogoAttribute()

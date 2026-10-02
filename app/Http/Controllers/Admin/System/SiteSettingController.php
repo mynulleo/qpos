@@ -136,6 +136,8 @@ class SiteSettingController extends BaseController
                 $data['favicon'] = $this->oldFile($conf->favicon);
             }
 
+            $this->processMembershipsData($data, $request);
+
             $conf->update($data);
 
             return $this->responseReturn('update', $conf);
@@ -153,10 +155,107 @@ class SiteSettingController extends BaseController
                 $data['favicon'] = $this->upload($favicon, 'conf');
             }
 
+            $this->processMembershipsData($data, $request);
+
             $setting = SiteSetting::create($data);
 
             return $this->responseReturn('create', $setting);
         }
+    }
+
+    /**
+     * Process memberships array and sync to organization_memberships table
+     */
+    private function processMembershipsData(array &$data, Request $request)
+    {
+        $rawMemberships = $request->input('memberships');
+        if (is_string($rawMemberships)) {
+            $rawMemberships = json_decode($rawMemberships, true) ?? [];
+            if (is_string($rawMemberships)) {
+                $rawMemberships = json_decode($rawMemberships, true) ?? [];
+            }
+        }
+        if (!is_array($rawMemberships)) {
+            $rawMemberships = [];
+        }
+
+        $processedMemberships = [];
+        $existingIds = [];
+
+        foreach ($rawMemberships as $idx => $m) {
+            $orgName = trim($m['org_name'] ?? '');
+            if (empty($orgName)) continue;
+
+            $logo = $m['logo'] ?? ($m['logo_url'] ?? null);
+            $logoPath = $logo;
+
+            // If logo is a base64 string, upload as image file
+            if (!empty($logo) && (str_starts_with($logo, 'data:image') || preg_match('/^data:image\/(\w+);base64,/', $logo))) {
+                $code = date('ymdhis') . '-' . rand(1111, 9999);
+                $cleanBase64 = preg_replace('/^data:image\/[a-zA-Z0-9]+;base64,/', '', $logo);
+                $cleanBase64 = str_replace(' ', '+', $cleanBase64);
+                $decodedImg = base64_decode($cleanBase64);
+                if ($decodedImg !== false) {
+                    $relPath = 'upload/memberships/' . $code . '.png';
+                    Storage::disk('public')->put($relPath, $decodedImg);
+                    $logoPath = Storage::disk('public')->url($relPath);
+                }
+            }
+
+            $showInInvoice = !empty($m['show_in_invoice']) ? 1 : 0;
+            $memberId = !empty($m['id']) ? $m['id'] : null;
+
+            $orgModel = null;
+            if ($memberId) {
+                $orgModel = \App\Models\OrganizationMembership::find($memberId);
+            }
+            if (!$orgModel) {
+                $orgModel = \App\Models\OrganizationMembership::where('org_name', $orgName)->first();
+            }
+
+            if ($orgModel) {
+                $orgModel->update([
+                    'org_name' => $orgName,
+                    'logo' => $logoPath,
+                    'show_in_invoice' => $showInInvoice,
+                    'sorting' => $idx + 1,
+                    'status' => 'active',
+                ]);
+            } else {
+                $orgModel = \App\Models\OrganizationMembership::create([
+                    'org_name' => $orgName,
+                    'logo' => $logoPath,
+                    'show_in_invoice' => $showInInvoice,
+                    'sorting' => $idx + 1,
+                    'status' => 'active',
+                ]);
+            }
+
+            $existingIds[] = $orgModel->id;
+
+            $processedMemberships[] = [
+                'id' => $orgModel->id,
+                'org_name' => $orgName,
+                'logo' => $logoPath,
+                'logo_url' => $logoPath,
+                'show_in_invoice' => $showInInvoice,
+                'sorting' => $idx + 1,
+            ];
+        }
+
+        try {
+            if (Schema::hasTable('organization_memberships')) {
+                if (!empty($existingIds)) {
+                    \App\Models\OrganizationMembership::whereNotIn('id', $existingIds)->delete();
+                } else if (empty($rawMemberships)) {
+                    \App\Models\OrganizationMembership::whereNotNull('id')->delete();
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore error
+        }
+
+        $data['memberships'] = $processedMemberships;
     }
 
     /**

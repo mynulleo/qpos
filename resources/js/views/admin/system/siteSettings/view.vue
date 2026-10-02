@@ -682,17 +682,18 @@ export default {
     name: "SiteSettingView",
     computed: {
         parsedMemberships() {
-            if (Array.isArray(this.data?.memberships)) {
-                return this.data.memberships;
-            }
-            if (typeof this.data?.memberships === "string") {
+            let mem = this.data?.memberships;
+            if (typeof mem === "string") {
                 try {
-                    return JSON.parse(this.data.memberships) || [];
+                    mem = JSON.parse(mem);
+                    if (typeof mem === "string") {
+                        mem = JSON.parse(mem);
+                    }
                 } catch (e) {
-                    return [];
+                    mem = [];
                 }
             }
-            return [];
+            return Array.isArray(mem) ? mem : [];
         }
     },
     data() {

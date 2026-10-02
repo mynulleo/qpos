@@ -282,8 +282,8 @@
                 </div>
             </div>
 
-            <!-- 🏛️ 3. Organization Memberships & Associations (Electronics / General Feature) -->
-            <div class="col-12" v-if="data.shop_type === 'electronics' || (memberships && memberships.length > 0)">
+            <!-- 🏛️ 3. Organization Memberships & Associations -->
+            <div class="col-12">
                 <div class="card border-0 shadow-sm form-section-card">
                     <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
@@ -736,15 +736,22 @@
                                     Organization Logo (লোগো)
                                 </label>
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="border rounded p-1 bg-light d-flex align-items-center justify-content-center"
-                                        style="width: 70px; height: 70px; min-width: 70px;">
-                                        <img v-if="membershipForm.logo_url || membershipForm.logo"
-                                            :src="membershipForm.logo_url || membershipForm.logo"
-                                            class="img-fluid rounded" style="max-height: 60px; max-width: 60px; object-fit: contain;" alt="Preview" />
+                                    <div class="border rounded p-1 bg-white d-flex align-items-center justify-content-center shadow-xs position-relative"
+                                        style="width: 70px; height: 70px; min-width: 70px; background-color: #fafafa;">
+                                        <img v-if="modalLogoPreview"
+                                            :src="modalLogoPreview"
+                                            class="img-fluid rounded"
+                                            style="max-height: 60px; max-width: 60px; object-fit: contain;"
+                                            alt="Preview" />
                                         <i v-else class="fas fa-image fs-3 text-muted opacity-50"></i>
+                                        <button v-if="modalLogoPreview" type="button" class="btn btn-danger btn-xs position-absolute top-0 end-0 p-0 rounded-circle d-flex align-items-center justify-content-center shadow-xs"
+                                            style="width: 20px; height: 20px; transform: translate(30%, -30%); font-size: 10px;"
+                                            @click="removeMembershipLogo" title="Remove Logo">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <input type="file" class="form-control form-control-sm" accept="image/*" @change="onMembershipLogoChange" />
+                                        <input ref="membershipFileInput" type="file" class="form-control form-control-sm" accept="image/*" @change="onMembershipLogoChange" />
                                         <small class="text-muted d-block mt-1" style="font-size: 10.5px;">Recommended size: Square PNG or JPG with transparent background</small>
                                     </div>
                                 </div>
@@ -785,6 +792,15 @@ export default {
     name: "SiteSettingsEdit",
     computed: {
         ...mapState("setting", ["colors"]),
+        modalLogoPreview() {
+            return (
+                this.membership_preview_blob ||
+                this.membershipForm.preview_url ||
+                this.membershipForm.logo_url ||
+                this.membershipForm.logo ||
+                ""
+            );
+        },
     },
     data() {
         return {
@@ -817,11 +833,13 @@ export default {
             showMembershipModal: false,
             membershipModalMode: "create",
             editingMembershipIndex: -1,
+            membership_preview_blob: "",
             membershipForm: {
                 id: null,
                 org_name: "",
                 logo: "",
                 logo_url: "",
+                preview_url: "",
                 show_in_invoice: 1,
             },
             image: {},
@@ -838,51 +856,90 @@ export default {
     },
     methods: {
         // Membership Modal Handlers
+        removeMembershipLogo() {
+            this.membership_preview_blob = "";
+            this.$set(this.membershipForm, "logo", "");
+            this.$set(this.membershipForm, "logo_url", "");
+            this.$set(this.membershipForm, "preview_url", "");
+            if (this.$refs.membershipFileInput) {
+                this.$refs.membershipFileInput.value = "";
+            }
+            this.$forceUpdate();
+        },
+
         openMembershipModal(mode = "create", idx = -1) {
             this.membershipModalMode = mode;
             this.editingMembershipIndex = idx;
+            this.membership_preview_blob = "";
             if (mode === "edit" && idx >= 0 && this.memberships[idx]) {
                 const item = this.memberships[idx];
+                const logoVal = item.logo_url || item.logo || "";
                 this.membershipForm = {
                     id: item.id || null,
                     org_name: item.org_name || "",
-                    logo: item.logo || "",
-                    logo_url: item.logo_url || item.logo || "",
+                    logo: logoVal,
+                    logo_url: logoVal,
+                    preview_url: logoVal,
                     show_in_invoice: item.show_in_invoice !== undefined ? (item.show_in_invoice ? 1 : 0) : 1,
                 };
+                this.membership_preview_blob = logoVal;
             } else {
                 this.membershipForm = {
                     id: null,
                     org_name: "",
                     logo: "",
                     logo_url: "",
+                    preview_url: "",
                     show_in_invoice: 1,
                 };
+                this.membership_preview_blob = "";
+            }
+            if (this.$refs.membershipFileInput) {
+                this.$refs.membershipFileInput.value = "";
             }
             this.showMembershipModal = true;
         },
 
         closeMembershipModal() {
             this.showMembershipModal = false;
+            this.membership_preview_blob = "";
             this.membershipForm = {
                 id: null,
                 org_name: "",
                 logo: "",
                 logo_url: "",
+                preview_url: "",
                 show_in_invoice: 1,
             };
             this.editingMembershipIndex = -1;
+            if (this.$refs.membershipFileInput) {
+                this.$refs.membershipFileInput.value = "";
+            }
         },
 
         onMembershipLogoChange(e) {
             const file = e.target.files && e.target.files[0];
             if (!file) return;
 
-            // Preview & Base64
+            // 1. Instant zero-delay synchronous preview using Blob URL
+            try {
+                const blobUrl = URL.createObjectURL(file);
+                this.membership_preview_blob = blobUrl;
+                this.$set(this.membershipForm, "preview_url", blobUrl);
+                this.$set(this.membershipForm, "logo_url", blobUrl);
+            } catch (err) {
+                console.error("Blob URL error", err);
+            }
+
+            // 2. Base64 conversion for payload persistence
             const reader = new FileReader();
             reader.onload = (event) => {
-                this.membershipForm.logo = event.target.result;
-                this.membershipForm.logo_url = event.target.result;
+                const base64 = event.target.result;
+                this.$set(this.membershipForm, "logo", base64);
+                this.$set(this.membershipForm, "logo_url", base64);
+                this.$set(this.membershipForm, "preview_url", base64);
+                this.membership_preview_blob = base64;
+                this.$forceUpdate();
             };
             reader.readAsDataURL(file);
         },
@@ -897,11 +954,12 @@ export default {
                 this.memberships = [];
             }
 
+            const logoVal = this.membershipForm.logo || this.membershipForm.logo_url || this.membership_preview_blob || "";
             const payload = {
-                id: this.membershipForm.id,
+                id: this.membershipForm.id || null,
                 org_name: this.membershipForm.org_name,
-                logo: this.membershipForm.logo,
-                logo_url: this.membershipForm.logo_url,
+                logo: logoVal,
+                logo_url: logoVal,
                 show_in_invoice: this.membershipForm.show_in_invoice ? 1 : 0,
             };
 
@@ -999,17 +1057,18 @@ export default {
                     if (!this.data.label_preset) this.data.label_preset = "4x2";
 
                     // Initialize memberships array
-                    if (Array.isArray(this.data.memberships)) {
-                        this.memberships = this.data.memberships;
-                    } else if (typeof this.data.memberships === "string") {
+                    let memList = this.data.memberships;
+                    if (typeof memList === "string") {
                         try {
-                            this.memberships = JSON.parse(this.data.memberships) || [];
+                            memList = JSON.parse(memList) || [];
+                            if (typeof memList === "string") {
+                                memList = JSON.parse(memList) || [];
+                            }
                         } catch (e) {
-                            this.memberships = [];
+                            memList = [];
                         }
-                    } else {
-                        this.memberships = [];
                     }
+                    this.memberships = Array.isArray(memList) ? memList : [];
                 })
                 .catch((error) => {
                     this.$toast(
