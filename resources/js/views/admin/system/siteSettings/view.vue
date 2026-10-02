@@ -58,6 +58,16 @@
                                         <i class="fas fa-layer-group me-1"></i> Nature: Retail & Wholesale
                                     </span>
 
+                                    <!-- Invoice Prefix Badge -->
+                                    <span class="badge bg-light bg-opacity-25 text-white font-monospace">
+                                        <i class="fas fa-receipt me-1"></i> Prefix: {{ data?.invoice_prefix || 'POS' }}
+                                    </span>
+
+                                    <!-- POS Terms Badge -->
+                                    <span class="badge" :class="data?.show_pos_terms ? 'bg-info text-dark' : 'bg-light bg-opacity-25 text-white'">
+                                        <i class="fas fa-file-contract me-1"></i> POS Terms: {{ data?.show_pos_terms ? 'Active' : 'Disabled' }}
+                                    </span>
+
                                     <!-- Default VAT Badge -->
                                     <span class="badge" :class="Number(data?.default_vat) > 0 ? 'bg-primary text-white' : 'bg-light bg-opacity-25 text-white'">
                                         <i class="fas fa-percent me-1"></i> VAT: {{ Number(data?.default_vat) > 0 ? data?.default_vat + '%' : '0% (Disabled)' }}
@@ -157,12 +167,30 @@
                             </div>
                             <div>
                                 <h6 class="fw-bold mb-0 text-dark">System & POS Configuration</h6>
-                                <small class="text-muted" style="font-size: 11px;">Currency, system mode and business checkout workflow</small>
+                                <small class="text-muted" style="font-size: 11px;">Prefix, currency, system mode and checkout workflow</small>
                             </div>
                         </div>
                         <div class="card-body p-0">
                             <table class="table table-hover align-middle mb-0 custom-spec-table">
                                 <tbody>
+                                    <tr>
+                                        <td class="spec-label"><i class="fas fa-receipt me-2 text-muted"></i>Invoice Prefix (ইনভয়েস প্রিফিক্স)</td>
+                                        <td class="spec-value">
+                                            <span class="badge bg-primary font-monospace fw-bold px-2 py-1 fs-6">
+                                                {{ data?.invoice_prefix || 'POS' }}
+                                            </span>
+                                            <small class="text-muted ms-2 font-monospace">({{ (data?.invoice_prefix || 'POS') }}-YYYYMMDD-####)</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="spec-label"><i class="fas fa-file-contract me-2 text-muted"></i>POS Terms & Conditions</td>
+                                        <td class="spec-value">
+                                            <span class="badge" :class="data?.show_pos_terms ? 'bg-success' : 'bg-secondary'">
+                                                <i :class="data?.show_pos_terms ? 'fas fa-check-circle me-1' : 'fas fa-times-circle me-1'"></i>
+                                                {{ data?.show_pos_terms ? 'Shown in Sale Terminal / POS' : 'Hidden in Sale Terminal' }}
+                                            </span>
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <td class="spec-label"><i class="fas fa-money-bill-wave me-2 text-muted"></i>Default Currency</td>
                                         <td class="spec-value">
@@ -513,7 +541,50 @@
                     </div>
                 </div>
 
-                <!-- 🖼️ 7. Brand Media & Logos -->
+                <!-- 🏛️ 7. Organization Memberships & Associations -->
+                <div class="col-12" v-if="data?.shop_type === 'electronics' || (parsedMemberships && parsedMemberships.length > 0)">
+                    <div class="card border-0 shadow-sm section-card">
+                        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="section-icon-box bg-info bg-opacity-10 text-info rounded d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-award"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">Organization Memberships & Associations (অর্গানাইজেশন মেম্বারশিপ)</h6>
+                                    <small class="text-muted" style="font-size: 11px;">Affiliated trade associations and business bodies displaying on sales bills</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-primary font-monospace" v-if="data?.shop_type === 'electronics'">Electronics Feature</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div v-if="parsedMemberships && parsedMemberships.length > 0" class="row g-3">
+                                <div class="col-xl-4 col-md-6" v-for="(m, idx) in parsedMemberships" :key="idx">
+                                    <div class="p-3 border rounded bg-light h-100 d-flex align-items-center justify-content-between gap-3 shadow-xs">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-white p-1 rounded border d-flex align-items-center justify-content-center shadow-xs" style="width: 54px; height: 54px; min-width: 54px;">
+                                                <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo" class="img-fluid rounded" style="max-height: 44px; max-width: 44px; object-fit: contain;" alt="Logo" />
+                                                <i v-else class="fas fa-building fs-4 text-muted opacity-50"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold text-dark mb-1 fs-6">{{ m.org_name }}</h6>
+                                                <span class="badge" :class="m.show_in_invoice ? 'bg-success' : 'bg-secondary'">
+                                                    <i :class="m.show_in_invoice ? 'fas fa-check-circle me-1' : 'fas fa-eye-slash me-1'"></i>
+                                                    {{ m.show_in_invoice ? 'Shown in Invoice' : 'Hidden in Invoice' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-center py-4 bg-light rounded border border-dashed">
+                                <i class="fas fa-award fs-2 text-muted opacity-25 mb-2"></i>
+                                <p class="text-muted small mb-0">No organization memberships added yet. You can add memberships in Site Settings Edit.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🖼️ 8. Brand Media & Logos -->
                 <div class="col-12">
                     <div class="card border-0 shadow-sm section-card">
                         <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
@@ -585,7 +656,7 @@
                     </div>
                 </div>
 
-                <!-- 🕒 8. System Meta & Timestamps -->
+                <!-- 🕒 9. System Meta & Timestamps -->
                 <div class="col-12">
                     <div class="card border-0 shadow-sm bg-light">
                         <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-3 text-muted small">
@@ -609,6 +680,21 @@ const model = "siteSetting";
 
 export default {
     name: "SiteSettingView",
+    computed: {
+        parsedMemberships() {
+            if (Array.isArray(this.data?.memberships)) {
+                return this.data.memberships;
+            }
+            if (typeof this.data?.memberships === "string") {
+                try {
+                    return JSON.parse(this.data.memberships) || [];
+                } catch (e) {
+                    return [];
+                }
+            }
+            return [];
+        }
+    },
     data() {
         return {
             page_title: "Site Settings",

@@ -14,8 +14,23 @@ class SiteSetting extends BaseModel
 {
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'show_pos_terms' => 'boolean',
+        'memberships' => 'array',
+        'coupon_enabled' => 'integer',
+        'default_vat' => 'float',
+    ];
+
     protected $logName = 'Site Settings';
     protected $appends = ['original_logo', 'logo_one', 'logo_two', 'logo_three', 'original_logo_small', 'logo_small_one', 'logo_small_two', 'logo_small_three'];
+
+    public function getMembershipsAttribute($value)
+    {
+        if (empty($value)) return [];
+        if (is_array($value)) return $value;
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
     public function getOriginalLogoAttribute()
     {
         return getJsonMediaUrl($this->logo, 'original');

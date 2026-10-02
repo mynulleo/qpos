@@ -35,6 +35,16 @@ class StockTransaction extends BaseModel
         return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
     }
 
+    public function color()
+    {
+        return $this->belongsTo(Color::class, 'color_id', 'id');
+    }
+
+    public function size()
+    {
+        return $this->belongsTo(Size::class, 'size_id', 'id');
+    }
+
     // --------------------------------------
     // $data = [
     //     'item_id' => $res->id,

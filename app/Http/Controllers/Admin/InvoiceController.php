@@ -226,7 +226,7 @@ class InvoiceController extends BaseController
             'details' => function ($q) {
                 $q->with([
                     'item' => function ($iq) {
-                        $iq->with('category:id,title', 'unit:id,title');
+                        $iq->with('category:id,title', 'brand:id,title', 'series:id,title', 'unit:id,title');
                     },
                     'color:id,title',
                     'size:id,title'
@@ -309,21 +309,33 @@ class InvoiceController extends BaseController
                 $stockBadge = 'warning';
             }
 
+            $brandTitle = $d->item && $d->item->brand ? $d->item->brand->title : null;
+            $modelNo = $d->item ? $d->item->model_no : null;
+            $seriesTitle = $d->item && $d->item->series ? $d->item->series->title : null;
+            $colorTitle = $d->color ? ($d->color->title ?? $d->color->name) : ($d->item && $d->item->color ? ($d->item->color->title ?? $d->item->color->name) : null);
+            $sizeTitle = $d->size ? ($d->size->title ?? $d->size->name) : ($d->item && $d->item->size ? ($d->item->size->title ?? $d->item->size->name) : null);
+            $warrantyType = $d->warranty_type && $d->warranty_type !== 'none' ? $d->warranty_type : ($d->item ? $d->item->warranty_type : 'none');
+            $warrantyPeriod = $d->warranty_period ?: ($d->item ? $d->item->warranty_period : null);
+
             return [
                 'id' => $d->id,
                 'invoice_id' => $d->invoice_id,
                 'item_id' => $itemId,
                 'title' => $d->item ? $d->item->title : 'Product',
                 'barcode' => $d->item ? $d->item->barcode : '',
+                'brand_title' => $brandTitle,
+                'model_no' => $modelNo,
+                'series_title' => $seriesTitle,
                 'category_title' => $d->item && $d->item->category ? $d->item->category->title : 'N/A',
                 'unit_title' => $d->item && $d->item->unit ? $d->item->unit->title : 'Pcs',
-                'warranty_type' => $d->item ? $d->item->warranty_type : 'none',
-                'warranty_period' => $d->item ? $d->item->warranty_period : null,
+                'warranty_type' => $warrantyType,
+                'warranty_period' => $warrantyPeriod,
                 'color_id' => $colorId,
-                'color_title' => $d->color ? $d->color->title : null,
+                'color_title' => $colorTitle,
                 'size_id' => $sizeId,
-                'size_title' => $d->size ? $d->size->title : null,
+                'size_title' => $sizeTitle,
                 'serial_no' => $d->serial_no,
+                'description' => $d->description ?: ($d->item ? $d->item->description : null),
                 'qty' => floatval($d->qty),
                 'amount' => floatval($d->amount),
                 'total_amount' => floatval($d->total_amount),
@@ -352,6 +364,30 @@ class InvoiceController extends BaseController
             $paymentStatus = 'Due';
         }
 
+        // 5. Creator / Salesperson resolution
+        $creator = null;
+        if (!empty($invoice->created_by)) {
+            $creator = \App\Models\Admin::find($invoice->created_by);
+        }
+        if (!$creator && !empty($invoice->admin_id)) {
+            $creator = \App\Models\Admin::find($invoice->admin_id);
+        }
+        if (!$creator && !empty($invoice->employee_id)) {
+            $creator = \App\Models\Admin::find($invoice->employee_id);
+        }
+        if (!$creator) {
+            $activity = \Spatie\Activitylog\Models\Activity::where('subject_type', \App\Models\Invoice::class)
+                ->where('subject_id', $invoice->id)
+                ->where('event', 'created')
+                ->first();
+            if ($activity && $activity->causer_id) {
+                $creator = \App\Models\Admin::find($activity->causer_id);
+            }
+        }
+        if (!$creator) {
+            $creator = auth()->guard('admin')->user() ?? auth()->user() ?? \App\Models\Admin::first();
+        }
+
         return response()->json([
             'id' => $invoice->id,
             'invoice_no' => $invoice->invoice_no,
@@ -368,6 +404,12 @@ class InvoiceController extends BaseController
             'is_closed' => $invoice->is_closed,
             'status' => $invoice->status,
             'client' => $invoice->client,
+            'creator' => $creator ? [
+                'id' => $creator->id,
+                'name' => $creator->name ?? ($creator->full_name ?? 'Cashier'),
+                'email' => $creator->email ?? '',
+                'mobile' => $creator->mobile ?? '',
+            ] : null,
             'client_history' => $clientHistory,
             'loyalty_points' => $loyaltyPoints,
             'details' => $details,
@@ -469,7 +511,14 @@ class InvoiceController extends BaseController
             [
                 'client',
                 'invoice_details' => function($q) {
-                    $q->with('item:id,title,barcode,warranty_type,warranty_period', 'color:id,title', 'size:id,title', 'currency:id,title,short_name');
+                    $q->with([
+                        'item' => function($iq) {
+                            $iq->with('category:id,title', 'brand:id,title', 'series:id,title', 'unit:id,title');
+                        },
+                        'color:id,title',
+                        'size:id,title',
+                        'currency:id,title,short_name'
+                    ]);
                 }
             ]
         )->where('id', $invoiceid)->first();
