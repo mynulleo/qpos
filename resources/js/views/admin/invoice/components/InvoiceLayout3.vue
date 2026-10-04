@@ -17,11 +17,16 @@
                 Phone: {{ currentSite.mobile1 }} <span v-if="currentSite.mobile2">/ {{ currentSite.mobile2 }}</span> | Email: {{ currentSite.contact_email || currentSite.email }}
                 <span v-if="currentSite.bin_no || currentSite.vat_no"> | BIN: {{ currentSite.bin_no || currentSite.vat_no }}</span>
             </p>
-            <div v-if="orgMemberships && orgMemberships.length > 0" class="d-flex justify-content-center align-items-center gap-1 mt-1">
-                <span v-for="(m, mIdx) in orgMemberships" :key="mIdx" class="badge bg-white text-black border border-dark font-monospace d-flex align-items-center gap-1" style="font-size: 10px; padding: 2px 6px; color: #000000 !important;">
-                    <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo" style="max-height: 20px; max-width: 34px; object-fit: contain;" alt="Logo" />
-                    {{ m.org_name }}
-                </span>
+            <div v-if="orgMemberships && orgMemberships.length > 0" class="d-flex justify-content-center align-items-center gap-2 mt-1">
+                <span class="text-uppercase fw-bold text-black me-1" style="font-size: 9px; letter-spacing: 0.5px; color: #000000 !important;">Member of:</span>
+                <template v-for="(m, mIdx) in orgMemberships" :key="mIdx">
+                    <img v-if="m.logo || m.logo_url" 
+                         :src="m.logo_url || m.logo" 
+                         :alt="m.org_name || 'Organization Logo'"
+                         :title="m.org_name"
+                         style="max-height: 28px; max-width: 65px; object-fit: contain;" />
+                    <span v-else class="badge bg-white text-black border border-dark font-monospace" style="font-size: 9px; padding: 2px 5px; color: #000000 !important;">{{ m.org_name }}</span>
+                </template>
             </div>
         </div>
 

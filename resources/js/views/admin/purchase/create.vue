@@ -327,6 +327,121 @@
         </div>
       </div>
 
+      <!-- 📜 Terms & Conditions Section (ক্রয় আদেশ শর্তাবলী) -->
+      <div class="card border-0 shadow-sm mb-4 form-card terms-card">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="section-icon theme-bg-soft text-theme rounded d-flex align-items-center justify-content-center">
+              <i class="fas fa-file-contract"></i>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <h6 class="fw-bold mb-0 text-dark">Terms & Conditions (ক্রয় আদেশ শর্তাবলী)</h6>
+                <span class="badge theme-bg text-white rounded-pill font-monospace" style="font-size: 11px;">
+                  {{ selectedTermsCount }} of {{ termsList.length }} Selected
+                </span>
+              </div>
+              <span class="small text-muted">Purchase Order module conditions are displayed below. Checked conditions will be included in the PO document.</span>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 px-3 py-1 fw-semibold shadow-sm"
+              @click.prevent="addCustomTerm"
+            >
+              <i class="fas fa-plus-circle"></i> Add Condition (শর্ত যোগ করুন)
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 px-3 py-1 fw-semibold"
+              @click.prevent="resetDefaultTerms"
+              title="Reload default conditions for Purchase Order module"
+            >
+              <i class="fas fa-undo"></i> Reset Defaults (ডিফল্ট শর্ত)
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body p-3">
+          <!-- Terms List Items -->
+          <div v-if="termsList && termsList.length > 0" class="d-flex flex-column gap-2">
+            <div
+              v-for="(item, tIdx) in termsList"
+              :key="tIdx"
+              class="term-item-row p-2 px-3 rounded border d-flex align-items-center gap-3 transition-all"
+              :class="item.selected ? 'bg-white border-primary border-opacity-50 shadow-xs' : 'bg-light border-light opacity-75'"
+            >
+              <!-- Checkbox -->
+              <div class="form-check m-0 d-flex align-items-center" title="Toggle condition">
+                <input
+                  class="form-check-input term-checkbox"
+                  type="checkbox"
+                  :id="'po_term_' + tIdx"
+                  v-model="item.selected"
+                  style="width: 20px; height: 20px; cursor: pointer;"
+                />
+              </div>
+
+              <!-- Index Badge -->
+              <span
+                class="badge rounded-circle d-flex align-items-center justify-content-center fw-bold font-monospace"
+                :class="item.selected ? 'theme-bg text-white' : 'bg-secondary text-white'"
+                style="width: 26px; height: 26px; min-width: 26px; font-size: 11px;"
+              >
+                {{ tIdx + 1 }}
+              </span>
+
+              <!-- Editable Condition Text Input Box -->
+              <div class="flex-grow-1">
+                <input
+                  type="text"
+                  class="form-control form-control-sm font-monospace"
+                  :class="{ 'fw-semibold text-dark': item.selected, 'text-muted': !item.selected }"
+                  v-model="item.condition"
+                  :placeholder="'Enter condition #' + (tIdx + 1) + ' text...'"
+                />
+              </div>
+
+              <!-- Delete Button -->
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger btn-action"
+                  @click="removeTerm(tIdx)"
+                  title="Remove this condition row"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="text-center py-4 bg-light rounded border border-dashed">
+            <div class="text-muted mb-2">
+              <i class="fas fa-clipboard-list fa-2x opacity-50"></i>
+            </div>
+            <p class="text-muted small mb-2">No terms & conditions added yet.</p>
+            <div class="d-flex justify-content-center gap-2">
+              <button type="button" class="btn btn-sm btn-primary px-3" @click="addCustomTerm">
+                <i class="fas fa-plus me-1"></i> Add Condition
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="resetDefaultTerms">
+                <i class="fas fa-sync-alt me-1"></i> Load Default Terms
+              </button>
+            </div>
+          </div>
+
+          <!-- Helper note -->
+          <div class="d-flex align-items-center gap-2 mt-3 pt-2 border-top text-muted small" style="font-size: 12px;">
+            <i class="fas fa-info-circle text-primary"></i>
+            <span>All <strong>checked</strong> conditions will appear in the Purchase Order View and Printed PO vouchers. Unchecked conditions will not be saved.</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 📋 Bottom Financial Summary & Notes Panel -->
       <div class="row g-3 mb-4">
         <!-- Remarks & Notes (Left Side) -->
@@ -649,6 +764,9 @@ export default {
       if (!this.data.purchase_details) return 0;
       return this.data.purchase_details.reduce((sum, item) => sum + (parseFloat(item.qty) || 0), 0);
     },
+    selectedTermsCount() {
+      return (this.termsList || []).filter((t) => t.selected && t.condition && t.condition.trim()).length;
+    },
   },
   data() {
     return {
@@ -664,8 +782,11 @@ export default {
         total_amount: 0,
         status: true,
         note: "",
+        terms_conditions: [],
         purchase_details: [],
       },
+      termsList: [],
+      rawDefaultTerms: [],
       categories: [],
       units: [],
       colors: [],
@@ -962,6 +1083,49 @@ export default {
         this.sizes = res.data || [];
       });
     },
+    loadPurchaseTerms() {
+      axios
+        .get("termsCondition/by-module/Purchase%20Order")
+        .then((res) => {
+          const list = res.data || [];
+          this.rawDefaultTerms = JSON.parse(JSON.stringify(list));
+          if (!this.$route.params.id || !this.termsList || this.termsList.length === 0) {
+            this.termsList = list.map((item) => ({
+              id: item.id,
+              condition: item.condition_text || item.condition || "",
+              selected: item.is_default == 1 || item.is_default === true,
+              is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
+            }));
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load purchase terms:", err);
+        });
+    },
+    addCustomTerm() {
+      this.termsList.push({
+        id: null,
+        condition: "",
+        selected: true,
+        is_default: 0,
+      });
+    },
+    removeTerm(index) {
+      this.termsList.splice(index, 1);
+    },
+    resetDefaultTerms() {
+      if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
+        this.termsList = this.rawDefaultTerms.map((item) => ({
+          id: item.id,
+          condition: item.condition_text || item.condition || "",
+          selected: item.is_default == 1 || item.is_default === true,
+          is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
+        }));
+        this.$toast("Terms & conditions reset to defaults", "info");
+      } else {
+        this.loadPurchaseTerms();
+      }
+    },
     submit() {
       this.$validate().then((res) => {
         const error = this.validation.countErrors();
@@ -994,6 +1158,13 @@ export default {
             this.$toast("This Purchase Order has already been received via GRN and cannot be edited.", "error");
             return false;
           }
+
+          // Extract selected checked terms
+          const selectedTerms = (this.termsList || [])
+            .filter((t) => t.selected && t.condition && t.condition.trim() !== "")
+            .map((t) => t.condition.trim());
+          this.data.terms_conditions = selectedTerms;
+
           var form = document.getElementById("form");
           var formData = new FormData(form);
           formData.append("supplier_id", this.data.supplier_id);
@@ -1041,11 +1212,35 @@ export default {
             this.$toast("This Purchase Order has already been received via GRN and cannot be edited.", "error");
             this.$router.replace({ name: 'purchase.show', params: { id: this.$route.params.id } });
           }
+
+          if (p.terms_conditions) {
+            let tcData = p.terms_conditions;
+            if (typeof tcData === "string") {
+              try {
+                tcData = JSON.parse(tcData);
+              } catch (e) {
+                tcData = [tcData];
+              }
+            }
+            if (Array.isArray(tcData) && tcData.length > 0) {
+              this.termsList = tcData.map((tc) => ({
+                id: null,
+                condition: typeof tc === "string" ? tc : (tc.condition || tc.condition_text || ""),
+                selected: typeof tc === "object" && tc.selected !== undefined ? Boolean(tc.selected) : true,
+                is_default: 1,
+              }));
+            } else {
+              this.loadPurchaseTerms();
+            }
+          } else {
+            this.loadPurchaseTerms();
+          }
         }
       });
     } else {
       this.page_title = this.headline(this.model) + " Create";
       this.getGeneratedInvoiceNo();
+      this.loadPurchaseTerms();
     }
 
     this.getCategories();
@@ -1253,5 +1448,33 @@ export default {
 :global(.vs__dropdown-option--highlight) {
   background-color: #112C47 !important;
   color: #ffffff !important;
+}
+
+/* Terms & Conditions Row Styling */
+.term-item-row {
+  transition: all 0.2s ease;
+}
+
+.term-item-row:hover {
+  border-color: #cbd5e1 !important;
+  background-color: #f8fafc;
+}
+
+.shadow-xs {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.term-checkbox {
+  border-color: #94a3b8;
+  transition: all 0.15s ease;
+}
+
+.term-checkbox:checked {
+  background-color: #112C47;
+  border-color: #112C47;
 }
 </style>

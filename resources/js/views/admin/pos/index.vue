@@ -106,7 +106,7 @@
           <!-- Default Walk-in Customer Hint -->
           <div v-else class="text-muted small d-flex align-items-center gap-2">
             <span class="badge bg-light text-secondary border px-2 py-1">
-              <i class="fas fa-walking theme-icon me-1"></i>Walk-in Customer (ডিফল্ট গ্রাহক)
+              <i class="fas fa-walking theme-icon me-1"></i>Walk-in Customer
             </span>
           </div>
         </div>
@@ -183,12 +183,12 @@
             <table class="table table-hover table-sm align-middle mb-0" style="font-size: 13px;">
               <thead class="table-light sticky-top" style="z-index: 2;">
                 <tr>
-                  <th style="width: 26%;">Item Title (পণ্যের নাম)</th>
+                  <th style="width: 26%;">Item Title</th>
                   <th style="width: 18%;">Color / Size</th>
                   <th style="width: 15%;" v-if="isElectronicsShop">Serial No</th>
                   <th style="width: 11%;" class="text-center">Qty</th>
-                  <th style="width: 13%;" class="text-end">Price (দর)</th>
-                  <th style="width: 12%;" class="text-end">Total (মোট)</th>
+                  <th style="width: 13%;" class="text-end">Price</th>
+                  <th style="width: 12%;" class="text-end">Total</th>
                   <th style="width: 5%;" class="text-center">Act</th>
                 </tr>
               </thead>
@@ -247,7 +247,7 @@
           <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between border-bottom cursor-pointer" @click="showTermsSection = !showTermsSection">
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-file-contract text-primary"></i>
-              <span class="fw-bold small text-dark">Terms & Conditions (ইনভয়েস শর্তাবলী)</span>
+              <span class="fw-bold small text-dark">Terms & Conditions</span>
               <span class="badge bg-primary font-monospace" style="font-size: 10px;">
                 {{ selectedTermsList.length }} selected
               </span>
@@ -306,7 +306,7 @@
                 <span class="fw-bold font-monospace">Tk. {{ formatPrice(cartSubtotal) }}</span>
               </div>
               <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                <span class="text-muted small">Discount (ছাড়):</span>
+                <span class="text-muted small">Discount:</span>
                 <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace py-0 px-2" style="max-width: 110px; height: 28px;" v-model.number="discount" placeholder="0.00">
               </div>
 
@@ -334,7 +334,7 @@
                       v-model="is_vat_applicable" @change="onVatSwitchToggle"
                       style="transform: scale(1.1); cursor: pointer;">
                     <label class="form-check-label fw-bold cursor-pointer small mb-0" for="posVatSwitch" :class="is_vat_applicable ? 'text-primary' : 'text-muted'" style="font-size: 11px;">
-                      <i class="fas fa-file-invoice-dollar me-1"></i>{{ is_vat_applicable ? 'With VAT (ভ্যাট সহ)' : 'Without VAT (ভ্যাট ছাড়া)' }}
+                      <i class="fas fa-file-invoice-dollar me-1"></i>{{ is_vat_applicable ? 'With VAT' : 'Without VAT' }}
                     </label>
                   </div>
 
@@ -365,20 +365,20 @@
               <div class="col-6">
                 <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">Payment Method</label>
                 <select class="form-select form-select-sm font-monospace fw-bold py-1" style="height: 32px;" v-model="payment_method">
-                  <option value="Cash">Cash (নগদ)</option>
+                  <option value="Cash">Cash</option>
                   <option value="Card">Card</option>
-                  <option value="bKash">bKash (বিকাশ)</option>
-                  <option value="Nagad">Nagad (নগদ)</option>
-                  <option value="Rocket">Rocket (রকেট)</option>
+                  <option value="bKash">bKash</option>
+                  <option value="Nagad">Nagad</option>
+                  <option value="Rocket">Rocket</option>
                   <option value="Bank">Bank Transfer</option>
                 </select>
               </div>
               <div class="col-6">
                 <div class="d-flex justify-content-between align-items-center mb-0">
-                  <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">Paid Amount (প্রদত্ত টাকা)</label>
-                  <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none font-monospace fw-bold text-primary" style="font-size: 10px;" @click="paid_amount = netPayable" title="Pay Full Amount">Full Pay</button>
+                  <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">Paid Amount</label>
+                  <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none font-monospace fw-bold text-primary" style="font-size: 10px;" @click="setFullPay" title="Pay Full Amount (Press F7, F9, or Alt+F)">Full Pay (F7)</button>
                 </div>
-                <input type="number" step="0.01" min="0" class="form-control form-control-sm text-end font-monospace fw-bold text-primary py-1" style="height: 32px; font-size: 14px;" v-model.number="paid_amount" placeholder="0.00">
+                <input ref="paidAmountInput" type="number" step="0.01" min="0" class="form-control form-control-sm text-end font-monospace fw-bold text-primary py-1" style="height: 32px; font-size: 14px;" v-model.number="paid_amount" placeholder="0.00">
               </div>
               <div class="col-12" v-if="payment_method !== 'Cash'">
                 <input type="text" class="form-control form-control-sm font-monospace py-1" style="height: 28px;" placeholder="TrxID / Reference No." v-model="trxid">
@@ -387,7 +387,7 @@
 
             <!-- Due / Change Return Amount (Compact Line) -->
             <div class="d-flex justify-content-between align-items-center p-2 bg-light border rounded mb-3">
-              <span class="text-muted fw-bold small">{{ (paid_amount || 0) >= netPayable ? 'Change (ফেরত):' : 'Due Amount (বকেয়া):' }}</span>
+              <span class="text-muted fw-bold small">{{ (paid_amount || 0) >= netPayable ? 'Change:' : 'Due Amount:' }}</span>
               <span class="fw-bold font-monospace fs-6" :class="(paid_amount || 0) >= netPayable ? 'text-success' : 'text-danger'">
                 Tk. {{ formatPrice((paid_amount || 0) >= netPayable ? ((paid_amount || 0) - netPayable) : (netPayable - (paid_amount || 0))) }}
               </span>
@@ -420,8 +420,8 @@
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-exclamation-triangle fs-5 text-dark"></i>
               <div>
-                <h5 class="modal-title fw-bold fs-6 mb-0">একাধিক পণ্য পাওয়া গেছে (Multiple Products Found)</h5>
-                <small class="font-monospace text-dark opacity-75">Barcode: <strong>{{ duplicateBarcodeScanned }}</strong> ({{ duplicateBarcodeItems.length }} টি পণ্য পাওয়া গেছে)</small>
+                <h5 class="modal-title fw-bold fs-6 mb-0">Multiple Products Found</h5>
+                <small class="font-monospace text-dark opacity-75">Barcode: <strong>{{ duplicateBarcodeScanned }}</strong> ({{ duplicateBarcodeItems.length }} items found)</small>
               </div>
             </div>
             <button type="button" class="btn-close" @click="closeDuplicateModal"></button>
@@ -429,9 +429,9 @@
           <div class="modal-body p-3 bg-light">
             <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between">
               <div class="small">
-                <i class="fas fa-keyboard me-1"></i> কীবোর্ড শর্টকাট: নম্বর <strong>[1]</strong>, <strong>[2]</strong>, <strong>[3]</strong> চাপুন অথবা <strong>Arrow Keys (↑/↓)</strong> দিয়ে সিলেক্ট করে <strong>[Enter]</strong> চাপুন।
+                <i class="fas fa-keyboard me-1"></i> Shortcuts: Press <strong>[1]</strong>-<strong>[{{ Math.min(duplicateBarcodeItems.length, 9) }}]</strong> or <strong>Arrow Keys (↑/↓)</strong> then <strong>[Enter]</strong>.
               </div>
-              <span class="badge bg-dark font-monospace">Esc = বন্ধ</span>
+              <span class="badge bg-dark font-monospace">Esc = Close</span>
             </div>
 
             <div class="list-group shadow-sm">
@@ -520,7 +520,7 @@
             <div class="row g-3">
               <!-- Color Selection -->
               <div class="col-6" v-if="availableColors && availableColors.length > 0">
-                <label class="form-label fw-bold small text-muted">Color (রং)</label>
+                <label class="form-label fw-bold small text-muted">Color</label>
                 <select
                   ref="modalColorSelect"
                   class="form-select form-select-sm"
@@ -535,7 +535,7 @@
 
               <!-- Size Selection -->
               <div class="col-6" v-if="availableSizes && availableSizes.length > 0">
-                <label class="form-label fw-bold small text-muted">Size (সাইজ)</label>
+                <label class="form-label fw-bold small text-muted">Size</label>
                 <select
                   ref="modalSizeSelect"
                   class="form-select form-select-sm"
@@ -559,7 +559,7 @@
               <!-- Serial No (For items with purchase serials or serialized items) -->
               <div class="col-12" v-if="activeItem && (activeItem.has_purchase_serials || activeItem.is_serialized || isElectronicsShop)">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label class="form-label fw-bold small text-muted mb-0">Serial No. (সিরিয়াল নং)</label>
+                  <label class="form-label fw-bold small text-muted mb-0">Serial No.</label>
                   <span class="badge bg-info text-dark" v-if="modalAvailableSerials && modalAvailableSerials.length > 0">
                     {{ modalAvailableSerials.length }} available in stock
                   </span>
@@ -596,7 +596,7 @@
 
               <!-- Selling Price (Editable) -->
               <div class="col-6">
-                <label class="form-label fw-bold small text-muted">Unit Rate (দর)</label>
+                <label class="form-label fw-bold small text-muted">Unit Rate</label>
                 <input
                   ref="modalRateInput"
                   type="number"
@@ -609,7 +609,7 @@
 
               <!-- Quantity -->
               <div class="col-6">
-                <label class="form-label fw-bold small text-muted">Quantity (পরিমাণ) <span class="text-primary">[Enter = Add]</span></label>
+                <label class="form-label fw-bold small text-muted">Quantity <span class="text-primary">[Enter = Add]</span></label>
                 <input
                   ref="modalQtyInput"
                   type="number"
@@ -887,7 +887,7 @@
         <!-- Bill To / Customer Details -->
         <div style="display: flex; justify-content: space-between; background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; font-size: 10px;">
           <div>
-            <strong>Bill To (গ্রাহক):</strong>
+            <strong>Bill To:</strong>
             <div style="font-weight: 600; font-size: 11px;">{{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
             <div v-if="completedInvoice.client?.mobile">Mobile: {{ completedInvoice.client.mobile }}</div>
             <div v-if="completedInvoice.client?.address">Address: {{ completedInvoice.client.address }}</div>
@@ -1036,7 +1036,7 @@
         <!-- Customer & Bill To Box -->
         <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px;">
           <div>
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Bill To (ক্রেতার তথ্য):</div>
+            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Bill To:</div>
             <div style="font-size: 13px; font-weight: bold; color: #0f172a;">{{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
             <div style="font-size: 11px; color: #475569;" v-if="completedInvoice.client?.mobile"><strong>Mobile:</strong> {{ completedInvoice.client.mobile }}</div>
             <div style="font-size: 11px; color: #475569;" v-if="completedInvoice.client?.address"><strong>Address:</strong> {{ completedInvoice.client.address }}</div>
@@ -1177,15 +1177,15 @@
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-dark text-white py-2">
-            <h5 class="modal-title fs-6 text-white"><i class="fas fa-cash-register me-2 text-warning"></i>ক্যাশ কাউন্টার / পিওএস টার্মিনাল সহায়িকা</h5>
+            <h5 class="modal-title fs-6 text-white"><i class="fas fa-cash-register me-2 text-warning"></i>POS Terminal Help</h5>
             <button type="button" class="btn-close btn-close-white" @click="showHelpModal = false"></button>
           </div>
           <div class="modal-body p-3">
             <div v-if="posHelpContent" v-html="posHelpContent"></div>
-            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> সহায়িকা লোড হচ্ছে...</div>
+            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> Loading help...</div>
           </div>
           <div class="modal-footer py-1">
-            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">বন্ধ করুন</button>
+            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">Close</button>
           </div>
         </div>
       </div>
@@ -1497,7 +1497,7 @@ export default {
       if (!this.client.mobile || this.client.mobile.trim() === '') return;
       const cleanMobile = this.client.mobile.trim();
       if (!/^\d{11}$/.test(cleanMobile)) {
-        this.$toast('Please enter an 11-digit mobile number (১১ ডিজিটের মোবাইল নম্বর দিন)', 'warning');
+        this.$toast('Please enter a valid 11-digit mobile number', 'warning');
         return;
       }
       axios.get(`pos/search-customer`, { params: { mobile: cleanMobile } })
@@ -1539,15 +1539,15 @@ export default {
     createQuickCustomer() {
       const mobile = (this.newClient.mobile || '').trim();
       if (!mobile) {
-        this.$toast('Mobile number is required (মোবাইল নম্বর দিন)', 'warning');
+        this.$toast('Mobile number is required', 'warning');
         return;
       }
       if (!/^\d{11}$/.test(mobile)) {
-        this.$toast('Mobile number must be exactly 11 digits (১১ ডিজিটের সঠিক মোবাইল নম্বর দিন)', 'warning');
+        this.$toast('Mobile number must be exactly 11 digits', 'warning');
         return;
       }
       if (!this.newClient.name || !this.newClient.name.trim()) {
-        this.$toast('Client name is required (গ্রাহকের নাম দিন)', 'warning');
+        this.$toast('Client name is required', 'warning');
         return;
       }
 
@@ -2096,6 +2096,16 @@ export default {
           this.$toast(err.response?.data?.exception || 'Failed to complete checkout', 'danger');
         });
     },
+    setFullPay() {
+      if (this.cart.length === 0) {
+        return;
+      }
+      this.paid_amount = Number(this.netPayable.toFixed(2));
+      this.$nextTick(() => {
+        this.$refs.paidAmountInput?.focus();
+        this.$refs.paidAmountInput?.select();
+      });
+    },
     resetPOS() {
       this.client = { id: null, name: '', mobile: '', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 };
       this.showNewClientForm = false;
@@ -2196,6 +2206,9 @@ export default {
         e.preventDefault();
         this.$refs.clientMobileInput?.focus();
         this.$refs.clientMobileInput?.select();
+      } else if (e.key === 'F7' || e.key === 'F9' || (e.altKey && (e.key === 'f' || e.key === 'F')) || (e.altKey && (e.key === 'p' || e.key === 'P'))) {
+        e.preventDefault();
+        this.setFullPay();
       } else if (e.key === 'F8' || (e.ctrlKey && e.key === 'p')) {
         e.preventDefault();
         this.submitCheckout();

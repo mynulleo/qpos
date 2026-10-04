@@ -726,7 +726,7 @@
                                     Organization Name (সংস্থার নাম) <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control" v-model.trim="membershipForm.org_name"
-                                    placeholder="e.g. Bangladesh Computer Samity (BCS), BASIS, ECAB" required />
+                                    placeholder="e.g. Bangladesh Computer Samity (BCS), BASIS, ECAB" />
                                 <small class="text-muted" style="font-size: 11px;">Enter the official name of the trade association or board</small>
                             </div>
 
@@ -858,13 +858,12 @@ export default {
         // Membership Modal Handlers
         removeMembershipLogo() {
             this.membership_preview_blob = "";
-            this.$set(this.membershipForm, "logo", "");
-            this.$set(this.membershipForm, "logo_url", "");
-            this.$set(this.membershipForm, "preview_url", "");
+            this.membershipForm.logo = "";
+            this.membershipForm.logo_url = "";
+            this.membershipForm.preview_url = "";
             if (this.$refs.membershipFileInput) {
                 this.$refs.membershipFileInput.value = "";
             }
-            this.$forceUpdate();
         },
 
         openMembershipModal(mode = "create", idx = -1) {
@@ -925,8 +924,8 @@ export default {
             try {
                 const blobUrl = URL.createObjectURL(file);
                 this.membership_preview_blob = blobUrl;
-                this.$set(this.membershipForm, "preview_url", blobUrl);
-                this.$set(this.membershipForm, "logo_url", blobUrl);
+                this.membershipForm.preview_url = blobUrl;
+                this.membershipForm.logo_url = blobUrl;
             } catch (err) {
                 console.error("Blob URL error", err);
             }
@@ -935,11 +934,10 @@ export default {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const base64 = event.target.result;
-                this.$set(this.membershipForm, "logo", base64);
-                this.$set(this.membershipForm, "logo_url", base64);
-                this.$set(this.membershipForm, "preview_url", base64);
+                this.membershipForm.logo = base64;
+                this.membershipForm.logo_url = base64;
+                this.membershipForm.preview_url = base64;
                 this.membership_preview_blob = base64;
-                this.$forceUpdate();
             };
             reader.readAsDataURL(file);
         },
@@ -964,7 +962,8 @@ export default {
             };
 
             if (this.membershipModalMode === "edit" && this.editingMembershipIndex >= 0) {
-                this.$set(this.memberships, this.editingMembershipIndex, payload);
+                this.memberships[this.editingMembershipIndex] = payload;
+                this.memberships = [...this.memberships];
             } else {
                 this.memberships.push(payload);
             }
@@ -976,6 +975,7 @@ export default {
         deleteMembership(idx) {
             if (confirm("Are you sure you want to remove this organization membership?")) {
                 this.memberships.splice(idx, 1);
+                this.memberships = [...this.memberships];
                 this.$toast("Membership removed", "info");
             }
         },
@@ -1007,35 +1007,55 @@ export default {
                 if (res) {
                     var form = document.getElementById("form");
                     var formData = new FormData(form);
-                    formData.append("logo_base64", this.data.original_logo || "");
-                    formData.append("system_mode", this.data.system_mode || "live");
-                    formData.append("shop_type", this.data.shop_type || "clothing");
-                    formData.append("sale_nature", this.data.sale_nature || "both");
-                    formData.append("default_vat", this.data.default_vat ?? 0);
-                    formData.append("invoice_prefix", this.data.invoice_prefix || "POS");
-                    formData.append("show_pos_terms", this.data.show_pos_terms ? 1 : 0);
-                    formData.append("memberships", JSON.stringify(this.memberships || []));
-                    formData.append("printer_type", this.data.printer_type || "thermal");
-                    formData.append("normal_paper_size", this.data.normal_paper_size || "A4");
-                    formData.append("thermal_paper_size", this.data.thermal_paper_size || "80mm");
-                    formData.append("label_preset", this.data.label_preset || "4x2");
-                    formData.append("default_currency_id", this.data.default_currency_id);
-                    formData.append("coupon_enabled", this.data.coupon_enabled ? 1 : 0);
-                    formData.append("point_earn_rate", this.data.point_earn_rate ?? 1);
-                    formData.append("point_redeem_rate", this.data.point_redeem_rate ?? 10);
-                    formData.append("min_points_to_redeem", this.data.min_points_to_redeem ?? 10);
-                    formData.append(
-                        "logo_small_base64",
-                        this.data.original_logo_small || ""
-                    );
-                    formData.append(
-                        "logo_resize_value",
-                        this.$root.media_validators?.logo?.resize_value ?? ""
-                    );
-                    formData.append(
-                        "logo_small_resize_value",
-                        this.$root.media_validators?.logo_small?.resize_value ?? ""
-                    );
+
+                    // Ensure all fields from this.data are set in formData
+                    for (const key in this.data) {
+                        if (this.data[key] !== undefined && this.data[key] !== null) {
+                            if (!formData.has(key)) {
+                                formData.append(key, this.data[key]);
+                            }
+                        }
+                    }
+
+                    formData.set("title", this.data.title || "");
+                    formData.set("short_title", this.data.short_title || "");
+                    formData.set("contact_email", this.data.contact_email || "");
+                    formData.set("feedback_email", this.data.feedback_email || "");
+                    formData.set("mobile1", this.data.mobile1 || "");
+                    formData.set("mobile2", this.data.mobile2 || "");
+                    formData.set("address", this.data.address || "");
+                    formData.set("address_two", this.data.address_two || "");
+                    formData.set("map", this.data.map || "");
+                    formData.set("map_two", this.data.map_two || "");
+                    formData.set("system_mode", this.data.system_mode || "live");
+                    formData.set("shop_type", this.data.shop_type || "clothing");
+                    formData.set("sale_nature", this.data.sale_nature || "both");
+                    formData.set("default_vat", this.data.default_vat ?? 0);
+                    formData.set("invoice_prefix", this.data.invoice_prefix || "POS");
+                    formData.set("show_pos_terms", this.data.show_pos_terms ? 1 : 0);
+                    formData.set("memberships", JSON.stringify(this.memberships || []));
+                    formData.set("printer_type", this.data.printer_type || "thermal");
+                    formData.set("normal_paper_size", this.data.normal_paper_size || "A4");
+                    formData.set("thermal_paper_size", this.data.thermal_paper_size || "80mm");
+                    formData.set("label_preset", this.data.label_preset || "4x2");
+                    formData.set("default_currency_id", this.data.default_currency_id || 1);
+                    formData.set("coupon_enabled", this.data.coupon_enabled ? 1 : 0);
+                    formData.set("point_earn_rate", this.data.point_earn_rate ?? 1);
+                    formData.set("point_redeem_rate", this.data.point_redeem_rate ?? 10);
+                    formData.set("min_points_to_redeem", this.data.min_points_to_redeem ?? 10);
+                    formData.set("vat_no", this.data.vat_no || "");
+                    formData.set("hs_code", this.data.hs_code || "");
+                    formData.set("swift_code", this.data.swift_code || "");
+                    formData.set("bank_name", this.data.bank_name || "");
+                    formData.set("branch_name", this.data.branch_name || "");
+                    formData.set("account_number", this.data.account_number || "");
+                    formData.set("routing_number", this.data.routing_number || "");
+
+                    formData.set("logo_base64", this.data.original_logo || "");
+                    formData.set("logo_small_base64", this.data.original_logo_small || "");
+                    formData.set("logo_resize_value", this.$root.media_validators?.logo?.resize_value ?? "");
+                    formData.set("logo_small_resize_value", this.$root.media_validators?.logo_small?.resize_value ?? "");
+
                     this.store(this.model, formData);
                 }
             });
@@ -1094,7 +1114,8 @@ export default {
                     this.$router.push({ name: "siteSetting.show" });
                 })
                 .catch((error) => {
-                    this.$toast("Error updating site settings", "error");
+                    const msg = error.response?.data?.message || "Error updating site settings";
+                    this.$toast(msg, "error");
                     console.log(error);
                 })
                 .finally(() => {

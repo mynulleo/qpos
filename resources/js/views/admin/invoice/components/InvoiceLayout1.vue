@@ -28,14 +28,15 @@
                 <div class="col-5 text-end">
                     <div v-if="orgMemberships && orgMemberships.length > 0" class="d-flex flex-column align-items-end gap-1">
                         <span class="text-uppercase fw-bold text-black" style="font-size: 9.5px; letter-spacing: 0.5px; color: #000000 !important;">Member of:</span>
-                        <div class="d-flex flex-wrap align-items-center justify-content-end gap-1">
-                            <div v-for="(m, mIdx) in orgMemberships" :key="mIdx"
-                                 class="d-flex align-items-center gap-1 bg-white p-1 px-1"
-                                 style="font-size: 10.5px;">
-                                <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo"
-                                     style="max-height: 28px; max-width: 45px; object-fit: contain;" alt="Logo" />
-                                <span class="fw-bold text-black font-monospace" style="font-size: 10.5px; color: #000000 !important;">{{ m.org_name }}</span>
-                            </div>
+                        <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                            <template v-for="(m, mIdx) in orgMemberships" :key="mIdx">
+                                <img v-if="m.logo || m.logo_url" 
+                                     :src="m.logo_url || m.logo" 
+                                     :alt="m.org_name || 'Organization Logo'"
+                                     :title="m.org_name"
+                                     style="max-height: 38px; max-width: 80px; object-fit: contain;" />
+                                <span v-else class="fw-bold text-black font-monospace border px-1" style="font-size: 10px; color: #000000 !important;">{{ m.org_name }}</span>
+                            </template>
                         </div>
                     </div>
                 </div>

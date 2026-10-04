@@ -120,20 +120,24 @@ class SiteSettingController extends BaseController
         if (!empty($conf)) {
             $this->validateCheck($request);
 
-            if (!empty($logo)) {
+            if (!empty($logo) && is_base64($logo)) {
                 $resizeValue = $data['logo_resize_value'] ?? '204x70,175x60';
                 $data['logo'] = cloudflare(file: $logo, folder: 'logo', resizeSize: $resizeValue, base64: true);
+            } else {
+                $data['logo'] = $conf->getRawOriginal('logo') ?? $conf->logo;
             }
-            if (!empty($logo_small)) {
+            if (!empty($logo_small) && is_base64($logo_small)) {
                 $resizeValue = $data['logo_small_resize_value'] ?? '600x200,300x100,150x50';
                 $data['logo_small'] = cloudflare(file: $logo_small, folder: 'logo_small', resizeSize: $resizeValue, base64: true);
+            } else {
+                $data['logo_small'] = $conf->getRawOriginal('logo_small') ?? $conf->logo_small;
             }
 
             // Favicon Icon...
             if (!empty($favicon)) {
                 $data['favicon'] = $this->upload($favicon, 'conf', $conf->favicon);
             } else {
-                $data['favicon'] = $this->oldFile($conf->favicon);
+                $data['favicon'] = $conf->getRawOriginal('favicon') ?? $this->oldFile($conf->favicon);
             }
 
             $this->processMembershipsData($data, $request);
@@ -143,13 +147,17 @@ class SiteSettingController extends BaseController
             return $this->responseReturn('update', $conf);
         } else {
             $this->validateCheck($request);
-            if (!empty($logo)) {
+            if (!empty($logo) && is_base64($logo)) {
                 $resizeValue = $data['logo_resize_value'] ?? '204x70,175x60';
                 $data['logo'] = cloudflare(file: $logo, folder: 'logo', resizeSize: $resizeValue, base64: true);
+            } else {
+                $data['logo'] = null;
             }
-            if (!empty($logo_small)) {
+            if (!empty($logo_small) && is_base64($logo_small)) {
                 $resizeValue = $data['logo_small_resize_value'] ?? '600x200,300x100,150x50';
                 $data['logo_small'] = cloudflare(file: $logo_small, folder: 'logo_small', resizeSize: $resizeValue, base64: true);
+            } else {
+                $data['logo_small'] = null;
             }
             if (!empty($favicon)) {
                 $data['favicon'] = $this->upload($favicon, 'conf');
@@ -190,7 +198,7 @@ class SiteSettingController extends BaseController
             $logoPath = $logo;
 
             // If logo is a base64 string, upload as image file
-            if (!empty($logo) && (str_starts_with($logo, 'data:image') || preg_match('/^data:image\/(\w+);base64,/', $logo))) {
+            if (!empty($logo) && (str_starts_with($logo, 'data:image') || preg_match('/^data:image\/(\w+);base64,/', $logo) || is_base64($logo))) {
                 $code = date('ymdhis') . '-' . rand(1111, 9999);
                 $cleanBase64 = preg_replace('/^data:image\/[a-zA-Z0-9]+;base64,/', '', $logo);
                 $cleanBase64 = str_replace(' ', '+', $cleanBase64);
@@ -348,11 +356,11 @@ class SiteSettingController extends BaseController
             'invoice_prefix' => ['nullable', 'string', 'max:50'],
             'show_pos_terms' => ['nullable'],
             'memberships' => ['nullable'],
-            'logo_base64' => ['nullable', 'string', new Base64Image()],
+            'logo_base64' => ['nullable'],
             'logo_resize_value' => ['nullable', 'string'],
-            'logo_small_base64' => ['nullable', 'string', new Base64Image()],
+            'logo_small_base64' => ['nullable'],
             'logo_small_resize_value' => ['nullable', 'string'],
-            'favicon' => ['nullable', Rule::file()->types(['jpeg', 'jpg', 'png'])->max(1024 * 5)],
+            'favicon' => ['nullable'],
         ]);
     }
 }

@@ -132,6 +132,11 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::post('pos/convert-points', [App\Http\Controllers\Admin\PosController::class, 'convertPoints']);
     Route::get('report/coupon', [App\Http\Controllers\Admin\ReportController::class, 'coupon']);
 
+    Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'pendingpurchases'])->name('grn.pendingpurchases');
+    Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
+    Route::get('grn/statistics', [App\Http\Controllers\Admin\GrnController::class, 'statistics'])->name('grn.statistics');
+    Route::post('grn/check-serials', [App\Http\Controllers\Admin\GrnController::class, 'checkSerials'])->name('grn.checkserials');
+    
     // Label Print & Barcode Utility Routes
     Route::get('generate-item-barcode', [App\Http\Controllers\Admin\ItemController::class, 'getGeneratedBarcode']);
 
@@ -232,10 +237,6 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');
         Route::resource('warrantyClaim', App\Http\Controllers\Admin\WarrantyClaimController::class);
         Route::resource('warehouse', App\Http\Controllers\Admin\WarehouseController::class);
-        Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'pendingpurchases'])->name('grn.pendingpurchases');
-        Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
-        Route::get('grn/statistics', [App\Http\Controllers\Admin\GrnController::class, 'statistics'])->name('grn.statistics');
-        Route::post('grn/check-serials', [App\Http\Controllers\Admin\GrnController::class, 'checkSerials'])->name('grn.checkserials');
         Route::resource('grn', App\Http\Controllers\Admin\GrnController::class);
         Route::resource('stockAdjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
         Route::resource('stock-adjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
