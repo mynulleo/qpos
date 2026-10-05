@@ -60,11 +60,11 @@
         <table class="table table-sm table-bordered border-dark align-middle mb-2" style="font-size: 10.5px; width: 100%;">
             <thead class="border-dark" style="background-color: #000000 !important; color: #ffffff !important;">
                 <tr>
-                    <th width="4%" class="text-center text-white" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 4px;">SL</th>
-                    <th width="48%" class="text-white" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px;">Item Description & Specifications</th>
-                    <th width="10%" class="text-center text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 4px; white-space: nowrap !important;">Qty</th>
-                    <th width="19%" class="text-end text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px; white-space: nowrap !important;">Rate (৳)</th>
-                    <th width="19%" class="text-end text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px; white-space: nowrap !important;">Amount (৳)</th>
+                    <th width="4%" class="text-center text-white" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 4px;">{{ $t('SL') }}</th>
+                    <th width="48%" class="text-white" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px;">{{ $t('Item Description & Specifications') }}</th>
+                    <th width="10%" class="text-center text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 4px; white-space: nowrap !important;">{{ $t('Qty') }}</th>
+                    <th width="19%" class="text-end text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px; white-space: nowrap !important;">{{ $t('Rate') }}</th>
+                    <th width="19%" class="text-end text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px; white-space: nowrap !important;">{{ $t('Amount') }}</th>
                 </tr>
             </thead>
             <tbody>

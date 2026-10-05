@@ -3,37 +3,37 @@
     <div class="row custom_row g-3">
       <div class="col-md-4">
         <fieldset>
-          <span class="legend">Office Information</span>
+          <span class="legend">{{ $t('Office Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>ClientID</th>
+                  <th>{{ $t('ClientID') }}</th>
                   <th>:</th>
                   <td>{{ data.clientid }}</td>
                 </tr>
                 <tr>
-                  <th>Reg Date</th>
+                  <th>{{ $t('Reg Date') }}</th>
                   <th>:</th>
                   <td>{{ data.reg_date }}</td>
                 </tr>
                 <tr>
-                  <th>Note</th>
+                  <th>{{ $t('Note') }}</th>
                   <th>:</th>
                   <td>{{ data.note }}</td>
                 </tr>
                 <tr>
-                  <th>Status</th>
+                  <th>{{ $t('Status') }}</th>
                   <th>:</th>
                   <td>{{ data.status }}</td>
                 </tr>
                 <tr>
-                  <th>Created At</th>
+                  <th>{{ $t('Created At') }}</th>
                   <th>:</th>
                   <td>{{ data.created_at }}</td>
                 </tr>
                 <tr>
-                  <th>Updated At</th>
+                  <th>{{ $t('Updated At') }}</th>
                   <th>:</th>
                   <td>{{ data.updated_at }}</td>
                 </tr>
@@ -44,42 +44,42 @@
       </div>
       <div class="col-md-4">
         <fieldset>
-          <span class="legend">Client Information</span>
+          <span class="legend">{{ $t('Client Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Client Name</th>
+                  <th>{{ $t('Client Name') }}</th>
                   <th>:</th>
                   <td>{{ data.org_name }}</td>
                 </tr>
                 <tr>
-                  <th>Contact Information</th>
+                  <th>{{ $t('Contact Information') }}</th>
                   <th>:</th>
                   <td>{{ data.name }}</td>
                 </tr>
                 <tr>
-                  <th>Mobile</th>
+                  <th>{{ $t('Mobile') }}</th>
                   <th>:</th>
                   <td>{{ data.mobile }}</td>
                 </tr>
                 <tr>
-                  <th>Email</th>
+                  <th>{{ $t('Email') }}</th>
                   <th>:</th>
                   <td>{{ data.email }}</td>
                 </tr>
                 <tr>
-                  <th>Address</th>
+                  <th>{{ $t('Address') }}</th>
                   <th>:</th>
                   <td>{{ data.address }}</td>
                 </tr>
                 <tr>
-                  <th>District</th>
+                  <th>{{ $t('District') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.district?.district_name }} ({{ data.area?.area_name }})</td>
                 </tr>
                 <tr>
-                  <th>Status</th>
+                  <th>{{ $t('Status') }}</th>
                   <th>:</th>
                   <td>{{ data.status }}</td>
                 </tr>
@@ -91,27 +91,27 @@
       </div>
       <div class="col-md-4">
         <fieldset>
-          <span class="legend">Bank Info</span>
+          <span class="legend">{{ $t('Bank Info') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Account Name</th>
+                  <th>{{ $t('Account Name') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.account_name }}</td>
                 </tr>
                 <tr>
-                  <th>Account No</th>
+                  <th>{{ $t('Account No') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.account_no }}</td>
                 </tr>
                 <tr>
-                  <th>Bank</th>
+                  <th>{{ $t('Bank') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.bank?.bank_name }}</td>
                 </tr>
                 <tr>
-                  <th>Branch</th>
+                  <th>{{ $t('Branch') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.branch }}</td>
                 </tr>

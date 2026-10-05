@@ -13,10 +13,10 @@
                     <div class="card-body p-3">
                         <div class="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge theme-bg text-white px-2 py-1"><i class="fas fa-bolt me-1"></i>Quick POS Actions</span>
-                                <span class="text-muted small fw-semibold">Frequently used terminal tools & shortcuts</span>
+                                <span class="badge theme-bg text-white px-2 py-1"><i class="fas fa-bolt me-1"></i>{{ $t('Quick POS Actions') }}</span>
+                                <span class="text-muted small fw-semibold">{{ $t('Frequently used terminal tools & shortcuts') }}</span>
                             </div>
-                            <span class="text-muted small font-monospace d-none d-md-inline"><i class="far fa-clock me-1"></i>{{ currentDate }}</span>
+                            <span class="text-muted small font-monospace d-none d-md-inline"><i class="far fa-clock me-1"></i>{{ formattedDashboardDate }}</span>
                         </div>
 
                         <div class="row g-2 quick-links-grid">
@@ -27,8 +27,8 @@
                                         <i class="fas fa-cash-register text-white fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">New Sale (POS)</div>
-                                        <div class="text-white-50 small" style="font-size: 11px;">Sell & Print (F8)</div>
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">{{ $t('New Sale (POS)') }}</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">{{ $t('Sell & Print (F8)') }}</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -40,8 +40,8 @@
                                         <i class="fas fa-boxes text-white fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Available Stock</div>
-                                        <div class="text-white-50 small" style="font-size: 11px;">Real-time Inventory</div>
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">{{ $t('Available Stock') }}</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">{{ $t('Real-time Inventory') }}</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -53,8 +53,8 @@
                                         <i class="fas fa-undo-alt text-white fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Sales Return</div>
-                                        <div class="text-white-50 small" style="font-size: 11px;">Invoice Refund</div>
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">{{ $t('Sales Return') }}</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">{{ $t('Invoice Refund') }}</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -66,8 +66,8 @@
                                         <i class="fas fa-barcode text-white fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Label Print</div>
-                                        <div class="text-white-50 small" style="font-size: 11px;">Barcode Generator</div>
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">{{ $t('Label Print') }}</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">{{ $t('Barcode Generator') }}</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -80,8 +80,8 @@
                                         <i class="fas fa-file-invoice-dollar text-white fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Invoices List</div>
-                                        <div class="text-white-50 small" style="font-size: 11px;">Order Records</div>
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">{{ $t('Invoices List') }}</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">{{ $t('Order Records') }}</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -93,8 +93,8 @@
                                         <i class="fas fa-cart-plus text-white fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">New Purchase</div>
-                                        <div class="text-white-50 small" style="font-size: 11px;">Stock Inward</div>
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">{{ $t('New Purchase') }}</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">{{ $t('Stock Inward') }}</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -106,8 +106,8 @@
                                         <i class="fas fa-shield-alt text-white fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Warranty Claims</div>
-                                        <div class="text-white-50 small" style="font-size: 11px;">Tracking & Logs</div>
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">{{ $t('Warranty Claims') }}</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">{{ $t('Tracking & Logs') }}</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -119,8 +119,8 @@
                                         <i class="fas fa-chart-line text-white fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">Daily Sales Report</div>
-                                        <div class="text-white-50 small" style="font-size: 11px;">Analytics & Summary</div>
+                                        <div class="fw-bold text-white text-truncate" style="font-size: 13px;">{{ $t('Daily Sales Report') }}</div>
+                                        <div class="text-white-50 small" style="font-size: 11px;">{{ $t('Analytics & Summary') }}</div>
                                     </div>
                                 </router-link>
                             </div>
@@ -137,15 +137,15 @@
                         <div class="card stat-card border-0 shadow-sm h-100">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted fw-bold small text-uppercase">Today's Sales</span>
+                                    <span class="text-muted fw-bold small text-uppercase">{{ $t("Today's Sales") }}</span>
                                     <div class="stat-icon-wrapper theme-bg-soft text-theme rounded-circle">
                                         <i class="fas fa-shopping-bag"></i>
                                     </div>
                                 </div>
                                 <h3 class="fw-bold mb-1 text-dark">৳ {{ formatNum(stats.today_sales) }}</h3>
                                 <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
-                                    <span><i class="fas fa-file-invoice text-success me-1"></i>{{ stats.today_sales_count || 0 }} Invoices</span>
-                                    <span class="text-success fw-semibold">Received: ৳ {{ formatNum(stats.today_received) }}</span>
+                                    <span><i class="fas fa-file-invoice text-success me-1"></i>{{ formatCount(stats.today_sales_count) }} {{ $t('Invoices') }}</span>
+                                    <span class="text-success fw-semibold">{{ $t('Received:') }} ৳ {{ formatNum(stats.today_received) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -156,15 +156,15 @@
                         <div class="card stat-card border-0 shadow-sm h-100">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted fw-bold small text-uppercase">Monthly Sales</span>
+                                    <span class="text-muted fw-bold small text-uppercase">{{ $t('Monthly Sales') }}</span>
                                     <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success rounded-circle">
                                         <i class="fas fa-calendar-check"></i>
                                     </div>
                                 </div>
                                 <h3 class="fw-bold mb-1 text-dark">৳ {{ formatNum(stats.month_sales) }}</h3>
                                 <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
-                                    <span><i class="fas fa-receipt text-primary me-1"></i>{{ stats.month_sales_count || 0 }} Invoices</span>
-                                    <span class="text-primary fw-semibold">Received: ৳ {{ formatNum(stats.month_received) }}</span>
+                                    <span><i class="fas fa-receipt text-primary me-1"></i>{{ formatCount(stats.month_sales_count) }} {{ $t('Invoices') }}</span>
+                                    <span class="text-primary fw-semibold">{{ $t('Received:') }} ৳ {{ formatNum(stats.month_received) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -175,15 +175,15 @@
                         <div class="card stat-card border-0 shadow-sm h-100">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted fw-bold small text-uppercase">Total Receivables (Due)</span>
+                                    <span class="text-muted fw-bold small text-uppercase">{{ $t('Total Receivables (Due)') }}</span>
                                     <div class="stat-icon-wrapper bg-danger bg-opacity-10 text-danger rounded-circle">
                                         <i class="fas fa-hand-holding-usd"></i>
                                     </div>
                                 </div>
                                 <h3 class="fw-bold mb-1 text-danger">৳ {{ formatNum(clientSummary.total_outstanding) }}</h3>
                                 <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
-                                    <span>This Month Due: ৳ {{ formatNum(clientSummary.cm_due) }}</span>
-                                    <router-link v-if="$root.checkPermission('report.receivable')" to="/report/receivable" class="text-decoration-none small text-danger fw-semibold">Details &rarr;</router-link>
+                                    <span>{{ $t('This Month Due:') }} ৳ {{ formatNum(clientSummary.cm_due) }}</span>
+                                    <router-link v-if="$root.checkPermission('report.receivable')" to="/report/receivable" class="text-decoration-none small text-danger fw-semibold">{{ $t('Details') }} &rarr;</router-link>
                                 </div>
                             </div>
                         </div>
@@ -194,15 +194,15 @@
                         <div class="card stat-card border-0 shadow-sm h-100">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted fw-bold small text-uppercase">Total Items in Stock</span>
+                                    <span class="text-muted fw-bold small text-uppercase">{{ $t('Total Items in Stock') }}</span>
                                     <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning rounded-circle">
                                         <i class="fas fa-cubes"></i>
                                     </div>
                                 </div>
-                                <h3 class="fw-bold mb-1 text-dark">{{ stats.total_items || 0 }}</h3>
+                                <h3 class="fw-bold mb-1 text-dark">{{ formatCount(stats.total_items) }}</h3>
                                 <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
-                                    <span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle me-1"></i>{{ zeroStockList.length }} Zero Stock</span>
-                                    <router-link v-if="$root.checkPermission('report.availablestock')" to="/report/availablestock" class="text-decoration-none small text-muted">Stock Report &rarr;</router-link>
+                                    <span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle me-1"></i>{{ formatCount(zeroStockList.length) }} {{ $t('Zero Stock') }}</span>
+                                    <router-link v-if="$root.checkPermission('report.availablestock')" to="/report/availablestock" class="text-decoration-none small text-muted">{{ $t('Stock Report') }} &rarr;</router-link>
                                 </div>
                             </div>
                         </div>
@@ -218,14 +218,14 @@
                             <div>
                                 <h5 class="fw-bold mb-0 text-theme d-flex align-items-center gap-2">
                                     <i class="fas fa-chart-line theme-text"></i>
-                                    <span>Current Month Sales Trend ({{ barChartDataMonth }})</span>
+                                    <span>{{ $t('Current Month Sales Trend') }} ({{ barChartDataMonth }})</span>
                                 </h5>
-                                <span class="text-muted small">Daily trajectory of Sales, Collections & Due</span>
+                                <span class="text-muted small">{{ $t('Daily trajectory of Sales, Collections & Due') }}</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-light text-dark border"><strong class="text-primary">Sales:</strong> ৳ {{ formatNum(totalMonthSales) }}</span>
-                                <span class="badge bg-light text-dark border"><strong class="text-success">Received:</strong> ৳ {{ formatNum(totalMonthReceived) }}</span>
-                                <span class="badge bg-light text-dark border"><strong class="text-danger">Due:</strong> ৳ {{ formatNum(totalMonthDue) }}</span>
+                                <span class="badge bg-light text-dark border"><strong class="text-primary">{{ $t('Sales:') }}</strong> ৳ {{ formatNum(totalMonthSales) }}</span>
+                                <span class="badge bg-light text-dark border"><strong class="text-success">{{ $t('Received:') }}</strong> ৳ {{ formatNum(totalMonthReceived) }}</span>
+                                <span class="badge bg-light text-dark border"><strong class="text-danger">{{ $t('Due:') }}</strong> ৳ {{ formatNum(totalMonthDue) }}</span>
                             </div>
                         </div>
 
@@ -244,8 +244,8 @@
                             <div class="d-flex align-items-center gap-2">
                                 <i class="fas fa-vault fs-5 theme-text"></i>
                                 <div>
-                                    <h6 class="fw-bold mb-0 text-dark">Fund & Financial Accounts</h6>
-                                    <small class="text-muted" style="font-size: 11px;">Protected liquidity details</small>
+                                    <h6 class="fw-bold mb-0 text-dark">{{ $t('Fund & Financial Accounts') }}</h6>
+                                    <small class="text-muted" style="font-size: 11px;">{{ $t('Protected liquidity details') }}</small>
                                 </div>
                             </div>
                             <button
@@ -256,7 +256,7 @@
                                 style="font-size: 12px; font-weight: 600;"
                             >
                                 <i :class="showFunds ? 'fas fa-eye-slash me-1' : 'fas fa-eye me-1'"></i>
-                                {{ showFunds ? 'Hide Info' : 'Click to View' }}
+                                {{ showFunds ? $t('Hide Info') : $t('Click to View') }}
                             </button>
                         </div>
 
@@ -265,19 +265,19 @@
                             <div class="privacy-lock-icon mb-3">
                                 <i class="fas fa-lock fs-1 text-muted"></i>
                             </div>
-                            <h6 class="fw-bold text-dark mb-1">Fund Information is Hidden</h6>
+                            <h6 class="fw-bold text-dark mb-1">{{ $t('Fund Information is Hidden') }}</h6>
                             <p class="text-muted small mb-3" style="max-width: 260px;">
-                                Bank balances, cash registers & fund accounts are hidden for confidentiality.
+                                {{ $t('Bank balances, cash registers & fund accounts are hidden for confidentiality.') }}
                             </p>
                             <button type="button" class="btn btn-theme btn-sm px-3" @click="showFunds = true">
-                                <i class="fas fa-unlock me-1"></i> Reveal Fund Data
+                                <i class="fas fa-unlock me-1"></i> {{ $t('Reveal Fund Data') }}
                             </button>
                         </div>
 
                         <!-- 👁️ Expanded State: Account Balances & Pie Chart -->
                         <div v-else class="flex-grow-1 overflow-auto">
                             <div class="p-2 mb-3 bg-success bg-opacity-10 border border-success rounded d-flex align-items-center justify-content-between">
-                                <span class="small fw-bold text-success"><i class="fas fa-coins me-1"></i>Total Liquid Funds:</span>
+                                <span class="small fw-bold text-success"><i class="fas fa-coins me-1"></i>{{ $t('Total Liquid Funds:') }}</span>
                                 <strong class="fs-6 text-success">৳ {{ formatNum(totalLiquidity) }}</strong>
                             </div>
 
@@ -286,8 +286,8 @@
                                 <table class="table table-sm table-hover align-middle mb-0" style="font-size: 12px;">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Account Name</th>
-                                            <th class="text-end">Balance (৳)</th>
+                                            <th>{{ $t('Account Name') }}</th>
+                                            <th class="text-end">{{ $t('Balance') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -296,7 +296,7 @@
                                             <td class="text-end font-monospace fw-bold text-dark">৳ {{ formatNum(acc.current_balance) }}</td>
                                         </tr>
                                         <tr v-if="!fundAccounts || fundAccounts.length === 0">
-                                            <td colspan="2" class="text-center text-muted py-2">No fund accounts found</td>
+                                            <td colspan="2" class="text-center text-muted py-2">{{ $t('No fund accounts found') }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -319,12 +319,12 @@
                             <div class="d-flex align-items-center gap-2">
                                 <i class="fas fa-exclamation-triangle text-danger fs-5"></i>
                                 <div>
-                                    <h6 class="fw-bold mb-0 text-dark">🚨 Top Selling Out of Stock (জিরো স্টক পণ্য)</h6>
-                                    <small class="text-muted" style="font-size: 11px;">Most sold items currently at 0 stock (Priority Restock)</small>
+                                    <h6 class="fw-bold mb-0 text-dark">🚨 {{ $t('Top Selling Out of Stock') }}</h6>
+                                    <small class="text-muted" style="font-size: 11px;">{{ $t('Most sold items currently at 0 stock (Priority Restock)') }}</small>
                                 </div>
                             </div>
                             <router-link v-if="$root.checkPermission('report.availablestock')" to="/report/availablestock" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
-                                Stock Report
+                                {{ $t('Stock Report') }}
                             </router-link>
                         </div>
 
@@ -332,12 +332,12 @@
                             <table class="table table-sm table-hover align-middle mb-0" style="font-size: 12px;">
                                 <thead class="table-light sticky-top">
                                     <tr>
-                                        <th>Barcode</th>
-                                        <th>Item Name</th>
-                                        <th>Category</th>
-                                        <th class="text-center">Total Sold</th>
-                                        <th class="text-center">Stock</th>
-                                        <th class="text-end">Action</th>
+                                        <th>{{ $t('Barcode') }}</th>
+                                        <th>{{ $t('Item Name') }}</th>
+                                        <th>{{ $t('Category') }}</th>
+                                        <th class="text-center">{{ $t('Total Sold') }}</th>
+                                        <th class="text-center">{{ $t('Stock') }}</th>
+                                        <th class="text-end">{{ $t('Action') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -347,23 +347,23 @@
                                         <td><span class="badge bg-light text-dark border">{{ s.category_title || 'General' }}</span></td>
                                         <td class="text-center">
                                             <span class="badge bg-primary bg-opacity-10 text-primary fw-bold font-monospace">
-                                                {{ s.total_sold_qty }} Sold
+                                                {{ formatCount(s.total_sold_qty) }} {{ $t('Sold') }}
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-danger text-white">
-                                                0 (Empty)
+                                                0 ({{ $t('Empty') }})
                                             </span>
                                         </td>
                                         <td class="text-end">
-                                            <router-link v-if="$root.checkPermission('purchase.create') || $root.checkPermission('purchase.index')" to="/purchase/create" class="btn btn-xs btn-outline-danger" title="Purchase Reorder">
-                                                <i class="fas fa-cart-plus"></i> Restock
+                                            <router-link v-if="$root.checkPermission('purchase.create') || $root.checkPermission('purchase.index')" to="/purchase/create" class="btn btn-xs btn-outline-danger" :title="$t('Purchase Reorder')">
+                                                <i class="fas fa-cart-plus"></i> {{ $t('Restock') }}
                                             </router-link>
                                         </td>
                                     </tr>
                                     <tr v-if="!zeroStockList || zeroStockList.length === 0">
                                         <td colspan="6" class="text-center text-success py-3">
-                                            <i class="fas fa-check-circle me-1"></i> No zero stock items! All products have stock available.
+                                            <i class="fas fa-check-circle me-1"></i> {{ $t('No zero stock items! All products have stock available.') }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -381,12 +381,12 @@
                             <div class="d-flex align-items-center gap-2">
                                 <i class="fas fa-history theme-text fs-5"></i>
                                 <div>
-                                    <h6 class="fw-bold mb-0 text-dark">Recent Invoices</h6>
-                                    <small class="text-muted" style="font-size: 11px;">Latest completed sales orders</small>
+                                    <h6 class="fw-bold mb-0 text-dark">{{ $t('Recent Invoices') }}</h6>
+                                    <small class="text-muted" style="font-size: 11px;">{{ $t('Latest completed sales orders') }}</small>
                                 </div>
                             </div>
                             <router-link v-if="$root.checkPermission('invoice.index')" to="/invoice" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
-                                View All
+                                {{ $t('View All') }}
                             </router-link>
                         </div>
 
@@ -394,36 +394,36 @@
                             <table class="table table-sm table-hover align-middle mb-0" style="font-size: 12px;">
                                 <thead class="table-light sticky-top">
                                     <tr>
-                                        <th>Invoice #</th>
-                                        <th>Customer</th>
-                                        <th class="text-end">Total</th>
-                                        <th class="text-end">Paid</th>
-                                        <th class="text-center">Status</th>
-                                        <th class="text-end">View</th>
+                                        <th>{{ $t('Invoice #') }}</th>
+                                        <th>{{ $t('Customer') }}</th>
+                                        <th class="text-end">{{ $t('Total') }}</th>
+                                        <th class="text-end">{{ $t('Paid') }}</th>
+                                        <th class="text-center">{{ $t('Status') }}</th>
+                                        <th class="text-end">{{ $t('View') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="(inv, idx) in recentInvoicesList" :key="idx">
                                         <td class="font-monospace fw-bold text-dark">{{ inv.invoice_no }}</td>
                                         <td>
-                                            <div class="fw-semibold text-truncate" style="max-width: 130px;">{{ inv.client_name || 'Walk-in' }}</div>
+                                            <div class="fw-semibold text-truncate" style="max-width: 130px;">{{ inv.client_name || $t('Walk-in') }}</div>
                                             <small class="text-muted font-monospace" style="font-size: 10px;">{{ inv.client_mobile || '' }}</small>
                                         </td>
                                         <td class="text-end font-monospace fw-bold text-dark">৳ {{ formatNum(inv.amount) }}</td>
                                         <td class="text-end font-monospace text-success">৳ {{ formatNum(inv.paid_amount) }}</td>
                                         <td class="text-center">
                                             <span class="badge" :class="inv.is_closed ? 'bg-success' : 'bg-danger'">
-                                                {{ inv.is_closed ? 'Paid' : 'Due' }}
+                                                {{ inv.is_closed ? $t('Paid') : $t('Due') }}
                                             </span>
                                         </td>
                                         <td class="text-end">
-                                            <router-link v-if="$root.checkPermission('invoice.show')" :to="'/invoice/' + inv.id" class="btn btn-xs btn-light border" title="View Invoice">
+                                            <router-link v-if="$root.checkPermission('invoice.show')" :to="'/invoice/' + inv.id" class="btn btn-xs btn-light border" :title="$t('View Invoice')">
                                                 <i class="fas fa-eye text-muted"></i>
                                             </router-link>
                                         </td>
                                     </tr>
                                     <tr v-if="!recentInvoicesList || recentInvoicesList.length === 0">
-                                        <td colspan="6" class="text-center text-muted py-3">No recent invoices recorded</td>
+                                        <td colspan="6" class="text-center text-muted py-3">{{ $t('No recent invoices recorded') }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -451,7 +451,6 @@ export default {
     data() {
         return {
             showFunds: false,
-            currentDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
             lineChartData: {
                 labels: [],
                 datasets: [],
@@ -502,6 +501,17 @@ export default {
         };
     },
     computed: {
+        formattedDashboardDate() {
+            const now = new Date();
+            if (this.$locale === 'bn') {
+                const bnMonths = ["জানু", "ফেব্রু", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টে", "অক্টো", "নভে", "ডিসে"];
+                const day = this.$bnNum(String(now.getDate()).padStart(2, '0'));
+                const month = bnMonths[now.getMonth()];
+                const year = this.$bnNum(now.getFullYear());
+                return `${day} ${month} ${year}`;
+            }
+            return now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        },
         stats() {
             return this.data?.dashboard?.statisticsData || {};
         },
@@ -521,7 +531,7 @@ export default {
             return this.data?.dashboard?.fundData?.total_liquidity || 0;
         },
         barChartDataMonth() {
-            return this.data?.dashboard?.barData?.month_name || 'This Month';
+            return this.data?.dashboard?.barData?.month_name || (this.$locale === 'bn' ? 'চলতি মাস' : 'This Month');
         },
         totalMonthSales() {
             return this.data?.dashboard?.barData?.total_sales || this.stats.month_sales || 0;
@@ -561,8 +571,13 @@ export default {
     methods: {
         formatNum(val) {
             const num = parseFloat(val);
-            if (isNaN(num)) return '0.00';
-            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (isNaN(num)) return this.$locale === 'bn' ? this.$bnNum('0.00') : '0.00';
+            const formatted = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return this.$locale === 'bn' ? this.$bnNum(formatted) : formatted;
+        },
+        formatCount(val) {
+            const num = parseInt(val, 10) || 0;
+            return this.$locale === 'bn' ? this.$bnNum(num) : num;
         },
         generateLineChart(data) {
             if (!data?.dashboard?.barData) return;

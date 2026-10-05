@@ -10,7 +10,7 @@
                 <i class="fas fa-file-invoice-dollar fs-4"></i>
               </div>
               <div>
-                <h5 class="fw-bold mb-0 text-dark">Expense Voucher Entry (দৈনন্দিন খরচ ভাউচার)</h5>
+                <h5 class="fw-bold mb-0 text-dark">{{ $t('Expense Voucher Entry') }}</h5>
                 <p class="text-muted small mb-0">Record and track office, operational, staff, and maintenance expenses.</p>
               </div>
             </div>
@@ -39,8 +39,7 @@
       <div class="card border-0 shadow-sm rounded-3 mb-2 expense-card">
         <div class="card-header bg-white py-2 border-bottom d-flex align-items-center justify-content-between">
           <span class="fw-bold small text-dark d-flex align-items-center gap-2">
-            <i class="fas fa-calendar-alt text-primary"></i> General Information (ভাউচারের তথ্য)
-          </span>
+            <i class="fas fa-calendar-alt text-primary"></i>{{ $t('General Information') }}</span>
           <span class="badge bg-light text-secondary border font-monospace" v-if="data.expense_date">
             <i class="fas fa-clock me-1"></i> {{ data.expense_date }}
           </span>
@@ -51,7 +50,7 @@
               id="date1"
               v-model="data.expense_date"
               field="data.expense_date"
-              title="Expense Date (খরচের তারিখ)"
+              title="Expense Date"
               placeholder="Expense Date"
               col="3"
               :req="true"
@@ -72,7 +71,7 @@
             />
 
             <Select
-              title="Employee In-Charge (দায়িত্বপ্রাপ্ত কর্মী)"
+              title="Employee In-Charge"
               v-model="data.employee_id"
               col="3"
               field="data.employee_id"
@@ -86,7 +85,7 @@
             />
 
             <div class="col-md-3">
-              <label class="form-label fw-bold small text-secondary mb-1">Status (স্ট্যাটাস)</label>
+              <label class="form-label fw-bold small text-secondary mb-1">{{ $t('Status') }}</label>
               <div class="pt-1">
                 <Switch
                   v-model="data.status"
@@ -109,8 +108,7 @@
         <div class="card-header bg-white py-2 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div class="d-flex align-items-center gap-2">
             <span class="fw-bold small text-dark d-flex align-items-center gap-2">
-              <i class="fas fa-list-ol text-primary"></i> Expense Items & Account Breakdown (খরচের খাত ও বিবরণী)
-            </span>
+              <i class="fas fa-list-ol text-primary"></i>{{ $t('Expense Items & Account Breakdown') }}</span>
             <span class="badge bg-primary rounded-pill px-2">
               {{ (data.expense_details || []).length }} Items
             </span>
@@ -148,17 +146,16 @@
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr class="small text-muted text-uppercase">
-                  <th style="width: 4%;" class="text-center">#</th>
+                  <th style="width: 4%;" class="text-center">{{ $t('#') }}</th>
                   <th style="width: 32%;">
-                    <i class="fas fa-landmark text-primary me-1"></i> Expense Account Head (খাত) <span class="text-danger">*</span>
+                    <i class="fas fa-landmark text-primary me-1"></i>{{ $t('Expense Account Head') }}<span class="text-danger">*</span>
                   </th>
                   <th style="width: 40%;">
-                    <i class="fas fa-comment-alt text-secondary me-1"></i> Narration / Description (বিবরণ)
-                  </th>
+                    <i class="fas fa-comment-alt text-secondary me-1"></i>{{ $t('Narration / Description') }}</th>
                   <th style="width: 16%;" class="text-end">
-                    <i class="fas fa-money-bill-wave text-success me-1"></i> Amount (টাকা) <span class="text-danger">*</span>
+                    <i class="fas fa-money-bill-wave text-success me-1"></i>{{ $t('Amount') }}<span class="text-danger">*</span>
                   </th>
-                  <th style="width: 8%;" class="text-center">Action</th>
+                  <th style="width: 8%;" class="text-center">{{ $t('Action') }}</th>
                 </tr>
               </thead>
               <tbody>

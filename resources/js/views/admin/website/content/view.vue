@@ -12,7 +12,7 @@
                 </div>
                 <div class="col-xl-4 col-lg-12">
                     <fieldset>
-                        <span class="legend">Media</span>
+                        <span class="legend">{{ $t('Media') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="col-lg-12">
@@ -123,7 +123,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-12 col-lg-12">
                     <fieldset>
-                        <span class="legend">Meta Information</span>
+                        <span class="legend">{{ $t('Meta Information') }}</span>
                         <template v-if="(data.meta_tag && data.meta_tag.length) || data.meta_description">
                             <div class="col-lg-12 mt-2" v-if="data.meta_tag && data.meta_tag.length">
                                 <button class="btn btn-light border" v-for="(item, index) in data.meta_tag"

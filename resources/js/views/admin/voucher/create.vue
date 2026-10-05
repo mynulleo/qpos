@@ -12,17 +12,17 @@
     <Textarea v-model='data.narration' field='data.narration' :required='true' title="Narration" col="12" />
     <div class="col-md-12">
       <fieldset class="mt-4 mb-4">
-        <span class="legend">Voucher Details</span>
+        <span class="legend">{{ $t('Voucher Details') }}</span>
         <table class="table">
           <thead>
             <tr>
-              <th style="width:10%">Type</th>
-              <th style="width:20%">Account</th>
-              <th style="width:10%">Dr. Amount</th>
-              <th style="width:10%">Cr. Amount</th>
-              <th style="width:25%">Narration</th>
-              <th style="width:10%">R. Type</th>
-              <th style="width:10%">R. ID</th>
+              <th style="width:10%">{{ $t('Type') }}</th>
+              <th style="width:20%">{{ $t('Account') }}</th>
+              <th style="width:10%">{{ $t('Dr. Amount') }}</th>
+              <th style="width:10%">{{ $t('Cr. Amount') }}</th>
+              <th style="width:25%">{{ $t('Narration') }}</th>
+              <th style="width:10%">{{ $t('R. Type') }}</th>
+              <th style="width:10%">{{ $t('R. ID') }}</th>
               <th style="width:5%"></th>
             </tr>
           </thead>

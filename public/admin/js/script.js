@@ -73,18 +73,8 @@ $(function () {
         return day + " " + monthNames[monthIndex] + ", " + year;
     }
 
-    function updateDateTime() {
-        const now = new Date();
-        const timeString = formatAMPM(now);
-        const dateString = formatDate(now);
-        const currentDateTime = document.getElementById("currentDateTime");
-        if (currentDateTime) {
-            currentDateTime.innerText = timeString + " - " + dateString;
-        }
-    }
-
-    updateDateTime();
-    setInterval(updateDateTime, 1000); // Update every second
+    // DateTime is reactively managed by Vue in AppNav.vue
+    // function updateDateTime() { ... }
 
     // Toggle dropdown menu on button click
     $(document).on("click", ".dropdown_menu", function (e) {

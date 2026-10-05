@@ -3,13 +3,13 @@
         <!-- 🔍 Search & Filter Section -->
         <template v-slot:search-field>
             <!-- Category Filter -->
-            <v-select-container title="Category (ক্যাটাগরি)" field="search_data.category_id" col="3 mb-3">
+            <v-select-container title="Category" field="search_data.category_id" col="3 mb-3">
                 <v-select v-model="search_data.category_id" label="title" :reduce="obj => obj.id" :options="categories"
                     placeholder="-- All Categories --" :closeOnSelect="true" />
             </v-select-container>
 
             <!-- Item Filter -->
-            <v-select-container title="Item (পণ্য)" field="search_data.item_id" col="3 mb-3">
+            <v-select-container title="Item" field="search_data.item_id" col="3 mb-3">
                 <v-select v-model="search_data.item_id" label="title" :reduce="obj => obj.id" :options="items"
                     :placeholder="search_data.category_id ? '-- Select Item --' : '-- All Items / Select --'" :closeOnSelect="true">
                     <template #option="option">
@@ -25,13 +25,13 @@
             </v-select-container>
 
             <!-- Color Filter -->
-            <v-select-container title="Color (কালার)" field="search_data.color_id" col="2 mb-3">
+            <v-select-container title="Color" field="search_data.color_id" col="2 mb-3">
                 <v-select v-model="search_data.color_id" label="title" :reduce="obj => obj.id" :options="colorOptions"
                     placeholder="-- All Colors --" :closeOnSelect="true" />
             </v-select-container>
 
             <!-- Size Filter (Hidden for Electronics Shops) -->
-            <v-select-container v-if="showSizeColumn" title="Size (সাইজ)" field="search_data.size_id" col="2 mb-3">
+            <v-select-container v-if="showSizeColumn" title="Size" field="search_data.size_id" col="2 mb-3">
                 <v-select v-model="search_data.size_id" label="title" :reduce="obj => obj.id" :options="sizeOptions"
                     placeholder="-- All Sizes --" :closeOnSelect="true" />
             </v-select-container>
@@ -43,11 +43,11 @@
                     <select class="form-select form-select-sm" v-model="search_data.transaction_type">
                         <option :value="null">-- All Types --</option>
                         <option value="Opening">Opening Balance</option>
-                        <option value="Purchase">Purchase (ক্রয়)</option>
-                        <option value="GRN">GRN (পণ্য গ্রহণ)</option>
-                        <option value="Sale">Sale / Issue (বিক্রয়)</option>
-                        <option value="SalesReturn">Sales Return (ফেরত)</option>
-                        <option value="Wastage">Wastage (অপচয়)</option>
+                        <option value="Purchase">{{ $t('Purchase') }}</option>
+                        <option value="GRN">{{ $t('GRN') }}</option>
+                        <option value="Sale">{{ $t('Sale / Issue') }}</option>
+                        <option value="SalesReturn">{{ $t('Sales Return') }}</option>
+                        <option value="Wastage">{{ $t('Wastage') }}</option>
                     </select>
                 </div>
             </div>
@@ -211,7 +211,7 @@
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="card border-0 shadow-sm p-2 text-center bg-white rounded-3">
-                        <small class="text-muted d-block fw-semibold text-danger">Period Stock Out (-)</small>
+                        <small class="text-muted d-block fw-semibold text-danger">{{ $t('Period Stock Out') }}</small>
                         <span class="fs-5 fw-bold text-danger">-{{ summaryData.totalOut }}</span>
                         <small class="text-muted" style="font-size: 10px;">Sales & Wastages</small>
                     </div>
@@ -261,21 +261,21 @@
                     <table class="table table-bordered table-hover align-middle mb-0 text-nowrap">
                         <thead class="table-light">
                             <tr class="fw-bold text-center small text-secondary">
-                                <th style="width: 40px;">#</th>
-                                <th style="width: 120px;">Date & Time</th>
-                                <th style="width: 110px;">Transaction Type</th>
-                                <th>Reference No</th>
-                                <th>Party / Contact</th>
-                                <th>Warehouse</th>
-                                <th>Color</th>
+                                <th style="width: 40px;">{{ $t('#') }}</th>
+                                <th style="width: 120px;">{{ $t('Date & Time') }}</th>
+                                <th style="width: 110px;">{{ $t('Transaction Type') }}</th>
+                                <th>{{ $t('Reference No') }}</th>
+                                <th>{{ $t('Party / Contact') }}</th>
+                                <th>{{ $t('Warehouse') }}</th>
+                                <th>{{ $t('Color') }}</th>
                                 <!-- Size Column (Only for Non-Electronics Shops) -->
-                                <th v-if="showSizeColumn">Size</th>
+                                <th v-if="showSizeColumn">{{ $t('Size') }}</th>
                                 <!-- Serial No Column (Based on Shop Type / Serial availability) -->
-                                <th v-if="showSerialColumn" style="width: 110px;">Serial No</th>
-                                <th class="text-end" style="width: 100px;">Unit Rate</th>
+                                <th v-if="showSerialColumn" style="width: 110px;">{{ $t('Serial No') }}</th>
+                                <th class="text-end" style="width: 100px;">{{ $t('Unit Rate') }}</th>
                                 <th class="text-end text-success" style="width: 100px;">Stock In (+)</th>
-                                <th class="text-end text-danger" style="width: 100px;">Stock Out (-)</th>
-                                <th class="text-end text-primary" style="width: 110px;">Balance</th>
+                                <th class="text-end text-danger" style="width: 100px;">{{ $t('Stock Out') }}</th>
+                                <th class="text-end text-primary" style="width: 110px;">{{ $t('Balance') }}</th>
                             </tr>
                         </thead>
                         <tbody>

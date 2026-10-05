@@ -6,10 +6,10 @@
         <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
             <router-link :to="{ name: 'quotation.index' }" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
-              <i class="fas fa-arrow-left"></i> Back to List
+              <i class="fas fa-arrow-left"></i> {{ $t('Back to List') }}
             </router-link>
             <span class="badge font-monospace px-3 py-2 fs-6" :class="statusBadgeClass(data.status)">
-              <i class="fas fa-circle me-1 small"></i> Status: {{ (data.status || 'draft').toUpperCase() }}
+              <i class="fas fa-circle me-1 small"></i> {{ $t('Status') }}: {{ $t(data.status || 'draft') }}
             </span>
           </div>
 
@@ -17,24 +17,24 @@
             <!-- Quick Status Changer -->
             <div class="dropdown">
               <button class="btn btn-sm btn-outline-dark dropdown-toggle d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-sync-alt"></i> Change Status
+                <i class="fas fa-sync-alt"></i> {{ $t('Change Status') }}
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('draft')"><i class="fas fa-file text-secondary me-2"></i>Draft</a></li>
-                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('sent')"><i class="fas fa-paper-plane text-primary me-2"></i>Sent</a></li>
-                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('accepted')"><i class="fas fa-check-circle text-success me-2"></i>Accepted</a></li>
-                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('declined')"><i class="fas fa-times-circle text-danger me-2"></i>Declined</a></li>
-                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('converted')"><i class="fas fa-file-invoice text-info me-2"></i>Converted to Invoice</a></li>
-                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('expired')"><i class="fas fa-clock text-warning me-2"></i>Expired</a></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('draft')"><i class="fas fa-file text-secondary me-2"></i>{{ $t('Draft') }}</a></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('sent')"><i class="fas fa-paper-plane text-primary me-2"></i>{{ $t('Sent') }}</a></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('accepted')"><i class="fas fa-check-circle text-success me-2"></i>{{ $t('Accepted') }}</a></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('declined')"><i class="fas fa-times-circle text-danger me-2"></i>{{ $t('Declined') }}</a></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('converted')"><i class="fas fa-file-invoice text-info me-2"></i>{{ $t('Converted to Invoice') }}</a></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="updateStatus('expired')"><i class="fas fa-clock text-warning me-2"></i>{{ $t('Expired') }}</a></li>
               </ul>
             </div>
 
             <router-link :to="{ name: 'quotation.edit', params: { id: data.id } }" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" v-if="data.id">
-              <i class="fas fa-edit"></i> Edit
+              <i class="fas fa-edit"></i> {{ $t('Edit') }}
             </router-link>
 
             <button type="button" class="btn btn-sm btn-dark d-inline-flex align-items-center gap-1 shadow-sm px-3" @click="printQuotation">
-              <i class="fas fa-print"></i> Print Quotation
+              <i class="fas fa-print"></i> {{ $t('Print Quotation') }}
             </button>
           </div>
         </div>
@@ -63,9 +63,9 @@
         </div>
 
         <div class="col-5 text-end">
-          <h2 class="fw-bold text-uppercase tracking-wide mb-1 document-title" style="color: #112C47;">QUOTATION</h2>
+          <h2 class="fw-bold text-uppercase tracking-wide mb-1 document-title" style="color: #112C47;">{{ $t('Quotation') }}</h2>
           <span class="badge border px-3 py-1 font-monospace small" style="background-color: #f1f5f9; color: #112C47; border-color: #cbd5e1 !important;">
-            OFFICIAL PROPOSAL
+            {{ $t('OFFICIAL PROPOSAL') }}
           </span>
         </div>
       </div>
@@ -76,11 +76,11 @@
         <div class="col-6">
           <div class="p-3 bg-light rounded-3 border h-100 client-info-box" style="border-left: 4px solid #112C47 !important;">
             <div class="text-uppercase fw-bold small mb-2 border-bottom pb-1" style="color: #112C47;">
-              <i class="fas fa-user-tie me-1"></i> Quotation For / Customer Info:
+              <i class="fas fa-user-tie me-1"></i> {{ $t('Quotation For / Customer Info') }}:
             </div>
-            <h5 class="fw-bold text-dark mb-1">{{ data.client_name || (data.client ? data.client.org_name || data.client.name : 'Walk-in Customer') }}</h5>
+            <h5 class="fw-bold text-dark mb-1">{{ data.client_name || (data.client ? data.client.org_name || data.client.name : $t('Walk-in Customer')) }}</h5>
             <div class="small text-muted mb-1" v-if="data.client && data.client.name && data.client.org_name">
-              <strong>Attn:</strong> {{ data.client.name }}
+              <strong>{{ $t('Attn') }}:</strong> {{ data.client.name }}
             </div>
             <div class="small text-muted mb-1" v-if="data.client_phone || (data.client && data.client.mobile)">
               <i class="fas fa-phone-alt me-1 text-primary"></i> {{ data.client_phone || (data.client ? data.client.mobile : '') }}
@@ -98,28 +98,28 @@
         <div class="col-6">
           <div class="p-3 bg-light rounded-3 border h-100 meta-info-box" style="border-left: 4px solid #112C47 !important;">
             <div class="text-uppercase fw-bold small mb-2 border-bottom pb-1" style="color: #112C47;">
-              <i class="fas fa-info-circle me-1"></i> Quotation Details:
+              <i class="fas fa-info-circle me-1"></i> {{ $t('Quotation Details') }}:
             </div>
             <table class="table table-sm table-borderless mb-0 small">
               <tbody>
                 <tr>
-                  <td class="fw-bold text-secondary" style="width: 45%;">Quotation No:</td>
+                  <td class="fw-bold text-secondary" style="width: 45%;">{{ $t('Quotation No') }}:</td>
                   <td class="text-end font-monospace fw-bold" style="color: #112C47;">{{ data.quotation_no || 'N/A' }}</td>
                 </tr>
                 <tr>
-                  <td class="fw-bold text-secondary">Quotation Date:</td>
+                  <td class="fw-bold text-secondary">{{ $t('Quotation Date') }}:</td>
                   <td class="text-end font-monospace text-dark fw-semibold">{{ formatDate(data.quotation_date) }}</td>
                 </tr>
                 <tr v-if="data.validity_date">
-                  <td class="fw-bold text-secondary">Valid Until:</td>
+                  <td class="fw-bold text-secondary">{{ $t('Valid Until') }}:</td>
                   <td class="text-end font-monospace text-danger fw-bold">{{ formatDate(data.validity_date) }}</td>
                 </tr>
                 <tr v-if="data.reference_no">
-                  <td class="fw-bold text-secondary">Reference / RFQ:</td>
+                  <td class="fw-bold text-secondary">{{ $t('Reference / RFQ') }}:</td>
                   <td class="text-end font-monospace text-dark">{{ data.reference_no }}</td>
                 </tr>
                 <tr v-if="data.prepared_by && data.prepared_by.name">
-                  <td class="fw-bold text-secondary">Prepared By:</td>
+                  <td class="fw-bold text-secondary">{{ $t('Prepared By') }}:</td>
                   <td class="text-end text-dark">{{ data.prepared_by.full_name || data.prepared_by.name }}</td>
                 </tr>
               </tbody>
@@ -130,7 +130,7 @@
 
       <!-- 3. Subject Banner -->
       <div class="alert bg-light border py-2 px-3 mb-4 rounded-3" style="border-left: 4px solid #112C47 !important;" v-if="data.subject">
-        <strong style="color: #112C47;">Subject:</strong>
+        <strong style="color: #112C47;">{{ $t('Subject') }}:</strong>
         <span class="text-dark fw-semibold ms-1">{{ data.subject }}</span>
       </div>
 
@@ -139,17 +139,17 @@
         <table class="table table-bordered align-middle mb-0 quotation-table">
           <thead class="theme-table-header text-center small text-uppercase">
             <tr>
-              <th style="width: 5%;">SL</th>
-              <th style="width: 45%;" class="text-start">Item Description & Specifications</th>
-              <th style="width: 10%;">Unit</th>
-              <th style="width: 10%;">Qty</th>
-              <th style="width: 15%;" class="text-end">Unit Price (৳)</th>
-              <th style="width: 15%;" class="text-end">Total Amount (৳)</th>
+              <th style="width: 5%;">{{ $t('SL') }}</th>
+              <th style="width: 45%;" class="text-start">{{ $t('Item Description & Specifications') }}</th>
+              <th style="width: 10%;">{{ $t('Unit') }}</th>
+              <th style="width: 10%;">{{ $t('Qty') }}</th>
+              <th style="width: 15%;" class="text-end">{{ $t('Unit Price') }}</th>
+              <th style="width: 15%;" class="text-end">{{ $t('Total Amount') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(item, index) in data.quotation_details" :key="index">
-              <td class="text-center font-monospace text-muted small fw-bold">{{ index + 1 }}</td>
+              <td class="text-center font-monospace text-muted small fw-bold">{{ $bnNum(index + 1) }}</td>
               <td>
                 <div class="fw-bold text-dark item-title">{{ item.item_name || (item.item ? item.item.title : 'N/A') }}</div>
                 <div v-if="item.description" class="small text-muted mt-1 item-desc" style="white-space: pre-line;">
@@ -157,7 +157,7 @@
                 </div>
               </td>
               <td class="text-center small font-monospace">
-                {{ item.unit_name || (item.unit ? item.unit.title : (item.item && item.item.unit ? item.item.unit.title : 'Pcs')) }}
+                {{ item.unit_name || (item.unit ? item.unit.title : (item.item && item.item.unit ? item.item.unit.title : $t('Pcs'))) }}
               </td>
               <td class="text-center font-monospace fw-bold text-dark">{{ formatNumber(item.qty) }}</td>
               <td class="text-end font-monospace text-dark">{{ formatCurrency(item.unit_price) }}</td>
@@ -168,10 +168,10 @@
           <tfoot>
             <tr>
               <td colspan="4" rowspan="5" class="align-top p-3 bg-light border">
-                <!-- 🌟 IN WORDS SECTION (Requirement 4) -->
+                <!-- 🌟 IN WORDS SECTION -->
                 <div class="mb-3">
                   <div class="fw-bold text-uppercase small mb-1" style="color: #112C47;">
-                    <i class="fas fa-money-bill-wave me-1 text-success"></i> Amount in Words (টাকায় কথায়):
+                    <i class="fas fa-money-bill-wave me-1 text-success"></i> {{ $t('Amount in Words') }}:
                   </div>
                   <div class="p-2 bg-white rounded border fw-bold text-dark small font-monospace text-capitalize" style="border-color: #cbd5e1 !important;">
                     {{ $filter.numberToEnglishBD(data.total_amount) }}.
@@ -180,38 +180,38 @@
 
                 <!-- Special Note if any -->
                 <div v-if="data.note" class="small text-muted">
-                  <strong class="text-dark">Note:</strong> {{ data.note }}
+                  <strong class="text-dark">{{ $t('Note') }}:</strong> {{ data.note }}
                 </div>
               </td>
 
               <!-- Sub Total -->
-              <td class="text-end fw-bold text-secondary small">Sub Total (উপ-মোট):</td>
+              <td class="text-end fw-bold text-secondary small">{{ $t('Sub Total') }}:</td>
               <td class="text-end font-monospace fw-bold text-dark">{{ formatCurrency(data.sub_total) }}</td>
             </tr>
 
             <!-- Discount -->
             <tr v-if="Number(data.discount_amount) > 0">
               <td class="text-end fw-bold text-secondary small">
-                Discount {{ data.discount_type === 'percentage' ? '(' + data.discount + '%)' : '' }}:
+                {{ $t('Discount') }} {{ data.discount_type === 'percentage' ? '(' + $bnNum(data.discount) + '%)' : '' }}:
               </td>
               <td class="text-end font-monospace text-danger fw-bold">- {{ formatCurrency(data.discount_amount) }}</td>
             </tr>
 
             <!-- VAT / Tax -->
             <tr v-if="Number(data.tax_amount) > 0">
-              <td class="text-end fw-bold text-secondary small">VAT / Tax ({{ data.tax_percent }}%):</td>
+              <td class="text-end fw-bold text-secondary small">{{ $t('VAT / Tax') }} ({{ $bnNum(data.tax_percent) }}%):</td>
               <td class="text-end font-monospace text-dark fw-bold">+ {{ formatCurrency(data.tax_amount) }}</td>
             </tr>
 
             <!-- Shipping -->
             <tr v-if="Number(data.shipping_cost) > 0">
-              <td class="text-end fw-bold text-secondary small">Shipping / Handling:</td>
+              <td class="text-end fw-bold text-secondary small">{{ $t('Shipping / Handling') }}:</td>
               <td class="text-end font-monospace text-dark fw-bold">+ {{ formatCurrency(data.shipping_cost) }}</td>
             </tr>
 
-            <!-- Grand Total (Dark Black Text with Theme Accent Border) -->
+            <!-- Grand Total -->
             <tr class="grand-total-row">
-              <td class="text-end fw-bold text-uppercase fs-6 text-dark" style="color: #000000 !important;">Grand Total (সর্বমোট):</td>
+              <td class="text-end fw-bold text-uppercase fs-6 text-dark" style="color: #000000 !important;">{{ $t('Grand Total') }}:</td>
               <td class="text-end font-monospace fw-bold fs-5 text-dark" style="color: #000000 !important;">৳ {{ formatCurrency(data.total_amount) }}</td>
             </tr>
           </tfoot>
@@ -223,17 +223,16 @@
         <div class="col-12">
           <div class="p-3 bg-light rounded-3 border" style="border-left: 4px solid #112C47 !important;">
             <h6 class="fw-bold text-uppercase small mb-2 border-bottom pb-1" style="color: #112C47;">
-              <i class="fas fa-file-contract me-1"></i> Terms & Conditions (শর্তাবলী)
-            </h6>
+              <i class="fas fa-file-contract me-1"></i>{{ $t('Terms & Conditions') }}</h6>
             <div class="row g-2 small text-dark">
               <div class="col-md-6" v-if="data.payment_terms">
-                <strong>• Payment Terms:</strong> {{ data.payment_terms }}
+                <strong>• {{ $t('Payment Terms') }}:</strong> {{ data.payment_terms }}
               </div>
               <div class="col-md-6" v-if="data.delivery_terms">
-                <strong>• Delivery Terms:</strong> {{ data.delivery_terms }}
+                <strong>• {{ $t('Delivery Terms') }}:</strong> {{ data.delivery_terms }}
               </div>
               <div class="col-md-6" v-if="data.warranty_terms">
-                <strong>• Warranty Terms:</strong> {{ data.warranty_terms }}
+                <strong>• {{ $t('Warranty Terms') }}:</strong> {{ data.warranty_terms }}
               </div>
               <div class="col-12 mt-2" v-if="data.terms_conditions">
                 <div style="white-space: pre-line;">{{ data.terms_conditions }}</div>
@@ -243,16 +242,16 @@
         </div>
       </div>
 
-      <!-- 7. 🌟 PHYSICAL DUAL SIGNATURE BLOCKS (Requirement 5) -->
+      <!-- 7. Dual Signature Blocks -->
       <div class="row pt-5 mt-5 signature-container">
         <!-- 7.1 Left: Client Acceptance / Receiver Signature -->
         <div class="col-6">
           <div class="signature-box text-start">
             <div class="signature-line mb-2"></div>
-            <div class="fw-bold text-dark">Client Acceptance / Receiver Signature</div>
-            <div class="text-muted small">Name: _______________________________</div>
-            <div class="text-muted small mt-1">Designation: ________________________</div>
-            <div class="text-muted small mt-1">Date & Seal: ________________________</div>
+            <div class="fw-bold text-dark">{{ $t('Client Acceptance / Receiver Signature') }}</div>
+            <div class="text-muted small">{{ $t('Name') }}: _______________________________</div>
+            <div class="text-muted small mt-1">{{ $t('Designation') }}: ________________________</div>
+            <div class="text-muted small mt-1">{{ $t('Date & Seal') }}: ________________________</div>
           </div>
         </div>
 
@@ -260,16 +259,16 @@
         <div class="col-6 text-end">
           <div class="signature-box text-end d-inline-block">
             <div class="signature-line mb-2"></div>
-            <div class="fw-bold text-dark">Authorised Signature</div>
-            <div class="text-dark small fw-semibold">For: {{ $root.site ? $root.site.title : 'QPOS ERP' }}</div>
-            <div class="text-muted small mt-1">Official Company Seal</div>
+            <div class="fw-bold text-dark">{{ $t('Authorised Signature') }}</div>
+            <div class="text-dark small fw-semibold">{{ $t('For') }}: {{ $root.site ? $root.site.title : 'QPOS ERP' }}</div>
+            <div class="text-muted small mt-1">{{ $t('Official Company Seal') }}</div>
           </div>
         </div>
       </div>
 
       <!-- 8. Document Footer -->
       <div class="text-center text-muted small mt-5 pt-3 border-top border-1">
-        <em>This quotation is computer generated by {{ $root.site ? $root.site.title : 'QPOS' }}. Thank you for your business!</em>
+        <em>{{ $t('This quotation is computer generated by') }} {{ $root.site ? $root.site.title : 'QPOS' }}. {{ $t('Thank you for your business!') }}</em>
       </div>
     </div>
   </div>
@@ -323,12 +322,13 @@ export default {
 
     formatNumber(val) {
       const num = Number(val || 0);
-      return num.toLocaleString();
+      return this.$bnNum(num.toLocaleString());
     },
 
     formatCurrency(val) {
       const num = Number(val || 0);
-      return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const str = num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return this.$bnNum(str);
     },
 
     statusBadgeClass(status) {

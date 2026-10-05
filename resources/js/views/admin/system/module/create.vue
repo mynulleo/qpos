@@ -220,13 +220,13 @@
                                 <table class="table table-bordered mb-0 mt-0">
                                     <thead>
                                         <tr>
-                                            <th>Field Name</th>
-                                            <th>Input type</th>
-                                            <th>Type</th>
-                                            <th>Length</th>
-                                            <th>Validation</th>
-                                            <th>Index Page</th>
-                                            <th>Action</th>
+                                            <th>{{ $t('Field Name') }}</th>
+                                            <th>{{ $t('Input type') }}</th>
+                                            <th>{{ $t('Type') }}</th>
+                                            <th>{{ $t('Length') }}</th>
+                                            <th>{{ $t('Validation') }}</th>
+                                            <th>{{ $t('Index Page') }}</th>
+                                            <th>{{ $t('Action') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody v-if="data.databases">

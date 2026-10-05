@@ -3,72 +3,72 @@
     <div class="row custom_row g-3">
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Information</span>
+          <span class="legend">{{ $t('Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Trns ID</th>
+                  <th>{{ $t('Trns ID') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.trnsid }}</td>
                 </tr>
                 <tr>
-                  <th>Trns Date</th>
+                  <th>{{ $t('Trns Date') }}</th>
                   <th>:</th>
                   <td>{{ data.trns_date }}</td>
                 </tr>
                 <tr>
-                  <th>Trns Type</th>
+                  <th>{{ $t('Trns Type') }}</th>
                   <th>:</th>
                   <td>{{ data.trns_type }}</td>
                 </tr>
                 <tr>
-                  <th>Amount</th>
+                  <th>{{ $t('Amount') }}</th>
                   <th>:</th>
                   <td>{{ data.amount }}</td>
                 </tr>
                 <tr>
-                  <th>Installment</th>
+                  <th>{{ $t('Installment') }}</th>
                   <th>:</th>
                   <td>{{ data.total_installment }}</td>
                 </tr>
                 <tr>
-                  <th>Installment Amount</th>
+                  <th>{{ $t('Installment Amount') }}</th>
                   <th>:</th>
                   <td>{{ data.installment_amount }}</td>
                 </tr>
                 <tr>
-                  <th>Deduct From Salary</th>
+                  <th>{{ $t('Deduct From Salary') }}</th>
                   <th>:</th>
                   <td>{{ data.deduct_from_salary ? 'Yes' : 'No' }}</td>
                 </tr>
                 <tr>
-                  <th>Schedule Day</th>
+                  <th>{{ $t('Schedule Day') }}</th>
                   <th>:</th>
                   <td>{{ data.schedule_day }}</td>
                 </tr>
                 <tr>
-                  <th>Return Day</th>
+                  <th>{{ $t('Return Day') }}</th>
                   <th>:</th>
                   <td>{{ data.return_date }}</td>
                 </tr>
                 <tr>
-                  <th>Closing Day</th>
+                  <th>{{ $t('Closing Day') }}</th>
                   <th>:</th>
                   <td>{{ data.closing_date }}</td>
                 </tr>
                 <tr>
-                  <th>Due Amount</th>
+                  <th>{{ $t('Due Amount') }}</th>
                   <th>:</th>
                   <td>{{ data.due_amount }}</td>
                 </tr>
                 <tr>
-                  <th>Reason</th>
+                  <th>{{ $t('Reason') }}</th>
                   <th>:</th>
                   <td>{{ data.reason }}</td>
                 </tr>
                 <tr>
-                  <th>Remarks</th>
+                  <th>{{ $t('Remarks') }}</th>
                   <th>:</th>
                   <td>{{ data.remarks }}</td>
                 </tr>
@@ -81,7 +81,7 @@
         <div class="row g-4">
           <div class=" col-md-12">
             <fieldset>
-              <span class="legend">Employee Info</span>
+              <span class="legend">{{ $t('Employee Info') }}</span>
               <div class="table-responsive">
 
                 <table class="table table-striped">
@@ -94,32 +94,32 @@
                         <img v-else :src="$root.asset_url + '/images/profile.jpg'" class="rounded mx-auto d-block"
                           style="width:150px" />
                       </td>
-                      <th>Emp ID</th>
+                      <th>{{ $t('Emp ID') }}</th>
                       <th width="5%">:</th>
                       <td>{{ data.employee?.empid }}</td>
                     </tr>
                     <tr>
-                      <th class="text-end">Joining Date</th>
+                      <th class="text-end">{{ $t('Joining Date') }}</th>
                       <th>:</th>
                       <td>{{ data.employee?.joining_date }}</td>
                     </tr>
                     <tr>
-                      <th class="text-end">Designation</th>
+                      <th class="text-end">{{ $t('Designation') }}</th>
                       <th>:</th>
                       <td>{{ data.employee?.designation?.title }}</td>
                     </tr>
                     <tr>
-                      <th class="text-end">Salary</th>
+                      <th class="text-end">{{ $t('Salary') }}</th>
                       <th>:</th>
                       <td>{{ data.employee?.designation?.total_salary }}</td>
                     </tr>
                     <tr>
-                      <th class="text-end">Full Name</th>
+                      <th class="text-end">{{ $t('Full Name') }}</th>
                       <th>:</th>
                       <td>{{ data.employee?.full_name }}</td>
                     </tr>
                     <tr>
-                      <th class="text-end">Address</th>
+                      <th class="text-end">{{ $t('Address') }}</th>
                       <th>:</th>
                       <td>{{ data.employee?.address }}</td>
                     </tr>
@@ -130,17 +130,17 @@
           </div>
           <div class="col-md-12" style="min-height: 220px;">
             <fieldset>
-              <span class="legend">Loan Histories</span>
+              <span class="legend">{{ $t('Loan Histories') }}</span>
               <div class="table-responsive">
                 <table class="table table-striped">
                   <thead>
                     <tr>
-                      <th>Sl</th>
-                      <th>Trns ID</th>
-                      <th>Trns Date</th>
-                      <th>Amount</th>
-                      <th>Due Amount</th>
-                      <th>Aproved By</th>
+                      <th>{{ $t('Sl') }}</th>
+                      <th>{{ $t('Trns ID') }}</th>
+                      <th>{{ $t('Trns Date') }}</th>
+                      <th>{{ $t('Amount') }}</th>
+                      <th>{{ $t('Due Amount') }}</th>
+                      <th>{{ $t('Aproved By') }}</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -4,18 +4,28 @@
     <div class="card border-0 shadow-sm mb-3">
       <div class="card-header bg-white py-3 border-0 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
         <div>
-          <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-undo me-2 text-warning"></i>Sales Return Management (পণ্য ফেরত ব্যবস্থাপনা)</h5>
-          <small class="text-muted">Search previous invoice, select returned items, choose return reason, and process refund</small>
+          <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-undo me-2 text-warning"></i>{{ $t('Sales Return Management') }}</h5>
+          <small class="text-muted">{{ $t('Search previous invoice, select returned items, choose return reason, and process refund') }}</small>
         </div>
         <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2 py-1 rounded-pill fw-bold border"
+            :class="$locale === 'bn' ? 'btn-primary text-white border-primary' : 'btn-outline-dark bg-white text-dark'"
+            @click="toggleLanguage"
+            :title="$locale === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'"
+          >
+            <i class="fas fa-language fa-lg"></i>
+            <span class="fw-bold">{{ $locale === 'bn' ? 'বাংলা' : 'EN' }}</span>
+          </button>
           <router-link to="/invoice" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 font-monospace">
-            <i class="fas fa-file-invoice"></i> Invoices
+            <i class="fas fa-file-invoice"></i> {{ $t('Invoices') }}
           </router-link>
           <router-link to="/pos" class="btn-pos-sale shadow-sm">
             <span>
               <i class="fas fa-cash-register"></i>
             </span>
-            Back to POS
+            {{ $t('Back to POS') }}
           </router-link>
         </div>
       </div>
@@ -25,13 +35,12 @@
         <div class="row mb-4">
           <div class="col-md-7 mx-auto">
             <label class="form-label fw-bold text-muted small mb-1">
-              <i class="fas fa-search me-1"></i> Search Invoice No / Customer Mobile (ইনভয়েস বা গ্রাহকের মোবাইল নম্বর)
-            </label>
+              <i class="fas fa-search me-1"></i>{{ $t('Search Invoice No / Customer Mobile') }}</label>
             <div class="search-box-wrapper d-flex align-items-stretch">
               <input
                 type="text"
                 class="form-control search-input"
-                placeholder="e.g. POS-20260817-0001 or 017xxxxxxxx"
+                :placeholder="$t('e.g. POS-20260817-0001 or 017xxxxxxxx')"
                 v-model="searchTerm"
                 @keyup.enter="searchInvoice"
               >
@@ -40,7 +49,7 @@
                 class="btn search-btn d-inline-flex align-items-center justify-content-center gap-2"
                 @click="searchInvoice"
               >
-                <i class="fas fa-search"></i> Search
+                <i class="fas fa-search"></i> {{ $t('Search') }}
               </button>
             </div>
           </div>
@@ -49,8 +58,8 @@
         <!-- Invoice Results List -->
         <div v-if="invoices.length > 0 && !selectedInvoice" class="row g-3 mb-4">
           <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2">
-            <h6 class="fw-bold text-dark mb-0">Matching Invoices found: <span class="badge bg-primary">{{ invoices.length }}</span></h6>
-            <small class="text-muted">Click an invoice below to process return</small>
+            <h6 class="fw-bold text-dark mb-0">{{ $t('Matching Invoices found:') }} <span class="badge bg-primary">{{ $bnNum(invoices.length) }}</span></h6>
+            <small class="text-muted">{{ $t('Click an invoice below to process return') }}</small>
           </div>
           <div v-for="inv in invoices" :key="inv.id" class="col-md-6">
             <div class="card border shadow-sm h-100 invoice-select-card cursor-pointer" @click="selectInvoice(inv)">
@@ -58,15 +67,15 @@
                 <div>
                   <h6 class="fw-bold text-primary font-monospace mb-1">{{ inv.invoice_no }}</h6>
                   <div class="small text-dark fw-bold mb-1">
-                    <i class="fas fa-user me-1 text-muted"></i>{{ inv.client ? inv.client.name : 'Walk-in Customer' }}
+                    <i class="fas fa-user me-1 text-muted"></i>{{ inv.client ? inv.client.name : $t('Walk-in Customer') }}
                     <span class="text-muted ms-1" v-if="inv.client && inv.client.mobile">({{ inv.client.mobile }})</span>
                   </div>
-                  <small class="text-muted"><i class="far fa-calendar-alt me-1"></i>Date: {{ inv.invoice_date }}</small>
+                  <small class="text-muted"><i class="far fa-calendar-alt me-1"></i>{{ $t('Date') }}: {{ inv.invoice_date }}</small>
                 </div>
                 <div class="text-end">
-                  <div class="fw-bold text-success font-monospace fs-5">Tk. {{ formatPrice(inv.amount) }}</div>
+                  <div class="fw-bold text-success font-monospace fs-5">{{ $t('Tk.') }} {{ $bnNum(formatPrice(inv.amount)) }}</div>
                   <button type="button" class="btn btn-sm btn-primary mt-2 shadow-sm d-inline-flex align-items-center gap-1">
-                    <i class="fas fa-arrow-right"></i> Select
+                    <i class="fas fa-arrow-right"></i> {{ $t('Select') }}
                   </button>
                 </div>
               </div>
@@ -79,26 +88,26 @@
           <div class="card-header text-white py-2 px-3 d-flex justify-content-between align-items-center" style="background-color: #112C47;">
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-file-invoice fs-5"></i>
-              <span class="fw-bold fs-6">Selected Invoice: {{ selectedInvoice.invoice_no }}</span>
+              <span class="fw-bold fs-6">{{ $t('Selected Invoice:') }} {{ selectedInvoice.invoice_no }}</span>
             </div>
             <button type="button" class="btn btn-sm btn-outline-light d-flex align-items-center gap-1" @click="selectedInvoice = null">
-              <i class="fas fa-exchange-alt"></i> Change Invoice
+              <i class="fas fa-exchange-alt"></i> {{ $t('Change Invoice') }}
             </button>
           </div>
           <div class="card-body p-3">
             <div class="row mb-3 p-3 bg-light rounded border g-2">
               <div class="col-md-4">
-                <span class="text-muted small d-block">Customer (গ্রাহক):</span>
-                <strong class="text-dark">{{ selectedInvoice.client ? selectedInvoice.client.name : 'Walk-in' }}</strong>
+                <span class="text-muted small d-block">{{ $t('Customer:') }}</span>
+                <strong class="text-dark">{{ selectedInvoice.client ? selectedInvoice.client.name : $t('Walk-in Customer') }}</strong>
                 <span class="text-muted small ms-1" v-if="selectedInvoice.client && selectedInvoice.client.mobile">({{ selectedInvoice.client.mobile }})</span>
               </div>
               <div class="col-md-4">
-                <span class="text-muted small d-block">Invoice Date:</span>
+                <span class="text-muted small d-block">{{ $t('Invoice Date:') }}</span>
                 <strong class="text-dark">{{ selectedInvoice.invoice_date }}</strong>
               </div>
               <div class="col-md-4 text-md-end">
-                <span class="text-muted small d-block">Total Invoice Amount:</span>
-                <span class="fw-bold text-success font-monospace fs-5">Tk. {{ formatPrice(selectedInvoice.amount) }}</span>
+                <span class="text-muted small d-block">{{ $t('Total Invoice Amount:') }}</span>
+                <span class="fw-bold text-success font-monospace fs-5">{{ $t('Tk.') }} {{ $bnNum(formatPrice(selectedInvoice.amount)) }}</span>
               </div>
             </div>
 
@@ -107,16 +116,16 @@
               <table class="table table-bordered align-middle mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th width="4%" class="text-center">Select</th>
-                    <th>Item Title</th>
-                    <th>Color / Size</th>
-                    <th>Serial No</th>
-                    <th width="10%" class="text-center">Sold Qty</th>
-                    <th width="10%" class="text-center">Prev Return</th>
-                    <th width="11%" class="text-center">Returnable</th>
-                    <th width="12%" class="text-end">Unit Rate</th>
-                    <th width="13%" class="text-center">Return Qty</th>
-                    <th width="14%" class="text-end">Refund Amount</th>
+                    <th width="4%" class="text-center">{{ $t('Select') }}</th>
+                    <th>{{ $t('Item Title') }}</th>
+                    <th>{{ $t('Color / Size') }}</th>
+                    <th>{{ $t('Serial No') }}</th>
+                    <th width="10%" class="text-center">{{ $t('Sold Qty') }}</th>
+                    <th width="10%" class="text-center">{{ $t('Prev Return') }}</th>
+                    <th width="11%" class="text-center">{{ $t('Returnable') }}</th>
+                    <th width="12%" class="text-end">{{ $t('Unit Rate') }}</th>
+                    <th width="13%" class="text-center">{{ $t('Return Qty') }}</th>
+                    <th width="14%" class="text-end">{{ $t('Refund Amount') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -138,19 +147,19 @@
                     <td>
                       <span class="badge bg-info text-dark me-1" v-if="item.color_title">{{ item.color_title }}</span>
                       <span class="badge bg-secondary" v-if="item.size_title">{{ item.size_title }}</span>
-                      <span v-if="!item.color_title && !item.size_title" class="text-muted small">Standard</span>
+                      <span v-if="!item.color_title && !item.size_title" class="text-muted small">{{ $t('Standard') }}</span>
                     </td>
                     <td class="font-monospace small">{{ item.serial_no || 'N/A' }}</td>
-                    <td class="text-center font-monospace fw-bold">{{ item.sold_qty }}</td>
+                    <td class="text-center font-monospace fw-bold">{{ $bnNum(item.sold_qty) }}</td>
                     <td class="text-center font-monospace">
-                      <span class="badge bg-warning text-dark" v-if="item.already_returned_qty > 0">{{ item.already_returned_qty }} Returned</span>
-                      <span class="text-muted" v-else>0</span>
+                      <span class="badge bg-warning text-dark" v-if="item.already_returned_qty > 0">{{ $bnNum(item.already_returned_qty) }} {{ $t('Returned') }}</span>
+                      <span class="text-muted" v-else>{{ $bnNum('0') }}</span>
                     </td>
                     <td class="text-center font-monospace">
-                      <span class="badge bg-success" v-if="item.remaining_returnable_qty > 0">{{ item.remaining_returnable_qty }} Pcs</span>
-                      <span class="badge bg-danger" v-else>Fully Returned</span>
+                      <span class="badge bg-success" v-if="item.remaining_returnable_qty > 0">{{ $bnNum(item.remaining_returnable_qty) }} {{ $t('Pcs') }}</span>
+                      <span class="badge bg-danger" v-else>{{ $t('Fully Returned') }}</span>
                     </td>
-                    <td class="text-end font-monospace">Tk. {{ formatPrice(item.rate) }}</td>
+                    <td class="text-end font-monospace">{{ $t('Tk.') }} {{ $bnNum(formatPrice(item.rate)) }}</td>
                     <td>
                       <input
                         type="number"
@@ -165,7 +174,7 @@
                       >
                     </td>
                     <td class="text-end font-monospace fw-bold text-danger">
-                      Tk. {{ formatPrice(item.selected ? (item.return_qty * item.rate) : 0) }}
+                      {{ $t('Tk.') }} {{ $bnNum(formatPrice(item.selected ? (item.return_qty * item.rate) : 0)) }}
                     </td>
                   </tr>
                 </tbody>
@@ -180,16 +189,16 @@
                   <div class="col-12">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                       <label class="form-label fw-bold small text-dark mb-0">
-                        <i class="fas fa-tasks me-1 text-primary"></i> Return Reason (ফেরতের কারণ নির্বাচন করুন):
+                        <i class="fas fa-tasks me-1 text-primary"></i> {{ $t('Return Reason') }}:
                       </label>
                       <span v-if="return_reason === 'Client request'" class="badge bg-success px-2 py-1 shadow-sm">
-                        <i class="fas fa-check-circle me-1"></i> পণ্য সরাসরি স্টকে যুক্ত হবে (Stock In)
+                        <i class="fas fa-check-circle me-1"></i> {{ $t('পণ্য সরাসরি স্টকে যুক্ত হবে (Stock In)') }}
                       </span>
                       <span v-else-if="return_reason === 'Wastage'" class="badge bg-danger px-2 py-1 shadow-sm">
-                        <i class="fas fa-exclamation-triangle me-1"></i> ওয়েস্টেজ এন্ট্রি হবে, স্টকে ঢুকবে না
+                        <i class="fas fa-exclamation-triangle me-1"></i> {{ $t('ওয়েস্টেজ এন্ট্রি হবে, স্টকে ঢুকবে না') }}
                       </span>
                       <span v-else-if="return_reason === 'Date Expaired'" class="badge bg-warning text-dark px-2 py-1 shadow-sm">
-                        <i class="fas fa-calendar-times me-1"></i> মেয়াদোত্তীর্ণ হিসেবে ওয়েস্টেজ এন্ট্রি হবে, স্টকে ঢুকবে না
+                        <i class="fas fa-calendar-times me-1"></i> {{ $t('মেয়াদোত্তীর্ণ হিসেবে ওয়েস্টেজ এন্ট্রি হবে, স্টকে ঢুকবে না') }}
                       </span>
                     </div>
                     
@@ -198,8 +207,8 @@
                         <label class="return-reason-card d-flex align-items-center p-2 rounded border cursor-pointer h-100" :class="{ 'active border-primary bg-primary-subtle': return_reason === 'Client request' }">
                           <input type="radio" class="form-check-input me-2 mt-0" value="Client request" v-model="return_reason">
                           <div>
-                            <div class="fw-bold text-dark small"><i class="fas fa-user-check me-1 text-primary"></i> 1. Client request</div>
-                            <small class="text-muted d-block" style="font-size: 11px;">ভালো পণ্য - স্টকে পুনরায় জমা হবে</small>
+                            <div class="fw-bold text-dark small"><i class="fas fa-user-check me-1 text-primary"></i> 1. {{ $t('Client request') }}</div>
+                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('ভালো পণ্য - স্টকে পুনরায় জমা হবে') }}</small>
                           </div>
                         </label>
                       </div>
@@ -207,8 +216,8 @@
                         <label class="return-reason-card d-flex align-items-center p-2 rounded border cursor-pointer h-100" :class="{ 'active border-danger bg-danger-subtle': return_reason === 'Wastage' }">
                           <input type="radio" class="form-check-input me-2 mt-0" value="Wastage" v-model="return_reason">
                           <div>
-                            <div class="fw-bold text-danger small"><i class="fas fa-trash-alt me-1 text-danger"></i> 2. Wastage</div>
-                            <small class="text-muted d-block" style="font-size: 11px;">নষ্ট/ড্যামেজ - ওয়েস্টেজ এন্ট্রি হবে, স্টকে নয়</small>
+                            <div class="fw-bold text-danger small"><i class="fas fa-trash-alt me-1 text-danger"></i> 2. {{ $t('Wastage') }}</div>
+                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('নষ্ট/ড্যামেজ - ওয়েস্টেজ এন্ট্রি হবে, স্টকে নয়') }}</small>
                           </div>
                         </label>
                       </div>
@@ -216,8 +225,8 @@
                         <label class="return-reason-card d-flex align-items-center p-2 rounded border cursor-pointer h-100" :class="{ 'active border-warning bg-warning-subtle': return_reason === 'Date Expaired' }">
                           <input type="radio" class="form-check-input me-2 mt-0" value="Date Expaired" v-model="return_reason">
                           <div>
-                            <div class="fw-bold text-dark small"><i class="fas fa-calendar-times me-1 text-warning"></i> 3. Date Expaired</div>
-                            <small class="text-muted d-block" style="font-size: 11px;">মেয়াদ শেষ - ওয়েস্টেজ এন্ট্রি হবে, স্টকে নয়</small>
+                            <div class="fw-bold text-dark small"><i class="fas fa-calendar-times me-1 text-warning"></i> 3. {{ $t('Date Expaired') }}</div>
+                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('মেয়াদ শেষ - ওয়েস্টেজ এন্ট্রি হবে, স্টকে নয়') }}</small>
                           </div>
                         </label>
                       </div>
@@ -227,26 +236,25 @@
                   <!-- Refund Method -->
                   <div class="col-md-3">
                     <label class="form-label fw-bold small text-muted mb-1">
-                      <i class="fas fa-wallet me-1 text-primary"></i> Refund Method (ফেরত)
-                    </label>
+                      <i class="fas fa-wallet me-1 text-primary"></i>{{ $t('Refund Method') }}</label>
                     <select class="form-select form-select-sm font-monospace fw-bold" v-model="payment_method">
-                      <option value="Cash">Cash (নগদ ফেরত)</option>
-                      <option value="bKash">bKash (বিকাশ)</option>
-                      <option value="Nagad">Nagad (নগদ)</option>
-                      <option value="Rocket">Rocket (রকেট)</option>
-                      <option value="Bank">Bank Transfer</option>
+                      <option value="Cash">{{ $t('Cash') }}</option>
+                      <option value="bKash">{{ $t('bKash') }}</option>
+                      <option value="Nagad">{{ $t('Nagad') }}</option>
+                      <option value="Rocket">{{ $t('Rocket') }}</option>
+                      <option value="Bank">{{ $t('Bank Transfer') }}</option>
                     </select>
                   </div>
 
                   <!-- TrxID / Reference No -->
                   <div class="col-md-3" v-if="payment_method !== 'Cash'">
                     <label class="form-label fw-bold small text-muted mb-1">
-                      <i class="fas fa-hashtag me-1 text-info"></i> TrxID / Reference No
+                      <i class="fas fa-hashtag me-1 text-info"></i> {{ $t('TrxID / Reference No') }}
                     </label>
                     <input
                       type="text"
                       class="form-control form-control-sm font-monospace"
-                      placeholder="e.g. TRX893242"
+                      :placeholder="$t('e.g. TRX893242')"
                       v-model="trxid"
                     >
                   </div>
@@ -254,12 +262,11 @@
                   <!-- Return Note Textarea -->
                   <div :class="payment_method !== 'Cash' ? 'col-md-6' : 'col-md-9'">
                     <label class="form-label fw-bold small text-muted mb-1">
-                      <i class="fas fa-comment-alt me-1 text-secondary"></i> Return Note / Remarks (মন্তব্য)
-                    </label>
+                      <i class="fas fa-comment-alt me-1 text-secondary"></i>{{ $t('Return Note / Remarks') }}</label>
                     <textarea
                       class="form-control form-control-sm"
                       rows="2"
-                      placeholder="ফেরত সংক্রান্ত কোনো অতিরিক্ত তথ্য বা মন্তব্য থাকলে লিখুন..."
+                      :placeholder="$t('ফেরত সংক্রান্ত কোনো অতিরিক্ত তথ্য বা মন্তব্য থাকলে লিখুন...')"
                       v-model="return_note"
                     ></textarea>
                   </div>
@@ -270,16 +277,16 @@
             <!-- Total Refund Summary & Action Buttons -->
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 bg-light border rounded gap-3">
               <div class="d-flex align-items-center gap-2">
-                <span class="fw-bold fs-5 text-dark">Total Refund Amount (ফেরত মূল্য):</span>
-                <span class="fw-bold fs-4 text-danger font-monospace">Tk. {{ formatPrice(totalRefundAmount) }}</span>
+                <span class="fw-bold fs-5 text-dark">{{ $t('Total Refund Amount:') }}</span>
+                <span class="fw-bold fs-4 text-danger font-monospace">{{ $t('Tk.') }} {{ $bnNum(formatPrice(totalRefundAmount)) }}</span>
               </div>
               <div class="d-flex align-items-center gap-2">
                 <button type="button" class="btn btn-outline-secondary px-4 fw-bold" @click="selectedInvoice = null">
-                  <i class="fas fa-times me-1"></i> Cancel
+                  <i class="fas fa-times me-1"></i> {{ $t('Cancel') }}
                 </button>
                 <button type="button" class="btn btn-danger px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" @click="submitReturn" :disabled="totalRefundAmount <= 0 || isSubmitting">
                   <i class="fas fa-check-circle"></i>
-                  <span>{{ isSubmitting ? 'Processing...' : 'Process Sales Return & Record Refund' }}</span>
+                  <span>{{ isSubmitting ? $t('Processing...') : $t('Process Sales Return & Record Refund') }}</span>
                 </button>
               </div>
             </div>

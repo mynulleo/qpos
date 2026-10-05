@@ -2,7 +2,7 @@
   <create-form @onSubmit='submit'>
     <div class="col-md-8 mb-5">
       <fieldset>
-        <span class="legend">Invoice</span>
+        <span class="legend">{{ $t('Invoice') }}</span>
         <div class="row g-3">
           <date-picker id='date1' v-model='data.trns_date' field='data.trns_date' title='Trns Date'
             placeholder='Trns Date' col='3' :req='true'></date-picker>
@@ -39,53 +39,53 @@
     </div>
     <div class="col-md-4">
       <fieldset>
-        <span class="legend">Employee Profile</span>
+        <span class="legend">{{ $t('Employee Profile') }}</span>
         <img v-if="data.employee.image" :src="data.employee.image" class="rounded mx-auto d-block" style="width:150px">
         <img v-else :src="$root.asset_url + '/images/profile.jpg'" class="rounded mx-auto d-block" style="width:150px">
         <table class="table table-striped">
           <tbody>
             <tr>
-              <th class="text-end" width="40%">EmpID</th>
+              <th class="text-end" width="40%">{{ $t('EmpID') }}</th>
               <th width="5%">:</th>
               <td>{{ data.employee?.empid }}</td>
             </tr>
             <tr>
-              <th class="text-end">Joining Date</th>
+              <th class="text-end">{{ $t('Joining Date') }}</th>
               <th>:</th>
               <td>{{ data.employee?.joining_date }}</td>
             </tr>
             <tr>
-              <th class="text-end">Designation</th>
+              <th class="text-end">{{ $t('Designation') }}</th>
               <th>:</th>
               <td>{{ data.employee?.designation?.title }}</td>
             </tr>
             <tr>
-              <th class="text-end">Salary</th>
+              <th class="text-end">{{ $t('Salary') }}</th>
               <th>:</th>
               <td>{{ data.employee?.salary }}</td>
             </tr>
             <tr>
-              <th class="text-end">Full Name</th>
+              <th class="text-end">{{ $t('Full Name') }}</th>
               <th>:</th>
               <td>{{ data.employee?.full_name }}</td>
             </tr>
             <tr>
-              <th class="text-end">NID</th>
+              <th class="text-end">{{ $t('NID') }}</th>
               <th>:</th>
               <td>{{ data.employee?.nid }}</td>
             </tr>
             <tr>
-              <th class="text-end">Mobile</th>
+              <th class="text-end">{{ $t('Mobile') }}</th>
               <th>:</th>
               <td>{{ data.employee?.mobile }}</td>
             </tr>
             <tr>
-              <th class="text-end">Email</th>
+              <th class="text-end">{{ $t('Email') }}</th>
               <th>:</th>
               <td>{{ data.employee?.email }}</td>
             </tr>
             <tr>
-              <th class="text-end">Address</th>
+              <th class="text-end">{{ $t('Address') }}</th>
               <th>:</th>
               <td>{{ data.employee?.address }}</td>
             </tr>

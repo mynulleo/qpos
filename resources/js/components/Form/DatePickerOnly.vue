@@ -4,7 +4,7 @@
         type="text"
         :name="name"
         :value="modelValue"
-        :placeholder="placeholder"
+        :placeholder="placeholder ? $t(placeholder) : (title ? $t(title) : '')"
         :class="!readonly ? 'date' : ''"
         class="form-control date-input"
         autocomplete="off"

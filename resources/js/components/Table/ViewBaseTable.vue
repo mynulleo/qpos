@@ -2,7 +2,7 @@
     <div class="row custom_row g-3">
         <div class="col-xl-6 col-lg-12" v-if="typeof fields !== 'undefined'">
             <fieldset>
-                <span class="legend">Information</span>
+                <span class="legend">{{ $t("Information") }}</span>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <tbody>
@@ -13,7 +13,7 @@
                             ">
                                 <tr v-for="(item, index) in belongs_to.fields" :key="index">
                                     <th class="view_t_head">
-                                        {{ index !== 0 ? headline(item) : "Parent" }}
+                                        {{ index !== 0 ? $t(headline(item)) : $t("Parent") }}
                                     </th>
                                     <th style="text-align: center">:</th>
                                     <td>
@@ -35,10 +35,10 @@
                                     <template v-if="item !== 'file'">
                                         <th class="view_t_head" v-if="typeof item == 'string'">
                                             {{
-                                                headline(item.replace(
+                                                $t(headline(item.replace(
                                                     new RegExp("_", "g"),
                                                     " "
-                                                ))
+                                                )))
                                             }}:
                                         </th>
                                         <th v-if="typeof item == 'string'" style="text-align: center">
@@ -95,12 +95,12 @@
 
         <div class="col-xl-6 col-lg-12" v-else-if="extra_row !== undefined">
             <fieldset>
-                <span class="legend">Information</span>
+                <span class="legend">{{ $t("Information") }}</span>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <tbody>
                             <tr v-for="(item, index) in extra_row" :key="index">
-                                <th class="view_t_head">{{ headline(item[0]) }}</th>
+                                <th class="view_t_head">{{ $t(headline(item[0])) }}</th>
                                 <th style="text-align: center">:</th>
                                 <td>
                                     <div v-for="(values, key) in item[1]" :key="key">
@@ -120,7 +120,7 @@
                 Object.keys(data).length
             )" :key="index">
                 <fieldset>
-                    <span class="legend">Information</span>
+                    <span class="legend">{{ $t("Information") }}</span>
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <tbody>
@@ -131,7 +131,7 @@
                                 ">
                                     <tr v-for="(item, index) in belongs_to.fields" :key="index">
                                         <th class="view_t_head">
-                                            {{ index !== 0 ? headline(item) : "Parent" }}
+                                            {{ index !== 0 ? $t(headline(item)) : $t("Parent") }}
                                         </th>
                                         <th style="text-align: center">:</th>
                                         <td>
@@ -153,7 +153,7 @@
                                     <!-- {{name}} : {{ item }} -->
 
                                     <th class="view_t_head">
-                                        {{ headline(name) }}
+                                        {{ $t(headline(name)) }}
                                     </th>
                                     <th style="text-align: center">:</th>
                                     <td>
@@ -217,7 +217,7 @@
 
         <div class="col-xl-6 col-lg-12" v-if="Array.isArray(fileColumns) && fileColumns.length > 0">
             <fieldset>
-                <span class="legend">Media</span>
+                <span class="legend">{{ $t("Media") }}</span>
                 <div class="view_file">
                     <div class="row g-3">
                         <template v-for="(file, inx) in fileColumns" :key="inx">
@@ -227,7 +227,7 @@
                                     file.field == key
                                 ">
                                     <div class="view_file_item text-center" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" :data-bs-title="headline(file.title)" v-x-tooltip>
+                                        data-bs-placement="top" :data-bs-title="$t(headline(file.title))" v-x-tooltip>
                                         <div class="img">
                                             <img :src="value.includes('pdf')
                                                 ? $root.baseurl +
@@ -238,7 +238,7 @@
                                         <p v-if="value.includes('pdf')">
                                             <a :href="value" download>
                                                 <i class="fa-solid fa-download"></i>
-                                                Download
+                                                {{ $t('Download') }}
                                             </a>
                                         </p>
                                     </div>

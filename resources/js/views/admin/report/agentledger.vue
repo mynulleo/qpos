@@ -52,12 +52,12 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Voucher No</th>
-                                        <th>Account</th>
-                                        <th class="text-md-end">Debit</th>
-                                        <th class="text-md-end">Credit</th>
-                                        <th class="text-md-end">Balance</th>
+                                        <th>{{ $t('Date') }}</th>
+                                        <th>{{ $t('Voucher No') }}</th>
+                                        <th>{{ $t('Account') }}</th>
+                                        <th class="text-md-end">{{ $t('Debit') }}</th>
+                                        <th class="text-md-end">{{ $t('Credit') }}</th>
+                                        <th class="text-md-end">{{ $t('Balance') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

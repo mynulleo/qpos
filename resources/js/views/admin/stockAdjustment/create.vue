@@ -4,7 +4,7 @@
     <div class="col-12 mb-3">
       <div class="card shadow-sm border-0 bg-white">
         <div class="card-header bg-light py-2">
-          <span class="fw-bold text-dark"><i class="fas fa-sliders-h me-1 text-primary"></i> Stock Adjustment Information (সমন্বয় সাধারণ তথ্য)</span>
+          <span class="fw-bold text-dark"><i class="fas fa-sliders-h me-1 text-primary"></i>{{ $t('Stock Adjustment Information') }}</span>
         </div>
         <div class="card-body p-3">
           <div class="row g-3">
@@ -22,12 +22,12 @@
               :closeOnSelect='true' :required='false' />
 
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Reason (সমন্বয়ের কারণ)</label>
+              <label class="form-label small fw-semibold">{{ $t('Reason') }}</label>
               <input type="text" class="form-control" v-model="data.reason" placeholder="e.g. Annual Inventory Count, Damaged items found, Stock mismatch..." />
             </div>
 
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Remarks / Note (মন্তব্য)</label>
+              <label class="form-label small fw-semibold">{{ $t('Remarks / Note') }}</label>
               <input type="text" class="form-control" v-model="data.remarks" placeholder="Additional audit notes or instructions..." />
             </div>
           </div>
@@ -40,8 +40,7 @@
       <div class="card shadow-sm border border-primary-subtle bg-light">
         <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <span class="fw-bold text-dark">
-            <i class="fas fa-search-plus me-1 text-primary"></i> Product Search & Barcode Scanner (পণ্য নির্বাচন ও বারকোড স্ক্যানার)
-          </span>
+            <i class="fas fa-search-plus me-1 text-primary"></i>{{ $t('Product Search & Barcode Scanner') }}</span>
           <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
             <i class="fas fa-magic me-1"></i>পণ্য সিলেক্ট বা স্ক্যান করা মাত্রই অটোমেটিক ভ্যারিয়েন্ট, ক্রয়মূল্য ও মজুদসহ তালিকায় যুক্ত হবে
           </span>
@@ -142,8 +141,7 @@
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2 flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
             <span class="fs-6 fw-bold">
-              <i class="fas fa-boxes me-2"></i>Stock Adjustment Items Matrix (সমন্বয় তালিকা)
-            </span>
+              <i class="fas fa-boxes me-2"></i>{{ $t('Stock Adjustment Items Matrix') }}</span>
             <span class="badge bg-primary rounded-pill px-2 py-1">{{ data.details.length }} Items</span>
           </div>
 
@@ -167,15 +165,15 @@
           <table class="table table-bordered table-striped align-middle mb-0 text-center" v-if="data.details.length > 0">
             <thead class="table-light">
               <tr>
-                <th width="3%">#</th>
-                <th width="25%" class="text-start">Product (পণ্য)</th>
-                <th width="11%">Variant (ভ্যারিয়েন্ট)</th>
-                <th width="11%">Unit Cost (ক্রয়মূল্য)</th>
-                <th width="12%" class="table-info">System Stock (সিস্টেম মজুদ)</th>
-                <th width="14%" class="table-warning">Physical Count (বাস্তব গণনা)</th>
-                <th width="13%">Difference (পার্থক্য)</th>
-                <th width="8%">Total Impact</th>
-                <th width="3%">Action</th>
+                <th width="3%">{{ $t('#') }}</th>
+                <th width="25%" class="text-start">{{ $t('Product') }}</th>
+                <th width="11%">{{ $t('Variant') }}</th>
+                <th width="11%">{{ $t('Unit Cost') }}</th>
+                <th width="12%" class="table-info">{{ $t('System Stock') }}</th>
+                <th width="14%" class="table-warning">{{ $t('Physical Count') }}</th>
+                <th width="13%">{{ $t('Difference') }}</th>
+                <th width="8%">{{ $t('Total Impact') }}</th>
+                <th width="3%">{{ $t('Action') }}</th>
               </tr>
             </thead>
             <tbody>

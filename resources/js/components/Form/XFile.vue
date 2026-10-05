@@ -4,7 +4,7 @@
             <label :for="id ?? `input-${uuid}`"
                 class="form-label d-flex justify-content-between align-items-center gap-4">
                 <div class="lft">
-                    <slot name="title"> {{ title }} </slot>
+                    <slot name="title"> {{ $t(title) }} </slot>
                     <sup v-if="req || required" class="text-danger ms-1">*</sup>
                     <!-- icon error -->
                     <span class="icon_error" v-if="has_error">
@@ -23,7 +23,7 @@
             <div class="input-group position-relative">
                 <!-- add error class for border red -->
                 <input type="file" class="form-control" :class="{ error: has_error }"
-                    :placeholder="placeholder ?? title" :disabled="disabled" :readonly="readonly"
+                    :placeholder="placeholder ? $t(placeholder) : (title ? $t(title) : '')" :disabled="disabled" :readonly="readonly"
                     :id="id ?? `input-${uuid}`" :name="name ?? fieldName" :field="field"
                     @change="updateModel($event)" />
             </div>

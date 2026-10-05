@@ -4,7 +4,7 @@
             <label :for="id ?? `input-${uuid}`"
                 class="form-label d-flex justify-content-between align-items-center gap-4">
                 <div class="lft">
-                    <slot name="title"> {{ title }} </slot>
+                    <slot name="title"> {{ $t(title) }} </slot>
                     <sup v-if="req || required" class="text-danger ms-1">*</sup>
                     <!-- icon error -->
                     <span class="icon_error" v-if="has_error">
@@ -24,7 +24,7 @@
                 <div :id="id ?? `input-${uuid}`" class="v-select-wrapper"
                     :class="{ 'border-red': has_error, 'readonly-select': readonly }" ref="vselect_wrapper">
                     <v-select v-model="selected_value" :label="label" :reduce="reduce" :options="options"
-                        :placeholder="placeholder" :closeOnSelect="closeOnSelect" :field="field"
+                        :placeholder="placeholder ? $t(placeholder) : (title ? $t(title) : '')" :closeOnSelect="closeOnSelect" :field="field"
                         :appendToBody="appendToBody"
                         @update:modelValue="onChange" />
                 </div>

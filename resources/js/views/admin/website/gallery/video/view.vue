@@ -4,7 +4,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-8 col-lg-12">
                     <fieldset>
-                        <span class="legend">Media</span>
+                        <span class="legend">{{ $t('Media') }}</span>
                         <div class="view_file">
                             <div class="row g-3">
                                 <div class="col-lg-6">
@@ -48,12 +48,12 @@
                 </div>
                 <div class="col-xl-4 col-lg-12">
                     <fieldset>
-                        <span class="legend">Information</span>
+                        <span class="legend">{{ $t('Information') }}</span>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <tbody>
                                     <tr>
-                                        <th>Album</th>
+                                        <th>{{ $t('Album') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <router-link :to="{
                                             name: 'album.show',
@@ -65,18 +65,18 @@
                                         }}</router-link>
                                     </tr>
                                     <tr>
-                                        <th>URL</th>
+                                        <th>{{ $t('URL') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td><a :href="data?.url" target="_blank">{{ data?.url }}</a>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Sorting</th>
+                                        <th>{{ $t('Sorting') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.sorting ?? " " }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Status</th>
+                                        <th>{{ $t('Status') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td><span :class="[
                                             data?.status == 'active'

@@ -42,6 +42,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('get-permissions', [App\Http\Controllers\Admin\System\RoleController::class, 'getPermissions']);
     Route::get('get-menus/{any?}', [App\Http\Controllers\Admin\System\MenuController::class, 'menus']);
     Route::get('initialize-systems', [App\Http\Controllers\Admin\System\LibController::class, 'systems']);
+    Route::post('set-locale', [App\Http\Controllers\Admin\System\LocaleController::class, 'setLocale'])->name('setLocale');
     Route::post('subscription/initiate-payment', [App\Http\Controllers\SubscriptionPaymentController::class, 'initiatePayment'])->name('subscription.initiatePayment');
 
     // Software / Database Update Routes (Accessible to authenticated users without role permission blocking)

@@ -43,24 +43,24 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-12 col-lg-12">
                     <fieldset>
-                        <span class="legend">Slider Details</span>
+                        <span class="legend">{{ $t('Slider Details') }}</span>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="table-responsive">
                                     <table class="table table-striped">
                                         <tbody>
                                             <tr>
-                                                <th>Position</th>
+                                                <th>{{ $t('Position') }}</th>
                                                 <th style="text-align: center;">:</th>
                                                 <td>{{ data?.position ?? " " }}</td>
                                             </tr>
                                             <tr>
-                                                <th>Width</th>
+                                                <th>{{ $t('Width') }}</th>
                                                 <th style="text-align: center;">:</th>
                                                 <td>{{ data?.width ?? " " }} px</td>
                                             </tr>
                                             <tr>
-                                                <th>Height</th>
+                                                <th>{{ $t('Height') }}</th>
                                                 <th style="text-align: center;">:</th>
                                                 <td>{{ data?.height ?? " " }} px</td>
                                             </tr>
@@ -73,7 +73,7 @@
                                     <table class="table table-striped">
                                         <tbody>
                                             <tr>
-                                                <th>Status</th>
+                                                <th>{{ $t('Status') }}</th>
                                                 <th style="text-align: center;">:</th>
                                                 <td>
                                                     <span :class="[
@@ -88,12 +88,12 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <th>Created at</th>
+                                                <th>{{ $t('Created at') }}</th>
                                                 <th style="text-align: center;">:</th>
                                                 <td>{{ data?.created_at ?? " " }}</td>
                                             </tr>
                                             <tr>
-                                                <th>Updated at</th>
+                                                <th>{{ $t('Updated at') }}</th>
                                                 <th style="text-align: center;">:</th>
                                                 <td>{{ data?.updated_at ?? " " }}</td>
                                             </tr>
@@ -106,7 +106,7 @@
                 </div>
                 <div class="col-xl-12 col-lg-12">
                     <fieldset>
-                        <span class="legend">Media</span>
+                        <span class="legend">{{ $t('Media') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="album-list-area"

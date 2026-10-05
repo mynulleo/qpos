@@ -8,7 +8,7 @@
           <div class="d-flex align-items-center gap-2">
             <h5 class="mb-0 fw-bold text-dark text-nowrap d-flex align-items-center gap-2">
               <i class="fas fa-barcode theme-text"></i>
-              <span>Serial & Warranty Audit Report (সিরিয়াল ও ওয়ারেন্টি অডিট রিপোর্ট)</span>
+              <span>{{ $t('Serial & Warranty Audit Report') }}</span>
             </h5>
             <span class="badge bg-secondary font-monospace">{{ summary.total_serials || 0 }}</span>
           </div>
@@ -75,7 +75,7 @@
               type="button"
               class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-sm"
               @click="openHelpModal"
-              title="Help Manual (সহায়িকা)"
+              title="Help Manual"
             >
               <i class="fas fa-question-circle"></i> Help
             </button>
@@ -90,8 +90,8 @@
               <label class="form-label small fw-bold text-muted mb-1">Sales Status</label>
               <select class="form-select form-select-sm" v-model="search_data.sales_status" @change="search">
                 <option value="all">-- All Sales Status --</option>
-                <option value="sold">Sold (বিক্রয় হয়েছে)</option>
-                <option value="unsold">In Stock / Unsold (স্টকে আছে)</option>
+                <option value="sold">{{ $t('Sold') }}</option>
+                <option value="unsold">{{ $t('In Stock / Unsold') }}</option>
               </select>
             </div>
 
@@ -102,8 +102,8 @@
                 <option value="all">-- All Lifecycles --</option>
                 <option value="sold_unclaimed_active">Sold & Never Claimed (Active Policy)</option>
                 <option value="sold_unclaimed_expired">Sold & Never Claimed (Expired Policy)</option>
-                <option value="claimed">Claimed (ক্লেইম করা হয়েছে)</option>
-                <option value="unsold">In Stock / Unsold (অবিক্রীত)</option>
+                <option value="claimed">{{ $t('Claimed') }}</option>
+                <option value="unsold">{{ $t('In Stock / Unsold') }}</option>
               </select>
             </div>
 
@@ -112,9 +112,9 @@
               <label class="form-label small fw-bold text-muted mb-1">Warranty Policy Status</label>
               <select class="form-select form-select-sm" v-model="search_data.warranty_status" @change="search">
                 <option value="all">-- All Warranty States --</option>
-                <option value="active">Active (মেয়াদ আছে)</option>
-                <option value="expired">Expired (মেয়াদ শেষ)</option>
-                <option value="no_warranty">No Policy (পলিসি নেই)</option>
+                <option value="active">{{ $t('Active') }}</option>
+                <option value="expired">{{ $t('Expired') }}</option>
+                <option value="no_warranty">{{ $t('No Policy') }}</option>
               </select>
             </div>
 
@@ -248,9 +248,7 @@
         </p>
         <div class="border-top border-bottom py-2 my-2 bg-light">
           <h5 class="fw-bold mb-0 text-dark">
-            <i class="fas fa-barcode me-1"></i>
-            Serial Number & Warranty Lifecycle Audit Report (সিরিয়াল ও ওয়ারেন্টি অডিট রিপোর্ট)
-          </h5>
+            <i class="fas fa-barcode me-1"></i>{{ $t('Serial Number & Warranty Lifecycle Audit Report') }}</h5>
           <small class="text-muted">
             Total Records: <strong>{{ meta.total || (records ? records.length : 0) }}</strong> | Generated on: <strong>{{ currentDate }}</strong>
           </small>
@@ -279,13 +277,13 @@
           <table class="table table-hover table-sm align-middle mb-0 serial-table">
             <thead class="sticky-top" style="z-index: 2;">
               <tr>
-                <th class="text-center" width="3%">#</th>
-                <th width="14%">Serial / IMEI No</th>
-                <th width="20%">Product Info</th>
-                <th width="18%">Sales & Customer Details</th>
-                <th width="15%">Warranty Policy</th>
-                <th width="15%" class="text-center">Lifecycle & Claim State</th>
-                <th width="15%" class="text-center">Expiry Status</th>
+                <th class="text-center" width="3%">{{ $t('#') }}</th>
+                <th width="14%">{{ $t('Serial / IMEI No') }}</th>
+                <th width="20%">{{ $t('Product Info') }}</th>
+                <th width="18%">{{ $t('Sales & Customer Details') }}</th>
+                <th width="15%">{{ $t('Warranty Policy') }}</th>
+                <th width="15%" class="text-center">{{ $t('Lifecycle & Claim State') }}</th>
+                <th width="15%" class="text-center">{{ $t('Expiry Status') }}</th>
               </tr>
             </thead>
             <tbody>

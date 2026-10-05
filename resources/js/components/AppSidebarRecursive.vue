@@ -4,7 +4,7 @@
             <li v-if="child_menu && (child_menu.status === 'active' || !child_menu.status) && hasMenuPermission(child_menu)">
                 <template v-if="child_menu.child_menus && Object.keys(child_menu.child_menus).length > 0">
                     <a href="javascript:void(0)" data-bs-toggle="tooltip" data-bs-placement="right"
-                        :data-bs-title="child_menu.menu_name" v-x-tooltip="child_menu.menu_name && child_menu.menu_name.length >= tooltipLength">
+                        :data-bs-title="$t(child_menu.menu_name)" v-x-tooltip="child_menu.menu_name && child_menu.menu_name.length >= tooltipLength">
                         <div class="menu_icon" v-if="child_menu.icon" v-html="child_menu.icon"></div>
                         <div class="menu_icon" v-else>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -15,7 +15,7 @@
                             </svg>
                         </div>
                         <div class="menu_name">
-                            {{ limitString(child_menu.menu_name, tooltipLength) }}
+                            {{ limitString($t(child_menu.menu_name), tooltipLength) }}
                         </div>
                         <div class="menu_info" v-if="child_menu.child_menus && Object.keys(child_menu.child_menus).length > 0">
                             <div class="arrow_icon">
@@ -39,7 +39,7 @@
                         name: child_menu.route_name,
                         params: { slug: child_menu.params },
                     }" :class="isMenuActive(child_menu.route_name) ? 'router-link-active active' : ''" data-bs-toggle="
-                        tooltip" data-bs-placement="right" :data-bs-title="child_menu.menu_name"
+                        tooltip" data-bs-placement="right" :data-bs-title="$t(child_menu.menu_name)"
                         v-x-tooltip="child_menu.menu_name && child_menu.menu_name.length >= tooltipLength">
                         <div class="menu_icon" v-if="child_menu.icon" v-html="child_menu.icon"></div>
                         <div class="menu_icon" v-else>
@@ -51,7 +51,7 @@
                             </svg>
                         </div>
                         <div class="menu_name">
-                            {{ limitString(child_menu.menu_name, tooltipLength) }}
+                            {{ limitString($t(child_menu.menu_name), tooltipLength) }}
                         </div>
                     </router-link>
                 </template>

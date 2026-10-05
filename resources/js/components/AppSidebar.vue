@@ -43,7 +43,7 @@
                                 <div class="menu_name">
                                     {{
                                         limitString(
-                                            root_menu.menu_name,
+                                            $t(root_menu.menu_name),
                                             tooltipLength
                                         )
                                     }}
@@ -76,14 +76,14 @@
                                 name: root_menu.route_name,
                                 params: { slug: root_menu.params },
                             }" :class="isMenuActive(root_menu.route_name) ? 'router-link-active active' : ''"
-                                data-bs-toggle="tooltip" data-bs-placement="right" :data-bs-title="root_menu.menu_name"
+                                data-bs-toggle="tooltip" data-bs-placement="right" :data-bs-title="$t(root_menu.menu_name)"
                                 v-x-tooltip="root_menu.menu_name.length >= tooltipLength
                                     ">
                                 <div class="menu_icon" v-if="root_menu.icon" v-html="root_menu.icon"></div>
                                 <div class="menu_name">
                                     {{
                                         limitString(
-                                            root_menu.menu_name,
+                                            $t(root_menu.menu_name),
                                             tooltipLength
                                         )
                                     }}
@@ -93,14 +93,14 @@
                             <!-- SINGLE MENU -->
                             <router-link v-else :to="{ name: root_menu.route_name }"
                                 :class="isMenuActive(root_menu.route_name) ? 'router-link-active active' : ''"
-                                data-bs-toggle="tooltip" data-bs-placement="right" :data-bs-title="root_menu.menu_name"
+                                data-bs-toggle="tooltip" data-bs-placement="right" :data-bs-title="$t(root_menu.menu_name)"
                                 v-x-tooltip="root_menu.menu_name.length >= tooltipLength
                                     ">
                                 <div class="menu_icon" v-if="root_menu.icon" v-html="root_menu.icon"></div>
                                 <div class="menu_name">
                                     {{
                                         limitString(
-                                            root_menu.menu_name,
+                                            $t(root_menu.menu_name),
                                             tooltipLength
                                         )
                                     }}
@@ -112,9 +112,9 @@
             </ul>
         </div>
 
-        <div class="log_out" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Log Out" v-x-tooltip>
+        <div class="log_out" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Log Out')" v-x-tooltip>
             <a href="javascript:void(0)" class="logout_btn" @click.prevent="logout">
-                <div class="text">Log Out</div>
+                <div class="text">{{ $t('Log Out') }}</div>
                 <span class="sign">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"

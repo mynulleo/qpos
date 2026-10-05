@@ -8,8 +8,8 @@
             </div>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div style="width:100%">
-                    <h5 class="fw-bold mb-1 text-center" style="width:100%;">DELIVERY CHALLAN</h5>
-                    <small class="text-muted">Report Date: <strong>{{ reportDate }}</strong></small>
+                    <h5 class="fw-bold mb-1 text-center" style="width:100%;">{{ $t('Delivery Challan') }}</h5>
+                    <small class="text-muted">{{ $t('Report Date:') }} <strong>{{ reportDate }}</strong></small>
                 </div>
                 <div class="text-end">
                 </div>
@@ -20,27 +20,27 @@
                         <table class="table table-report">
                             <tbody>
                                 <tr>
-                                    <td width="30%">Challan No</td>
+                                    <td width="30%">{{ $t('Challan No') }}</td>
                                     <td width="3%">:</td>
                                     <td>{{ data.challan_no }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Challan Date</td>
+                                    <td>{{ $t('Challan Date') }}</td>
                                     <td>:</td>
                                     <td>{{ data.challan_date }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Order NO</td>
+                                    <td>{{ $t('Order No') }}</td>
                                     <td>:</td>
                                     <td>{{ data.workorder?.order_no }}</td>
                                 </tr>
                                 <tr>
-                                    <td>UNO NO</td>
+                                    <td>{{ $t('UNO No') }}</td>
                                     <td>:</td>
                                     <td>{{ data.workorder?.uno_no }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Order Date</td>
+                                    <td>{{ $t('Order Date') }}</td>
                                     <td>:</td>
                                     <td>{{ data.workorder?.order_date }}</td>
                                 </tr>
@@ -53,27 +53,27 @@
                         <table class="table table-report">
                             <tbody>
                                 <tr>
-                                    <td width="30%">Client</td>
+                                    <td width="30%">{{ $t('Client') }}</td>
                                     <td width="3%">:</td>
                                     <td>{{ data.client?.org_name }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Shipping</td>
+                                    <td>{{ $t('Shipping') }}</td>
                                     <td>:</td>
                                     <td>{{ data.shipping }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Receive By</td>
+                                    <td>{{ $t('Receive By') }}</td>
                                     <td>:</td>
                                     <td>{{ data.receive_by }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Designation</td>
+                                    <td>{{ $t('Designation') }}</td>
                                     <td>:</td>
                                     <td>{{ data.receive_by_designation }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Mobile</td>
+                                    <td>{{ $t('Mobile') }}</td>
                                     <td>:</td>
                                     <td>{{ data.receive_by_mobile }}</td>
                                 </tr>
@@ -85,11 +85,11 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th width="3%">Sl</th>
-                                <th width="50%">Item/Description</th>
-                                <th width="10%">Quantity</th>
-                                <th width="15%">Receive Quantity</th>
-                                <th>Remarks</th>
+                                <th width="3%">{{ $t('Sl') }}</th>
+                                <th width="50%">{{ $t('Item/Description') }}</th>
+                                <th width="10%">{{ $t('Quantity') }}</th>
+                                <th width="15%">{{ $t('Receive Quantity') }}</th>
+                                <th>{{ $t('Remarks') }}</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -8,7 +8,7 @@
           <div class="d-flex align-items-center gap-2">
             <h5 class="mb-0 fw-bold text-dark text-nowrap d-flex align-items-center gap-2">
               <i class="fas fa-shield-alt theme-text"></i>
-              <span>Warranty Claims (ওয়ারেন্টি ক্লেইম)</span>
+              <span>{{ $t('Warranty Claims') }}</span>
             </h5>
             <span class="badge bg-secondary font-monospace">{{ table.meta.total || 0 }}</span>
           </div>
@@ -20,12 +20,12 @@
               <input
                 type="text"
                 class="form-control"
-                placeholder="Search Serial, Claim No, Mobile, Customer, Product... (Press Enter)"
+                :placeholder="$t('Search Serial, Claim No, Mobile, Customer, Product... (Press Enter)')"
                 v-model="search_data.keyword"
                 @keyup.enter="search"
               >
               <button type="button" class="btn btn-sm px-3 theme_search_btn" @click="search">
-                <i class="fas fa-search me-1"></i> Search
+                <i class="fas fa-search me-1"></i> {{ $t('Search') }}
               </button>
               <button type="button" class="btn btn-outline-secondary btn-sm" v-if="search_data.keyword" @click="search_data.keyword = ''; search()">
                 <i class="fas fa-times"></i>
@@ -109,19 +109,19 @@
           <div class="row g-2 align-items-end">
             <!-- Specific Serial Search -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Serial / IMEI No</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('Serial / IMEI No') }}</label>
               <input type="text" class="form-control form-control-sm font-monospace" placeholder="Serial No..." v-model="search_data.serial_no" @keyup.enter="search">
             </div>
 
             <!-- Specific Claim No -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Claim Ticket No</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('Claim Ticket No') }}</label>
               <input type="text" class="form-control form-control-sm font-monospace" placeholder="CLM-..." v-model="search_data.claim_no" @keyup.enter="search">
             </div>
 
             <!-- Claim Status Filter -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Claim Status</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('Claim Status') }}</label>
               <select class="form-select form-select-sm" v-model="search_data.current_status" @change="search">
                 <option value="">-- All Statuses --</option>
                 <option value="received">Received</option>
@@ -138,33 +138,33 @@
 
             <!-- Coverage Type Filter -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Coverage Type</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('Coverage Type') }}</label>
               <select class="form-select form-select-sm" v-model="search_data.warranty_type" @change="search">
                 <option value="">-- All Types --</option>
-                <option value="warranty">Warranty (ওয়ারেন্টি)</option>
-                <option value="guarantee">Guarantee (গ্যারান্টি)</option>
+                <option value="warranty">{{ $t('Warranty') }}</option>
+                <option value="guarantee">{{ $t('Guarantee') }}</option>
               </select>
             </div>
 
             <!-- From Date -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">From Date</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('From Date') }}</label>
               <input type="date" class="form-control form-control-sm" v-model="search_data.from_date" @change="search">
             </div>
 
             <!-- To Date -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">To Date</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('To Date') }}</label>
               <input type="date" class="form-control form-control-sm" v-model="search_data.to_date" @change="search">
             </div>
 
             <!-- Action Buttons in Filter -->
             <div class="col-12 d-flex justify-content-end gap-2 mt-2">
               <button type="button" class="btn btn-sm theme_search_btn px-4 fw-bold" @click="search">
-                <i class="fas fa-filter me-1"></i> Apply Filter
+                <i class="fas fa-filter me-1"></i> {{ $t('Apply Filter') }}
               </button>
               <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="resetSearch">
-                <i class="fas fa-undo me-1"></i> Reset Filters
+                <i class="fas fa-undo me-1"></i> {{ $t('Reset Filters') }}
               </button>
             </div>
           </div>
@@ -178,13 +178,13 @@
         <table class="table table-hover table-sm align-middle mb-0 claims-table">
           <thead class="sticky-top" style="z-index: 2;">
             <tr>
-              <th class="text-center" width="4%">#</th>
-              <th width="15%">Claim Ticket</th>
-              <th width="12%">Dates</th>
-              <th width="23%">Product & Serial</th>
-              <th width="18%">Customer</th>
-              <th width="13%">Coverage Policy</th>
-              <th width="15%" class="text-center">Tracking Status</th>
+              <th class="text-center" width="4%">{{ $t('#') }}</th>
+              <th width="15%">{{ $t('Claim Ticket') }}</th>
+              <th width="12%">{{ $t('Dates') }}</th>
+              <th width="23%">{{ $t('Product & Serial') }}</th>
+              <th width="18%">{{ $t('Customer') }}</th>
+              <th width="13%">{{ $t('Coverage Policy') }}</th>
+              <th width="15%" class="text-center">{{ $t('Tracking Status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -280,8 +280,8 @@
             <tr v-if="!loading && (!table.datas || table.datas.length === 0)">
               <td colspan="7" class="text-center py-5 text-secondary">
                 <i class="fas fa-shield-alt fa-3x theme-text opacity-50 mb-3 d-block"></i>
-                <h6 class="fw-bold text-dark">No Warranty Claims Found</h6>
-                <p class="small text-muted mb-0">Search with different criteria or click 'New Claim' to register a warranty ticket.</p>
+                <h6 class="fw-bold text-dark">{{ $t('No Warranty Claims Found') }}</h6>
+                <p class="small text-muted mb-0">{{ $t('Search with different criteria or click New Claim to register a warranty ticket.') }}</p>
               </td>
             </tr>
 
@@ -289,7 +289,7 @@
             <tr v-if="loading">
               <td colspan="7" class="text-center py-5">
                 <div class="spinner-border theme-text" role="status"></div>
-                <div class="mt-2 small text-secondary fw-semibold">Loading warranty claims...</div>
+                <div class="mt-2 small text-secondary fw-semibold">{{ $t('Loading warranty claims...') }}</div>
               </td>
             </tr>
           </tbody>
@@ -304,7 +304,7 @@
           <!-- Summary count info on bottom left -->
           <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 12px;">
             <div class="d-flex align-items-center gap-1">
-              <span class="text-muted fw-bold">Total Claims:</span>
+              <span class="text-muted fw-bold">{{ $t('Total Claims:') }}</span>
               <span class="badge theme-bg text-white font-monospace">{{ table.meta.total || 0 }}</span>
             </div>
             <div class="small text-secondary font-monospace d-none d-md-inline" v-if="table.meta.total > 0">

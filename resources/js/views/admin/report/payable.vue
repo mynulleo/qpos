@@ -57,12 +57,12 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Source</th>
-                                        <th>Name</th>
-                                        <th class="text-md-end">Amount</th>
-                                        <th class="text-md-end">Paid Amount</th>
-                                        <th class="text-md-end">Outstanding</th>
+                                        <th>{{ $t('Date') }}</th>
+                                        <th>{{ $t('Source') }}</th>
+                                        <th>{{ $t('Name') }}</th>
+                                        <th class="text-md-end">{{ $t('Amount') }}</th>
+                                        <th class="text-md-end">{{ $t('Paid Amount') }}</th>
+                                        <th class="text-md-end">{{ $t('Outstanding') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

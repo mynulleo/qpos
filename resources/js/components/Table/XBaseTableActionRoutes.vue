@@ -10,7 +10,7 @@
                                 v-if="route.route && $root.checkPermission(route.route)"
                                 @click.stop="$parent.destroy(item, item.is_delete ?? null)"
                                 class="btn btn-xs btn-outline-danger border-0"
-                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Delete" v-x-tooltip>
+                                data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Delete')" v-x-tooltip>
                                 <span v-if="item.is_delete"><i class="fa-solid fa-send-back"></i></span>
                                 <template v-else><span v-html="route.content"></span></template>
                             </a>
@@ -29,7 +29,7 @@
                                 :to="generateRoute(route)"
                                 class="btn btn-xs btn-outline-secondary border-0"
                                 data-bs-toggle="tooltip" data-bs-placement="top"
-                                :data-bs-title="route.title" v-x-tooltip v-html="route.content"></router-link>
+                                :data-bs-title="$t(route.title)" v-x-tooltip v-html="route.content"></router-link>
                         </template>
                     </template>
                 </template>
@@ -46,7 +46,7 @@
                         query: { page: $route.query.page },
                     }"
                     class="btn btn-xs btn-outline-primary border-0"
-                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View" v-x-tooltip
+                    data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('View')" v-x-tooltip
                 >
                     <i class="fas fa-eye"></i>
                 </router-link>
@@ -61,7 +61,7 @@
                             query: { page: $route.query.page },
                         }"
                         class="btn btn-xs btn-outline-success border-0"
-                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit" v-x-tooltip
+                        data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Edit')" v-x-tooltip
                     >
                         <i class="fas fa-pencil-alt"></i>
                     </router-link>
@@ -69,7 +69,7 @@
                         v-else
                         class="btn btn-xs btn-outline-secondary border-0 text-muted opacity-50 cursor-not-allowed"
                         data-bs-toggle="tooltip" data-bs-placement="top"
-                        :data-bs-title="editDisabledReason(item)"
+                        :data-bs-title="$t(editDisabledReason(item))"
                         v-x-tooltip
                     >
                         <i class="fas fa-pencil-alt"></i>
@@ -83,7 +83,7 @@
                         v-if="canDeleteItem(item)"
                         @click.stop="$parent.destroy(item, item.is_delete ?? null)"
                         class="btn btn-xs btn-outline-danger border-0"
-                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Delete" v-x-tooltip
+                        data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Delete')" v-x-tooltip
                     >
                         <span v-if="item.is_delete">
                             <i class="fa-solid fa-send-back"></i>
@@ -96,7 +96,7 @@
                         v-else
                         class="btn btn-xs btn-outline-secondary border-0 text-muted opacity-50 cursor-not-allowed"
                         data-bs-toggle="tooltip" data-bs-placement="top"
-                        :data-bs-title="deleteDisabledReason(item)"
+                        :data-bs-title="$t(deleteDisabledReason(item))"
                         v-x-tooltip
                     >
                         <i class="fas fa-trash-alt"></i>

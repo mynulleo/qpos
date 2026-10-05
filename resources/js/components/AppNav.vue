@@ -23,8 +23,11 @@
             </div>
             <div class="col-md-8 col-8 align-self-center">
                 <div class="header_right d-flex align-items-center justify-content-end gap-4">
-                    <div class="date_time position-relative">
-                        <p id="currentDateTime"></p>
+                    <div class="date_time position-relative d-none d-sm-block">
+                        <p id="currentDateTime" class="mb-0 fw-semibold d-flex align-items-center gap-2" style="color: #112C47 !important; font-size: 13.5px; white-space: nowrap;">
+                            <i class="far fa-clock text-primary"></i>
+                            <span>{{ currentDateTime }}</span>
+                        </p>
                     </div>
                     <div class="action_info d-flex gap-3 align-items-center">
                         <!-- 🔄 SaaS Database Update Available Indicator -->
@@ -43,60 +46,22 @@
                             </span>
                         </router-link>
 
-                        <div class="icon_box position-relative">
-                            <button type="button"
-                                class="icon_btn dropdown_menu bg-transparent border-0 position-relative"
-                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Messages" v-x-tooltip>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    class="icon icon-tabler icons-tabler-outline icon-tabler-message">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M8 9h8" />
-                                    <path d="M8 13h6" />
-                                    <path
-                                        d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z" />
-                                </svg>
-                                <sup
-                                    class="notification_number position-absolute rounded-pill d-flex justify-content-center align-items-center">{{
-                                        $root.global?.notify_contacts?.length >
-                                            5
-                                            ? "5+"
-                                            : $root.global?.notify_contacts
-                                                ?.length
-                                    }}</sup>
+                        <!-- 🌐 Reactive Language Toggle Button -->
+                        <div class="lang_switch_box position-relative">
+                            <button
+                                type="button"
+                                class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2 py-1 rounded-pill fw-bold border"
+                                :class="$locale === 'bn' ? 'btn-primary text-white border-primary' : 'btn-outline-dark bg-white text-dark'"
+                                @click="toggleLanguage"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                :data-bs-title="$locale === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'"
+                                v-x-tooltip
+                                style="font-size: 12px; cursor: pointer; transition: all 0.2s ease-in-out;"
+                            >
+                                <i class="fas fa-language fa-lg"></i>
+                                <span class="fw-bold">{{ $locale === 'bn' ? 'বাংলা' : 'EN' }}</span>
                             </button>
-                            <div
-                                class="information_box dropdown_menu_info messages_information position-absolute top-100 end-0 x_top_message_dropdown_box">
-                                <div class="top d-flex justify-content-between align-items-center gap-4">
-                                    <h3 class="title">Messages</h3>
-                                </div>
-                                <div class="list">
-                                    <ul class="list-unstyled">
-                                        <li>
-                                            <h4 class="no_list">
-                                                <div>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="1.5" stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        class="icon icon-tabler icons-tabler-outline icon-tabler-alarm-minus">
-                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                        <path d="M12 13m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                                                        <path d="M7 4l-2.75 2" />
-                                                        <path d="M17 4l2.75 2" />
-                                                        <path d="M10 13h4" />
-                                                    </svg>
-                                                </div>
-                                                No Messages Found
-                                            </h4>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="btm text-center">
-
-                                </div>
-                            </div>
                         </div>
                         <div class="user_box position-relative">
                             <button type="button"
@@ -136,7 +101,7 @@ profileMenu,
                                                 }">
                                                     <span class="menu_icon" v-if="profileMenu.icon" v-html="profileMenu.icon
                                                         "></span>
-                                                    {{ profileMenu.menu_name }}
+                                                    {{ $t(profileMenu.menu_name) }}
                                                 </router-link>
 
                                                 <router-link v-else :to="{
@@ -144,14 +109,14 @@ profileMenu,
                                                 }">
                                                     <span v-if="profileMenu.icon" v-html="profileMenu.icon
                                                         "></span>
-                                                    {{ profileMenu.menu_name }}
+                                                    {{ $t(profileMenu.menu_name) }}
                                                 </router-link>
                                             </li>
 
                                             <li>
                                                 <a href="javascript:void(0)" @click.prevent="logout()">
                                                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                                                    Log Out
+                                                    {{ $t('Log Out') }}
                                                 </a>
                                             </li>
                                         </ul>
@@ -178,15 +143,67 @@ export default {
             profile: false,
             message: false,
             notification: false,
+            currentDateTime: "",
+            dateTimeTimer: null,
         };
     },
+    watch: {
+        "$locale"() {
+            this.updateDateTime();
+        },
+    },
     methods: {
+        updateDateTime() {
+            const now = new Date();
+            if (this.$locale === "bn") {
+                const bnDays = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
+                const bnMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+
+                const dayName = bnDays[now.getDay()];
+                const day = this.$bnNum(now.getDate());
+                const month = bnMonths[now.getMonth()];
+                const year = this.$bnNum(now.getFullYear());
+
+                let hours = now.getHours();
+                const minutes = this.$bnNum(String(now.getMinutes()).padStart(2, "0"));
+                const seconds = this.$bnNum(String(now.getSeconds()).padStart(2, "0"));
+                const ampm = hours >= 12 ? "পিএম" : "এএম";
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                const bnHours = this.$bnNum(hours);
+
+                this.currentDateTime = `${dayName}, ${day} ${month} ${year}, ${bnHours}:${minutes}:${seconds} ${ampm}`;
+            } else {
+                const options = {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true,
+                };
+                this.currentDateTime = now.toLocaleDateString("en-US", options);
+            }
+        },
+
         async logout() {
             try {
                 await this.callApi("post", "logout", null, false);
             } catch (e) {}
             this.$store.dispatch("auth/logout");
             window.location.href = (this.$root.baseurl ? this.$root.baseurl : '') + "/";
+        },
+
+        toggleLanguage() {
+            const nextLocale = this.$locale === 'bn' ? 'en' : 'bn';
+            if (typeof this.$setLocale === 'function') {
+                this.$setLocale(nextLocale);
+            }
+            try {
+                this.callApi("post", "set-locale", { locale: nextLocale }, false);
+            } catch (e) {}
         },
 
         loggedInfo() {
@@ -206,7 +223,15 @@ export default {
         },
     },
 
+    created() {
+        this.updateDateTime();
+    },
+
     mounted() {
+        this.updateDateTime();
+        this.dateTimeTimer = setInterval(() => {
+            this.updateDateTime();
+        }, 1000);
         // collapsed sidebar js
         $(".control-bar i").click(function () {
             $("body").toggleClass("collapsed-menu");
@@ -260,6 +285,13 @@ export default {
                 $(".top-header").removeClass("fixed");
             }
         });
+    },
+
+    beforeUnmount() {
+        if (this.dateTimeTimer) {
+            clearInterval(this.dateTimeTimer);
+            this.dateTimeTimer = null;
+        }
     },
 };
 </script>

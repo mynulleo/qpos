@@ -1,17 +1,17 @@
 <template>
     <div class="input_select">
         <select class="form-select form-select-lg shadow-none">
-            <option selected>Select</option>
-            <option>Select One</option>
-            <option>Select Two</option>
-            <option>Select Three</option>
+            <option selected>{{ $t('Select') }}</option>
+            <option>{{ $t('Select One') }}</option>
+            <option>{{ $t('Select Two') }}</option>
+            <option>{{ $t('Select Three') }}</option>
         </select>
     </div>
     <div class="search_box position-relative">
-        <input type="search" name="qpos_search_filter" autocomplete="off" placeholder="Search..." />
+        <input type="search" name="qpos_search_filter" autocomplete="off" :placeholder="$t('Search...')" />
         <button
             class="search_btn position-absolute top-50 translate-middle-y bg-transparent border-0"
-            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Search" v-x-tooltip
+            data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Search')" v-x-tooltip
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -34,7 +34,7 @@
             class="advance_filter"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
-            data-bs-title="Advance Search"
+            :data-bs-title="$t('Advance Search')"
              v-x-tooltip
         >
             <svg
@@ -221,7 +221,7 @@
                             type="submit"
                             class="theme_btn rounded-2 w-100 advance_search_btn"
                         >
-                            Advance Search
+                            {{ $t('Advance Search') }}
                         </button>
                     </div>
                 </div>

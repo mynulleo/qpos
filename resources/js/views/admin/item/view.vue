@@ -68,7 +68,7 @@
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <div class="text-uppercase small fw-bold text-muted mb-1">Total Sales (বিক্রয়)</div>
+                  <div class="text-uppercase small fw-bold text-muted mb-1">{{ $t('Total Sales') }}</div>
                   <h3 class="mb-0 fw-bold text-success">
                     {{ data.metrics.total_sold_qty }}
                     <small class="fs-6 text-muted fw-normal">Sold</small>
@@ -91,7 +91,7 @@
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <div class="text-uppercase small fw-bold text-muted mb-1">Total Stock In (ক্রয়/ওপেনিং)</div>
+                  <div class="text-uppercase small fw-bold text-muted mb-1">{{ $t('Total Stock In') }}</div>
                   <h3 class="mb-0 fw-bold text-info">
                     {{ data.metrics.total_stock_in }}
                     <small class="fs-6 text-muted fw-normal">Received</small>
@@ -114,7 +114,7 @@
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <div class="text-uppercase small fw-bold text-muted mb-1">Stock Adjustment (সমন্বয়)</div>
+                  <div class="text-uppercase small fw-bold text-muted mb-1">{{ $t('Stock Adjustment') }}</div>
                   <h3 class="mb-0 fw-bold" :class="Number(data.metrics.net_adjustment_qty) > 0 ? 'text-success' : (Number(data.metrics.net_adjustment_qty) < 0 ? 'text-danger' : 'text-secondary')">
                     {{ Number(data.metrics.net_adjustment_qty) > 0 ? '+' : '' }}{{ data.metrics.net_adjustment_qty }}
                     <small class="fs-6 text-muted fw-normal">Net</small>
@@ -148,7 +148,7 @@
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <div class="text-uppercase small fw-bold text-muted mb-1">Wastage / Loss (অপচয়)</div>
+                  <div class="text-uppercase small fw-bold text-muted mb-1">{{ $t('Wastage / Loss') }}</div>
                   <h3 class="mb-0 fw-bold text-danger">
                     {{ data.metrics.total_wastage_qty }}
                     <small class="fs-6 text-muted fw-normal">Wasted</small>
@@ -249,7 +249,7 @@
                     </td>
                   </tr>
                   <tr>
-                    <th>Primary Purchase Price:</th>
+                    <th>{{ $t('Primary Purchase Price:') }}</th>
                     <td class="font-monospace fw-semibold text-dark">{{ $filter.formatBDT(primaryPurchasePrice) }}</td>
                   </tr>
                   <tr>
@@ -257,7 +257,7 @@
                     <td class="font-monospace fw-bold text-success fs-6">{{ $filter.formatBDT(primarySellingPrice) }}</td>
                   </tr>
                   <tr>
-                    <th>Average Margin / Profit:</th>
+                    <th>{{ $t('Average Margin / Profit:') }}</th>
                     <td>
                       <span class="badge bg-success bg-opacity-10 text-success fw-bold font-monospace px-2 py-1">
                         +{{ $filter.formatBDT(primarySellingPrice - primaryPurchasePrice) }}
@@ -272,7 +272,7 @@
                     <td class="text-secondary small">{{ data.description }}</td>
                   </tr>
                   <tr>
-                    <th>Created Timestamp:</th>
+                    <th>{{ $t('Created Timestamp:') }}</th>
                     <td class="small text-muted">{{ data.created_at || 'N/A' }}</td>
                   </tr>
                 </tbody>
@@ -284,8 +284,7 @@
           <div class="card border border-primary-subtle shadow-sm mb-3" v-if="isElectronicsShop || data.warranty_type !== 'none'">
             <div class="card-header bg-primary bg-opacity-10 py-2">
               <span class="fw-bold text-primary small d-flex align-items-center gap-2">
-                <i class="fas fa-shield-alt"></i> Warranty & Guarantee Info (ওয়ারেন্টি তথ্য)
-              </span>
+                <i class="fas fa-shield-alt"></i>{{ $t('Warranty & Guarantee Info') }}</span>
             </div>
             <div class="card-body p-3">
               <div class="d-flex align-items-center gap-3">
@@ -313,25 +312,24 @@
           <div class="card border-0 shadow-sm">
             <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
               <span class="fw-bold fs-6">
-                <i class="fas fa-tags me-2 text-warning"></i>Variant-Wise Price, Stock & Sales Matrix (ভেরিয়েন্ট অনুযায়ী স্টক ও বিক্রয়)
-              </span>
+                <i class="fas fa-tags me-2 text-warning"></i>{{ $t('Variant-Wise Price, Stock & Sales Matrix') }}</span>
               <span class="badge bg-primary">{{ data.variants_breakdown ? data.variants_breakdown.length : 0 }} Variants</span>
             </div>
             <div class="card-body p-0 table-responsive">
               <table class="table table-bordered table-striped align-middle mb-0">
                 <thead class="table-light text-center" style="font-size: 13px;">
                   <tr>
-                    <th width="3%">#</th>
-                    <th :width="isElectronicsShop ? '15%' : '11%'">Color (রং)</th>
-                    <th width="11%" v-if="!isElectronicsShop">Size (সাইজ)</th>
-                    <th width="11%">Purchase Price</th>
-                    <th width="11%">Selling Price</th>
-                    <th width="12%">Profit Margin</th>
-                    <th width="8%">Total In</th>
-                    <th width="8%">Sold Qty</th>
-                    <th width="8%">Wastage</th>
+                    <th width="3%">{{ $t('#') }}</th>
+                    <th :width="isElectronicsShop ? '15%' : '11%'">{{ $t('Color') }}</th>
+                    <th width="11%" v-if="!isElectronicsShop">{{ $t('Size') }}</th>
+                    <th width="11%">{{ $t('Purchase Price') }}</th>
+                    <th width="11%">{{ $t('Selling Price') }}</th>
+                    <th width="12%">{{ $t('Profit Margin') }}</th>
+                    <th width="8%">{{ $t('Total In') }}</th>
+                    <th width="8%">{{ $t('Sold Qty') }}</th>
+                    <th width="8%">{{ $t('Wastage') }}</th>
                     <th width="9%">Stock Adj (+/-)</th>
-                    <th width="9%">Current Stock</th>
+                    <th width="9%">{{ $t('Current Stock') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -394,23 +392,19 @@
               <ul class="nav nav-pills card-header-pills" id="itemTab" role="tablist">
                 <li class="nav-item" role="presentation">
                   <button class="nav-link active fw-bold small" id="price-tab" data-bs-toggle="tab" data-bs-target="#price-tab-pane" type="button" role="tab">
-                    <i class="fas fa-history me-1 text-primary"></i> Price Change History (মূল্য পরিবর্তনের ইতিহাস)
-                  </button>
+                    <i class="fas fa-history me-1 text-primary"></i>{{ $t('Price Change History') }}</button>
                 </li>
                 <li class="nav-item" role="presentation">
                   <button class="nav-link fw-bold small" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales-tab-pane" type="button" role="tab">
-                    <i class="fas fa-shopping-cart me-1 text-success"></i> Recent Sales (সাম্প্রতিক বিক্রয়সমূহ)
-                  </button>
+                    <i class="fas fa-shopping-cart me-1 text-success"></i>{{ $t('Recent Sales') }}</button>
                 </li>
                 <li class="nav-item" role="presentation">
                   <button class="nav-link fw-bold small" id="purchase-tab" data-bs-toggle="tab" data-bs-target="#purchase-tab-pane" type="button" role="tab">
-                    <i class="fas fa-truck-loading me-1 text-info"></i> Recent Purchases (সাম্প্রতিক ক্রয়সমূহ)
-                  </button>
+                    <i class="fas fa-truck-loading me-1 text-info"></i>{{ $t('Recent Purchases') }}</button>
                 </li>
                 <li class="nav-item" role="presentation">
                   <button class="nav-link fw-bold small" id="adjustment-tab" data-bs-toggle="tab" data-bs-target="#adjustment-tab-pane" type="button" role="tab">
-                    <i class="fas fa-sliders-h me-1 text-warning"></i> Stock Adjustments (স্টক সমন্বয় ইতিহাস)
-                    <span class="badge bg-secondary ms-1" v-if="data.recent_stock_adjustments && data.recent_stock_adjustments.length > 0">
+                    <i class="fas fa-sliders-h me-1 text-warning"></i>{{ $t('Stock Adjustments') }}<span class="badge bg-secondary ms-1" v-if="data.recent_stock_adjustments && data.recent_stock_adjustments.length > 0">
                       {{ data.recent_stock_adjustments.length }}
                     </span>
                   </button>
@@ -425,12 +419,12 @@
                     <table class="table table-bordered table-striped align-middle mb-0">
                       <thead class="table-light text-center" style="font-size: 13px;">
                         <tr>
-                          <th width="5%">#</th>
-                          <th width="20%">Date & Time</th>
-                          <th width="25%">Source / Change Event</th>
+                          <th width="5%">{{ $t('#') }}</th>
+                          <th width="20%">{{ $t('Date & Time') }}</th>
+                          <th width="25%">{{ $t('Source / Change Event') }}</th>
                           <th width="15%">Variant (Color / Size)</th>
-                          <th width="18%" class="text-end">Purchase Price (ক্রয় মূল্য)</th>
-                          <th width="17%" class="text-end">Selling Price (বিক্রয় মূল্য)</th>
+                          <th width="18%" class="text-end">{{ $t('Purchase Price') }}</th>
+                          <th width="17%" class="text-end">{{ $t('Selling Price') }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -462,14 +456,14 @@
                     <table class="table table-bordered table-striped align-middle mb-0">
                       <thead class="table-light text-center" style="font-size: 13px;">
                         <tr>
-                          <th width="5%">#</th>
-                          <th width="15%">Invoice No</th>
-                          <th width="12%">Date</th>
-                          <th width="20%">Customer</th>
-                          <th width="15%">Variant / S/N</th>
-                          <th width="10%">Quantity</th>
-                          <th width="11%" class="text-end">Unit Rate</th>
-                          <th width="12%" class="text-end">Total Amount</th>
+                          <th width="5%">{{ $t('#') }}</th>
+                          <th width="15%">{{ $t('Invoice No') }}</th>
+                          <th width="12%">{{ $t('Date') }}</th>
+                          <th width="20%">{{ $t('Customer') }}</th>
+                          <th width="15%">{{ $t('Variant / S/N') }}</th>
+                          <th width="10%">{{ $t('Quantity') }}</th>
+                          <th width="11%" class="text-end">{{ $t('Unit Rate') }}</th>
+                          <th width="12%" class="text-end">{{ $t('Total Amount') }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -504,14 +498,14 @@
                     <table class="table table-bordered table-striped align-middle mb-0">
                       <thead class="table-light text-center" style="font-size: 13px;">
                         <tr>
-                          <th width="5%">#</th>
-                          <th width="15%">Challan / Invoice</th>
-                          <th width="12%">Purchase Date</th>
-                          <th width="20%">Supplier Name</th>
-                          <th width="15%">Variant</th>
-                          <th width="10%">Quantity</th>
-                          <th width="11%" class="text-end">Unit Cost</th>
-                          <th width="12%" class="text-end">Total Cost</th>
+                          <th width="5%">{{ $t('#') }}</th>
+                          <th width="15%">{{ $t('Challan / Invoice') }}</th>
+                          <th width="12%">{{ $t('Purchase Date') }}</th>
+                          <th width="20%">{{ $t('Supplier Name') }}</th>
+                          <th width="15%">{{ $t('Variant') }}</th>
+                          <th width="10%">{{ $t('Quantity') }}</th>
+                          <th width="11%" class="text-end">{{ $t('Unit Cost') }}</th>
+                          <th width="12%" class="text-end">{{ $t('Total Cost') }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -544,19 +538,19 @@
                     <table class="table table-bordered table-striped align-middle mb-0">
                       <thead class="table-light text-center" style="font-size: 13px;">
                         <tr>
-                          <th width="4%">#</th>
-                          <th width="14%">Adjustment No</th>
-                          <th width="11%">Date</th>
-                          <th width="13%">Type / Reason</th>
-                          <th width="11%">Warehouse</th>
-                          <th width="11%">Variant</th>
-                          <th width="7%" class="text-center">System</th>
-                          <th width="7%" class="text-center">Physical</th>
+                          <th width="4%">{{ $t('#') }}</th>
+                          <th width="14%">{{ $t('Adjustment No') }}</th>
+                          <th width="11%">{{ $t('Date') }}</th>
+                          <th width="13%">{{ $t('Type / Reason') }}</th>
+                          <th width="11%">{{ $t('Warehouse') }}</th>
+                          <th width="11%">{{ $t('Variant') }}</th>
+                          <th width="7%" class="text-center">{{ $t('System') }}</th>
+                          <th width="7%" class="text-center">{{ $t('Physical') }}</th>
                           <th width="10%" class="text-center">Adjusted (+/-)</th>
-                          <th width="9%" class="text-end">Unit Cost</th>
-                          <th width="10%" class="text-end">Total Value</th>
-                          <th width="11%">Conducted By</th>
-                          <th width="6%" class="text-center">Action</th>
+                          <th width="9%" class="text-end">{{ $t('Unit Cost') }}</th>
+                          <th width="10%" class="text-end">{{ $t('Total Value') }}</th>
+                          <th width="11%">{{ $t('Conducted By') }}</th>
+                          <th width="6%" class="text-center">{{ $t('Action') }}</th>
                         </tr>
                       </thead>
                       <tbody>

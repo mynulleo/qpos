@@ -9,13 +9,13 @@
             <div class="page_header d-flex align-items-center justify-content-between gap-4">
                 <h4 class="form_card_title">
                     <slot name="title">
-                        {{ $parent.page_title ?? "Page Title" }}
+                        {{ $t($parent.page_title ?? "Page Title") }}
                     </slot>
                 </h4>
 
                 <div class="right_page_header action">
                     <div class="viewer_action_btn">
-                        <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print"
+                        <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Print')"
                             v-x-tooltip v-if="showPrintButton" @click="print(printArea, $parent.model)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -29,40 +29,7 @@
                                     d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" />
                             </svg>
                         </button>
-                        <!-- <router-link
-                            class="p_btn"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            data-bs-title="Add"
-                            v-x-tooltip
-                            v-if="
-                                showCreateRoute &&
-                                $root.checkPermission($parent.model + '.create')
-                            "
-                            :to="{ name: $parent.model + '.create' }"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="icon icon-tabler icons-tabler-outline icon-tabler-plus"
-                            >
-                                <path
-                                    stroke="none"
-                                    d="M0 0h24v24H0z"
-                                    fill="none"
-                                />
-                                <path d="M12 5l0 14" />
-                                <path d="M5 12l14 0" />
-                            </svg>
-                        </router-link> -->
-                        <router-link class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add"
+                        <router-link class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Add')"
                             v-x-tooltip v-if="
                                 showCreateRoute &&
                                 $root.checkPermission((dynamicModel ? dynamicModel : $parent.model) + '.create')
@@ -80,7 +47,7 @@
                                 <path d="M5 12l14 0" />
                             </svg>
                         </router-link>
-                        <router-link class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit"
+                        <router-link class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Edit')"
                             v-x-tooltip v-if="
                                 showEditRoute &&
                                 ($parent.data?.id || $route.params.id) &&
@@ -102,7 +69,7 @@
                             </svg>
                         </router-link>
                         <button type="button" class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top"
-                            data-bs-title="Delete" v-x-tooltip v-if="
+                            :data-bs-title="$t('Delete')" v-x-tooltip v-if="
                                 showDeleteButton &&
                                 ($parent.data?.id || $route.params.id) &&
                                 $root.checkPermission(
@@ -126,7 +93,7 @@
                             </svg>
                         </button>
                     </div>
-                    <button class="help_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Help"
+                    <button class="help_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Help')"
                         v-x-tooltip>
                         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -159,14 +126,14 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title text-black" id="deleteModalLabel">
-                                Are you sure want to
-                                {{ is_delete ? "return back" : "delete" }} this?
+                                {{ $t('Are you sure want to') }}
+                                {{ is_delete ? $t("return back") : $t("delete") }} {{ $t("this?") }}
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <h6 class="mb-3 text-black">
-                                Please confirm your login password
+                                {{ $t('Please confirm your login password') }}
                             </h6>
                             <div class="d-flex justify-content-center mb-3">
                                 <input v-model="delete_password" type="password" placeholder="********"
@@ -177,11 +144,11 @@
                                     :disabled="$root.submit">
                                     <span v-if="$root.submit">
                                         <i class="fa fa-spinner fa-spin"></i>
-                                        processing...
+                                        {{ $t('processing...') }}
                                     </span>
                                     <template v-else>
-                                        <span v-if="is_delete">Return Back</span>
-                                        <span v-else> Confirm </span>
+                                        <span v-if="is_delete">{{ $t('Return Back') }}</span>
+                                        <span v-else> {{ $t('Confirm') }} </span>
                                     </template>
                                 </button>
                             </div>
@@ -195,16 +162,16 @@
             <div class="help_info_sidebar position-fixed">
                 <div class="help_info_sidebar_content p-4">
                     <h3 class="help_title d-flex align-items-center gap-3">
-                        <img width="30" :src="helpInfoIcon()" alt=""> Help
+                        <img width="30" :src="helpInfoIcon()" alt=""> {{ $t('Help') }}
                     </h3>
 
                     <div class="information_box" v-if="$root.helpInfo.description">
-                        <h5 class="top-title"><img width="30" :src="bookImage()" alt="">{{ $parent.page_title }}</h5>
+                        <h5 class="top-title"><img width="30" :src="bookImage()" alt="">{{ $t($parent.page_title) }}</h5>
                         <div v-html="$root.helpInfo.description"></div>
                     </div>
                     <p v-else class="text-danger fw-medium no_help_info fs-5">
                         <img width="70" :src="noInfoFound()" alt="">
-                        <span class="d-block mt-3">No Help Info Found !!</span>
+                        <span class="d-block mt-3">{{ $t('No Help Info Found !!') }}</span>
                     </p>
                 </div>
             </div>

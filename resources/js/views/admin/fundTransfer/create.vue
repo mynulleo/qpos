@@ -2,7 +2,7 @@
   <create-form @onSubmit='submit'>
     <div class="col-9">
       <fieldset>
-        <span class="legend">Transfer Form</span>
+        <span class="legend">{{ $t('Transfer Form') }}</span>
         <div class="row g-3">
           <date-picker id='date0' v-model='data.transfer_date' field='data.transfer_date' title='Transfer Date'
             placeholder='Transfer Date' col='2' :req='true'></date-picker>
@@ -22,7 +22,7 @@
     </div>
     <div class="col-3">
       <fieldset>
-        <span class="legend">Fund Balance</span>
+        <span class="legend">{{ $t('Fund Balance') }}</span>
         <div class="card shadow-sm border-0">
           <div class="card-body p-3">
             <!-- Instruction -->

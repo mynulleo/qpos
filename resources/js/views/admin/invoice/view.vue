@@ -130,7 +130,7 @@
       <div class="col-lg-6 col-md-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-header text-white py-2 d-flex align-items-center justify-content-between" style="background-color: #112C47;">
-            <span class="fw-bold"><i class="fas fa-info-circle me-2"></i>Invoice Details (ইনভয়েস বিবরণী)</span>
+            <span class="fw-bold"><i class="fas fa-info-circle me-2"></i>{{ $t('Invoice Details') }}</span>
             <span class="badge font-monospace" :class="getPaymentStatusBadge(data)">{{ data.payment_status }}</span>
           </div>
           <div class="card-body p-3">
@@ -138,15 +138,15 @@
               <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 13px;">
                 <tbody>
                   <tr class="border-bottom">
-                    <th width="40%">Invoice No:</th>
+                    <th width="40%">{{ $t('Invoice No:') }}</th>
                     <td class="font-monospace fw-bold text-primary">{{ data.invoice_no }}</td>
                   </tr>
                   <tr class="border-bottom">
-                    <th>Invoice Date:</th>
+                    <th>{{ $t('Invoice Date:') }}</th>
                     <td>{{ data.invoice_date }}</td>
                   </tr>
                   <tr class="border-bottom">
-                    <th>Subtotal Amount:</th>
+                    <th>{{ $t('Subtotal Amount:') }}</th>
                     <td class="font-monospace">Tk. {{ formatPrice(data.original_amount) }}</td>
                   </tr>
                   <tr class="border-bottom" v-if="data.discount > 0">
@@ -154,11 +154,11 @@
                     <td class="font-monospace text-danger">- Tk. {{ formatPrice(data.discount) }}</td>
                   </tr>
                   <tr class="border-bottom" v-if="data.vat > 0">
-                    <th>VAT / Tax:</th>
+                    <th>{{ $t('VAT / Tax:') }}</th>
                     <td class="font-monospace">+ Tk. {{ formatPrice(data.vat) }}</td>
                   </tr>
                   <tr class="border-bottom text-white" style="background-color: #112C47 !important; border-top: 2px solid #112C47; border-bottom: 2px solid #112C47;">
-                    <th class="fs-6 fw-bold text-white" style="color: #ffffff !important;">Net Total Payable:</th>
+                    <th class="fs-6 fw-bold text-white" style="color: #ffffff !important;">{{ $t('Net Total Payable:') }}</th>
                     <td class="font-monospace fs-5 fw-bold text-white" style="color: #ffffff !important;">Tk. {{ formatPrice(data.amount) }}</td>
                   </tr>
                   <tr class="border-bottom">
@@ -180,7 +180,7 @@
       <div class="col-lg-6 col-md-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-header text-white py-2 d-flex align-items-center justify-content-between" style="background-color: #112C47;">
-            <span class="fw-bold"><i class="fas fa-user me-2"></i>Customer & History (গ্রাহকের বিবরণী)</span>
+            <span class="fw-bold"><i class="fas fa-user me-2"></i>{{ $t('Customer & History') }}</span>
             <span class="badge bg-secondary font-monospace" v-if="data.client">{{ data.client.clientid || 'Registered' }}</span>
             <span class="badge bg-secondary font-monospace" v-else>Walk-in</span>
           </div>
@@ -199,8 +199,7 @@
               <!-- ⭐️ Customer Lifetime History Grid -->
               <div class="p-2 bg-light rounded border mb-2" v-if="data.client_history">
                 <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 11px;">
-                  <i class="fas fa-history me-1 text-primary"></i>Client Lifetime History (গ্রাহকের মোট ইতিহাস)
-                </div>
+                  <i class="fas fa-history me-1 text-primary"></i>{{ $t('Client Lifetime History') }}</div>
                 <div class="row g-2 text-center" style="font-size: 12px;">
                   <div class="col-3 border-end">
                     <span class="text-muted d-block" style="font-size: 10px;">Total Invoices</span>
@@ -252,23 +251,23 @@
     <!-- ⭐️ Item Details Table with Requested Live Stock & Lifetime Sold Analytics -->
     <div class="card border-0 shadow-sm mb-3">
       <div class="card-header text-white py-2 d-flex align-items-center justify-content-between" style="background-color: #112C47;">
-        <span class="fw-bold"><i class="fas fa-box-open me-2 text-warning"></i>Purchased Items & Live Stock Analytics (পণ্যের বিবরণ ও বর্তমান স্টক)</span>
+        <span class="fw-bold"><i class="fas fa-box-open me-2 text-warning"></i>{{ $t('Purchased Items & Live Stock Analytics') }}</span>
         <span class="badge bg-secondary font-monospace">{{ data.details ? data.details.length : 0 }} Items</span>
       </div>
       <div class="card-body p-0 table-responsive">
         <table class="table table-hover table-striped align-middle mb-0" style="font-size: 13px;">
           <thead class="table-light">
             <tr>
-              <th width="4%" class="text-center">#</th>
-              <th width="24%">Product & Barcode</th>
-              <th width="14%">Variant / Spec</th>
-              <th width="12%">Category / Unit</th>
-              <th width="8%" class="text-center">Sold Qty</th>
-              <th width="11%" class="text-end">Unit Rate (দর)</th>
-              <th width="11%" class="text-end">Total Price</th>
+              <th width="4%" class="text-center">{{ $t('#') }}</th>
+              <th width="24%">{{ $t('Product & Barcode') }}</th>
+              <th width="14%">{{ $t('Variant / Spec') }}</th>
+              <th width="12%">{{ $t('Category / Unit') }}</th>
+              <th width="8%" class="text-center">{{ $t('Sold Qty') }}</th>
+              <th width="11%" class="text-end">{{ $t('Unit Rate') }}</th>
+              <th width="11%" class="text-end">{{ $t('Total Price') }}</th>
               <!-- ⭐️ Requested Item Insights -->
-              <th width="8%" class="text-center">Present Stock</th>
-              <th width="8%" class="text-center">Total Sold</th>
+              <th width="8%" class="text-center">{{ $t('Present Stock') }}</th>
+              <th width="8%" class="text-center">{{ $t('Total Sold') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -327,17 +326,17 @@
     <!-- Sales Returns Section (If items were returned against this invoice) -->
     <div class="card border-0 shadow-sm mb-3" v-if="data.returns && data.returns.length > 0">
       <div class="card-header bg-danger text-white py-2">
-        <span class="fw-bold"><i class="fas fa-undo me-2"></i>Processed Sales Returns (পণ্য ফেরত সংক্রান্ত তথ্য)</span>
+        <span class="fw-bold"><i class="fas fa-undo me-2"></i>{{ $t('Processed Sales Returns') }}</span>
       </div>
       <div class="card-body p-0 table-responsive">
         <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
           <thead class="table-light">
             <tr>
-              <th>Return Date</th>
-              <th>Product</th>
-              <th>Color / Size</th>
-              <th class="text-center">Returned Qty</th>
-              <th>Reference</th>
+              <th>{{ $t('Return Date') }}</th>
+              <th>{{ $t('Product') }}</th>
+              <th>{{ $t('Color / Size') }}</th>
+              <th class="text-center">{{ $t('Returned Qty') }}</th>
+              <th>{{ $t('Reference') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -361,7 +360,7 @@
       <div class="card-header text-white py-2 d-flex align-items-center justify-content-between" style="background-color: #112C47;">
         <span class="fw-bold d-flex align-items-center gap-2">
           <i class="fas fa-file-contract text-warning"></i>
-          <span>Terms & Conditions (ইনভয়েস শর্তাবলী)</span>
+          <span>{{ $t('Terms & Conditions') }}</span>
         </span>
         <span class="badge bg-secondary font-monospace">{{ data.terms_conditions.length }} Conditions</span>
       </div>
@@ -406,10 +405,10 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 10px;">
           <thead>
             <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
-              <th style="text-align: left; padding: 3px 0; width: 48%;">Item</th>
-              <th style="text-align: center; padding: 3px 0; width: 14%;">Qty</th>
-              <th style="text-align: right; padding: 3px 0; width: 18%;">Rate</th>
-              <th style="text-align: right; padding: 3px 0; width: 20%;">Total</th>
+              <th style="text-align: left; padding: 3px 0; width: 48%;">{{ $t('Item') }}</th>
+              <th style="text-align: center; padding: 3px 0; width: 14%;">{{ $t('Qty') }}</th>
+              <th style="text-align: right; padding: 3px 0; width: 18%;">{{ $t('Rate') }}</th>
+              <th style="text-align: right; padding: 3px 0; width: 20%;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -493,9 +492,9 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 8.5px;">
           <thead>
             <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
-              <th style="text-align: left; padding: 2px 0;">Item</th>
-              <th style="text-align: center; padding: 2px 0;">Qty</th>
-              <th style="text-align: right; padding: 2px 0;">Total</th>
+              <th style="text-align: left; padding: 2px 0;">{{ $t('Item') }}</th>
+              <th style="text-align: center; padding: 2px 0;">{{ $t('Qty') }}</th>
+              <th style="text-align: right; padding: 2px 0;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>

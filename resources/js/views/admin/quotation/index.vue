@@ -2,11 +2,11 @@
   <index-page :show_status="false">
     <!-- Advance Filter Fields -->
     <template v-slot:search-field>
-      <Input v-model="search_data.quotation_no" field="search_data.quotation_no" title="Quotation No (কোটেশন নং)" placeholder="e.g. QT-..." col="3" />
+      <Input v-model="search_data.quotation_no" field="search_data.quotation_no" title="Quotation No" :placeholder="$t('e.g. QT-...')" col="3" />
 
-      <v-select-container title="Customer / Client (গ্রাহক)" field="search_data.client_id" col="3">
+      <v-select-container title="Customer / Client" field="search_data.client_id" col="3">
         <v-select v-model="search_data.client_id" label="name" :reduce="(obj) => obj.id"
-          :options="clients" placeholder="-- Select Client --" :closeOnSelect="true">
+          :options="clients" :placeholder="$t('-- Select Client --')" :closeOnSelect="true">
           <template #option="option">
             <div>
               <strong>{{ option.org_name || option.name }}</strong>
@@ -18,25 +18,25 @@
 
       <div class="col-md-3">
         <div class="form-group">
-          <label class="form-label fw-bold small text-dark">Status (অবস্থা)</label>
+          <label class="form-label fw-bold small text-dark">{{ $t('Status') }}</label>
           <select class="form-select shadow-sm" v-model="search_data.status">
-            <option value="">-- All Status --</option>
-            <option value="draft">Draft (খসড়া)</option>
-            <option value="sent">Sent (প্রেরিত)</option>
-            <option value="accepted">Accepted (গৃহীত)</option>
-            <option value="declined">Declined (বাতিল)</option>
-            <option value="converted">Converted to Invoice (ইনভয়েস হয়েছে)</option>
-            <option value="expired">Expired (মেয়াদোত্তীর্ণ)</option>
+            <option value="">{{ $t('-- All Status --') }}</option>
+            <option value="draft">{{ $t('Draft') }}</option>
+            <option value="sent">{{ $t('Sent') }}</option>
+            <option value="accepted">{{ $t('Accepted') }}</option>
+            <option value="declined">{{ $t('Declined') }}</option>
+            <option value="converted">{{ $t('Converted to Invoice') }}</option>
+            <option value="expired">{{ $t('Expired') }}</option>
           </select>
         </div>
       </div>
 
       <date-picker id='searchfromquotedate' v-model='search_data.from_date'
-        field='search_data.from_date' title='From Date (শুরুর তারিখ)' placeholder='From Date' col='3'
+        field='search_data.from_date' title='From Date' placeholder='From Date' col='3'
         :req='false'></date-picker>
 
       <date-picker id='searchtoquotedate' v-model='search_data.to_date' field='search_data.to_date'
-        title='To Date (শেষের তারিখ)' placeholder='To Date' col='3' :req='false'
+        title='To Date' placeholder='To Date' col='3' :req='false'
         :disablePastDates="search_data.from_date"></date-picker>
     </template>
 
@@ -59,7 +59,7 @@
     <!-- Custom Column Slot: Client Name & Contact -->
     <template v-slot:client_id="{ item }">
       <td>
-        <div class="fw-bold text-dark">{{ item.client_name || (item.client ? (item.client.org_name || item.client.name) : 'Walk-in Customer') }}</div>
+        <div class="fw-bold text-dark">{{ item.client_name || (item.client ? (item.client.org_name || item.client.name) : $t('Walk-in Customer')) }}</div>
         <small class="text-muted" v-if="item.client_phone || (item.client && item.client.mobile)">
           <i class="fas fa-phone-alt me-1 text-primary small"></i> {{ item.client_phone || (item.client ? item.client.mobile : '') }}
         </small>
@@ -69,14 +69,14 @@
     <!-- Custom Column Slot: Total Items -->
     <template v-slot:total_items="{ item }">
       <td class="text-center">
-        <span class="badge bg-light text-dark border font-monospace">{{ item.total_items || (item.quotation_details ? item.quotation_details.length : 0) }}</span>
+        <span class="badge bg-light text-dark border font-monospace">{{ $bnNum(item.total_items || (item.quotation_details ? item.quotation_details.length : 0)) }}</span>
       </td>
     </template>
 
     <!-- Custom Column Slot: Total Amount -->
     <template v-slot:total_amount="{ item }">
       <td class="text-end">
-        <span class="font-monospace fw-bold text-dark">৳ {{ formatCurrency(item.total_amount) }}</span>
+        <span class="font-monospace fw-bold text-dark">{{ $t('Tk.') }} {{ $bnNum(formatCurrency(item.total_amount)) }}</span>
       </td>
     </template>
 
@@ -84,7 +84,7 @@
     <template v-slot:status="{ item }">
       <td class="text-center">
         <span class="badge px-3 py-1 font-monospace text-uppercase" :class="statusBadgeClass(item.status)">
-          {{ getStatusLabel(item.status) }}
+          {{ $t(getStatusLabel(item.status)) }}
         </span>
       </td>
     </template>
@@ -237,7 +237,7 @@ export default {
 
   created() {
     this.getRouteName(this.model);
-    this.page_title = "Quotation List (কোটেশন তালিকা)";
+    this.page_title = "Quotation List";
     this.search();
     this.getClients();
   },

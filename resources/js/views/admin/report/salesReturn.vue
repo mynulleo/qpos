@@ -37,9 +37,7 @@
             class="btn btn-xs btn-outline-primary"
             :class="{ 'active': activePreset === 'thisMonth' }"
             @click="applyDatePreset('thisMonth')"
-          >
-            This Month (চলতি মাস)
-          </button>
+          >{{ $t('This Month') }}</button>
           <button
             type="button"
             class="btn btn-xs btn-outline-primary"
@@ -72,7 +70,7 @@
         id="searchfromdate"
         v-model="search_data.from_date"
         field="search_data.from_date"
-        title="From Date (শুরুর তারিখ)"
+        title="From Date"
         placeholder="From Date"
         col="3"
         :req="false"
@@ -81,14 +79,14 @@
         id="searchtodate"
         v-model="search_data.to_date"
         field="search_data.to_date"
-        title="To Date (শেষ তারিখ)"
+        title="To Date"
         placeholder="To Date"
         col="3"
         :req="false"
       />
 
       <!-- Customer / Client -->
-      <v-select-container title="Customer (গ্রাহক)" field="search_data.client_id" col="3">
+      <v-select-container title="Customer" field="search_data.client_id" col="3">
         <v-select
           v-model="search_data.client_id"
           label="name"
@@ -110,13 +108,12 @@
       <div class="col-md-3">
         <div class="form-group">
           <label class="form-label fw-bold small text-muted">
-            <i class="fas fa-tag me-1 text-info"></i> Return Reason (ফেরতের কারণ)
-          </label>
+            <i class="fas fa-tag me-1 text-info"></i>{{ $t('Return Reason') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.return_reason">
             <option value="all">-- All Reasons (সকল কারণ) --</option>
-            <option value="Client request">Client request (ভালো পণ্য - স্টকে জমা)</option>
-            <option value="Wastage">Wastage (নষ্ট/ড্যামেজ - ওয়েস্টেজ)</option>
-            <option value="Date Expaired">Date Expaired (মেয়াদোত্তীর্ণ - ওয়েস্টেজ)</option>
+            <option value="Client request">{{ $t('Client request') }}</option>
+            <option value="Wastage">{{ $t('Wastage') }}</option>
+            <option value="Date Expaired">{{ $t('Date Expaired') }}</option>
           </select>
         </div>
       </div>
@@ -125,21 +122,20 @@
       <div class="col-md-3">
         <div class="form-group">
           <label class="form-label fw-bold small text-muted">
-            <i class="fas fa-wallet me-1 text-success"></i> Refund Method (টাকা ফেরত মাধ্যম)
-          </label>
+            <i class="fas fa-wallet me-1 text-success"></i>{{ $t('Refund Method') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.payment_method">
             <option value="all">-- All Methods (সকল মাধ্যম) --</option>
-            <option value="Cash">Cash (নগদ ফেরত)</option>
-            <option value="bKash">bKash (বিকাশ)</option>
-            <option value="Nagad">Nagad (নগদ)</option>
-            <option value="Rocket">Rocket (রকেট)</option>
+            <option value="Cash">{{ $t('Cash') }}</option>
+            <option value="bKash">{{ $t('bKash') }}</option>
+            <option value="Nagad">{{ $t('Nagad') }}</option>
+            <option value="Rocket">{{ $t('Rocket') }}</option>
             <option value="Bank">Bank Transfer</option>
           </select>
         </div>
       </div>
 
       <!-- Category Filter -->
-      <v-select-container title="Category (ক্যাটাগরি)" field="search_data.category_id" col="3">
+      <v-select-container title="Category" field="search_data.category_id" col="3">
         <v-select
           v-model="search_data.category_id"
           label="title"
@@ -151,7 +147,7 @@
       </v-select-container>
 
       <!-- Item Filter -->
-      <v-select-container title="Item (পণ্য)" field="search_data.item_id" col="3">
+      <v-select-container title="Item" field="search_data.item_id" col="3">
         <v-select
           v-model="search_data.item_id"
           label="title"
@@ -173,7 +169,7 @@
       <Input
         v-model="search_data.keyword"
         field="search_data.keyword"
-        title="Keyword (চালান/ইনভয়েস/মোবাইল/নোট)"
+        title="Keyword"
         placeholder="e.g. RET-..., POS-..., Note text..."
         col="3"
         :req="false"
@@ -228,8 +224,7 @@
           <!-- Action Buttons -->
           <div class="d-flex align-items-center gap-2">
             <router-link to="/pos/return" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 shadow-sm">
-              <i class="fas fa-plus-circle"></i> New Return (নতুন ফেরত)
-            </router-link>
+              <i class="fas fa-plus-circle"></i>{{ $t('New Return') }}</router-link>
 
             <!-- Excel Export -->
             <download-excel
@@ -262,7 +257,7 @@
           <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted small fw-bold">Total Returns (চালান)</span>
+                <span class="text-muted small fw-bold">{{ $t('Total Returns') }}</span>
                 <div class="kpi-icon-badge bg-primary-subtle text-primary">
                   <i class="fas fa-undo-alt"></i>
                 </div>
@@ -276,7 +271,7 @@
           <div class="col-xl-3 col-md-4 col-sm-6">
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100 border-start border-4 border-danger">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted small fw-bold">Total Refund (মোট ফেরত টাকা)</span>
+                <span class="text-muted small fw-bold">{{ $t('Total Refund') }}</span>
                 <div class="kpi-icon-badge bg-danger-subtle text-danger">
                   <i class="fas fa-money-bill-wave"></i>
                 </div>
@@ -290,7 +285,7 @@
           <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted small fw-bold">Total Items (মোট পিস)</span>
+                <span class="text-muted small fw-bold">{{ $t('Total Items') }}</span>
                 <div class="kpi-icon-badge bg-info-subtle text-info">
                   <i class="fas fa-cubes"></i>
                 </div>
@@ -304,7 +299,7 @@
           <div class="col-xl-2 col-md-6 col-sm-6">
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100 border-start border-3 border-success">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i> Restocked (স্টকে)</span>
+                <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i>{{ $t('Restocked') }}</span>
                 <span class="badge bg-success font-monospace">{{ summary.restocked_qty || 0 }} pcs</span>
               </div>
               <h5 class="mb-0 fw-bold font-monospace text-success">Tk. {{ formatMoney(summary.restocked_amount) }}</h5>
@@ -316,7 +311,7 @@
           <div class="col-xl-3 col-md-6 col-sm-6">
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100 border-start border-3 border-warning">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-warning-emphasis small fw-bold"><i class="fas fa-trash-alt me-1"></i> Wastage/Expired (ক্ষতি)</span>
+                <span class="text-warning-emphasis small fw-bold"><i class="fas fa-trash-alt me-1"></i>{{ $t('Wastage/Expired') }}</span>
                 <span class="badge bg-danger font-monospace">{{ summary.wastage_qty || 0 }} pcs</span>
               </div>
               <h5 class="mb-0 fw-bold font-monospace text-danger">Tk. {{ formatMoney(summary.wastage_amount) }}</h5>
@@ -357,16 +352,16 @@
             <table class="table table-bordered table-hover align-middle mb-0 custom-return-table">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="3%">#</th>
-                  <th width="12%">Return Slip No & Date</th>
-                  <th width="12%">Original Invoice</th>
-                  <th width="15%">Customer (গ্রাহক)</th>
-                  <th width="12%">Return Reason (কারণ)</th>
-                  <th width="16%">Returned Items & Qty</th>
-                  <th width="10%" class="text-end">Refund Amount</th>
-                  <th width="10%">Refund Method</th>
-                  <th width="18%">Return Note / Remarks (মন্তব্য)</th>
-                  <th width="8%" class="d-print-none text-center">Action</th>
+                  <th width="3%">{{ $t('#') }}</th>
+                  <th width="12%">{{ $t('Return Slip No & Date') }}</th>
+                  <th width="12%">{{ $t('Original Invoice') }}</th>
+                  <th width="15%">{{ $t('Customer') }}</th>
+                  <th width="12%">{{ $t('Return Reason') }}</th>
+                  <th width="16%">{{ $t('Returned Items & Qty') }}</th>
+                  <th width="10%" class="text-end">{{ $t('Refund Amount') }}</th>
+                  <th width="10%">{{ $t('Refund Method') }}</th>
+                  <th width="18%">{{ $t('Return Note / Remarks') }}</th>
+                  <th width="8%" class="d-print-none text-center">{{ $t('Action') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -510,17 +505,17 @@
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="4%">#</th>
-                  <th width="24%">Item Title (পণ্যের নাম)</th>
-                  <th width="12%">Barcode</th>
-                  <th width="12%">Category</th>
+                  <th width="4%">{{ $t('#') }}</th>
+                  <th width="24%">{{ $t('Item Title') }}</th>
+                  <th width="12%">{{ $t('Barcode') }}</th>
+                  <th width="12%">{{ $t('Category') }}</th>
                   <th width="10%">Variant (Color/Size)</th>
-                  <th width="8%" class="text-center">Total Return</th>
-                  <th width="8%" class="text-center">Restocked</th>
-                  <th width="8%" class="text-center">Wastage</th>
-                  <th width="9%" class="text-end">Avg Refund Rate</th>
-                  <th width="11%" class="text-end">Total Refund Value</th>
-                  <th width="14%">Return Reasons</th>
+                  <th width="8%" class="text-center">{{ $t('Total Return') }}</th>
+                  <th width="8%" class="text-center">{{ $t('Restocked') }}</th>
+                  <th width="8%" class="text-center">{{ $t('Wastage') }}</th>
+                  <th width="9%" class="text-end">{{ $t('Avg Refund Rate') }}</th>
+                  <th width="11%" class="text-end">{{ $t('Total Refund Value') }}</th>
+                  <th width="14%">{{ $t('Return Reasons') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -580,13 +575,13 @@
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="5%">#</th>
-                  <th width="15%">Customer ID</th>
-                  <th width="30%">Customer Name</th>
-                  <th width="20%">Mobile</th>
-                  <th width="12%" class="text-center">Return Slips Count</th>
-                  <th width="10%" class="text-center">Total Qty Returned</th>
-                  <th width="15%" class="text-end">Total Refunded Amount</th>
+                  <th width="5%">{{ $t('#') }}</th>
+                  <th width="15%">{{ $t('Customer ID') }}</th>
+                  <th width="30%">{{ $t('Customer Name') }}</th>
+                  <th width="20%">{{ $t('Mobile') }}</th>
+                  <th width="12%" class="text-center">{{ $t('Return Slips Count') }}</th>
+                  <th width="10%" class="text-center">{{ $t('Total Qty Returned') }}</th>
+                  <th width="15%" class="text-end">{{ $t('Total Refunded Amount') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -631,11 +626,11 @@
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="5%">#</th>
-                  <th width="25%">Return Date (তারিখ)</th>
-                  <th width="20%" class="text-center">Returns Count (চালান)</th>
-                  <th width="20%" class="text-center">Total Qty Returned</th>
-                  <th width="30%" class="text-end">Total Refund Amount (টাকা)</th>
+                  <th width="5%">{{ $t('#') }}</th>
+                  <th width="25%">{{ $t('Return Date') }}</th>
+                  <th width="20%" class="text-center">{{ $t('Returns Count') }}</th>
+                  <th width="20%" class="text-center">{{ $t('Total Qty Returned') }}</th>
+                  <th width="30%" class="text-end">{{ $t('Total Refund Amount') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -767,13 +762,13 @@
                 <table class="table table-bordered table-striped align-middle mb-0">
                   <thead class="table-light">
                     <tr>
-                      <th width="5%">#</th>
-                      <th>Item Description</th>
-                      <th>Variant</th>
-                      <th>Serial No</th>
-                      <th width="12%" class="text-center">Returned Qty</th>
-                      <th width="15%" class="text-end">Unit Rate</th>
-                      <th width="18%" class="text-end">Refund Subtotal</th>
+                      <th width="5%">{{ $t('#') }}</th>
+                      <th>{{ $t('Item Description') }}</th>
+                      <th>{{ $t('Variant') }}</th>
+                      <th>{{ $t('Serial No') }}</th>
+                      <th width="12%" class="text-center">{{ $t('Returned Qty') }}</th>
+                      <th width="15%" class="text-end">{{ $t('Unit Rate') }}</th>
+                      <th width="18%" class="text-end">{{ $t('Refund Subtotal') }}</th>
                     </tr>
                   </thead>
                   <tbody>

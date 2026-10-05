@@ -22,8 +22,7 @@
 
           <div class="d-flex align-items-center gap-2">
             <button type="button" class="btn btn-dark btn-sm d-flex align-items-center gap-1 font-monospace fw-bold px-3 shadow-sm" @click="printMushak">
-              <i class="fas fa-print"></i> Print Mushak 6.3 (কর চালানপত্র)
-            </button>
+              <i class="fas fa-print"></i>{{ $t('Print Mushak 6.3') }}</button>
           </div>
         </div>
 

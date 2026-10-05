@@ -4,7 +4,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-4 col-lg-12">
                     <fieldset>
-                        <span class="legend">Media</span>
+                        <span class="legend">{{ $t('Media') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="col-lg-12">
@@ -24,32 +24,32 @@
 
                 <div class="col-xl-8 col-lg-12">
                     <fieldset>
-                        <span class="legend">News Details</span>
+                        <span class="legend">{{ $t('News Details') }}</span>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <tbody>
                                     <tr>
-                                        <th>Title</th>
+                                        <th>{{ $t('Title') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td> {{ ucfirst(data?.title ?? "") }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Category</th>
+                                        <th>{{ $t('Category') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ ucfirst(data?.category?.title ?? "") }}</td>
                                     </tr>
                                     <tr>
-                                        <th>News Date</th>
+                                        <th>{{ $t('News Date') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ enFormat(data?.date) ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Sorting</th>
+                                        <th>{{ $t('Sorting') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.sorting ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Status</th>
+                                        <th>{{ $t('Status') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td><span :class="[
                                             data?.status == 'active'
@@ -73,7 +73,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-12 col-lg-12">
                     <fieldset>
-                        <span class="legend">News Description</span>
+                        <span class="legend">{{ $t('News Description') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="col-lg-12">
@@ -89,7 +89,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-12 col-lg-12">
                     <fieldset>
-                        <span class="legend">Meta Information</span>
+                        <span class="legend">{{ $t('Meta Information') }}</span>
                         <template v-if="(data.meta_tag && data.meta_tag.length) || data.meta_description">
                             <div class="col-lg-12 mt-2" v-if="data.meta_tag && data.meta_tag.length">
                                 <button class="btn btn-light border" v-for="(item, index) in data.meta_tag"

@@ -3,32 +3,32 @@
     <div class="row custom_row g-3">
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Information</span>
+          <span class="legend">{{ $t('Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Payment Date</th>
+                  <th>{{ $t('Payment Date') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.payment_date }}</td>
                 </tr>
                 <tr>
-                  <th>Payment Type</th>
+                  <th>{{ $t('Payment Type') }}</th>
                   <th>:</th>
                   <td>{{ data.payment_type }}</td>
                 </tr>
                 <tr>
-                  <th>Payment Method</th>
+                  <th>{{ $t('Payment Method') }}</th>
                   <th>:</th>
                   <td>{{ data.payment_method }}</td>
                 </tr>
                 <tr>
-                  <th>Discount</th>
+                  <th>{{ $t('Discount') }}</th>
                   <th>:</th>
                   <td>{{ data.payment_method }}</td>
                 </tr>
                 <tr>
-                  <th>Amount</th>
+                  <th>{{ $t('Amount') }}</th>
                   <th>:</th>
                   <td>{{ data.amount }}</td>
                 </tr>
@@ -39,27 +39,27 @@
       </div>
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Receive From / Pay To</span>
+          <span class="legend">{{ $t('Receive From / Pay To') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Name</th>
+                  <th>{{ $t('Name') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.payto?.name }}</td>
                 </tr>
                 <tr>
-                  <th>Mobile</th>
+                  <th>{{ $t('Mobile') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.payto?.mobile }}</td>
                 </tr>
                 <tr>
-                  <th>Address</th>
+                  <th>{{ $t('Address') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.payto?.address }}</td>
                 </tr>
                 <tr>
-                  <th>Other Info</th>
+                  <th>{{ $t('Other Info') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.payto?.info }}</td>
                 </tr>
@@ -70,21 +70,21 @@
       </div>
       <div class="col-md-12">
         <fieldset>
-          <span class="legend">Payment Details</span>
+          <span class="legend">{{ $t('Payment Details') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th>Sl</th>
-                  <th>Referance Type</th>
-                  <th>Account</th>
-                  <th>Account Type</th>
-                  <th>Ref. Info</th>
-                  <th class="text-md-end">Amount</th>
-                  <th class="text-md-end">Paid Amount</th>
-                  <th class="text-md-end">Due Amount</th>
-                  <th class="text-md-end">Adjst. Amount</th>
-                  <th>Is Closed</th>
+                  <th>{{ $t('Sl') }}</th>
+                  <th>{{ $t('Referance Type') }}</th>
+                  <th>{{ $t('Account') }}</th>
+                  <th>{{ $t('Account Type') }}</th>
+                  <th>{{ $t('Ref. Info') }}</th>
+                  <th class="text-md-end">{{ $t('Amount') }}</th>
+                  <th class="text-md-end">{{ $t('Paid Amount') }}</th>
+                  <th class="text-md-end">{{ $t('Due Amount') }}</th>
+                  <th class="text-md-end">{{ $t('Adjst. Amount') }}</th>
+                  <th>{{ $t('Is Closed') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -107,7 +107,7 @@
       </div>
       <div class="col-md-4">
         <fieldset>
-          <span class="legend">Ref Info</span>
+          <span class="legend">{{ $t('Ref Info') }}</span>
           <h6 class="mt-2">Read this note first</h6>
           <p class="mt-1"><i>Please verify the client details, invoice references, and payment allocation before final
               submission.
@@ -116,7 +116,7 @@
       </div>
       <div class="col-md-8">
         <fieldset>
-          <span class="legend">Pay Slip / Money Receipt</span>
+          <span class="legend">{{ $t('Pay Slip / Money Receipt') }}</span>
           <div class="receipt-container" id="moneyreceipt_print">
             <div class="receipt-content mx-auto">
               <!-- Header with Logo and Contact Info -->

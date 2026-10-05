@@ -84,7 +84,7 @@
         <div class="col-12">
           <div class="card border shadow-sm">
             <div class="card-header bg-light py-2">
-              <span class="fw-bold small text-dark"><i class="fas fa-toggle-on me-1 text-primary"></i> Status (অবস্থা)</span>
+              <span class="fw-bold small text-dark"><i class="fas fa-toggle-on me-1 text-primary"></i>{{ $t('Status') }}</span>
             </div>
             <div class="card-body p-3">
               <Switch v-model='data.status' field='data.status' title='Status' on-label='Active' off-label='Deactive' :req='true' col="12">
@@ -102,7 +102,7 @@
         <div class="col-12">
           <div class="card border shadow-sm">
             <div class="card-header bg-light py-2">
-              <span class="fw-bold text-dark"><i class="fas fa-info-circle me-1 text-primary"></i> Basic Information (মৌলিক তথ্য)</span>
+              <span class="fw-bold text-dark"><i class="fas fa-info-circle me-1 text-primary"></i>{{ $t('Basic Information') }}</span>
             </div>
             <div class="card-body p-3">
               <div class="row g-3">
@@ -156,8 +156,7 @@
           <div class="card border border-primary-subtle shadow-sm rounded-3">
             <div class="card-header bg-primary bg-opacity-10 py-2 border-bottom">
               <span class="fw-bold text-primary small d-flex align-items-center gap-2">
-                <i class="fas fa-shield-alt"></i> Warranty / Guarantee Management (ওয়ারেন্টি / গ্যারান্টি সেটিংস)
-              </span>
+                <i class="fas fa-shield-alt"></i>{{ $t('Warranty / Guarantee Management') }}</span>
             </div>
             <div class="card-body p-3">
               <div class="row g-3 align-items-center">
@@ -167,19 +166,17 @@
                   <div class="d-flex flex-wrap gap-3">
                     <div class="form-check form-check-inline">
                       <input class="form-check-input cursor-pointer" type="radio" id="warrantyNone" value="none" v-model="data.warranty_type">
-                      <label class="form-check-label small cursor-pointer" for="warrantyNone">None (নেই)</label>
+                      <label class="form-check-label small cursor-pointer" for="warrantyNone">{{ $t('None') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                       <input class="form-check-input cursor-pointer" type="radio" id="warrantyType" value="warranty" v-model="data.warranty_type">
                       <label class="form-check-label small fw-bold text-primary cursor-pointer" for="warrantyType">
-                        <i class="fas fa-tools me-1"></i> Warranty (ওয়ারেন্টি)
-                      </label>
+                        <i class="fas fa-tools me-1"></i>{{ $t('Warranty') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                       <input class="form-check-input cursor-pointer" type="radio" id="guaranteeType" value="guarantee" v-model="data.warranty_type">
                       <label class="form-check-label small fw-bold text-success cursor-pointer" for="guaranteeType">
-                        <i class="fas fa-certificate me-1"></i> Guarantee (গ্যারান্টি)
-                      </label>
+                        <i class="fas fa-certificate me-1"></i>{{ $t('Guarantee') }}</label>
                     </div>
                   </div>
                 </div>
@@ -224,8 +221,7 @@
               <div class="form-check form-switch d-flex align-items-center gap-2">
                 <input class="form-check-input ms-0 cursor-pointer" type="checkbox" id="priceModCheck" v-model="is_price_modification" style="transform: scale(1.3);">
                 <label class="form-check-label fw-bold text-primary fs-6 cursor-pointer mb-0 ms-2" for="priceModCheck">
-                  <i class="fas fa-edit me-1"></i> Price Modification / Add Production Stock (মূল্য পরিবর্তন / নতুন স্টক যোগ)
-                </label>
+                  <i class="fas fa-edit me-1"></i>{{ $t('Price Modification / Add Production Stock') }}</label>
               </div>
               <small class="d-block text-muted mt-2">
                 <i class="fas fa-info-circle me-1"></i> Enable this switch to modify purchase/selling prices or add new production stock for specific color & size variants.
@@ -264,12 +260,12 @@
               <table class="table table-bordered table-striped mb-0 align-middle">
                 <thead class="table-light text-center">
                   <tr>
-                    <th :width="isElectronicsShop ? '24%' : '18%'">Color (রং)</th>
-                    <th width="16%" v-if="!isElectronicsShop">Size (সাইজ)</th>
-                    <th :width="isElectronicsShop ? '18%' : '14%'">Purchase Price (ক্রয়)</th>
-                    <th :width="isElectronicsShop ? '18%' : '14%'">Selling Price (বিক্রয়)</th>
+                    <th :width="isElectronicsShop ? '24%' : '18%'">{{ $t('Color') }}</th>
+                    <th width="16%" v-if="!isElectronicsShop">{{ $t('Size') }}</th>
+                    <th :width="isElectronicsShop ? '18%' : '14%'">{{ $t('Purchase Price') }}</th>
+                    <th :width="isElectronicsShop ? '18%' : '14%'">{{ $t('Selling Price') }}</th>
                     <!-- Current Stock in Edit Mode -->
-                    <th v-if="data.id" :width="isElectronicsShop ? '16%' : '14%'" class="text-primary">Current Stock (বর্তমান)</th>
+                    <th v-if="data.id" :width="isElectronicsShop ? '16%' : '14%'" class="text-primary">{{ $t('Current Stock') }}</th>
                     <!-- Add Qty with explanation tooltip -->
                     <th :width="isElectronicsShop ? '18%' : '14%'">
                       <span>{{ data.id ? 'Add Qty (নতুন স্টক)' : 'Opening Qty (মজুদ)' }}</span>
@@ -280,7 +276,7 @@
                         <i class="fas fa-question-circle text-primary"></i>
                       </button>
                     </th>
-                    <th width="8%">Action</th>
+                    <th width="8%">{{ $t('Action') }}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -4,7 +4,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-4 col-lg-12">
                     <fieldset>
-                        <span class="legend">Media</span>
+                        <span class="legend">{{ $t('Media') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="col-lg-12">
@@ -21,56 +21,56 @@
                 </div>
                 <div class="col-xl-8 col-lg-12">
                     <fieldset>
-                        <span class="legend">Information</span>
+                        <span class="legend">{{ $t('Information') }}</span>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <tbody>
                                     <tr>
-                                        <th>Title</th>
+                                        <th>{{ $t('Title') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ ucfirst(data?.title ?? " ") }}</td>
                                     </tr>
                                     <!-- <tr>
-                                        <th>Slider Name</th>
+                                        <th>{{ $t('Slider Name') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.meta_description ?? " " }}</td>
                                     </tr> -->
                                     <tr v-if="data.url">
-                                        <th>Url</th>
+                                        <th>{{ $t('Url') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>
                                             <a :href="data?.url" target="_blank">{{ data?.url }}</a>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Has Button</th>
+                                        <th>{{ $t('Has Button') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.has_button ?? " " }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Button Name</th>
+                                        <th>{{ $t('Button Name') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.button_name ?? " " }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Button Type</th>
+                                        <th>{{ $t('Button Type') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.button_type ?? " " }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Description</th>
+                                        <th>{{ $t('Description') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>
                                             <p class="text" v-html="data?.description"></p>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Sorting</th>
+                                        <th>{{ $t('Sorting') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.sorting ?? " " }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Status</th>
+                                        <th>{{ $t('Status') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td><span :class="[
                                             data?.status == 'active'

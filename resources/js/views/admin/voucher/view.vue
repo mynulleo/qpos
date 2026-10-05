@@ -3,42 +3,42 @@
     <div class="row custom_row g-3">
       <div class="col-md-4">
         <fieldset>
-          <span class="legend">Voucher Information</span>
+          <span class="legend">{{ $t('Voucher Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Voucher No</th>
+                  <th>{{ $t('Voucher No') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.voucherno }}</td>
                 </tr>
                 <tr>
-                  <th>Voucher Type </th>
+                  <th>{{ $t('Voucher Type') }}</th>
                   <th>:</th>
                   <td>{{ data.voucher_type }}</td>
                 </tr>
                 <tr>
-                  <th>Voucher Date</th>
+                  <th>{{ $t('Voucher Date') }}</th>
                   <th>:</th>
                   <td>{{ data.voucher_date }}</td>
                 </tr>
                 <tr>
-                  <th>Financial Year</th>
+                  <th>{{ $t('Financial Year') }}</th>
                   <th>:</th>
                   <td>{{ data.financial_year?.title }}</td>
                 </tr>
                 <tr>
-                  <th>Narration</th>
+                  <th>{{ $t('Narration') }}</th>
                   <th>:</th>
                   <td>{{ data.narration }}</td>
                 </tr>
                 <tr>
-                  <th>Payslipno</th>
+                  <th>{{ $t('Payslipno') }}</th>
                   <th>:</th>
                   <td>{{ data.payment?.payslipno }}</td>
                 </tr>
                 <tr>
-                  <th>Payment</th>
+                  <th>{{ $t('Payment') }}</th>
                   <th>:</th>
                   <td>{{ data.payment?.payment_date }}</td>
                 </tr>
@@ -49,18 +49,18 @@
       </div>
       <div class="col-md-8">
         <fieldset>
-          <span class="legend">Voucher Information</span>
+          <span class="legend">{{ $t('Voucher Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th>Account Type</th>
-                  <th>Account Name</th>
-                  <th>Dr. Amount</th>
-                  <th>Cr. Amount</th>
-                  <th>Reference Type</th>
-                  <th>Reference ID</th>
-                  <th>Narration</th>
+                  <th>{{ $t('Account Type') }}</th>
+                  <th>{{ $t('Account Name') }}</th>
+                  <th>{{ $t('Dr. Amount') }}</th>
+                  <th>{{ $t('Cr. Amount') }}</th>
+                  <th>{{ $t('Reference Type') }}</th>
+                  <th>{{ $t('Reference ID') }}</th>
+                  <th>{{ $t('Narration') }}</th>
                 </tr>
               </thead>
               <tbody>

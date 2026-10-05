@@ -14,7 +14,7 @@
             >
                 <h4 class="form_card_title">
                     <slot name="title">
-                        {{ $parent.page_title ?? "Page Title" }}
+                        {{ $t($parent.page_title ?? "Page Title") }}
                     </slot>
                 </h4>
                 <div class="right_page_header">
@@ -22,7 +22,7 @@
                         class="help_btn"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        data-bs-title="Help"
+                        :data-bs-title="$t('Help')"
                         v-x-tooltip
                     >
                         <svg
@@ -76,10 +76,10 @@
                             >
                                 <template v-if="$root.submit">
                                     <i class="fa fa-spinner fa-spin me-1"></i>
-                                    Processing...
+                                    {{ $t('Processing...') }}
                                 </template>
                                 <template v-else>
-                                    {{ $route.params.id ? "Update" : "Submit" }}
+                                    {{ $t($route.params.id ? "Update" : "Submit") }}
                                 </template>
                             </button>
                         </div>
@@ -94,7 +94,7 @@
             <div class="help_info_sidebar position-fixed">
                 <div class="help_info_sidebar_content p-4">
                     <h3 class="help_title d-flex align-items-center gap-3">
-                        <img width="30" :src="helpInfoIcon()" alt="" /> Help
+                        <img width="30" :src="helpInfoIcon()" alt="" /> {{ $t('Help') }}
                     </h3>
 
                     <div
@@ -103,14 +103,14 @@
                     >
                         <h5 class="top-title">
                             <img width="30" :src="bookImage()" alt="" />{{
-                                $parent.page_title
+                                $t($parent.page_title)
                             }}
                         </h5>
                         <div v-html="$root.helpInfo.description"></div>
                     </div>
                     <p v-else class="text-danger fw-medium no_help_info fs-5">
                         <img width="70" :src="noInfoFound()" alt="" />
-                        <span class="d-block mt-3">No Help Info Found !!</span>
+                        <span class="d-block mt-3">{{ $t('No Help Info Found !!') }}</span>
                     </p>
                 </div>
             </div>

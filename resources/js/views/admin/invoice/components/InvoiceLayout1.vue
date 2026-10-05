@@ -99,11 +99,11 @@
             <table class="table table-bordered border-dark align-middle mb-0" style="font-size: 11px; width: 100%;">
                 <thead style="background-color: #112C47; color: #fff;">
                     <tr>
-                        <th width="4%" class="text-center text-white" style="background-color: #112C47; color: #fff; padding: 4px;">#</th>
-                        <th width="48%" class="text-white" style="background-color: #112C47; color: #fff; padding: 4px 6px;">Item Description & Specifications</th>
-                        <th width="10%" class="text-center text-white text-nowrap" style="background-color: #112C47; color: #fff; padding: 4px; white-space: nowrap !important;">Qty</th>
-                        <th width="19%" class="text-end text-white text-nowrap" style="background-color: #112C47; color: #fff; padding: 4px 6px; white-space: nowrap !important;">Unit Rate (৳)</th>
-                        <th width="19%" class="text-end text-white text-nowrap" style="background-color: #112C47; color: #fff; padding: 4px 6px; white-space: nowrap !important;">Total (৳)</th>
+                        <th width="4%" class="text-center text-white" style="background-color: #112C47; color: #fff; padding: 4px;">{{ $t('#') }}</th>
+                        <th width="48%" class="text-white" style="background-color: #112C47; color: #fff; padding: 4px 6px;">{{ $t('Item Description & Specifications') }}</th>
+                        <th width="10%" class="text-center text-white text-nowrap" style="background-color: #112C47; color: #fff; padding: 4px; white-space: nowrap !important;">{{ $t('Qty') }}</th>
+                        <th width="19%" class="text-end text-white text-nowrap" style="background-color: #112C47; color: #fff; padding: 4px 6px; white-space: nowrap !important;">{{ $t('Unit Rate') }}</th>
+                        <th width="19%" class="text-end text-white text-nowrap" style="background-color: #112C47; color: #fff; padding: 4px 6px; white-space: nowrap !important;">{{ $t('Total') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -161,31 +161,31 @@
                 <table class="table table-sm table-bordered border-dark mb-0" style="font-size: 10.5px; width: 100% !important; border-collapse: collapse !important;">
                     <tbody>
                         <tr style="background-color: #112C47 !important; color: #ffffff !important;">
-                            <th class="text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 52%; white-space: nowrap !important;">Subtotal:</th>
+                            <th class="text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 52%; white-space: nowrap !important;">{{ $t('Subtotal:') }}</th>
                             <td class="text-end font-monospace text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.original_amount) }}</td>
                         </tr>
                         <tr v-if="data.discount > 0">
-                            <th class="text-danger text-nowrap fw-bold" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #dc2626 !important;">Special Discount:</th>
+                            <th class="text-danger text-nowrap fw-bold" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #dc2626 !important;">{{ $t('Special Discount:') }}</th>
                             <td class="text-end font-monospace text-danger fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #dc2626 !important;">- ৳ {{ formatPrice(data.discount) }}</td>
                         </tr>
                         <tr v-if="data.vat > 0" style="background-color: #112C47 !important; color: #ffffff !important;">
-                            <th class="text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 52%; white-space: nowrap !important;">VAT / Tax:</th>
+                            <th class="text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 52%; white-space: nowrap !important;">{{ $t('VAT / Tax:') }}</th>
                             <td class="text-end font-monospace text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 48%; white-space: nowrap !important;">+ ৳ {{ formatPrice(data.vat) }}</td>
                         </tr>
                         <tr style="background-color: #0c1f33 !important; color: #ffffff !important; font-weight: bold; border-top: 2px solid #0c1f33; border-bottom: 2px solid #0c1f33;">
-                            <th class="fw-bold text-white text-nowrap" style="background-color: #0c1f33 !important; color: #ffffff !important; padding: 5px 6px; width: 52%; font-size: 11.5px; font-weight: 900; white-space: nowrap !important;">NET TOTAL PAYABLE:</th>
+                            <th class="fw-bold text-white text-nowrap" style="background-color: #0c1f33 !important; color: #ffffff !important; padding: 5px 6px; width: 52%; font-size: 11.5px; font-weight: 900; white-space: nowrap !important;">{{ $t('NET TOTAL PAYABLE:') }}</th>
                             <td class="text-end font-monospace fw-bold text-white text-nowrap" style="background-color: #0c1f33 !important; color: #ffffff !important; padding: 5px 6px; width: 48%; font-size: 11.5px; font-weight: 900; white-space: nowrap !important;">৳ {{ formatPrice(data.amount) }}</td>
                         </tr>
                         <tr style="background-color: #112C47 !important; color: #ffffff !important;">
-                            <th class="text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 52%; white-space: nowrap !important;">Paid Amount:</th>
+                            <th class="text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 52%; white-space: nowrap !important;">{{ $t('Paid Amount:') }}</th>
                             <td class="text-end font-monospace text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.paid_amount) }}</td>
                         </tr>
                         <tr v-if="data.due_amount > 0">
-                            <th class="text-danger fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #dc2626 !important;">Balance Due:</th>
+                            <th class="text-danger fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #dc2626 !important;">{{ $t('Balance Due:') }}</th>
                             <td class="text-end font-monospace text-danger fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #dc2626 !important;">৳ {{ formatPrice(data.due_amount) }}</td>
                         </tr>
                         <tr v-if="data.previous_due > 0" style="background-color: #112C47 !important; color: #ffffff !important;">
-                            <th class="text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 52%; white-space: nowrap !important;">Previous Due:</th>
+                            <th class="text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 52%; white-space: nowrap !important;">{{ $t('Previous Due:') }}</th>
                             <td class="text-end font-monospace text-white fw-bold text-nowrap" style="background-color: #112C47 !important; color: #ffffff !important; padding: 4px 6px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.previous_due) }}</td>
                         </tr>
                     </tbody>

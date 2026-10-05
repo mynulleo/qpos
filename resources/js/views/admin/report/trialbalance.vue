@@ -45,10 +45,10 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Account Type</th>
-                                        <th>Account Name</th>
-                                        <th class="text-md-end">Debit</th>
-                                        <th class="text-md-end">Credit</th>
+                                        <th>{{ $t('Account Type') }}</th>
+                                        <th>{{ $t('Account Name') }}</th>
+                                        <th class="text-md-end">{{ $t('Debit') }}</th>
+                                        <th class="text-md-end">{{ $t('Credit') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

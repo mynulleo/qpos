@@ -166,8 +166,8 @@
               <label class="form-label small fw-bold mb-1">Filter by Default State:</label>
               <select class="form-select form-select-sm" v-model="selectedDefault" @change="applyFilters">
                 <option value="all">-- All Defaults --</option>
-                <option value="1">Default Only (ডিফল্ট)</option>
-                <option value="0">Optional Only (ঐচ্ছিক)</option>
+                <option value="1">{{ $t('Default Only') }}</option>
+                <option value="0">{{ $t('Optional Only') }}</option>
               </select>
             </div>
 
@@ -175,8 +175,8 @@
               <label class="form-label small fw-bold mb-1">Filter by Status:</label>
               <select class="form-select form-select-sm" v-model="selectedStatus" @change="applyFilters">
                 <option value="all">-- All Statuses --</option>
-                <option value="active">Active (সক্রিয়)</option>
-                <option value="inactive">Inactive (নিষ্ক্রিয়)</option>
+                <option value="active">{{ $t('Active') }}</option>
+                <option value="inactive">{{ $t('Inactive') }}</option>
               </select>
             </div>
           </div>
@@ -354,10 +354,10 @@
                   <i class="fas fa-layer-group text-primary me-1"></i> Target Module (মডিউল):
                 </label>
                 <select class="form-select form-select-sm fw-bold" v-model="formData.module_name" required>
-                  <option value="Invoice">Invoice (বিক্রয় রশিদ / চালান)</option>
-                  <option value="Purchase Order">Purchase Order (ক্রয় আদেশ)</option>
-                  <option value="Warranty">Warranty & Claims (ওয়ারেন্টি ও সার্ভিস)</option>
-                  <option value="Quotation">Quotation (কোটেশন / প্রস্তাবনা)</option>
+                  <option value="Invoice">{{ $t('Invoice') }}</option>
+                  <option value="Purchase Order">{{ $t('Purchase Order') }}</option>
+                  <option value="Warranty">{{ $t('Warranty & Claims') }}</option>
+                  <option value="Quotation">{{ $t('Quotation') }}</option>
                 </select>
                 <small class="text-muted d-block mt-1" style="font-size: 11px;">
                   Conditions under <strong>Invoice</strong> will show in the POS Terminal and Sales Receipts.
@@ -387,8 +387,8 @@
                 <div class="col-6">
                   <label class="form-label fw-bold small text-dark mb-1">Status (স্ট্যাটাস):</label>
                   <select class="form-select form-select-sm" v-model="formData.status">
-                    <option value="active">Active (সক্রিয়)</option>
-                    <option value="inactive">Inactive (নিষ্ক্রিয়)</option>
+                    <option value="active">{{ $t('Active') }}</option>
+                    <option value="inactive">{{ $t('Inactive') }}</option>
                   </select>
                 </div>
               </div>

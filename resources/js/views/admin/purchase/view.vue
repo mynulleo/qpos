@@ -15,7 +15,7 @@
                   <h4 class="fw-bold mb-0 text-white">#{{ data.invoiceno || data.id || 'N/A' }}</h4>
                   <span class="badge" :class="data.is_closed ? 'bg-success text-white' : 'bg-danger text-white'">
                     <i :class="data.is_closed ? 'fas fa-check-circle me-1' : 'fas fa-clock me-1'"></i>
-                    {{ data.is_closed ? 'Closed / Settled' : 'Open / Due' }}
+                    {{ data.is_closed ? $t('Closed / Settled') : $t('Open / Due') }}
                   </span>
                   <span
                     class="badge"
@@ -25,7 +25,7 @@
                     {{ data.receive_status || 'Pending Delivery' }}
                   </span>
                   <span class="badge bg-light bg-opacity-25 text-white" v-if="hasAnySerials">
-                    <i class="fas fa-microchip me-1"></i> Serialized Stock
+                    <i class="fas fa-microchip me-1"></i> {{ $t('Serialized Stock') }}
                   </span>
                 </div>
                 <div class="d-flex align-items-center gap-3 mt-2 text-white-50 small flex-wrap font-monospace">
@@ -43,13 +43,13 @@
                 :to="{ name: 'grn.create', query: { purchase_id: data.id } }"
                 class="btn btn-success btn-sm fw-bold px-3 shadow-sm d-flex align-items-center gap-1"
               >
-                <i class="fas fa-clipboard-check"></i> Receive Goods (GRN)
+                <i class="fas fa-clipboard-check"></i> {{ $t('Receive Goods (GRN)') }}
               </router-link>
               <span
                 v-else
                 class="badge bg-success bg-opacity-75 text-white px-3 py-2 font-monospace"
               >
-                <i class="fas fa-check-double me-1"></i> All Goods Received
+                <i class="fas fa-check-double me-1"></i> {{ $t('All Goods Received') }}
               </span>
             </div>
           </div>
@@ -63,7 +63,7 @@
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Sub Total</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Sub Total') }}</span>
                 <div class="stat-icon theme-bg-soft text-theme rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-calculator"></i>
                 </div>
@@ -78,7 +78,7 @@
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Discount</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Discount') }}</span>
                 <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-percentage"></i>
                 </div>
@@ -93,7 +93,7 @@
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">VAT / Tax</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('VAT / Tax') }}</span>
                 <div class="stat-icon bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-receipt"></i>
                 </div>
@@ -108,7 +108,7 @@
           <div class="card stat-card border-0 shadow-sm h-100" style="border-left: 4px solid rgb(17, 44, 70) !important;">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Net Total Amount</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Net Total Amount') }}</span>
                 <div class="stat-icon theme-bg-soft text-theme rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-coins"></i>
                 </div>
@@ -129,7 +129,7 @@
                 <i class="fas fa-truck"></i>
               </div>
               <div>
-                <h6 class="fw-bold mb-0 text-dark">Supplier & Order Details</h6>
+                <h6 class="fw-bold mb-0 text-dark">{{ $t('Supplier & Order Details') }}</h6>
                 <small class="text-muted" style="font-size: 11px;">Vendor credentials and purchase metadata</small>
               </div>
             </div>
@@ -164,7 +164,7 @@
                     <td class="spec-label"><i class="fas fa-toggle-on me-2 text-muted"></i>Payment Status</td>
                     <td class="spec-value">
                       <span class="badge" :class="data.is_closed ? 'bg-success' : 'bg-danger'">
-                        {{ data.is_closed ? 'Settled / Closed' : 'Open / Due' }}
+                        {{ data.is_closed ? $t('Closed / Settled') : $t('Open / Due') }}
                       </span>
                     </td>
                   </tr>
@@ -195,7 +195,7 @@
                   <i class="fas fa-boxes"></i>
                 </div>
                 <div>
-                  <h6 class="fw-bold mb-0 text-dark">Purchased Products & Line Items</h6>
+                  <h6 class="fw-bold mb-0 text-dark">{{ $t('Purchased Products & Line Items') }}</h6>
                   <small class="text-muted" style="font-size: 11px;">Breakdown of quantities, unit costs, selling prices and serials</small>
                 </div>
               </div>
@@ -208,15 +208,15 @@
                 <table class="table table-hover align-middle mb-0 custom-items-table">
                   <thead class="table-light">
                     <tr>
-                      <th class="text-center" style="width: 45px;">#</th>
-                      <th>Product Details</th>
-                      <th>Category</th>
-                      <th v-if="hasAnyVariants">Variant</th>
-                      <th class="text-center">Qty</th>
-                      <th class="text-end">Cost Price</th>
-                      <th class="text-end">Selling Price</th>
-                      <th class="text-center" v-if="isElectronicsShop || hasAnySerials">Serial Numbers</th>
-                      <th class="text-end" style="width: 120px;">Total Amount</th>
+                      <th class="text-center" style="width: 45px;">{{ $t('#') }}</th>
+                      <th>{{ $t('Product Details') }}</th>
+                      <th>{{ $t('Category') }}</th>
+                      <th v-if="hasAnyVariants">{{ $t('Variant') }}</th>
+                      <th class="text-center">{{ $t('Qty') }}</th>
+                      <th class="text-end">{{ $t('Cost Price') }}</th>
+                      <th class="text-end">{{ $t('Selling Price') }}</th>
+                      <th class="text-center" v-if="isElectronicsShop || hasAnySerials">{{ $t('Serial Numbers') }}</th>
+                      <th class="text-end" style="width: 120px;">{{ $t('Total Amount') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -299,7 +299,7 @@
               <i class="fas fa-clipboard-check"></i>
             </div>
             <div>
-              <h6 class="fw-bold mb-0 text-dark">Goods Receive Notes (GRN) History</h6>
+              <h6 class="fw-bold mb-0 text-dark">{{ $t('Goods Receive Notes (GRN) History') }}</h6>
               <small class="text-muted" style="font-size: 11px;">Shipments and inventory received against this purchase order</small>
             </div>
           </div>
@@ -312,13 +312,13 @@
             <table class="table table-hover align-middle mb-0 custom-items-table">
               <thead class="table-light">
                 <tr>
-                  <th class="text-center" style="width: 50px;">#</th>
-                  <th>GRN Number</th>
-                  <th>GRN Date</th>
-                  <th>Destination Warehouse</th>
-                  <th class="text-center">Received Qty</th>
-                  <th class="text-end">GRN Valuation</th>
-                  <th class="text-center" style="width: 100px;">Action</th>
+                  <th class="text-center" style="width: 50px;">{{ $t('#') }}</th>
+                  <th>{{ $t('GRN Number') }}</th>
+                  <th>{{ $t('GRN Date') }}</th>
+                  <th>{{ $t('Destination Warehouse') }}</th>
+                  <th class="text-center">{{ $t('Received Qty') }}</th>
+                  <th class="text-end">{{ $t('GRN Valuation') }}</th>
+                  <th class="text-center" style="width: 100px;">{{ $t('Action') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -362,7 +362,7 @@
               <i class="fas fa-file-contract"></i>
             </div>
             <div>
-              <h6 class="fw-bold mb-0 text-dark">Terms & Conditions (ক্রয় আদেশ শর্তাবলী)</h6>
+              <h6 class="fw-bold mb-0 text-dark">{{ $t('Terms & Conditions') }}</h6>
               <small class="text-muted" style="font-size: 11px;">Standard commercial terms, delivery guidelines and purchase obligations</small>
             </div>
           </div>
@@ -398,7 +398,7 @@
             <i class="fas fa-comment-alt"></i>
           </div>
           <div>
-            <h6 class="fw-bold mb-0 text-dark">Purchase Notes & Memo</h6>
+            <h6 class="fw-bold mb-0 text-dark">{{ $t('Purchase Notes & Memo') }}</h6>
             <small class="text-muted" style="font-size: 11px;">Internal remarks or delivery instructions</small>
           </div>
         </div>
@@ -415,7 +415,7 @@
           <div class="p-3 border rounded bg-light bg-opacity-25 text-center">
             <div style="height: 40px;"></div>
             <div class="border-top pt-2">
-              <div class="fw-bold text-dark small">Supplier / Vendor Acceptance</div>
+              <div class="fw-bold text-dark small">{{ $t('Supplier / Vendor Acceptance') }}</div>
               <small class="text-muted font-monospace" style="font-size: 11px;">Signature & Official Seal</small>
             </div>
           </div>
@@ -424,7 +424,7 @@
           <div class="p-3 border rounded bg-light bg-opacity-25 text-center">
             <div style="height: 40px;"></div>
             <div class="border-top pt-2">
-              <div class="fw-bold text-dark small">Authorized Procurement Officer</div>
+              <div class="fw-bold text-dark small">{{ $t('Authorized Procurement Officer') }}</div>
               <small class="text-muted font-monospace" style="font-size: 11px;">Signature & Approval</small>
             </div>
           </div>
@@ -510,7 +510,7 @@
         <!-- 1.2 Document Title & Badge (Right) -->
         <div class="text-end">
           <div class="voucher-title-badge">
-            PURCHASE ORDER
+            {{ $t('PURCHASE ORDER') }}
           </div>
           <div class="fw-bold fs-6 font-monospace mt-1 text-dark">
             #{{ data.invoiceno || ('PO-' + data.id) }}
@@ -532,9 +532,7 @@
         <!-- 2.1 Supplier / Vendor Credentials -->
         <div class="col-6">
           <div class="p-2 border rounded bg-light h-100">
-            <div class="fw-bold small text-uppercase text-secondary border-bottom pb-1 mb-2">
-              Supplier / Vendor Details (সরবরাহকারী)
-            </div>
+            <div class="fw-bold small text-uppercase text-secondary border-bottom pb-1 mb-2">{{ $t('Supplier / Vendor Details') }}</div>
             <table class="table table-sm table-borderless mb-0 small-meta-table">
               <tbody>
                 <tr>
@@ -565,9 +563,7 @@
         <!-- 2.2 Order Information -->
         <div class="col-6">
           <div class="p-2 border rounded bg-light h-100">
-            <div class="fw-bold small text-uppercase text-secondary border-bottom pb-1 mb-2">
-              Order Details (আদেশ সংক্রান্ত তথ্য)
-            </div>
+            <div class="fw-bold small text-uppercase text-secondary border-bottom pb-1 mb-2">{{ $t('Order Details') }}</div>
             <table class="table table-sm table-borderless mb-0 small-meta-table">
               <tbody>
                 <tr>
@@ -580,7 +576,7 @@
                 </tr>
                 <tr>
                   <td class="text-muted">Payment Terms:</td>
-                  <td class="text-dark fw-semibold">{{ data.is_closed ? 'Settled / Closed' : 'Open / Due' }}</td>
+                  <td class="text-dark fw-semibold">{{ data.is_closed ? $t('Closed / Settled') : $t('Open / Due') }}</td>
                 </tr>
                 <tr>
                   <td class="text-muted">Delivery Status:</td>
@@ -601,14 +597,14 @@
         <table class="table table-bordered align-middle print-items-table mb-0">
           <thead>
             <tr>
-              <th class="text-center" style="width: 35px;">#</th>
-              <th>Product Details & Barcode</th>
-              <th style="width: 100px;">Category</th>
-              <th style="width: 90px;" v-if="hasAnyVariants">Variant</th>
-              <th class="text-center" style="width: 60px;">Unit</th>
-              <th class="text-center" style="width: 60px;">Qty</th>
-              <th class="text-end" style="width: 95px;">Unit Cost</th>
-              <th class="text-end" style="width: 110px;">Total (৳)</th>
+              <th class="text-center" style="width: 35px;">{{ $t('#') }}</th>
+              <th>{{ $t('Product Details & Barcode') }}</th>
+              <th style="width: 100px;">{{ $t('Category') }}</th>
+              <th style="width: 90px;" v-if="hasAnyVariants">{{ $t('Variant') }}</th>
+              <th class="text-center" style="width: 60px;">{{ $t('Unit') }}</th>
+              <th class="text-center" style="width: 60px;">{{ $t('Qty') }}</th>
+              <th class="text-end" style="width: 95px;">{{ $t('Unit Cost') }}</th>
+              <th class="text-end" style="width: 110px;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -740,7 +736,7 @@
           <div class="text-start">
             <div class="print-sig-space"></div>
             <div class="print-sig-line"></div>
-            <div class="fw-bold text-dark small mt-1">Supplier / Vendor Acceptance</div>
+            <div class="fw-bold text-dark small mt-1">{{ $t('Supplier / Vendor Acceptance') }}</div>
             <div class="text-muted small" style="font-size: 10px;">Signature & Company Seal</div>
             <div class="text-muted small" style="font-size: 10px;">Date: ____________________</div>
           </div>

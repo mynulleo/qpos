@@ -17,7 +17,7 @@
       </div>
 
       <!-- Client Selection -->
-      <v-select-container title="Customer (গ্রাহক)" field="search_data.client_id" col="3">
+      <v-select-container title="Customer" field="search_data.client_id" col="3">
         <v-select
           v-model="search_data.client_id"
           label="name"
@@ -36,14 +36,14 @@
 
       <!-- Date Range -->
       <date-picker id="searchfromdate" v-model="search_data.from_date" field="search_data.from_date"
-        title="From Date (শুরুর তারিখ)" placeholder="From Date" col="3" :req="false"></date-picker>
+        title="From Date" placeholder="From Date" col="3" :req="false"></date-picker>
       <date-picker id="searchtodate" v-model="search_data.to_date" field="search_data.to_date"
-        title="To Date (শেষ তারিখ)" placeholder="To Date" col="3" :req="false"></date-picker>
+        title="To Date" placeholder="To Date" col="3" :req="false"></date-picker>
 
       <!-- Invoice No Search -->
       <div class="col-md-3">
         <div class="form-group">
-          <label class="form-label fw-bold small text-muted">Invoice No (ইনভয়েস নং)</label>
+          <label class="form-label fw-bold small text-muted">{{ $t('Invoice No') }}</label>
           <input type="text" class="form-control form-control-sm font-monospace" v-model="search_data.invoice_no" placeholder="e.g. POS-2026...">
         </div>
       </div>
@@ -51,11 +51,11 @@
       <!-- Sale Channel Filter -->
       <div class="col-md-3">
         <div class="form-group">
-          <label class="form-label fw-bold small text-muted">Sale Channel (বিক্রয় মাধ্যম)</label>
+          <label class="form-label fw-bold small text-muted">{{ $t('Sale Channel') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.sale_type">
             <option value="all">-- All Channels (সকল মাধ্যম) --</option>
-            <option value="pos">POS Terminal (পিওএস)</option>
-            <option value="general">General Invoice (সাধারণ ইনভয়েস)</option>
+            <option value="pos">{{ $t('POS Terminal') }}</option>
+            <option value="general">{{ $t('General Invoice') }}</option>
           </select>
         </div>
       </div>
@@ -69,7 +69,7 @@
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
               <i class="fas fa-file-invoice-dollar text-primary fs-5"></i>
-              <span>VAT / Tax Collection & Audit Report (ভ্যাট ও ট্যাক্স রিপোর্ট)</span>
+              <span>{{ $t('VAT / Tax Collection & Audit Report') }}</span>
             </h6>
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace" v-if="siteSetting.vat_no">
               <i class="fas fa-building me-1"></i>BIN / VAT Reg: {{ siteSetting.vat_no }}
@@ -105,7 +105,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-primary text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase text-nowrap">Total VAT Collected (মোট ভ্যাট)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase text-nowrap">{{ $t('Total VAT Collected') }}</div>
                   <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_vat_collected) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-file-invoice-dollar"></i></div>
@@ -119,7 +119,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-info text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase text-nowrap">Taxable Sales (করযোগ্য বিক্রয়)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase text-nowrap">{{ $t('Taxable Sales') }}</div>
                   <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_taxable_sales) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-chart-line"></i></div>
@@ -133,7 +133,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-success text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase text-nowrap">Total Gross Invoiced (মোট বিল)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase text-nowrap">{{ $t('Total Gross Invoiced') }}</div>
                   <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_gross_sales) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-cash-register"></i></div>
@@ -147,7 +147,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-warning text-dark h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-muted small fw-bold text-uppercase text-nowrap">Effective VAT Rate (কার্যকর হার)</div>
+                  <div class="text-muted small fw-bold text-uppercase text-nowrap">{{ $t('Effective VAT Rate') }}</div>
                   <div class="fs-4 fw-bold mt-1 text-dark font-monospace text-nowrap">{{ summaryData.effective_vat_rate }}%</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-percentage text-dark"></i></div>
@@ -199,18 +199,18 @@
             <table class="table table-hover table-striped align-middle mb-0 custom-report-table">
               <thead class="table-dark">
                 <tr>
-                  <th style="width: 40px;" class="text-center text-nowrap">#</th>
-                  <th class="text-nowrap">Invoice Details (ইনভয়েস)</th>
-                  <th class="text-nowrap">Customer (গ্রাহক)</th>
-                  <th class="text-end text-nowrap">Subtotal (৳)</th>
-                  <th class="text-end text-nowrap">Discount (৳)</th>
-                  <th class="text-end text-nowrap">Taxable (৳)</th>
-                  <th class="text-center text-nowrap">Rate</th>
-                  <th class="text-end bg-primary bg-opacity-25 text-white text-nowrap">VAT (৳)</th>
-                  <th class="text-end text-nowrap">Total Bill (৳)</th>
-                  <th class="text-end text-nowrap">Paid (৳)</th>
-                  <th class="text-end text-nowrap">Due (৳)</th>
-                  <th class="text-center d-print-none text-nowrap" style="width: 70px;">Action</th>
+                  <th style="width: 40px;" class="text-center text-nowrap">{{ $t('#') }}</th>
+                  <th class="text-nowrap">{{ $t('Invoice Details') }}</th>
+                  <th class="text-nowrap">{{ $t('Customer') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Subtotal') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Discount') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Taxable') }}</th>
+                  <th class="text-center text-nowrap">{{ $t('Rate') }}</th>
+                  <th class="text-end bg-primary bg-opacity-25 text-white text-nowrap">{{ $t('VAT') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Total Bill') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Paid') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Due') }}</th>
+                  <th class="text-center d-print-none text-nowrap" style="width: 70px;">{{ $t('Action') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -294,13 +294,13 @@
             <table class="table table-hover table-striped align-middle mb-0 custom-report-table">
               <thead class="table-dark">
                 <tr>
-                  <th style="width: 50px;" class="text-center text-nowrap">#</th>
-                  <th class="text-nowrap">Month (মাস)</th>
-                  <th class="text-center text-nowrap">Total Invoices</th>
-                  <th class="text-center text-nowrap">With VAT Bills</th>
-                  <th class="text-end text-nowrap">Taxable Sales (৳)</th>
-                  <th class="text-end bg-primary bg-opacity-25 text-white text-nowrap">VAT Collected (৳)</th>
-                  <th class="text-end text-nowrap">Gross Sales (৳)</th>
+                  <th style="width: 50px;" class="text-center text-nowrap">{{ $t('#') }}</th>
+                  <th class="text-nowrap">{{ $t('Month') }}</th>
+                  <th class="text-center text-nowrap">{{ $t('Total Invoices') }}</th>
+                  <th class="text-center text-nowrap">{{ $t('With VAT Bills') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Taxable Sales') }}</th>
+                  <th class="text-end bg-primary bg-opacity-25 text-white text-nowrap">{{ $t('VAT Collected') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Gross Sales') }}</th>
                   <th class="text-end text-nowrap">Effective VAT %</th>
                 </tr>
               </thead>
@@ -344,13 +344,13 @@
             <table class="table table-hover table-striped align-middle mb-0 custom-report-table">
               <thead class="table-dark">
                 <tr>
-                  <th style="width: 50px;" class="text-center text-nowrap">#</th>
-                  <th class="text-nowrap">Customer (গ্রাহক)</th>
-                  <th class="text-nowrap">Mobile Number</th>
-                  <th class="text-center text-nowrap">VAT Invoices</th>
-                  <th class="text-end text-nowrap">Taxable Amount (৳)</th>
-                  <th class="text-end bg-primary bg-opacity-25 text-white text-nowrap">VAT Contributed (৳)</th>
-                  <th class="text-end text-nowrap">Gross Amount (৳)</th>
+                  <th style="width: 50px;" class="text-center text-nowrap">{{ $t('#') }}</th>
+                  <th class="text-nowrap">{{ $t('Customer') }}</th>
+                  <th class="text-nowrap">{{ $t('Mobile Number') }}</th>
+                  <th class="text-center text-nowrap">{{ $t('VAT Invoices') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Taxable Amount') }}</th>
+                  <th class="text-end bg-primary bg-opacity-25 text-white text-nowrap">{{ $t('VAT Contributed') }}</th>
+                  <th class="text-end text-nowrap">{{ $t('Gross Amount') }}</th>
                 </tr>
               </thead>
               <tbody>

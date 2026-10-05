@@ -3,7 +3,7 @@
     <div class="row g-3">
       <div class="col-md-9">
         <fieldset>
-          <span class="legend">Workorder</span>
+          <span class="legend">{{ $t('Workorder') }}</span>
           <div class="row g-3">
             <date-picker id='date1' v-model='data.order_date' field='data.order_date' title='Order Date'
               placeholder='Order Date' col='2' :req='true'></date-picker>
@@ -27,7 +27,7 @@
       </div>
       <div class="col-md-3">
         <fieldset>
-          <span class="legend">Import Item</span>
+          <span class="legend">{{ $t('Import Item') }}</span>
 
           <p class="fst-italic mb-3">
             If the Work Order Details are large or contain many items, you can download the provided
@@ -56,15 +56,15 @@
       </div>
       <div class="col-md-12">
         <fieldset>
-          <span class="legend">Workorder Detail</span>
+          <span class="legend">{{ $t('Workorder Detail') }}</span>
           <table class="table table-striped">
             <thead>
               <tr>
-                <th width="50%">Description</th>
-                <th>Actual Qty</th>
-                <th>Ordered Qty</th>
-                <th>Unit Price</th>
-                <th>Amount</th>
+                <th width="50%">{{ $t('Description') }}</th>
+                <th>{{ $t('Actual Qty') }}</th>
+                <th>{{ $t('Ordered Qty') }}</th>
+                <th>{{ $t('Unit Price') }}</th>
+                <th>{{ $t('Amount') }}</th>
                 <th></th>
               </tr>
             </thead>

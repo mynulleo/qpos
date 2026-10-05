@@ -4,7 +4,7 @@
             <div class="row custom_row">
                 <div class="col-xl-4 col-lg-12">
                     <fieldset>
-                        <span class="legend">Profile Image</span>
+                        <span class="legend">{{ $t('Profile Image') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="col-lg-12">
@@ -35,74 +35,74 @@
 
                 <div class="col-xl-8 col-lg-12">
                     <fieldset>
-                        <span class="legend">Profile Details</span>
+                        <span class="legend">{{ $t('Profile Details') }}</span>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <tbody>
                                     <tr>
-                                        <th>Name</th>
+                                        <th>{{ $t('Name') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.name ?? " " }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Role</th>
+                                        <th>{{ $t('Role') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.role?.name ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Mobile</th>
+                                        <th>{{ $t('Mobile') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.mobile ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Email</th>
+                                        <th>{{ $t('Email') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.email ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Gender</th>
+                                        <th>{{ $t('Gender') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.gender ?? "" }}</td>
                                     </tr>
 
                                     <tr>
-                                        <th>Birthdate</th>
+                                        <th>{{ $t('Birthdate') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.birth_date ?? " " }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Address</th>
+                                        <th>{{ $t('Address') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.address ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>City</th>
+                                        <th>{{ $t('City') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.city ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>State</th>
+                                        <th>{{ $t('State') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.state ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Zip Code</th>
+                                        <th>{{ $t('Zip Code') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.zip_code ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Road Number</th>
+                                        <th>{{ $t('Road Number') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.road_number ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Description</th>
+                                        <th>{{ $t('Description') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.description ?? "" }}</td>
                                     </tr>
 
                                     <tr>
-                                        <th>Status</th>
+                                        <th>{{ $t('Status') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>
                                             <span :class="[

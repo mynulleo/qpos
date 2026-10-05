@@ -75,7 +75,7 @@
               <i class="fas fa-clipboard-list"></i>
             </div>
             <div>
-              <h6 class="fw-bold mb-0 text-dark">Receiving Details (গ্রহণ তথ্যাবলী)</h6>
+              <h6 class="fw-bold mb-0 text-dark">{{ $t('Receiving Details') }}</h6>
               <span class="small text-muted">Basic requisition, warehouse and challan information</span>
             </div>
           </div>
@@ -94,7 +94,7 @@
                 id="date_grn"
                 v-model="data.grn_date"
                 field="data.grn_date"
-                title="GRN Date (গ্রহণের তারিখ)"
+                title="GRN Date"
                 placeholder="GRN Date"
                 col="12"
                 :req="true"
@@ -103,8 +103,7 @@
 
             <!-- TAB 1: PO Based Dropdown (Rich Professional Selector) -->
             <div class="col-md-5" v-if="activeTab === 'po'">
-              <label class="form-label small fw-bold text-dark mb-1">
-                Purchase Order (ক্রয় আদেশ) <span class="text-danger">*</span>
+              <label class="form-label small fw-bold text-dark mb-1">{{ $t('Purchase Order') }}<span class="text-danger">*</span>
               </label>
               <div class="po-vselect-wrapper">
                 <v-select
@@ -180,7 +179,7 @@
             <!-- TAB 2: Manual Supplier Dropdown -->
             <div class="col-md-4" v-if="activeTab === 'supplier'">
               <Select
-                title="Supplier (সরবরাহকারী)"
+                title="Supplier"
                 v-model="data.supplier_id"
                 field="data.supplier_id"
                 label="org_name"
@@ -197,7 +196,7 @@
             <!-- Destination Warehouse (All Tabs) -->
             <div :class="activeTab === 'po' ? 'col-md-4' : (activeTab === 'supplier' ? 'col-md-5' : 'col-md-5')">
               <Select
-                title="Destination Warehouse (গন্তব্য ওয়্যারহাউস)"
+                title="Destination Warehouse"
                 v-model="data.warehouse_id"
                 field="data.warehouse_id"
                 label="name"
@@ -286,7 +285,7 @@
                 v-model="data.received_by"
                 col="12"
                 field="data.received_by"
-                title="Received By (গ্রহীতার নাম)"
+                title="Received By"
                 placeholder="Staff / Store Keeper"
                 :req="false"
               />
@@ -298,7 +297,7 @@
                 v-model="data.note"
                 col="12"
                 field="data.note"
-                title="Remarks / Note (মন্তব্য)"
+                title="Remarks / Note"
                 placeholder="Any special remarks or delivery notes"
                 :req="false"
               />
@@ -329,7 +328,7 @@
               <i class="fas fa-boxes"></i>
             </div>
             <div>
-              <h6 class="fw-bold mb-0 text-dark">PO Received Items (ক্রয় আদেশের পণ্য তালিকা)</h6>
+              <h6 class="fw-bold mb-0 text-dark">{{ $t('PO Received Items') }}</h6>
               <span class="small text-muted">Receive remaining quantities from selected purchase order</span>
             </div>
           </div>
@@ -343,17 +342,17 @@
             <table class="table custom-items-table table-hover align-middle mb-0">
               <thead class="theme-table-header text-center">
                 <tr>
-                  <th style="min-width: 220px;">Item / Product</th>
-                  <th style="min-width: 100px;">Color</th>
-                  <th style="min-width: 100px;" v-if="!isElectronicsShop">Size</th>
-                  <th style="min-width: 80px;">Unit</th>
-                  <th style="min-width: 90px;">Ordered</th>
-                  <th style="min-width: 90px;">Prev. Recv</th>
-                  <th style="min-width: 90px;">Remaining</th>
-                  <th style="min-width: 110px;">Receive Qty</th>
-                  <th style="min-width: 110px;" v-if="isElectronicsShop">Serials</th>
-                  <th style="min-width: 110px;">Rate (৳)</th>
-                  <th style="min-width: 120px;">Total (৳)</th>
+                  <th style="min-width: 220px;">{{ $t('Item / Product') }}</th>
+                  <th style="min-width: 100px;">{{ $t('Color') }}</th>
+                  <th style="min-width: 100px;" v-if="!isElectronicsShop">{{ $t('Size') }}</th>
+                  <th style="min-width: 80px;">{{ $t('Unit') }}</th>
+                  <th style="min-width: 90px;">{{ $t('Ordered') }}</th>
+                  <th style="min-width: 90px;">{{ $t('Prev. Recv') }}</th>
+                  <th style="min-width: 90px;">{{ $t('Remaining') }}</th>
+                  <th style="min-width: 110px;">{{ $t('Receive Qty') }}</th>
+                  <th style="min-width: 110px;" v-if="isElectronicsShop">{{ $t('Serials') }}</th>
+                  <th style="min-width: 110px;">{{ $t('Rate') }}</th>
+                  <th style="min-width: 120px;">{{ $t('Total') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -450,8 +449,7 @@
             class="btn btn-sm btn-primary d-flex align-items-center gap-2 px-3 py-2 fw-semibold shadow-sm"
             @click.prevent="openAddProductModal"
           >
-            <i class="fas fa-plus-circle"></i> Add Product Row (পণ্য যোগ করুন)
-          </button>
+            <i class="fas fa-plus-circle"></i>{{ $t('Add Product Row') }}</button>
         </div>
 
         <div class="card-body p-0 overflow-visible">
@@ -459,16 +457,16 @@
             <table class="table custom-items-table table-hover align-middle mb-0">
               <thead class="theme-table-header text-center">
                 <tr>
-                  <th style="width: 4%;">#</th>
-                  <th style="width: 28%;" class="text-start ps-3">Product / Item (পণ্য ও বিবরণ)</th>
-                  <th style="width: 14%;">Variant (ভেরিয়েন্ট)</th>
-                  <th style="width: 8%;">Unit (একক)</th>
-                  <th style="width: 12%;" class="text-end">Cost Price (ক্রয়)</th>
-                  <th style="width: 12%;" class="text-end">Selling Price (বিক্রয়)</th>
-                  <th style="width: 8%;">Qty (পরিমাণ)</th>
-                  <th style="width: 10%;" v-if="isElectronicsShop">Serials</th>
-                  <th style="width: 12%;" class="text-end pe-3">Total Amount</th>
-                  <th style="width: 8%;">Actions</th>
+                  <th style="width: 4%;">{{ $t('#') }}</th>
+                  <th style="width: 28%;" class="text-start ps-3">{{ $t('Product / Item') }}</th>
+                  <th style="width: 14%;">{{ $t('Variant') }}</th>
+                  <th style="width: 8%;">{{ $t('Unit') }}</th>
+                  <th style="width: 12%;" class="text-end">{{ $t('Cost Price') }}</th>
+                  <th style="width: 12%;" class="text-end">{{ $t('Selling Price') }}</th>
+                  <th style="width: 8%;">{{ $t('Qty') }}</th>
+                  <th style="width: 10%;" v-if="isElectronicsShop">{{ $t('Serials') }}</th>
+                  <th style="width: 12%;" class="text-end pe-3">{{ $t('Total Amount') }}</th>
+                  <th style="width: 8%;">{{ $t('Actions') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -554,7 +552,7 @@
                         type="button"
                         class="btn btn-sm btn-outline-primary btn-action"
                         @click="openEditProductModal(index, pitem)"
-                        title="Edit Product (সংশোধন করুন)"
+                        title="Edit Product"
                       >
                         <i class="fas fa-edit"></i>
                       </button>
@@ -562,7 +560,7 @@
                         type="button"
                         class="btn btn-sm btn-outline-danger btn-action"
                         @click="removeDynamicItemRow(index)"
-                        title="Remove Product (মুছে ফেলুন)"
+                        title="Remove Product"
                       >
                         <i class="fas fa-trash-alt"></i>
                       </button>
@@ -584,8 +582,7 @@
                         class="btn btn-primary btn-sm px-4 fw-bold shadow-sm"
                         @click="openAddProductModal"
                       >
-                        <i class="fas fa-plus-circle me-1"></i> Add First Product (পণ্য যোগ করুন)
-                      </button>
+                        <i class="fas fa-plus-circle me-1"></i>{{ $t('Add First Product') }}</button>
                     </div>
                   </td>
                 </tr>
@@ -609,8 +606,7 @@
               class="btn btn-outline-secondary btn-sm px-4 fw-bold dashed-btn"
               @click.prevent="openAddProductModal"
             >
-              <i class="fas fa-plus me-1 text-primary"></i> Add Another Product Row (আরও পণ্য যোগ করুন)
-            </button>
+              <i class="fas fa-plus me-1 text-primary"></i>{{ $t('Add Another Product Row') }}</button>
           </div>
         </div>
       </div>
@@ -626,7 +622,7 @@
                   <i class="fas fa-wallet"></i>
                 </div>
                 <div>
-                  <h6 class="fw-bold mb-0 text-dark">Fund Account & Settlement (তহবিল ও তাৎক্ষণিক পরিশোধ)</h6>
+                  <h6 class="fw-bold mb-0 text-dark">{{ $t('Fund Account & Settlement') }}</h6>
                   <span class="small text-muted">Select fund source to debit payment directly</span>
                 </div>
               </div>
@@ -698,7 +694,7 @@
                 <i class="fas fa-calculator"></i>
               </div>
               <div>
-                <h6 class="fw-bold mb-0 text-dark">Financial Summary (হিসাব বিবরণী)</h6>
+                <h6 class="fw-bold mb-0 text-dark">{{ $t('Financial Summary') }}</h6>
                 <span class="small text-muted">Direct purchase cost & instant payment calculation</span>
               </div>
             </div>
@@ -846,8 +842,7 @@
             <div class="row g-3">
               <!-- Category Selection with appendToBody -->
               <div class="col-md-6">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Category (ক্যাটাগরি) <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Category') }}<span class="text-danger">*</span>
                 </label>
                 <v-select
                   v-model="modalForm.category_id"
@@ -864,8 +859,7 @@
 
               <!-- Product / Item Selection with appendToBody -->
               <div class="col-md-6">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Product / Item (পণ্য) <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Product / Item') }}<span class="text-danger">*</span>
                 </label>
                 <v-select
                   v-model="modalForm.item_id"
@@ -884,9 +878,7 @@
 
               <!-- Color Variant -->
               <div :class="isElectronicsShop ? 'col-md-6' : 'col-md-4'">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Color (রং)
-                </label>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Color') }}</label>
                 <select class="form-select form-select-sm" v-model="modalForm.color_id">
                   <option :value="null">-- Standard / None --</option>
                   <option v-for="c in colors" :key="c.id" :value="c.id">{{ c.title }}</option>
@@ -895,9 +887,7 @@
 
               <!-- Size Variant (Hidden for Electronics) -->
               <div class="col-md-4" v-if="!isElectronicsShop">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Size (সাইজ)
-                </label>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Size') }}</label>
                 <select class="form-select form-select-sm" v-model="modalForm.size_id">
                   <option :value="null">-- Standard / None --</option>
                   <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.title }}</option>
@@ -906,9 +896,7 @@
 
               <!-- Auto-detected Unit Display Badge -->
               <div :class="isElectronicsShop ? 'col-md-6' : 'col-md-4'">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Unit (একক - অটোমেটিক)
-                </label>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Unit') }}</label>
                 <div class="input-group input-group-sm">
                   <span class="input-group-text bg-light text-muted"><i class="fas fa-balance-scale"></i></span>
                   <input
@@ -922,8 +910,7 @@
 
               <!-- Purchase Price (ক্রয় মূল্য) -->
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Purchase Cost (ক্রয় মূল্য ৳) <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Purchase Cost') }}<span class="text-danger">*</span>
                 </label>
                 <div class="input-group input-group-sm">
                   <span class="input-group-text bg-light text-muted">৳</span>
@@ -941,9 +928,7 @@
 
               <!-- Selling Price (বিক্রয় মূল্য) -->
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Selling Price (বিক্রয় মূল্য ৳)
-                </label>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Selling Price') }}</label>
                 <div class="input-group input-group-sm">
                   <span class="input-group-text bg-light text-muted">৳</span>
                   <input
@@ -959,8 +944,7 @@
 
               <!-- Quantity (পরিমাণ) -->
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Received Qty (পরিমাণ) <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Received Qty') }}<span class="text-danger">*</span>
                 </label>
                 <div class="input-group input-group-sm">
                   <input
@@ -1002,7 +986,7 @@
                         <i class="fas fa-barcode"></i>
                       </div>
                       <div>
-                        <strong class="text-dark small d-block">Serial Numbers / IMEI Tracking (সিরিয়াল নম্বর সমূহ)</strong>
+                        <strong class="text-dark small d-block">{{ $t('Serial Numbers / IMEI Tracking') }}</strong>
                         <span class="text-muted" style="font-size: 11px;">
                           {{ modalForm.showSerialsSection ? 'Click to collapse serial entry section' : 'Click to expand and scan/add device serial numbers' }}
                         </span>
@@ -1162,7 +1146,7 @@
                 <i class="fas fa-barcode fs-5"></i>
               </div>
               <div>
-                <h5 class="modal-title fw-bold fs-6 mb-0 text-white">Manage Serial Numbers (সিরিয়াল নম্বর সমূহ)</h5>
+                <h5 class="modal-title fw-bold fs-6 mb-0 text-white">{{ $t('Manage Serial Numbers') }}</h5>
                 <span class="small text-white-50">Add or scan unique device serial numbers</span>
               </div>
             </div>

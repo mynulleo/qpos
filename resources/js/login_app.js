@@ -8,6 +8,8 @@ window.Validator = Validator;
 
 // Import Plugin...
 import toast_plugin from "./plugin/toast";
+import filters from "./plugin/filters";
+import i18n from "./plugin/i18n";
 
 // Import Mixin...
 import crud_mixin from "./mixins/crud";
@@ -26,7 +28,7 @@ const app = createApp({
             storage_url: laravel.storage_url,
             spinner: false,
             site: "",
-            initialLoader: true,
+            initialLoader: false,
         };
     },
     methods: {
@@ -52,6 +54,8 @@ app.component("login", login);
 app.mixin(crud_mixin);
 app.use(validate);
 app.use(toast_plugin);
+app.use(filters);
+app.use(i18n);
 app.use(store);
 
 app.directive("x-tooltip", xTooltip);

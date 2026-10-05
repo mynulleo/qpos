@@ -2,7 +2,7 @@
     <div :class="getClass()" class="mb-3 col-sm-4">
         <div class="mt-3 mt-lg-0">
             <label v-if="title" class="d-block w-100 mb-0 text-dark">
-                <slot name="title"> {{ title.replaceAll("_", " ") }} </slot>
+                <slot name="title"> {{ $t(title ? title.replaceAll("_", " ") : '') }} </slot>
                 <sup v-if="req" class="text-danger">*</sup>
                 <span class="ms-1 position-relative">
                     <i
@@ -23,7 +23,7 @@
                         data-bs-toggle="tooltip"
                         data-bs-placement="left"
                         :title="
-                            `Please Put ` + title.replaceAll('_', ' ') + ` Here`
+                            `Please Put ` + (title ? title.replaceAll('_', ' ') : '') + ` Here`
                         "
                         ref="info"
                         v-x-tooltip

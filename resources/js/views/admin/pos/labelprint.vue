@@ -4,24 +4,32 @@
     <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
       <div>
         <h4 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
-          <i class="fas fa-barcode text-primary fs-3"></i>
-          Barcode Label Printing (বারকোড লেবেল প্রিন্ট)
-        </h4>
+          <i class="fas fa-barcode text-primary fs-3"></i>{{ $t('Barcode Label Printing') }}</h4>
         <p class="text-muted small mb-0">
-          Scan or search items to queue labels and print multiple barcode stickers in custom formats.
+          {{ $t('Scan or search items to queue labels and print multiple barcode stickers in custom formats.') }}
         </p>
       </div>
 
       <div class="d-flex gap-2">
+        <button
+          type="button"
+          class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2 py-1 rounded-pill fw-bold border"
+          :class="$locale === 'bn' ? 'btn-primary text-white border-primary' : 'btn-outline-dark bg-white text-dark'"
+          @click="toggleLanguage"
+          :title="$locale === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'"
+        >
+          <i class="fas fa-language fa-lg"></i>
+          <span class="fw-bold">{{ $locale === 'bn' ? 'বাংলা' : 'EN' }}</span>
+        </button>
         <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
           @click="showSettings = !showSettings">
-          <i class="fas fa-cog"></i> {{ showSettings ? 'Hide Settings' : 'Label Settings' }}
+          <i class="fas fa-cog"></i> {{ showSettings ? $t('Hide Settings') : $t('Label Settings') }}
         </button>
         <router-link :to="{ name: 'pos.index' }" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
-          <i class="fas fa-cash-register"></i> POS Terminal
+          <i class="fas fa-cash-register"></i> {{ $t('POS Terminal') }}
         </router-link>
         <router-link :to="{ name: 'item.index' }" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1">
-          <i class="fas fa-arrow-left"></i> Products
+          <i class="fas fa-arrow-left"></i> {{ $t('Products') }}
         </router-link>
       </div>
     </div>
@@ -30,14 +38,13 @@
     <div class="card border-0 shadow-sm mb-3" v-if="showSettings">
       <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-          <i class="fas fa-sliders-h text-primary"></i> Label Dimensions, Sizing & Layout Settings (লেবেল সাইজ ও কাস্টমাইজেশন)
-        </h6>
+          <i class="fas fa-sliders-h text-primary"></i>{{ $t('Label Dimensions, Sizing & Layout Settings') }}</h6>
         <div class="d-flex align-items-center gap-2">
           <span class="badge bg-primary px-2 py-1 font-monospace">
             {{ settings.width }}{{ settings.unit }} × {{ settings.height }}{{ settings.unit }} ({{ formattedDimensionMm }})
           </span>
-          <button type="button" class="btn btn-xs btn-outline-dark py-1 px-2 d-inline-flex align-items-center gap-1" @click="swapDimensions" title="Rotate label (Swap Width & Height)">
-            <i class="fas fa-sync-alt"></i> Rotate / Swap
+          <button type="button" class="btn btn-xs btn-outline-dark py-1 px-2 d-inline-flex align-items-center gap-1" @click="swapDimensions" :title="$t('Rotate / Swap')">
+            <i class="fas fa-sync-alt"></i> {{ $t('Rotate / Swap') }}
           </button>
         </div>
       </div>
@@ -46,7 +53,7 @@
           <!-- 1. Preset Size Dropdown -->
           <div class="col-lg-4 col-md-6">
             <label class="form-label fw-bold small text-secondary">
-              <i class="fas fa-ruler-combined me-1 text-primary"></i> Label Size Preset (সাইজ প্রিসেট):
+              <i class="fas fa-ruler-combined me-1 text-primary"></i> {{ $t('Label Size Preset') }}:
             </label>
             <select class="form-select form-select-sm fw-semibold" v-model="settings.preset" @change="onPresetChange(true)">
               <option v-for="preset in labelPresetOptions" :key="preset.value" :value="preset.value">
@@ -59,7 +66,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <label class="form-label fw-bold small text-secondary mb-0">
-                <i class="fas fa-arrows-alt me-1 text-primary"></i> Custom Dimensions (প্রস্থ × উচ্চতা):
+                <i class="fas fa-arrows-alt me-1 text-primary"></i> {{ $t('Custom Dimensions') }}:
               </label>
               <div class="btn-group btn-group-sm">
                 <button
@@ -67,17 +74,13 @@
                   class="btn btn-xs py-0 px-2"
                   :class="settings.unit === 'in' ? 'btn-primary' : 'btn-outline-secondary'"
                   style="font-size: 11px;"
-                  @click="changeUnit('in')">
-                  Inch (in)
-                </button>
+                  @click="changeUnit('in')">{{ $t('Inch (in)') }}</button>
                 <button
                   type="button"
                   class="btn btn-xs py-0 px-2"
                   :class="settings.unit === 'mm' ? 'btn-primary' : 'btn-outline-secondary'"
                   style="font-size: 11px;"
-                  @click="changeUnit('mm')">
-                  MM (mm)
-                </button>
+                  @click="changeUnit('mm')">{{ $t('MM (mm)') }}</button>
               </div>
             </div>
 
@@ -90,7 +93,7 @@
                 class="form-control text-center font-monospace fw-bold"
                 v-model.number="settings.width"
                 @input="onDimensionManualChange"
-                placeholder="Width"
+                :placeholder="$t('Width')"
               />
               <span class="input-group-text bg-white px-1 border-start-0 border-end-0">×</span>
               <span class="input-group-text bg-white small fw-bold">H:</span>
@@ -101,20 +104,20 @@
                 class="form-control text-center font-monospace fw-bold"
                 v-model.number="settings.height"
                 @input="onDimensionManualChange"
-                placeholder="Height"
+                :placeholder="$t('Height')"
               />
               <span class="input-group-text bg-light fw-bold font-monospace">{{ settings.unit }}</span>
               <button
                 type="button"
                 class="btn btn-outline-primary"
                 @click="swapDimensions"
-                title="Rotate / Swap Width & Height (যেমন 4x2 থেকে 2x4 বা 2x4 থেকে 4x2)">
+                :title="$t('Rotate / Swap Width & Height')">
                 <i class="fas fa-sync-alt"></i>
               </button>
             </div>
             <div class="d-flex justify-content-between mt-1">
               <small class="text-muted" style="font-size: 11px;">
-                Orientation: <strong>{{ isPortraitLabel ? '↕ Portrait (খাড়া)' : '↔ Landscape (অনুভূমিক)' }}</strong>
+                {{ $t('Orientation:') }} <strong>{{ isPortraitLabel ? $t('Portrait') : $t('Landscape') }}</strong>
               </small>
               <small class="text-primary font-monospace" style="font-size: 11px;">
                 {{ settings.unit === 'in' ? formattedDimensionMm : formattedDimensionIn }}
@@ -125,26 +128,26 @@
           <!-- 3. Paper Type & Column Layout -->
           <div class="col-lg-4 col-md-6">
             <label class="form-label fw-bold small text-secondary mb-1">
-              <i class="fas fa-print me-1 text-primary"></i> Printer Paper & Columns:
+              <i class="fas fa-print me-1 text-primary"></i> {{ $t('Printer Paper & Columns:') }}
             </label>
             <div class="input-group input-group-sm">
               <select class="form-select form-select-sm" v-model="settings.paperType">
-                <option value="thermal">Continuous Roll / Barcode Printer</option>
-                <option value="A4">A4 Sheet Paper (210 × 297 mm)</option>
-                <option value="letter">Letter Sheet Paper (8.5 × 11 in)</option>
+                <option value="thermal">{{ $t('Continuous Roll / Barcode Printer') }}</option>
+                <option value="A4">{{ $t('A4 Sheet Paper (210 × 297 mm)') }}</option>
+                <option value="letter">{{ $t('Letter Sheet Paper (8.5 × 11 in)') }}</option>
               </select>
               <select class="form-select form-select-sm" v-model.number="settings.columns" style="max-width: 115px;">
-                <option :value="1">1 Column</option>
-                <option :value="2">2 Columns</option>
-                <option :value="3">3 Columns</option>
-                <option :value="4">4 Columns</option>
+                <option :value="1">{{ $t('1 Column') }}</option>
+                <option :value="2">{{ $t('2 Columns') }}</option>
+                <option :value="3">{{ $t('3 Columns') }}</option>
+                <option :value="4">{{ $t('4 Columns') }}</option>
               </select>
             </div>
           </div>
 
           <!-- 4. Store / Business Name on Label -->
           <div class="col-lg-4 col-md-6">
-            <label class="form-label fw-bold small text-secondary mb-1">Store / Business Name on Label:</label>
+            <label class="form-label fw-bold small text-secondary mb-1">{{ $t('Store / Business Name on Label:') }}</label>
             <input
               type="text"
               class="form-control form-control-sm"
@@ -155,27 +158,27 @@
 
           <!-- 5. Content Toggles -->
           <div class="col-lg-8 col-md-12">
-            <label class="form-label fw-bold small text-secondary d-block mb-1">Label Content & Formatting Toggles:</label>
+            <label class="form-label fw-bold small text-secondary d-block mb-1">{{ $t('Label Content & Formatting Toggles:') }}</label>
             <div class="d-flex flex-wrap gap-3 mt-1 bg-light p-2 rounded border">
               <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showCompany" v-model="settings.showCompany">
-                <label class="form-check-label small" for="showCompany">Store Name</label>
+                <label class="form-check-label small" for="showCompany">{{ $t('Store Name') }}</label>
               </div>
               <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showTitle" v-model="settings.showTitle">
-                <label class="form-check-label small" for="showTitle">Product Title</label>
+                <label class="form-check-label small" for="showTitle">{{ $t('Product Title') }}</label>
               </div>
               <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showPrice" v-model="settings.showPrice">
-                <label class="form-check-label small" for="showPrice">Price (মূল্য)</label>
+                <label class="form-check-label small" for="showPrice">{{ $t('Price') }}</label>
               </div>
               <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showBarcodeNum" v-model="settings.showBarcodeNum">
-                <label class="form-check-label small" for="showBarcodeNum">Barcode Digits</label>
+                <label class="form-check-label small" for="showBarcodeNum">{{ $t('Barcode Digits') }}</label>
               </div>
               <div class="form-check form-check-inline mb-0">
                 <input class="form-check-input" type="checkbox" id="showBorder" v-model="settings.showBorder">
-                <label class="form-check-label small" for="showBorder">Sticker Border</label>
+                <label class="form-check-label small" for="showBorder">{{ $t('Sticker Border') }}</label>
               </div>
             </div>
           </div>
@@ -197,7 +200,7 @@
                   ref="barcodeSearchInput"
                   type="text"
                   class="form-control form-control-lg border-start-0 ps-0 fw-bold"
-                  placeholder="Scan barcode with scanner or type product name/code (Press Enter)..."
+                  :placeholder="$t('Scan barcode with scanner or type product name/code (Press Enter)...')"
                   v-model="searchTerm"
                   @input="onSearchInput"
                   @keyup.enter="handleSearchEnter"
@@ -249,7 +252,7 @@
               type="button"
               class="btn btn-lg btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center gap-2 shadow-sm rounded-3"
               @click="openBrowseModal">
-              <i class="fas fa-boxes"></i> Browse Inventory
+              <i class="fas fa-boxes"></i> {{ $t('Browse Inventory') }}
             </button>
           </div>
         </div>
@@ -264,16 +267,16 @@
           <div class="card-header bg-white py-3 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div class="d-flex align-items-center gap-2">
               <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">
-                {{ labelQueue.length }} Products
+                {{ $bnNum(labelQueue.length) }} {{ $t('Products') }}
               </span>
               <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">
-                {{ totalStickersCount }} Total Stickers
+                {{ $bnNum(totalStickersCount) }} {{ $t('Total Stickers') }}
               </span>
             </div>
 
             <div class="d-flex align-items-center gap-2" v-if="labelQueue.length > 0">
               <div class="d-flex align-items-center gap-1 bg-light px-2 py-1 rounded border">
-                <span class="small text-muted fw-bold text-nowrap">Set All Qty:</span>
+                <span class="small text-muted fw-bold text-nowrap">{{ $t('Set All Qty:') }}</span>
                 <input
                   type="number"
                   min="1"
@@ -294,7 +297,7 @@
                 class="btn btn-sm btn-outline-danger"
                 @click="clearQueue"
                 title="Clear all queued items">
-                <i class="fas fa-trash-alt me-1"></i> Clear All
+                <i class="fas fa-trash-alt me-1"></i> {{ $t('Clear All') }}
               </button>
             </div>
           </div>
@@ -303,12 +306,12 @@
             <table class="table table-hover align-middle mb-0" v-if="labelQueue.length > 0">
               <thead class="table-light">
                 <tr class="small text-muted text-uppercase">
-                  <th width="5%" class="text-center">#</th>
-                  <th width="35%">Product Details</th>
-                  <th width="20%">Barcode</th>
-                  <th width="15%">Price (Tk.)</th>
-                  <th width="18%" class="text-center">Print Copies (পরিমাণ)</th>
-                  <th width="7%" class="text-center">Action</th>
+                  <th width="5%" class="text-center">{{ $t('#') }}</th>
+                  <th width="35%">{{ $t('Product Details') }}</th>
+                  <th width="20%">{{ $t('Barcode') }}</th>
+                  <th width="15%">{{ $t('Price (Tk.)') }}</th>
+                  <th width="18%" class="text-center">{{ $t('Print Copies') }}</th>
+                  <th width="7%" class="text-center">{{ $t('Action') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -394,12 +397,10 @@
               <div class="mb-3">
                 <i class="fas fa-barcode fa-4x text-secondary opacity-25"></i>
               </div>
-              <h5 class="fw-bold text-secondary">No products queued for printing</h5>
-              <p class="small text-muted mb-3">
-                Scan barcode using a scanner or search products from the top search box to add barcode labels.
-              </p>
+              <h5 class="fw-bold text-secondary">{{ $t('No products queued for printing') }}</h5>
+              <p class="small text-muted mb-3">{{ $t('Scan barcode using a scanner or search products from the top search box to add barcode labels.') }}</p>
               <button type="button" class="btn btn-sm btn-primary px-4 rounded-pill shadow-sm" @click="openBrowseModal">
-                <i class="fas fa-search me-1"></i> Browse Products
+                <i class="fas fa-search me-1"></i> {{ $t('Browse Products') }}
               </button>
             </div>
           </div>
@@ -415,9 +416,9 @@
           :disabled="labelQueue.length === 0"
           @click="printLabels">
           <i class="fas fa-print fa-lg"></i>
-          <span>Print All Barcode Labels</span>
+          <span>{{ $t('Print All Barcode Labels') }}</span>
           <span class="badge bg-white text-success font-monospace ms-1 px-2 py-1" v-if="totalStickersCount > 0">
-            {{ totalStickersCount }} Labels
+            {{ $bnNum(totalStickersCount) }} {{ $t('Labels') }}
           </span>
         </button>
 
@@ -425,7 +426,7 @@
         <div class="card border-0 shadow-sm rounded-3">
           <div class="card-header bg-white py-2 border-bottom d-flex justify-content-between align-items-center">
             <span class="fw-bold small text-dark d-flex align-items-center gap-1">
-              <i class="fas fa-eye text-primary"></i> Live Label Preview
+              <i class="fas fa-eye text-primary"></i> {{ $t('Live Label Preview') }}
             </span>
             <div class="d-flex align-items-center gap-2">
               <button
@@ -434,7 +435,7 @@
                 style="font-size: 11px;"
                 @click="swapDimensions"
                 title="Rotate preview (Swap Width & Height)">
-                <i class="fas fa-sync-alt"></i> Rotate ({{ isPortraitLabel ? 'Portrait' : 'Landscape' }})
+                <i class="fas fa-sync-alt"></i> {{ $t('Rotate') }} ({{ isPortraitLabel ? $t('Portrait') : $t('Landscape') }})
               </button>
               <div class="btn-group btn-group-sm" v-if="labelQueue.length > 1">
                 <button
@@ -509,7 +510,7 @@
                 class="btn btn-link btn-sm text-decoration-none p-0"
                 style="font-size: 11px;"
                 @click="showSettings = !showSettings">
-                <i class="fas fa-sliders-h me-1"></i> {{ showSettings ? 'Hide Settings' : 'Customize Size' }}
+                <i class="fas fa-sliders-h me-1"></i> {{ showSettings ? $t('Hide Settings') : $t('Customize Size') }}
               </button>
             </div>
           </div>
@@ -529,10 +530,10 @@
               </span>
               <div>
                 <h5 class="modal-title fw-bold mb-0 text-dark">
-                  Browse Inventory & Select Products for Barcode Labels
+                  {{ $t('Browse Inventory & Select Products for Barcode Labels') }}
                 </h5>
                 <p class="small text-muted mb-0">
-                  Filter by Barcode range, New/Recent items date, Category, or Keyword to batch print stickers.
+                  {{ $t('Filter by Barcode range, New/Recent items date, Category, or Keyword to batch print stickers.') }}
                 </p>
               </div>
             </div>
@@ -547,13 +548,13 @@
                 <!-- 1. Search Keyword -->
                 <div class="col-lg-3 col-md-6">
                   <label class="form-label fw-bold small text-secondary mb-1">
-                    <i class="fas fa-search me-1 text-primary"></i> Search Product:
+                    <i class="fas fa-search me-1 text-primary"></i> {{ $t('Search Product:') }}
                   </label>
                   <div class="input-group input-group-sm">
                     <input
                       type="text"
                       class="form-control form-control-sm"
-                      placeholder="Title or barcode..."
+                      :placeholder="$t('Title or barcode...')"
                       v-model="modalFilters.searchTerm"
                       @input="onModalFilterChangeDebounced"
                     />
@@ -570,13 +571,13 @@
                 <!-- 2. Category Filter -->
                 <div class="col-lg-3 col-md-6">
                   <label class="form-label fw-bold small text-secondary mb-1">
-                    <i class="fas fa-tags me-1 text-primary"></i> Category:
+                    <i class="fas fa-tags me-1 text-primary"></i> {{ $t('Category:') }}
                   </label>
                   <select
                     class="form-select form-select-sm"
                     v-model="modalFilters.categoryId"
                     @change="fetchModalItems">
-                    <option value="">-- All Categories --</option>
+                    <option value="">-- {{ $t('All Categories') }} --</option>
                     <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.title }}</option>
                   </select>
                 </div>
@@ -584,32 +585,32 @@
                 <!-- 3. New Items / Date Filter Preset -->
                 <div class="col-lg-3 col-md-6">
                   <label class="form-label fw-bold small text-secondary mb-1">
-                    <i class="fas fa-clock me-1 text-success"></i> New Items / Date:
+                    <i class="fas fa-clock me-1 text-success"></i> {{ $t('New Items / Date:') }}
                   </label>
                   <select
                     class="form-select form-select-sm fw-semibold"
                     :class="{ 'border-success text-success': modalFilters.dateFilter !== 'all' }"
                     v-model="modalFilters.dateFilter"
                     @change="onDateFilterPresetChange">
-                    <option value="all">All Products (সব আইটেম)</option>
-                    <option value="today">✨ Added Today (আজকের নতুন আইটেম)</option>
-                    <option value="yesterday">🕒 Added Yesterday (গতকালের আইটেম)</option>
-                    <option value="last_7_days">📅 Last 7 Days (গত ৭ দিনের আইটেম)</option>
-                    <option value="last_30_days">🗓️ Last 30 Days (গত ৩০ দিনের আইটেম)</option>
-                    <option value="custom">📆 Custom Date Range (তারিখ নির্বাচন)</option>
+                    <option value="all">{{ $t('All Products') }}</option>
+                    <option value="today">✨ {{ $t('Added Today') }}</option>
+                    <option value="yesterday">🕒 {{ $t('Added Yesterday') }}</option>
+                    <option value="last_7_days">📅 {{ $t('Last 7 Days') }}</option>
+                    <option value="last_30_days">🗓️ {{ $t('Last 30 Days') }}</option>
+                    <option value="custom">📆 {{ $t('Custom Date Range') }}</option>
                   </select>
                 </div>
 
                 <!-- 4. Barcode Range (From - To) -->
                 <div class="col-lg-3 col-md-6">
                   <label class="form-label fw-bold small text-secondary mb-1">
-                    <i class="fas fa-barcode me-1 text-dark"></i> Barcode Range (From - To):
+                    <i class="fas fa-barcode me-1 text-dark"></i> {{ $t('Barcode Range (From - To):') }}
                   </label>
                   <div class="input-group input-group-sm">
                     <input
                       type="text"
                       class="form-control form-control-sm font-monospace text-center"
-                      placeholder="From Barcode"
+                      :placeholder="$t('From Barcode')"
                       v-model="modalFilters.fromBarcode"
                       @input="onModalFilterChangeDebounced"
                     />
@@ -617,7 +618,7 @@
                     <input
                       type="text"
                       class="form-control form-control-sm font-monospace text-center"
-                      placeholder="To Barcode"
+                      :placeholder="$t('To Barcode')"
                       v-model="modalFilters.toBarcode"
                       @input="onModalFilterChangeDebounced"
                     />
@@ -629,7 +630,7 @@
               <div class="row g-2 mt-2 pt-2 border-top align-items-center" v-if="modalFilters.dateFilter === 'custom' || showMoreModalFilters">
                 <!-- Custom From Date -->
                 <div class="col-lg-3 col-md-4" v-if="modalFilters.dateFilter === 'custom'">
-                  <label class="form-label fw-bold small text-muted mb-1">From Date:</label>
+                  <label class="form-label fw-bold small text-muted mb-1">{{ $t('From Date:') }}</label>
                   <input
                     type="date"
                     class="form-control form-control-sm"
@@ -640,7 +641,7 @@
 
                 <!-- Custom To Date -->
                 <div class="col-lg-3 col-md-4" v-if="modalFilters.dateFilter === 'custom'">
-                  <label class="form-label fw-bold small text-muted mb-1">To Date:</label>
+                  <label class="form-label fw-bold small text-muted mb-1">{{ $t('To Date:') }}</label>
                   <input
                     type="date"
                     class="form-control form-control-sm"
@@ -651,20 +652,20 @@
 
                 <!-- Barcode Status Filter -->
                 <div class="col-lg-3 col-md-4">
-                  <label class="form-label fw-bold small text-muted mb-1">Barcode Status:</label>
+                  <label class="form-label fw-bold small text-muted mb-1">{{ $t('Barcode Status:') }}</label>
                   <select
                     class="form-select form-select-sm"
                     v-model="modalFilters.hasBarcode"
                     @change="fetchModalItems">
-                    <option value="all">All (With & Without Barcode)</option>
-                    <option value="yes">Only With Barcode Generated</option>
-                    <option value="no">Only Missing Barcode</option>
+                    <option value="all">{{ $t('All (With & Without Barcode)') }}</option>
+                    <option value="yes">{{ $t('Only With Barcode Generated') }}</option>
+                    <option value="no">{{ $t('Only Missing Barcode') }}</option>
                   </select>
                 </div>
 
                 <!-- Price Range -->
                 <div class="col-lg-3 col-md-4">
-                  <label class="form-label fw-bold small text-muted mb-1">Price Range (Tk.):</label>
+                  <label class="form-label fw-bold small text-muted mb-1">{{ $t('Price Range (Tk.):') }}</label>
                   <div class="input-group input-group-sm">
                     <input
                       type="number"
@@ -689,14 +690,14 @@
               <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
                 <!-- Left: Quick Date Preset Buttons -->
                 <div class="d-flex flex-wrap align-items-center gap-1">
-                  <span class="small text-muted fw-bold me-1" style="font-size: 11px;">Quick Presets:</span>
+                  <span class="small text-muted fw-bold me-1" style="font-size: 11px;">{{ $t('Quick Presets:') }}</span>
                   <button
                     type="button"
                     class="btn btn-xs py-0 px-2 rounded-pill"
                     :class="modalFilters.dateFilter === 'today' ? 'btn-success' : 'btn-outline-secondary'"
                     style="font-size: 11px;"
                     @click="setQuickDatePreset('today')">
-                    ✨ Today (আজকে)
+                    ✨ {{ $t('Today') }}
                   </button>
                   <button
                     type="button"
@@ -704,7 +705,7 @@
                     :class="modalFilters.dateFilter === 'yesterday' ? 'btn-info text-white' : 'btn-outline-secondary'"
                     style="font-size: 11px;"
                     @click="setQuickDatePreset('yesterday')">
-                    🕒 Yesterday (গতকাল)
+                    🕒 {{ $t('Yesterday') }}
                   </button>
                   <button
                     type="button"
@@ -712,7 +713,7 @@
                     :class="modalFilters.dateFilter === 'last_7_days' ? 'btn-primary' : 'btn-outline-secondary'"
                     style="font-size: 11px;"
                     @click="setQuickDatePreset('last_7_days')">
-                    📅 Last 7 Days (৭ দিন)
+                    📅 {{ $t('Last 7 Days') }}
                   </button>
                   <button
                     type="button"
@@ -720,7 +721,7 @@
                     :class="modalFilters.dateFilter === 'last_30_days' ? 'btn-primary' : 'btn-outline-secondary'"
                     style="font-size: 11px;"
                     @click="setQuickDatePreset('last_30_days')">
-                    🗓️ Last 30 Days
+                    🗓️ {{ $t('Last 30 Days') }}
                   </button>
                   <button
                     type="button"
@@ -728,7 +729,7 @@
                     :class="modalFilters.hasBarcode === 'yes' ? 'btn-dark' : 'btn-outline-secondary'"
                     style="font-size: 11px;"
                     @click="toggleBarcodeOnlyPreset">
-                    <i class="fas fa-barcode me-1"></i> Has Barcode
+                    <i class="fas fa-barcode me-1"></i> {{ $t('Has Barcode') }}
                   </button>
                 </div>
 
@@ -740,7 +741,7 @@
                     style="font-size: 11px;"
                     @click="showMoreModalFilters = !showMoreModalFilters">
                     <i class="fas" :class="showMoreModalFilters ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                    {{ showMoreModalFilters ? 'Less Filters' : 'More Filters' }}
+                    {{ showMoreModalFilters ? $t('Less Filters') : $t('More Filters') }}
                   </button>
                   <button
                     type="button"
@@ -748,14 +749,14 @@
                     style="font-size: 11px;"
                     v-if="hasActiveModalFilters"
                     @click="resetModalFilters">
-                    <i class="fas fa-undo"></i> Reset Filters
+                    <i class="fas fa-undo"></i> {{ $t('Reset Filters') }}
                   </button>
                 </div>
               </div>
 
               <!-- Active Filter Chips -->
               <div class="d-flex flex-wrap gap-1 mt-2" v-if="hasActiveModalFilters">
-                <span class="small text-muted fw-bold me-1 align-self-center" style="font-size: 10px;">Active Filters:</span>
+                <span class="small text-muted fw-bold me-1 align-self-center" style="font-size: 10px;">{{ $t('Active Filters:') }}</span>
                 <span class="badge bg-primary text-white d-inline-flex align-items-center gap-1" v-if="modalFilters.searchTerm">
                   Keyword: "{{ modalFilters.searchTerm }}"
                   <i class="fas fa-times cursor-pointer" @click="modalFilters.searchTerm = ''; fetchModalItems();"></i>
@@ -791,7 +792,7 @@
                     @change="toggleSelectAllModal"
                   />
                   <label class="form-check-label fw-bold small text-dark cursor-pointer" for="selectAllModalCheckbox">
-                    Select All ({{ filteredModalItems.length }} Products)
+                    {{ $t('Select All') }} ({{ $bnNum(filteredModalItems.length) }} {{ $t('Products') }})
                   </label>
                 </div>
 
@@ -827,17 +828,17 @@
                     v-if="selectedModalItemIds.length > 0"
                     @click="selectedModalItemIds = []"
                     title="Clear current selection">
-                    Clear ({{ selectedModalItemIds.length }})
+                    {{ $t('Clear') }} ({{ $bnNum(selectedModalItemIds.length) }})
                   </button>
                 </div>
               </div>
 
               <div class="d-flex align-items-center gap-2">
                 <span class="small text-muted" style="font-size: 12px;">
-                  Showing <strong>{{ filteredModalItems.length }}</strong> products
+                  {{ $t('Showing') }} <strong>{{ $bnNum(filteredModalItems.length) }}</strong> {{ $t('products') }}
                 </span>
                 <span class="badge bg-primary fs-6 px-2 py-1 rounded-pill" v-if="selectedModalItemIds.length > 0">
-                  {{ selectedModalItemIds.length }} Selected
+                  {{ $bnNum(selectedModalItemIds.length) }} {{ $t('Selected') }}
                 </span>
               </div>
             </div>
@@ -847,13 +848,13 @@
               <!-- Loading Spinner Overlay -->
               <div v-if="modalLoading" class="text-center py-5">
                 <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                <span class="text-muted small fw-bold">Loading inventory items...</span>
+                <span class="text-muted small fw-bold">{{ $t('Loading inventory items...') }}</span>
               </div>
 
               <table v-else class="table table-hover table-sm align-middle mb-0">
                 <thead class="table-light sticky-top shadow-sm">
                   <tr class="small text-muted text-uppercase">
-                    <th width="4%" class="text-center">#</th>
+                    <th width="4%" class="text-center">{{ $t('#') }}</th>
                     <th width="4%" class="text-center">
                       <input
                         type="checkbox"
@@ -862,11 +863,11 @@
                         @change="toggleSelectAllModal"
                       />
                     </th>
-                    <th width="32%">Product Details</th>
-                    <th width="16%">Barcode</th>
-                    <th width="16%">Created Date</th>
-                    <th width="14%" class="text-end">Price (Tk.)</th>
-                    <th width="14%" class="text-center">Action</th>
+                    <th width="32%">{{ $t('Product Details') }}</th>
+                    <th width="16%">{{ $t('Barcode') }}</th>
+                    <th width="16%">{{ $t('Created Date') }}</th>
+                    <th width="14%" class="text-end">{{ $t('Price (Tk.)') }}</th>
+                    <th width="14%" class="text-center">{{ $t('Action') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -936,7 +937,7 @@
                         class="btn btn-xs btn-outline-primary py-1 px-2 rounded-pill d-inline-flex align-items-center gap-1"
                         style="font-size: 11px;"
                         @click="addSingleItemToQueue(item)">
-                        <i class="fas fa-plus"></i> Add
+                        <i class="fas fa-plus"></i> {{ $t('Add') }}
                       </button>
                     </td>
                   </tr>
@@ -945,8 +946,8 @@
                       <div class="mb-2">
                         <i class="fas fa-search fa-2x text-secondary opacity-50"></i>
                       </div>
-                      <div class="fw-bold">No products match your active filters.</div>
-                      <p class="small text-muted mb-2">Try adjusting or clearing your search term, barcode range, or date filter.</p>
+                      <div class="fw-bold">{{ $t('No products match your active filters.') }}</div>
+                      <p class="small text-muted mb-2">{{ $t('Try adjusting or clearing your search term, barcode range, or date filter.') }}</p>
                       <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill" @click="resetModalFilters">
                         <i class="fas fa-undo me-1"></i> Reset Filters
                       </button>
@@ -961,7 +962,7 @@
           <div class="modal-footer bg-light border-top d-flex flex-wrap justify-content-between align-items-center py-2 px-3">
             <!-- Left: Default Quantity per Item to Add -->
             <div class="d-flex align-items-center gap-2">
-              <span class="small fw-bold text-dark">Sticker Copies per Product:</span>
+              <span class="small fw-bold text-dark">{{ $t('Sticker Copies per Product:') }}</span>
               <div class="input-group input-group-sm" style="width: 110px;">
                 <button
                   type="button"
@@ -995,17 +996,16 @@
             <!-- Right: Action Buttons -->
             <div class="d-flex align-items-center gap-2">
               <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">
-                Close
-              </button>
+                {{ $t('Close') }}</button>
               <button
                 type="button"
                 class="btn btn-primary btn-sm px-4 fw-bold shadow-sm d-inline-flex align-items-center gap-2"
                 :disabled="selectedModalItemIds.length === 0"
                 @click="addSelectedModalItems">
                 <i class="fas fa-plus-circle"></i>
-                <span>Add Selected ({{ selectedModalItemIds.length }})</span>
+                <span>{{ $t('Add Selected') }} ({{ $bnNum(selectedModalItemIds.length) }})</span>
                 <span class="badge bg-white text-primary rounded-pill font-monospace" v-if="selectedModalItemIds.length > 0">
-                  {{ selectedModalItemIds.length * modalAddQty }} Stickers
+                  {{ $bnNum(selectedModalItemIds.length * modalAddQty) }} {{ $t('Stickers') }}
                 </span>
               </button>
             </div>

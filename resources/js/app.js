@@ -4,6 +4,7 @@ import { createApp } from "vue";
 // Import Plugin...
 import toast_plugin from "./plugin/toast";
 import filters from "./plugin/filters";
+import i18n from "./plugin/i18n";
 
 // Import Mixin...
 import global_mixin from "./mixins/global";
@@ -125,6 +126,7 @@ app.mixin(crud_mixin);
 app.mixin(utils_mixin);
 app.use(toast_plugin);
 app.use(filters);
+app.use(i18n);
 app.use(store);
 app.use(router);
 

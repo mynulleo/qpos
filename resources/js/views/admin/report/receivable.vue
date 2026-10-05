@@ -49,13 +49,13 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>ClientID</th>
-                                        <th>Client Name</th>
-                                        <th>Client Mobile</th>
-                                        <th class="text-md-end">Bill Amount</th>
-                                        <th class="text-md-end">Received Amount</th>
-                                        <th class="text-md-end">Discount</th>
-                                        <th class="text-md-end">Total</th>
+                                        <th>{{ $t('ClientID') }}</th>
+                                        <th>{{ $t('Client Name') }}</th>
+                                        <th>{{ $t('Client Mobile') }}</th>
+                                        <th class="text-md-end">{{ $t('Bill Amount') }}</th>
+                                        <th class="text-md-end">{{ $t('Received Amount') }}</th>
+                                        <th class="text-md-end">{{ $t('Discount') }}</th>
+                                        <th class="text-md-end">{{ $t('Total') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

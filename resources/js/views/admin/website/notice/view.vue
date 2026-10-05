@@ -6,33 +6,33 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-6 col-lg-12">
                     <fieldset>
-                        <span class="legend">Notice Details</span>
+                        <span class="legend">{{ $t('Notice Details') }}</span>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <tbody>
                                     <tr>
-                                        <th>Start Date</th>
+                                        <th>{{ $t('Start Date') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ enFormat(data?.notice_date) }}</td>
                                     </tr>
                                     <tr>
-                                        <th>End Date</th>
+                                        <th>{{ $t('End Date') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ enFormat(data?.notice_end) }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Notice Type</th>
+                                        <th>{{ $t('Notice Type') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.type ?? '' }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Sorting</th>
+                                        <th>{{ $t('Sorting') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.sorting ?? "" }}</td>
                                     </tr>
 
                                     <tr>
-                                        <th>Status</th>
+                                        <th>{{ $t('Status') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td><span :class="[
                                             data?.status == 'active'
@@ -45,12 +45,12 @@
                                             </span></td>
                                     </tr>
                                     <tr>
-                                        <th>Created At</th>
+                                        <th>{{ $t('Created At') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.created_at ?? "" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Updated At</th>
+                                        <th>{{ $t('Updated At') }}</th>
                                         <th style="text-align: center;">:</th>
                                         <td>{{ data?.updated_at ?? "" }}</td>
                                     </tr>
@@ -61,7 +61,7 @@
                 </div>
                 <div class="col-xl-4 col-lg-12" v-if="data.file">
                     <fieldset>
-                        <span class="legend">File</span>
+                        <span class="legend">{{ $t('File') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="col-lg-12">
@@ -81,7 +81,7 @@
                 </div>
                 <div class="col-xl-6 col-lg-12" v-if="data.description">
                     <fieldset>
-                        <span class="legend">Notice Details</span>
+                        <span class="legend">{{ $t('Notice Details') }}</span>
                         <p class="text" v-html="data?.description"></p>
                     </fieldset>
                 </div>

@@ -3,42 +3,42 @@
     <div class="row custom_row g-3">
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Reference Info</span>
+          <span class="legend">{{ $t('Reference Info') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th width="40%">Is Employee</th>
+                  <th width="40%">{{ $t('Is Employee') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.is_employee ? 'Yes' : 'No' }}</td>
                 </tr>
                 <tr>
-                  <th>Client</th>
+                  <th>{{ $t('Client') }}</th>
                   <th>:</th>
                   <td>{{ data.client?.name }}</td>
                 </tr>
                 <tr>
-                  <th>Package</th>
+                  <th>{{ $t('Package') }}</th>
                   <th>:</th>
                   <td>{{ data.package?.title }}</td>
                 </tr>
                 <tr>
-                  <th>Reference Name</th>
+                  <th>{{ $t('Reference Name') }}</th>
                   <th>:</th>
                   <td>{{ data.reference_name }}</td>
                 </tr>
                 <tr>
-                  <th>Reference Mobile</th>
+                  <th>{{ $t('Reference Mobile') }}</th>
                   <th>:</th>
                   <td>{{ data.reference_mobile }}</td>
                 </tr>
                 <tr>
-                  <th>Reference NID</th>
+                  <th>{{ $t('Reference NID') }}</th>
                   <th>:</th>
                   <td>{{ data.reference_nid }}</td>
                 </tr>
                 <tr>
-                  <th>Reference Address</th>
+                  <th>{{ $t('Reference Address') }}</th>
                   <th>:</th>
                   <td>{{ data.reference_address }}</td>
                 </tr>
@@ -49,42 +49,42 @@
       </div>
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Commission Info</span>
+          <span class="legend">{{ $t('Commission Info') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th width="40%">Created Date</th>
+                  <th width="40%">{{ $t('Created Date') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.created_at }}</td>
                 </tr>
                 <tr>
-                  <th width="40%">Percentage</th>
+                  <th width="40%">{{ $t('Percentage') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.percentage }}%</td>
                 </tr>
                 <tr>
-                  <th>Commission Amount</th>
+                  <th>{{ $t('Commission Amount') }}</th>
                   <th>:</th>
                   <td>{{ data.amount }}</td>
                 </tr>
                 <tr>
-                  <th>Remarks</th>
+                  <th>{{ $t('Remarks') }}</th>
                   <th>:</th>
                   <td>{{ data.remarks }}</td>
                 </tr>
                 <tr>
-                  <th>Is Closed</th>
+                  <th>{{ $t('Is Closed') }}</th>
                   <th>:</th>
                   <td>{{ data.is_closed ? 'Yes' : 'No' }}</td>
                 </tr>
                 <tr>
-                  <th>Approved By</th>
+                  <th>{{ $t('Approved By') }}</th>
                   <th>:</th>
                   <td>{{ data.approved_by }}</td>
                 </tr>
                 <tr>
-                  <th>Approved Date</th>
+                  <th>{{ $t('Approved Date') }}</th>
                   <th>:</th>
                   <td>{{ data.approved_date }}</td>
                 </tr>

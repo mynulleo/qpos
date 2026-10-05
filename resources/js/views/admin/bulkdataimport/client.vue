@@ -3,7 +3,7 @@
         <div class="row">
             <div class="col-md-8">
                 <fieldset>
-                    <span class="legend">Client Import Instructions</span>
+                    <span class="legend">{{ $t('Client Import Instructions') }}</span>
                     <div class="mt-3">
 
                         <div class="mb-3">
@@ -22,8 +22,8 @@
                                 <table class="table table-bordered table-striped">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Field</th>
-                                            <th>Rule / Format Example</th>
+                                            <th>{{ $t('Field') }}</th>
+                                            <th>{{ $t('Rule / Format Example') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -90,7 +90,7 @@
 
             <div class="col-md-4">
                 <fieldset>
-                    <span class="legend">Import File</span>
+                    <span class="legend">{{ $t('Import File') }}</span>
                     <create-form @onSubmit="submit" :title="false" formid="formdownload"
                         submitbuttontext="Import Clients">
 
