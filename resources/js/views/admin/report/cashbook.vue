@@ -45,11 +45,11 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th class="text-md-center">Cash In</th>
-                                        <th class="text-md-center">Cash Out</th>
-                                        <th class="text-md-center">Balance</th>
+                                        <th>{{ $t('Date') }}</th>
+                                        <th>{{ $t('Description') }}</th>
+                                        <th class="text-md-center">{{ $t('Cash In') }}</th>
+                                        <th class="text-md-center">{{ $t('Cash Out') }}</th>
+                                        <th class="text-md-center">{{ $t('Balance') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

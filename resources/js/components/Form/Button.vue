@@ -3,28 +3,22 @@
         :type="type"
         :disabled="$root.submit ? true : false"
         class="theme_btn"
-
     >
         <span v-if="$root.submit">
             <i class="fa fa-spinner fa-spin"></i>
-            <span v-if="process">{{ process }}...</span>
-            <span v-else> Processing...</span>
+            <span v-if="process">{{ $t(process) }}...</span>
+            <span v-else> {{ $t('Processing...') }}</span>
         </span>
-        <span v-else> {{ btnTitle }}</span>
+        <span v-else> {{ $t(computedBtnTitle) }}</span>
     </button>
 </template>
 
 <script>
 export default {
-    data() {
-        return {
-            btnTitle: this.title,
-        };
-    },
-
     props: {
         title: {
             type: String,
+            default: "Submit",
         },
 
         process: {
@@ -37,13 +31,17 @@ export default {
         },
     },
 
-    mounted() {
-        let split = this.$route.name.split(".");
-        if (split.length == 2) {
-            if (this.title == "Submit" && split[1] == "edit") {
-                this.btnTitle = "Update";
+    computed: {
+        computedBtnTitle() {
+            let split = this.$route?.name ? this.$route.name.split(".") : [];
+            if (split.length >= 2) {
+                if (this.title === "Submit" && split[1] === "edit") {
+                    return "Update";
+                }
             }
-        }
+            return this.title || "Submit";
+        },
     },
 };
 </script>
+

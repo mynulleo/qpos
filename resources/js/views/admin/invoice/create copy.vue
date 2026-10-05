@@ -3,7 +3,7 @@
       <div class="col-md-8 mb-5">
         <div class="row">
           <div class="col-md-12">
-            <fieldset> <span class="legend">Invoice</span>
+            <fieldset> <span class="legend">{{ $t('Invoice') }}</span>
               <div class="row g-3">
                 <Input v-model="data.clientid" field="data.residenceno" title="Client ID" :req="true"
                   :disabled="this.$route.params.id ? true : false" @keyup.enter="fetchClientData" />
@@ -32,17 +32,17 @@
             </fieldset>
           </div> <!-- Invoice Details -->
           <div class="col-md-12">
-            <fieldset class="mt-4"> <span class="legend">Invoice Details</span>
+            <fieldset class="mt-4"> <span class="legend">{{ $t('Invoice Details') }}</span>
               <div class="row">
                 <div class="col-md-12">
                   <table class="table">
                     <thead>
                       <tr>
-                        <th style="width:5%">Sl</th>
-                        <th>Ref</th>
-                        <th>Description</th>
-                        <th>Qty</th>
-                        <th style=" width:20%">Amount</th>
+                        <th style="width:5%">{{ $t('Sl') }}</th>
+                        <th>{{ $t('Ref') }}</th>
+                        <th>{{ $t('Description') }}</th>
+                        <th>{{ $t('Qty') }}</th>
+                        <th style=" width:20%">{{ $t('Amount') }}</th>
                         <th style="width:10%"></th>
                       </tr>
                     </thead>
@@ -88,27 +88,27 @@
       <div class="col-md-4 mb-5">
         <div class="row g-3">
           <div class="col-md-12">
-            <fieldset> <span class="legend">Client Info</span>
+            <fieldset> <span class="legend">{{ $t('Client Info') }}</span>
               <div class="table-responsive">
                 <table class="table table-striped">
                   <tbody>
                     <tr>
-                      <th width="45%">Client Name</th>
+                      <th width="45%">{{ $t('Client Name') }}</th>
                       <th width="5">:</th>
                       <td width="50%">{{ data?.client?.org_name }}</td>
                     </tr>
                     <tr>
-                      <th>Mobile</th>
+                      <th>{{ $t('Mobile') }}</th>
                       <th>:</th>
                       <td>{{ data?.client?.mobile }}</td>
                     </tr>
                     <tr>
-                      <th>Email</th>
+                      <th>{{ $t('Email') }}</th>
                       <th>:</th>
                       <td>{{ data?.client?.email }}</td>
                     </tr>
                     <tr>
-                      <th>Address</th>
+                      <th>{{ $t('Address') }}</th>
                       <th>:</th>
                       <td>{{ data?.client?.address }}</td>
                     </tr>
@@ -118,7 +118,7 @@
             </fieldset>
           </div>
           <div class="col-md-12">
-            <fieldset> <span class="legend">Workorders</span>
+            <fieldset> <span class="legend">{{ $t('Workorders') }}</span>
               <table class="table table-striped">
                 <tbody>
                   <tr v-for="(record, index) in workorders" :key="index">

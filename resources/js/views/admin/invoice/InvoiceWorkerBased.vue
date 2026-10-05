@@ -6,7 +6,7 @@
                     <div class="col-md-12">
 
                         <fieldset>
-                            <span class="legend">Invoice</span>
+                            <span class="legend">{{ $t('Invoice') }}</span>
                             <div class="row g-3">
 
                                 <Select title='Client' v-model='data.client_id' field='data.client_id' col="6"
@@ -51,17 +51,17 @@
                     <!-- Invoice Details -->
                     <div class="col-md-12">
                         <fieldset class="mt-4">
-                            <span class="legend">Invoice Details</span>
+                            <span class="legend">{{ $t('Invoice Details') }}</span>
 
                             <table class="table table-squeeze">
                                 <thead>
                                     <tr>
-                                        <th style=" width:25%">Ref / Description</th>
-                                        <th style=" width:10%">Qty</th>
-                                        <th style=" width:15%">Amount</th>
-                                        <th style=" width:15%">Currency</th>
-                                        <th style=" width:15%">Curr. Rate</th>
-                                        <th style=" width:15%">Total</th>
+                                        <th style=" width:25%">{{ $t('Ref / Description') }}</th>
+                                        <th style=" width:10%">{{ $t('Qty') }}</th>
+                                        <th style=" width:15%">{{ $t('Amount') }}</th>
+                                        <th style=" width:15%">{{ $t('Currency') }}</th>
+                                        <th style=" width:15%">{{ $t('Curr. Rate') }}</th>
+                                        <th style=" width:15%">{{ $t('Total') }}</th>
                                         <th style="width:5%"></th>
                                     </tr>
                                 </thead>
@@ -141,27 +141,27 @@
             <div class="col-md-4">
                 <div class="row g-3">
                     <div class="col-md-12">
-                        <fieldset> <span class="legend">Client Info</span>
+                        <fieldset> <span class="legend">{{ $t('Client Info') }}</span>
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <tbody>
                                         <tr>
-                                            <th width="45%">Client Name</th>
+                                            <th width="45%">{{ $t('Client Name') }}</th>
                                             <th width="5">:</th>
                                             <td width="50%">{{ data?.client?.org_name }}</td>
                                         </tr>
                                         <tr>
-                                            <th>Mobile</th>
+                                            <th>{{ $t('Mobile') }}</th>
                                             <th>:</th>
                                             <td>{{ data?.client?.mobile }}</td>
                                         </tr>
                                         <tr>
-                                            <th>Email</th>
+                                            <th>{{ $t('Email') }}</th>
                                             <th>:</th>
                                             <td>{{ data?.client?.email }}</td>
                                         </tr>
                                         <tr>
-                                            <th>Address</th>
+                                            <th>{{ $t('Address') }}</th>
                                             <th>:</th>
                                             <td>{{ data?.client?.address }}</td>
                                         </tr>
@@ -172,7 +172,7 @@
                     </div>
                     <div class="col-md-12" v-if="workorders.length > 0">
                         <fieldset>
-                            <span class="legend">Workorders</span>
+                            <span class="legend">{{ $t('Workorders') }}</span>
                             <table class="table table-striped">
                                 <tbody>
                                     <tr v-for="(record, index) in workorders" :key="index">

@@ -3,12 +3,12 @@
     <!-- 📊 Modern KPI Statistics Cards Deck -->
     <template v-slot:header-summary>
       <div class="row g-2 mb-3 purchase_kpi_deck">
-        <!-- Card 1: Total Purchase Orders -->
+        <!-- Card 1: {{ $t('Total Purchase Orders') }} -->
         <div class="col-xl-3 col-sm-6">
           <div class="card border-0 shadow-sm kpi_card h-100 kpi_blue">
             <div class="card-body p-3 d-flex align-items-center justify-content-between">
               <div>
-                <div class="text-muted text-uppercase fw-semibold small tracking-wider">Total Purchase Orders</div>
+                <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('Total Purchase Orders') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
                   {{ Number(stats.total_pos || 0).toLocaleString() }}
                 </div>
@@ -31,17 +31,17 @@
           </div>
         </div>
 
-        <!-- Card 2: Total Purchase Valuation -->
+        <!-- Card 2: Total {{ $t('Purchase Valuation') }} -->
         <div class="col-xl-3 col-sm-6">
           <div class="card border-0 shadow-sm kpi_card h-100 kpi_green">
             <div class="card-body p-3 d-flex align-items-center justify-content-between">
               <div>
-                <div class="text-muted text-uppercase fw-semibold small tracking-wider">Purchase Valuation</div>
+                <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('Purchase Valuation') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
                   ৳ {{ formatNumber(stats.total_amount) }}
                 </div>
                 <div class="small text-muted mt-1">
-                  <i class="fas fa-coins text-success me-1"></i> Net Order Invoiced Value
+                  <i class="fas fa-coins text-success me-1"></i> {{ $t('Net Order Invoiced Value') }}
                 </div>
               </div>
               <div class="kpi_icon_box bg-success bg-opacity-10 text-success">
@@ -56,13 +56,13 @@
           <div class="card border-0 shadow-sm kpi_card h-100 kpi_amber">
             <div class="card-body p-3 d-flex align-items-center justify-content-between">
               <div>
-                <div class="text-muted text-uppercase fw-semibold small tracking-wider">Total Discounts</div>
+                <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('Total Discounts') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
                   ৳ {{ formatNumber(stats.total_discount) }}
                 </div>
                 <div class="small text-muted mt-1">
                   <span class="badge bg-warning bg-opacity-10 text-dark">
-                    <i class="fas fa-tags text-warning me-1"></i> Vendor Trade Discounts
+                    <i class="fas fa-tags text-warning me-1"></i> {{ $t('Vendor Trade Discounts') }}
                   </span>
                 </div>
               </div>
@@ -78,12 +78,12 @@
           <div class="card border-0 shadow-sm kpi_card h-100 kpi_purple">
             <div class="card-body p-3 d-flex align-items-center justify-content-between">
               <div>
-                <div class="text-muted text-uppercase fw-semibold small tracking-wider">VAT / Tax Amount</div>
+                <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('VAT / Tax Amount') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
                   ৳ {{ formatNumber(stats.total_tax) }}
                 </div>
                 <div class="small text-muted mt-1">
-                  <i class="fas fa-receipt text-primary me-1"></i> Input Tax Breakdown
+                  <i class="fas fa-receipt text-primary me-1"></i> {{ $t('Input Tax Breakdown') }}
                 </div>
               </div>
               <div class="kpi_icon_box" style="background-color: rgba(99, 102, 241, 0.1); color: #6366f1;">
@@ -124,7 +124,7 @@
       </v-select-container>
 
       <div class="col-md-3">
-        <label class="form-label small fw-semibold text-muted mb-1">Receive Status (GRN)</label>
+        <label class="form-label small fw-semibold text-muted mb-1">{{ $t('Receive Status (GRN)') }}</label>
         <select v-model="search_data.receive_status" class="form-select form-select-sm" @change="onFilterChange">
           <option value="">-- All Receive Status --</option>
           <option value="Pending">Pending (Awaiting GRN)</option>
@@ -142,7 +142,7 @@
         :disablePastDates="search_data.from_date" @change="onFilterChange"></date-picker>
 
       <div class="col-md-2">
-        <label class="form-label small fw-semibold text-muted mb-1">Record Status</label>
+        <label class="form-label small fw-semibold text-muted mb-1">{{ $t('Record Status') }}</label>
         <select v-model="search_data.status" class="form-select form-select-sm" @change="onFilterChange">
           <option value="">-- All Status --</option>
           <option value="active">Active</option>
@@ -153,14 +153,14 @@
       <!-- Quick Date Preset Pills -->
       <div class="col-md-4 d-flex align-items-end mb-2">
         <div class="w-100">
-          <label class="form-label small fw-semibold text-muted mb-1 d-block">Quick Date Presets</label>
+          <label class="form-label small fw-semibold text-muted mb-1 d-block">{{ $t('Quick Date Presets') }}</label>
           <div class="btn-group btn-group-sm w-100 flex-wrap" role="group">
-            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('today') }" @click="applyDatePreset('today')">Today</button>
-            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('yesterday') }" @click="applyDatePreset('yesterday')">Yesterday</button>
-            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('last7') }" @click="applyDatePreset('last7')">Last 7 Days</button>
-            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('thisMonth') }" @click="applyDatePreset('thisMonth')">This Month</button>
+            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('today') }" @click="applyDatePreset('today')">{{ $t('Today') }}</button>
+            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('yesterday') }" @click="applyDatePreset('yesterday')">{{ $t('Yesterday') }}</button>
+            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('last7') }" @click="applyDatePreset('last7')">{{ $t('Last 7 Days') }}</button>
+            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('thisMonth') }" @click="applyDatePreset('thisMonth')">{{ $t('This Month') }}</button>
             <button type="button" class="btn btn-outline-danger" v-if="search_data.from_date || search_data.to_date" @click="applyDatePreset('clear')">
-              <i class="fas fa-times me-1"></i> Clear
+              <i class="fas fa-times me-1"></i> {{ $t('Clear') }}
             </button>
           </div>
         </div>

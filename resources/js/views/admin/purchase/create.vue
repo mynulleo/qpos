@@ -9,7 +9,7 @@
               <i class="fas fa-file-invoice-dollar"></i>
             </div>
             <div>
-              <h6 class="fw-bold mb-0 text-dark">Purchase Order Information (ক্রয় তথ্যাবলী)</h6>
+              <h6 class="fw-bold mb-0 text-dark">{{ $t('Purchase Order Information') }}</h6>
               <span class="small text-muted">Enter invoice details, supplier and purchase date</span>
             </div>
           </div>
@@ -64,7 +64,7 @@
             <!-- Supplier Selection with appendToBody -->
             <div class="col-md-4">
               <Select
-                title="Supplier (সরবরাহকারী)"
+                title="Supplier"
                 v-model="data.supplier_id"
                 field="data.supplier_id"
                 label="org_name"
@@ -97,12 +97,12 @@
 
       <!-- 📊 Live KPI / Metric Summary Cards -->
       <div class="row g-3 mb-4 kpi-row">
-        <!-- Total Items & Qty -->
+        <!-- {{ $t('Total Items & Qty') }} -->
         <div class="col-xl-3 col-md-6 col-12">
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Total Items & Qty</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Total Items & Qty') }}</span>
                 <div class="stat-icon theme-bg-soft text-theme rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-boxes"></i>
                 </div>
@@ -120,7 +120,7 @@
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Sub Total (মোট)</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Sub Total') }}</span>
                 <div class="stat-icon bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-calculator"></i>
                 </div>
@@ -130,12 +130,12 @@
           </div>
         </div>
 
-        <!-- Discount & Tax -->
+        <!-- {{ $t('Discount & Tax') }} -->
         <div class="col-xl-3 col-md-6 col-12">
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Discount & Tax</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Discount & Tax') }}</span>
                 <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-percentage"></i>
                 </div>
@@ -153,7 +153,7 @@
           <div class="card stat-card border-0 shadow-sm h-100 total-card-highlight">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-white-50 fw-bold small text-uppercase">Net Grand Total</span>
+                <span class="text-white-50 fw-bold small text-uppercase">{{ $t('Net Grand Total') }}</span>
                 <div class="stat-icon bg-white bg-opacity-20 text-white rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-coins"></i>
                 </div>
@@ -172,7 +172,7 @@
               <i class="fas fa-cart-arrow-down"></i>
             </div>
             <div>
-              <h6 class="fw-bold mb-0 text-dark">Purchase Items (ক্রয়কৃত পণ্যসমূহের তালিকা)</h6>
+              <h6 class="fw-bold mb-0 text-dark">{{ $t('Purchase Items') }}</h6>
               <span class="small text-muted">Manage products, variants, unit pricing and quantities</span>
             </div>
             <span class="badge theme-bg text-white rounded-pill px-2 py-1 ms-2 font-monospace">
@@ -186,8 +186,7 @@
             class="btn btn-sm btn-primary d-flex align-items-center gap-2 px-3 py-2 fw-semibold shadow-sm"
             @click.prevent="openAddProductModal"
           >
-            <i class="fas fa-plus-circle"></i> Add Product Row (পণ্য যোগ করুন)
-          </button>
+            <i class="fas fa-plus-circle"></i>{{ $t('Add Product Row') }}</button>
         </div>
 
         <div class="card-body p-0">
@@ -195,15 +194,15 @@
             <table class="table custom-items-table table-hover align-middle mb-0">
               <thead class="theme-table-header text-center">
                 <tr>
-                  <th style="width: 4%;">#</th>
-                  <th style="width: 28%;" class="text-start ps-3">Product / Item (পণ্য)</th>
-                  <th style="width: 14%;">Variant (ভেরিয়েন্ট)</th>
-                  <th style="width: 8%;">Unit (একক)</th>
-                  <th style="width: 13%;" class="text-end">Cost Price (ক্রয়)</th>
-                  <th style="width: 13%;" class="text-end">Selling Price (বিক্রয়)</th>
-                  <th style="width: 8%;">Qty (পরিমাণ)</th>
-                  <th style="width: 12%;" class="text-end pe-3">Total Amount</th>
-                  <th style="width: 8%;">Actions</th>
+                  <th style="width: 4%;">{{ $t('#') }}</th>
+                  <th style="width: 28%;" class="text-start ps-3">{{ $t('Product / Item') }}</th>
+                  <th style="width: 14%;">{{ $t('Variant') }}</th>
+                  <th style="width: 8%;">{{ $t('Unit') }}</th>
+                  <th style="width: 13%;" class="text-end">{{ $t('Cost Price') }}</th>
+                  <th style="width: 13%;" class="text-end">{{ $t('Selling Price') }}</th>
+                  <th style="width: 8%;">{{ $t('Qty') }}</th>
+                  <th style="width: 12%;" class="text-end pe-3">{{ $t('Total Amount') }}</th>
+                  <th style="width: 8%;">{{ $t('Actions') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -275,7 +274,7 @@
                         type="button"
                         class="btn btn-sm btn-outline-primary btn-action"
                         @click="openEditProductModal(index, pitem)"
-                        title="Edit Product (সংশোধন করুন)"
+                        title="Edit Product"
                       >
                         <i class="fas fa-edit"></i>
                       </button>
@@ -283,7 +282,7 @@
                         type="button"
                         class="btn btn-sm btn-outline-danger btn-action"
                         @click="removePurchaseDetails(index)"
-                        title="Remove Product (মুছে ফেলুন)"
+                        title="Remove Product"
                       >
                         <i class="fas fa-trash-alt"></i>
                       </button>
@@ -305,8 +304,7 @@
                         class="btn btn-primary btn-sm px-4 fw-bold shadow-sm"
                         @click="openAddProductModal"
                       >
-                        <i class="fas fa-plus-circle me-1"></i> Add First Product (পণ্য যোগ করুন)
-                      </button>
+                        <i class="fas fa-plus-circle me-1"></i>{{ $t('Add First Product') }}</button>
                     </div>
                   </td>
                 </tr>
@@ -321,8 +319,120 @@
               class="btn btn-outline-secondary btn-sm px-4 fw-bold dashed-btn"
               @click.prevent="openAddProductModal"
             >
-              <i class="fas fa-plus me-1 text-primary"></i> Add Another Product Row (আরও পণ্য যোগ করুন)
-            </button>
+              <i class="fas fa-plus me-1 text-primary"></i>{{ $t('Add Another Product Row') }}</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📜 Terms & Conditions Section (ক্রয় আদেশ শর্তাবলী) -->
+      <div class="card border-0 shadow-sm mb-4 form-card terms-card">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="section-icon theme-bg-soft text-theme rounded d-flex align-items-center justify-content-center">
+              <i class="fas fa-file-contract"></i>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <h6 class="fw-bold mb-0 text-dark">{{ $t('Terms & Conditions') }}</h6>
+                <span class="badge theme-bg text-white rounded-pill font-monospace" style="font-size: 11px;">
+                  {{ selectedTermsCount }} of {{ termsList.length }} Selected
+                </span>
+              </div>
+              <span class="small text-muted">Purchase Order module conditions are displayed below. Checked conditions will be included in the PO document.</span>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 px-3 py-1 fw-semibold shadow-sm"
+              @click.prevent="addCustomTerm"
+            >
+              <i class="fas fa-plus-circle"></i>{{ $t('Add Condition') }}</button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 px-3 py-1 fw-semibold"
+              @click.prevent="resetDefaultTerms"
+              title="Reload default conditions for Purchase Order module"
+            >
+              <i class="fas fa-undo"></i>{{ $t('Reset Defaults') }}</button>
+          </div>
+        </div>
+
+        <div class="card-body p-3">
+          <!-- Terms List Items -->
+          <div v-if="termsList && termsList.length > 0" class="d-flex flex-column gap-2">
+            <div
+              v-for="(item, tIdx) in termsList"
+              :key="tIdx"
+              class="term-item-row p-2 px-3 rounded border d-flex align-items-center gap-3 transition-all"
+              :class="item.selected ? 'bg-white border-primary border-opacity-50 shadow-xs' : 'bg-light border-light opacity-75'"
+            >
+              <!-- Checkbox -->
+              <div class="form-check m-0 d-flex align-items-center" title="Toggle condition">
+                <input
+                  class="form-check-input term-checkbox"
+                  type="checkbox"
+                  :id="'po_term_' + tIdx"
+                  v-model="item.selected"
+                  style="width: 20px; height: 20px; cursor: pointer;"
+                />
+              </div>
+
+              <!-- Index Badge -->
+              <span
+                class="badge rounded-circle d-flex align-items-center justify-content-center fw-bold font-monospace"
+                :class="item.selected ? 'theme-bg text-white' : 'bg-secondary text-white'"
+                style="width: 26px; height: 26px; min-width: 26px; font-size: 11px;"
+              >
+                {{ tIdx + 1 }}
+              </span>
+
+              <!-- Editable Condition Text Input Box -->
+              <div class="flex-grow-1">
+                <input
+                  type="text"
+                  class="form-control form-control-sm font-monospace"
+                  :class="{ 'fw-semibold text-dark': item.selected, 'text-muted': !item.selected }"
+                  v-model="item.condition"
+                  :placeholder="'Enter condition #' + (tIdx + 1) + ' text...'"
+                />
+              </div>
+
+              <!-- Delete Button -->
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger btn-action"
+                  @click="removeTerm(tIdx)"
+                  title="Remove this condition row"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="text-center py-4 bg-light rounded border border-dashed">
+            <div class="text-muted mb-2">
+              <i class="fas fa-clipboard-list fa-2x opacity-50"></i>
+            </div>
+            <p class="text-muted small mb-2">No terms & conditions added yet.</p>
+            <div class="d-flex justify-content-center gap-2">
+              <button type="button" class="btn btn-sm btn-primary px-3" @click="addCustomTerm">
+                <i class="fas fa-plus me-1"></i> Add Condition
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="resetDefaultTerms">
+                <i class="fas fa-sync-alt me-1"></i> Load Default Terms
+              </button>
+            </div>
+          </div>
+
+          <!-- Helper note -->
+          <div class="d-flex align-items-center gap-2 mt-3 pt-2 border-top text-muted small" style="font-size: 12px;">
+            <i class="fas fa-info-circle text-primary"></i>
+            <span>All <strong>checked</strong> conditions will appear in the Purchase Order View and Printed PO vouchers. Unchecked conditions will not be saved.</span>
           </div>
         </div>
       </div>
@@ -336,7 +446,7 @@
               <div class="section-icon theme-bg-soft text-theme rounded d-flex align-items-center justify-content-center">
                 <i class="fas fa-comment-alt"></i>
               </div>
-              <h6 class="fw-bold mb-0 text-dark">Purchase Notes & Details</h6>
+              <h6 class="fw-bold mb-0 text-dark">{{ $t('Purchase Notes & Details') }}</h6>
             </div>
             <div class="card-body p-3">
               <label class="form-label small fw-semibold text-muted">Internal Remarks / Delivery Memo</label>
@@ -361,17 +471,17 @@
               <div class="section-icon theme-bg-soft text-theme rounded d-flex align-items-center justify-content-center">
                 <i class="fas fa-receipt"></i>
               </div>
-              <h6 class="fw-bold mb-0 text-dark">Financial Summary (হিসাব বিবরণী)</h6>
+              <h6 class="fw-bold mb-0 text-dark">{{ $t('Financial Summary') }}</h6>
             </div>
             <div class="card-body p-4">
               <div class="summary-line d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span class="text-muted fw-semibold">Sub Total (মোট পণ্যের মূল্য):</span>
+                <span class="text-muted fw-semibold">{{ $t('Sub Total') }}:</span>
                 <span class="fw-bold font-monospace fs-6 text-dark">{{ formatCurrency(data.amount) }}</span>
               </div>
 
               <!-- Discount Input -->
               <div class="summary-line d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span class="text-muted fw-semibold">Discount (ছাড় / ডিসকাউন্ট):</span>
+                <span class="text-muted fw-semibold">{{ $t('Discount') }}:</span>
                 <div class="input-group input-group-sm" style="width: 140px;">
                   <span class="input-group-text bg-light text-muted px-2">৳</span>
                   <input
@@ -388,7 +498,7 @@
 
               <!-- Tax / VAT Input -->
               <div class="summary-line d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span class="text-muted fw-semibold">Tax / VAT (ভ্যাট / ট্যাক্স):</span>
+                <span class="text-muted fw-semibold">{{ $t('Tax / VAT') }}:</span>
                 <div class="input-group input-group-sm" style="width: 140px;">
                   <span class="input-group-text bg-light text-muted px-2">৳</span>
                   <input
@@ -407,7 +517,7 @@
               <div class="grand-total-box p-3 rounded mt-3 d-flex justify-content-between align-items-center">
                 <div>
                   <span class="d-block text-white-50 small fw-bold text-uppercase">Net Total Amount</span>
-                  <span class="text-white fs-5 fw-bold">সর্বমোট প্রদেয়</span>
+                  <span class="text-white fs-5 fw-bold">{{ $t('Net Total Amount') }}</span>
                 </div>
                 <div class="text-end">
                   <h3 class="fw-bold mb-0 text-white font-monospace">{{ formatCurrency(data.total_amount) }}</h3>
@@ -424,7 +534,7 @@
       <div class="col-12 mt-2">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 bg-white border rounded shadow-sm">
           <router-link :to="{ name: model + '.index' }" class="btn btn-outline-secondary px-4 fw-semibold">
-            <i class="fas fa-arrow-left me-1"></i> Back to List
+            <i class="fas fa-arrow-left me-1"></i> {{ $t('Back to List') }}
           </router-link>
 
           <div class="d-flex align-items-center gap-2">
@@ -437,7 +547,7 @@
                 <i class="fa fa-spinner fa-spin"></i> Processing...
               </template>
               <template v-else>
-                <i class="fas fa-check-circle"></i> {{ $route.params.id ? "Update Purchase" : "Save & Create Purchase" }}
+                <i class="fas fa-check-circle"></i> {{ $route.params.id ? $t('Update Purchase') : $t('Save & Create Purchase') }}
               </template>
             </button>
           </div>
@@ -475,8 +585,7 @@
             <div class="row g-3">
               <!-- Category Selection with appendToBody -->
               <div class="col-md-6">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Category (ক্যাটাগরি) <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Category') }}<span class="text-danger">*</span>
                 </label>
                 <v-select
                   v-model="modalForm.category_id"
@@ -493,8 +602,7 @@
 
               <!-- Product / Item Selection with appendToBody -->
               <div class="col-md-6">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Product / Item (পণ্য) <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Product / Item') }}<span class="text-danger">*</span>
                 </label>
                 <v-select
                   v-model="modalForm.item_id"
@@ -513,9 +621,7 @@
 
               <!-- Color Variant -->
               <div :class="isElectronicsShop ? 'col-md-6' : 'col-md-4'">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Color (রং)
-                </label>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Color') }}</label>
                 <select class="form-select form-select-sm" v-model="modalForm.color_id">
                   <option :value="null">-- Standard / None --</option>
                   <option v-for="c in colors" :key="c.id" :value="c.id">{{ c.title }}</option>
@@ -524,9 +630,7 @@
 
               <!-- Size Variant (Hidden for Electronics) -->
               <div class="col-md-4" v-if="!isElectronicsShop">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Size (সাইজ)
-                </label>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Size') }}</label>
                 <select class="form-select form-select-sm" v-model="modalForm.size_id">
                   <option :value="null">-- Standard / None --</option>
                   <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.title }}</option>
@@ -535,9 +639,7 @@
 
               <!-- Auto-detected Unit Display Badge -->
               <div :class="isElectronicsShop ? 'col-md-6' : 'col-md-4'">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Unit (একক - অটোমেটিক)
-                </label>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Unit') }}</label>
                 <div class="input-group input-group-sm">
                   <span class="input-group-text bg-light text-muted"><i class="fas fa-balance-scale"></i></span>
                   <input
@@ -551,8 +653,7 @@
 
               <!-- Purchase Price (ক্রয় মূল্য) -->
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Purchase Price (ক্রয় মূল্য ৳) <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Purchase Price') }}<span class="text-danger">*</span>
                 </label>
                 <div class="input-group input-group-sm">
                   <span class="input-group-text bg-light text-muted">৳</span>
@@ -570,9 +671,7 @@
 
               <!-- Selling Price (বিক্রয় মূল্য) -->
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Selling Price (বিক্রয় মূল্য ৳)
-                </label>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Selling Price') }}</label>
                 <div class="input-group input-group-sm">
                   <span class="input-group-text bg-light text-muted">৳</span>
                   <input
@@ -588,8 +687,7 @@
 
               <!-- Quantity (পরিমাণ) -->
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  Quantity (পরিমাণ) <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Quantity') }}<span class="text-danger">*</span>
                 </label>
                 <div class="input-group input-group-sm">
                   <input
@@ -649,6 +747,9 @@ export default {
       if (!this.data.purchase_details) return 0;
       return this.data.purchase_details.reduce((sum, item) => sum + (parseFloat(item.qty) || 0), 0);
     },
+    selectedTermsCount() {
+      return (this.termsList || []).filter((t) => t.selected && t.condition && t.condition.trim()).length;
+    },
   },
   data() {
     return {
@@ -664,8 +765,11 @@ export default {
         total_amount: 0,
         status: true,
         note: "",
+        terms_conditions: [],
         purchase_details: [],
       },
+      termsList: [],
+      rawDefaultTerms: [],
       categories: [],
       units: [],
       colors: [],
@@ -962,6 +1066,49 @@ export default {
         this.sizes = res.data || [];
       });
     },
+    loadPurchaseTerms() {
+      axios
+        .get("termsCondition/by-module/Purchase%20Order")
+        .then((res) => {
+          const list = res.data || [];
+          this.rawDefaultTerms = JSON.parse(JSON.stringify(list));
+          if (!this.$route.params.id || !this.termsList || this.termsList.length === 0) {
+            this.termsList = list.map((item) => ({
+              id: item.id,
+              condition: item.condition_text || item.condition || "",
+              selected: item.is_default == 1 || item.is_default === true,
+              is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
+            }));
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load purchase terms:", err);
+        });
+    },
+    addCustomTerm() {
+      this.termsList.push({
+        id: null,
+        condition: "",
+        selected: true,
+        is_default: 0,
+      });
+    },
+    removeTerm(index) {
+      this.termsList.splice(index, 1);
+    },
+    resetDefaultTerms() {
+      if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
+        this.termsList = this.rawDefaultTerms.map((item) => ({
+          id: item.id,
+          condition: item.condition_text || item.condition || "",
+          selected: item.is_default == 1 || item.is_default === true,
+          is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
+        }));
+        this.$toast("Terms & conditions reset to defaults", "info");
+      } else {
+        this.loadPurchaseTerms();
+      }
+    },
     submit() {
       this.$validate().then((res) => {
         const error = this.validation.countErrors();
@@ -994,6 +1141,13 @@ export default {
             this.$toast("This Purchase Order has already been received via GRN and cannot be edited.", "error");
             return false;
           }
+
+          // Extract selected checked terms
+          const selectedTerms = (this.termsList || [])
+            .filter((t) => t.selected && t.condition && t.condition.trim() !== "")
+            .map((t) => t.condition.trim());
+          this.data.terms_conditions = selectedTerms;
+
           var form = document.getElementById("form");
           var formData = new FormData(form);
           formData.append("supplier_id", this.data.supplier_id);
@@ -1041,11 +1195,35 @@ export default {
             this.$toast("This Purchase Order has already been received via GRN and cannot be edited.", "error");
             this.$router.replace({ name: 'purchase.show', params: { id: this.$route.params.id } });
           }
+
+          if (p.terms_conditions) {
+            let tcData = p.terms_conditions;
+            if (typeof tcData === "string") {
+              try {
+                tcData = JSON.parse(tcData);
+              } catch (e) {
+                tcData = [tcData];
+              }
+            }
+            if (Array.isArray(tcData) && tcData.length > 0) {
+              this.termsList = tcData.map((tc) => ({
+                id: null,
+                condition: typeof tc === "string" ? tc : (tc.condition || tc.condition_text || ""),
+                selected: typeof tc === "object" && tc.selected !== undefined ? Boolean(tc.selected) : true,
+                is_default: 1,
+              }));
+            } else {
+              this.loadPurchaseTerms();
+            }
+          } else {
+            this.loadPurchaseTerms();
+          }
         }
       });
     } else {
       this.page_title = this.headline(this.model) + " Create";
       this.getGeneratedInvoiceNo();
+      this.loadPurchaseTerms();
     }
 
     this.getCategories();
@@ -1253,5 +1431,33 @@ export default {
 :global(.vs__dropdown-option--highlight) {
   background-color: #112C47 !important;
   color: #ffffff !important;
+}
+
+/* Terms & Conditions Row Styling */
+.term-item-row {
+  transition: all 0.2s ease;
+}
+
+.term-item-row:hover {
+  border-color: #cbd5e1 !important;
+  background-color: #f8fafc;
+}
+
+.shadow-xs {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.term-checkbox {
+  border-color: #94a3b8;
+  transition: all 0.15s ease;
+}
+
+.term-checkbox:checked {
+  background-color: #112C47;
+  border-color: #112C47;
 }
 </style>

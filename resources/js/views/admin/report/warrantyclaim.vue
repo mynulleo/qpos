@@ -8,7 +8,7 @@
           <div class="d-flex align-items-center gap-2">
             <h5 class="mb-0 fw-bold text-dark text-nowrap d-flex align-items-center gap-2">
               <i class="fas fa-shield-alt theme-text"></i>
-              <span>Warranty Claims Audit Report (ওয়ারেন্টি ক্লেইম অডিট রিপোর্ট)</span>
+              <span>{{ $t('Warranty Claims Audit Report') }}</span>
             </h5>
             <span class="badge bg-secondary font-monospace">{{ summary.total_claims || 0 }}</span>
           </div>
@@ -75,7 +75,7 @@
               type="button"
               class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-sm"
               @click="openHelpModal"
-              title="Help Manual (সহায়িকা)"
+              title="Help Manual"
             >
               <i class="fas fa-question-circle"></i> Help
             </button>
@@ -90,14 +90,14 @@
               <label class="form-label small fw-bold text-muted mb-1">Claim Status</label>
               <select class="form-select form-select-sm" v-model="search_data.current_status" @change="search">
                 <option value="all">-- All Statuses --</option>
-                <option value="received">Received (গৃহীত)</option>
-                <option value="sent_to_vendor">Sent to Vendor (ভেন্ডরে)</option>
-                <option value="in_service">In Service (মেরামতে)</option>
-                <option value="repaired">Repaired (মেরামত সম্পন্ন)</option>
-                <option value="replaced">Replaced (নতুন পরিবর্তন)</option>
-                <option value="ready_for_delivery">Ready for Delivery (প্রস্তুত)</option>
-                <option value="delivered">Delivered (হস্তান্তরিত)</option>
-                <option value="rejected">Rejected (বাতিল)</option>
+                <option value="received">{{ $t('Received') }}</option>
+                <option value="sent_to_vendor">{{ $t('Sent to Vendor') }}</option>
+                <option value="in_service">{{ $t('In Service') }}</option>
+                <option value="repaired">{{ $t('Repaired') }}</option>
+                <option value="replaced">{{ $t('Replaced') }}</option>
+                <option value="ready_for_delivery">{{ $t('Ready for Delivery') }}</option>
+                <option value="delivered">{{ $t('Delivered') }}</option>
+                <option value="rejected">{{ $t('Rejected') }}</option>
               </select>
             </div>
 
@@ -106,8 +106,8 @@
               <label class="form-label small fw-bold text-muted mb-1">Coverage Type</label>
               <select class="form-select form-select-sm" v-model="search_data.warranty_type" @change="search">
                 <option value="all">-- All Policies --</option>
-                <option value="warranty">Warranty (ওয়ারেন্টি)</option>
-                <option value="guarantee">Guarantee (গ্যারান্টি)</option>
+                <option value="warranty">{{ $t('Warranty') }}</option>
+                <option value="guarantee">{{ $t('Guarantee') }}</option>
               </select>
             </div>
 
@@ -159,7 +159,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-danger">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Total technician and vendor service cost incurred by shop">Service Cost (খরচ)</div>
+              <div class="text-muted small fw-semibold" title="Total technician and vendor service cost incurred by shop">{{ $t('Service Cost') }}</div>
               <h4 class="mb-0 fw-bold text-danger font-monospace">Tk. {{ formatPrice(summary.total_service_cost) }}</h4>
             </div>
             <div class="kpi-icon-box bg-danger bg-opacity-10 text-danger">
@@ -174,7 +174,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-success">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Total charge collected from customers">Cust. Charge (আদায়)</div>
+              <div class="text-muted small fw-semibold" title="Total charge collected from customers">{{ $t('Cust. Charge') }}</div>
               <h4 class="mb-0 fw-bold text-success font-monospace">Tk. {{ formatPrice(summary.total_customer_charge) }}</h4>
             </div>
             <div class="kpi-icon-box bg-success bg-opacity-10 text-success">
@@ -206,7 +206,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-info">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Under repair, vendor, or received">In Pipeline (পেন্ডিং)</div>
+              <div class="text-muted small fw-semibold" title="Under repair, vendor, or received">{{ $t('In Pipeline') }}</div>
               <h4 class="mb-0 fw-bold text-info font-monospace">{{ summary.pending_service || 0 }}</h4>
             </div>
             <div class="kpi-icon-box bg-info bg-opacity-10 text-info">
@@ -221,7 +221,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-dark">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Delivered back to customer">Delivered (হস্তান্তরিত)</div>
+              <div class="text-muted small fw-semibold" title="Delivered back to customer">{{ $t('Delivered') }}</div>
               <h4 class="mb-0 fw-bold text-dark font-monospace">{{ summary.delivered || 0 }}</h4>
             </div>
             <div class="kpi-icon-box bg-dark bg-opacity-10 text-dark">
@@ -316,9 +316,7 @@
         </p>
         <div class="border-top border-bottom py-2 my-2 bg-light">
           <h5 class="fw-bold mb-0 text-dark">
-            <i class="fas fa-shield-alt me-1"></i>
-            Warranty & Guarantee Claims Audit Report (ওয়ারেন্টি ও গ্যারান্টি ক্লেইম অডিট)
-          </h5>
+            <i class="fas fa-shield-alt me-1"></i>{{ $t('Warranty & Guarantee Claims Audit Report') }}</h5>
           <small class="text-muted">
             Total Claims: <strong>{{ meta.total || (records ? records.length : 0) }}</strong> | Generated on: <strong>{{ currentDate }}</strong>
           </small>
@@ -349,13 +347,13 @@
           <table class="table table-hover table-sm align-middle mb-0 claims-audit-table">
             <thead class="sticky-top" style="z-index: 2;">
               <tr>
-                <th class="text-center" width="3%">#</th>
-                <th width="14%">Claim Ticket</th>
-                <th width="20%">Product & Serial</th>
-                <th width="18%">Customer & Invoice</th>
-                <th width="16%">Problem Description</th>
-                <th width="14%" class="text-end">Servicing Financials</th>
-                <th width="15%" class="text-center">Tracking Status</th>
+                <th class="text-center" width="3%">{{ $t('#') }}</th>
+                <th width="14%">{{ $t('Claim Ticket') }}</th>
+                <th width="20%">{{ $t('Product & Serial') }}</th>
+                <th width="18%">{{ $t('Customer & Invoice') }}</th>
+                <th width="16%">{{ $t('Problem Description') }}</th>
+                <th width="14%" class="text-end">{{ $t('Servicing Financials') }}</th>
+                <th width="15%" class="text-center">{{ $t('Tracking Status') }}</th>
               </tr>
             </thead>
             <tbody>

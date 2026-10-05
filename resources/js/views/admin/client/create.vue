@@ -2,7 +2,7 @@
     <create-form @onSubmit='submit'>
         <div class="col-md-12 mb-3">
             <fieldset>
-                <span class="legend">Office Info</span>
+                <span class="legend">{{ $t('Office Info') }}</span>
                 <div class="row g-3">
                     <date-picker id='date1' v-model='data.reg_date' field='data.reg_date' title='Reg Date'
                         placeholder='Reg Date' col='2' :req='true'></date-picker>
@@ -28,7 +28,7 @@
 
         <div class="col-md-6 mb-3">
             <fieldset>
-                <span class="legend">Contact Info</span>
+                <span class="legend">{{ $t('Contact Info') }}</span>
                 <div class="row g-3">
                     <Input v-model='data.name' field='data.name' title='Name' col="6" :req='true' />
                     <Input v-model='data.nid' field='data.nid' title='NID' col="6" :req='false' />
@@ -40,7 +40,7 @@
         </div>
         <div class="col-md-6 mb-3">
             <fieldset>
-                <span class="legend">Bank Information</span>
+                <span class="legend">{{ $t('Bank Information') }}</span>
                 <div class="row g-3">
                     <Input v-model='data.account_name' field='data.account_name' col="6" title='Account Name'
                         :req='false' />

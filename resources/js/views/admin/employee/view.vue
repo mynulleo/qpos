@@ -3,7 +3,7 @@
     <div class="row custom_row g-3">
       <div class="col-md-2">
         <fieldset>
-          <span class="legend">Image</span>
+          <span class="legend">{{ $t('Image') }}</span>
           <div class="view_file_item text-center" data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-title="Image">
             <div class="img">
@@ -16,62 +16,62 @@
         <div class="row g-3">
           <div class="col-md-12">
             <fieldset>
-              <span class="legend">Image</span>
+              <span class="legend">{{ $t('Image') }}</span>
               <div class="table-responsive">
                 <table class="table table-striped">
                   <tbody>
                     <tr>
-                      <th width="30%">EmpID</th>
+                      <th width="30%">{{ $t('EmpID') }}</th>
                       <th width="5%">:</th>
                       <td>{{ data.empid }}</td>
                     </tr>
                     <tr>
-                      <th>Joining Date</th>
+                      <th>{{ $t('Joining Date') }}</th>
                       <th>:</th>
                       <td>{{ data.joining_date }}</td>
                     </tr>
                     <tr>
-                      <th>Designation</th>
+                      <th>{{ $t('Designation') }}</th>
                       <th>:</th>
                       <td>{{ data.designation?.title }}</td>
                     </tr>
                     <tr>
-                      <th>Full Name</th>
+                      <th>{{ $t('Full Name') }}</th>
                       <th>:</th>
                       <td>{{ data.full_name }}</td>
                     </tr>
                     <tr>
-                      <th>Email</th>
+                      <th>{{ $t('Email') }}</th>
                       <th>:</th>
                       <td>{{ data.email }}</td>
                     </tr>
                     <tr>
-                      <th>Mobile</th>
+                      <th>{{ $t('Mobile') }}</th>
                       <th>:</th>
                       <td>{{ data.mobile }}</td>
                     </tr>
                     <tr>
-                      <th>Date of Birth</th>
+                      <th>{{ $t('Date of Birth') }}</th>
                       <th>:</th>
                       <td>{{ data.dob }}</td>
                     </tr>
                     <tr>
-                      <th>Nid</th>
+                      <th>{{ $t('Nid') }}</th>
                       <th>:</th>
                       <td>{{ data.nid }}</td>
                     </tr>
                     <tr>
-                      <th>Address</th>
+                      <th>{{ $t('Address') }}</th>
                       <th>:</th>
                       <td>{{ data.address }}</td>
                     </tr>
                     <tr>
-                      <th>Branch</th>
+                      <th>{{ $t('Branch') }}</th>
                       <th>:</th>
                       <td>{{ data.office_branch?.branch_name }}</td>
                     </tr>
                     <tr>
-                      <th>Status</th>
+                      <th>{{ $t('Status') }}</th>
                       <th>:</th>
                       <td>{{ data.status }}</td>
                     </tr>
@@ -82,57 +82,57 @@
           </div>
           <div class="col-md-6">
             <fieldset class="mt-3">
-              <span class="legend">Family Info</span>
+              <span class="legend">{{ $t('Family Info') }}</span>
               <div class="table-responsive">
                 <table class="table table-striped">
                   <tbody>
                     <tr>
-                      <th>Father Name</th>
+                      <th>{{ $t('Father Name') }}</th>
                       <th width="5%">:</th>
                       <td>{{ data.father_name }}</td>
                     </tr>
                     <tr>
-                      <th>Father Occupation</th>
+                      <th>{{ $t('Father Occupation') }}</th>
                       <th>:</th>
                       <td>{{ data.father_occupation }}</td>
                     </tr>
                     <tr>
-                      <th>Father NID</th>
+                      <th>{{ $t('Father NID') }}</th>
                       <th>:</th>
                       <td>{{ data.father_nid }}</td>
                     </tr>
                     <tr>
-                      <th>Father Mobile</th>
+                      <th>{{ $t('Father Mobile') }}</th>
                       <th>:</th>
                       <td>{{ data.father_mobile }}</td>
                     </tr>
                     <tr>
-                      <th>Mother Name</th>
+                      <th>{{ $t('Mother Name') }}</th>
                       <th>:</th>
                       <td>{{ data.mother_name }}</td>
                     </tr>
                     <tr>
-                      <th>Mother Occupation</th>
+                      <th>{{ $t('Mother Occupation') }}</th>
                       <th>:</th>
                       <td>{{ data.mother_occupation }}</td>
                     </tr>
                     <tr>
-                      <th>Mother NID</th>
+                      <th>{{ $t('Mother NID') }}</th>
                       <th>:</th>
                       <td>{{ data.mother_nid }}</td>
                     </tr>
                     <tr>
-                      <th>Mother Mobile</th>
+                      <th>{{ $t('Mother Mobile') }}</th>
                       <th>:</th>
                       <td>{{ data.mother_mobile }}</td>
                     </tr>
                     <tr>
-                      <th>Spouse Name</th>
+                      <th>{{ $t('Spouse Name') }}</th>
                       <th>:</th>
                       <td>{{ data.spouse_name }}</td>
                     </tr>
                     <tr>
-                      <th>Spouse Mobile</th>
+                      <th>{{ $t('Spouse Mobile') }}</th>
                       <th>:</th>
                       <td>{{ data.spouse_mobile }}</td>
                     </tr>
@@ -145,7 +145,7 @@
             <div class="row">
               <div class="col-md-12">
                 <fieldset class="mt-3">
-                  <span class="legend">Salary Info</span>
+                  <span class="legend">{{ $t('Salary Info') }}</span>
                   <div class="table-responsive">
                     <table class="table table-striped">
                       <tbody>
@@ -155,7 +155,7 @@
                           <td>{{ salary.amount }}</td>
                         </tr>
                         <tr>
-                          <th>Total</th>
+                          <th>{{ $t('Total') }}</th>
                           <th>:</th>
                           <td><strong>{{ data.salary }}</strong></td>
                         </tr>
@@ -166,27 +166,27 @@
               </div>
               <div class="col-md-12">
                 <fieldset class="mt-3">
-                  <span class="legend">Bank Information</span>
+                  <span class="legend">{{ $t('Bank Information') }}</span>
                   <div class="table-responsive">
                     <table class="table table-striped">
                       <tbody>
                         <tr>
-                          <th>Account Name</th>
+                          <th>{{ $t('Account Name') }}</th>
                           <th width="5%">:</th>
                           <td>{{ data.account_name }}</td>
                         </tr>
                         <tr>
-                          <th>Account No</th>
+                          <th>{{ $t('Account No') }}</th>
                           <th width="5%">:</th>
                           <td>{{ data.account_no }}</td>
                         </tr>
                         <tr>
-                          <th>Bank</th>
+                          <th>{{ $t('Bank') }}</th>
                           <th width="5%">:</th>
                           <td>{{ data.bank?.bank_name }}</td>
                         </tr>
                         <tr>
-                          <th>Branch</th>
+                          <th>{{ $t('Branch') }}</th>
                           <th width="5%">:</th>
                           <td>{{ data.branch_name }}</td>
                         </tr>

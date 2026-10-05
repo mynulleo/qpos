@@ -4,21 +4,31 @@
     <div class="card border-0 shadow-sm mb-2 text-white" style="background-color: #112C47;">
       <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-3">
-          <h4 class="mb-0 fw-bold text-white"><i class="fas fa-cash-register me-2 text-warning"></i>QTerminal</h4>
-          <span class="badge bg-secondary font-monospace">{{ currentDate }}</span>
+          <h4 class="mb-0 fw-bold text-white"><i class="fas fa-cash-register me-2 text-warning"></i>{{ $t('QTerminal') }}</h4>
+          <span class="badge bg-secondary font-monospace">{{ localizedCurrentDate }}</span>
         </div>
         <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2 py-1 rounded-pill fw-bold border"
+            :class="$locale === 'bn' ? 'btn-primary text-white border-primary' : 'btn-outline-light bg-light text-dark'"
+            @click="toggleLanguage"
+            :title="$locale === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'"
+          >
+            <i class="fas fa-language fa-lg"></i>
+            <span class="fw-bold">{{ $locale === 'bn' ? 'বাংলা' : 'EN' }}</span>
+          </button>
           <button type="button" class="btn btn-sm btn-outline-info text-white d-flex align-items-center gap-1 font-monospace" @click="openHelpModal">
-            <i class="fas fa-question-circle"></i> Help
+            <i class="fas fa-question-circle"></i> {{ $t('Help') }}
           </button>
           <router-link to="/invoice" class="btn btn-sm btn-outline-light d-flex align-items-center gap-1 font-monospace">
-            <i class="fas fa-file-invoice"></i> Invoices
+            <i class="fas fa-file-invoice"></i> {{ $t('Invoices') }}
           </router-link>
           <router-link to="/pos/return" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 font-monospace">
-            <i class="fas fa-undo"></i> Sales Return
+            <i class="fas fa-undo"></i> {{ $t('Sales Return') }}
           </router-link>
           <router-link to="/admin/dashboard" class="btn btn-sm btn-outline-light d-flex align-items-center gap-1">
-            <i class="fas fa-tachometer-alt"></i> Dashboard
+            <i class="fas fa-tachometer-alt"></i> {{ $t('Dashboard') }}
           </router-link>
         </div>
       </div>
@@ -30,18 +40,18 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
           <!-- Client Mobile Search Input (Compact, rgb(17 44 70) Theme Color) -->
           <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 240px; max-width: 320px;">
-            <span class="fw-bold small text-nowrap" style="color: rgb(17 44 70);"><i class="fas fa-user theme-icon me-1"></i>Client (F4):</span>
+            <span class="fw-bold small text-nowrap" style="color: rgb(17 44 70);"><i class="fas fa-user theme-icon me-1"></i>{{ $t('Client') }} (F4):</span>
             <div class="input-group input-group-sm client-search-group">
               <input
                 ref="clientMobileInput"
                 type="text"
                 class="form-control form-control-sm font-monospace fw-bold client-input"
-                placeholder="Mobile: 017xxxxxxxx"
+                :placeholder="$t('Mobile: 017xxxxxxxx')"
                 v-model="client.mobile"
                 @keyup.enter="searchCustomer"
                 @blur="searchCustomer"
               >
-              <button type="button" class="btn client-search-btn" @click="searchCustomer" title="Search Client">
+              <button type="button" class="btn client-search-btn" @click="searchCustomer" :title="$t('Search Client')">
                 <i class="fas fa-search"></i>
               </button>
             </div>
@@ -56,35 +66,35 @@
             </div>
             <div class="d-flex align-items-center gap-2">
               <span class="badge bg-danger bg-opacity-10 text-danger border border-danger font-monospace px-2 py-1" v-if="client.current_due > 0">
-                Due: Tk. {{ formatPrice(client.current_due) }}
+                {{ $t('Due') }}: {{ $t('Tk.') }} {{ $bnNum(formatPrice(client.current_due)) }}
               </span>
               <span class="badge bg-warning text-dark border font-monospace px-2 py-1" v-if="client.coupon_enabled">
-                <i class="fas fa-gift me-1"></i>{{ formatPrice(client.points_balance || 0) }} Pts (≈ Tk. {{ formatPrice(client.points_value_in_tk || 0) }})
+                <i class="fas fa-gift me-1"></i>{{ $bnNum(formatPrice(client.points_balance || 0)) }} {{ $t('Pts') }} (≈ {{ $t('Tk.') }} {{ $bnNum(formatPrice(client.points_value_in_tk || 0)) }})
               </span>
-              <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" @click="resetClient" title="Clear / Change Customer">
-                <i class="fas fa-times me-1"></i>Change
+              <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" @click="resetClient" :title="$t('Clear / Change Customer')">
+                <i class="fas fa-times me-1"></i>{{ $t('Change') }}
               </button>
             </div>
           </div>
 
           <!-- Quick New Client Registration Inline Form if Not Found -->
           <div v-else-if="showNewClientForm" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 bg-warning bg-opacity-10 p-1 px-2 rounded border border-warning">
-            <span class="small fw-bold text-dark text-nowrap"><i class="fas fa-user-plus me-1 text-warning"></i>New:</span>
+            <span class="small fw-bold text-dark text-nowrap"><i class="fas fa-user-plus me-1 text-warning"></i>{{ $t('New') }}:</span>
             <input
               type="text"
               class="form-control form-control-sm font-monospace fw-bold client-input bg-light"
-              placeholder="Mobile *"
+              :placeholder="$t('Mobile') + ' *'"
               v-model="newClient.mobile"
               maxlength="11"
               readonly
               style="max-width: 125px; cursor: not-allowed;"
-              title="Mobile number cannot be changed"
+              :title="$t('Mobile number cannot be changed')"
             >
             <input
               ref="newClientNameInput"
               type="text"
               class="form-control form-control-sm client-input"
-              placeholder="Client Name *"
+              :placeholder="$t('Client Name') + ' *'"
               v-model="newClient.name"
               @keyup.enter="createQuickCustomer"
               style="max-width: 150px;"
@@ -92,21 +102,21 @@
             <input
               type="text"
               class="form-control form-control-sm client-input flex-grow-1"
-              placeholder="Address / Location (optional)"
+              :placeholder="$t('Address / Location (optional)')"
               v-model="newClient.address"
               @keyup.enter="createQuickCustomer"
               style="min-width: 180px; max-width: 300px;"
             >
-            <button type="button" class="btn client-save-btn text-nowrap" @click="createQuickCustomer" title="Save Client (Press Enter / Ctrl+Enter)">
-              <i class="fas fa-save me-1"></i>Save <small class="text-white-50 ms-1">[Enter]</small>
+            <button type="button" class="btn client-save-btn text-nowrap" @click="createQuickCustomer" :title="$t('Save Client (Press Enter / Ctrl+Enter)')">
+              <i class="fas fa-save me-1"></i>{{ $t('Save') }} <small class="text-white-50 ms-1">[Enter]</small>
             </button>
-            <button type="button" class="btn btn-sm btn-link text-muted p-0 ms-1" @click="showNewClientForm = false" title="Cancel (Esc)">Cancel</button>
+            <button type="button" class="btn btn-sm btn-link text-muted p-0 ms-1" @click="showNewClientForm = false" :title="$t('Cancel (Esc)')">{{ $t('Cancel') }}</button>
           </div>
 
           <!-- Default Walk-in Customer Hint -->
           <div v-else class="text-muted small d-flex align-items-center gap-2">
             <span class="badge bg-light text-secondary border px-2 py-1">
-              <i class="fas fa-walking theme-icon me-1"></i>Walk-in Customer (ডিফল্ট গ্রাহক)
+              <i class="fas fa-walking theme-icon me-1"></i>{{ $t('Walk-in Customer') }}
             </span>
           </div>
         </div>
@@ -124,9 +134,9 @@
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <label class="form-label fw-bold small mb-0 d-flex align-items-center gap-1" style="color: rgb(17 44 70);">
                   <i class="fas fa-search theme-icon"></i>
-                  <span>Search Item / Scan Barcode (F2)</span>
+                  <span>{{ $t('Search Item / Scan Barcode') }} (F2)</span>
                 </label>
-                <span class="text-muted" style="font-size: 11px;"><kbd class="bg-dark text-white">↑</kbd> <kbd class="bg-dark text-white">↓</kbd> = Navigate | <kbd class="bg-dark text-white">Enter</kbd> = Select</span>
+                <span class="text-muted" style="font-size: 11px;"><kbd class="bg-dark text-white">↑</kbd> <kbd class="bg-dark text-white">↓</kbd> = {{ $t('Navigate') }} | <kbd class="bg-dark text-white">Enter</kbd> = {{ $t('Select') }}</span>
               </div>
               <div class="item-search-bar d-flex align-items-stretch">
                 <span class="search-barcode-icon d-flex align-items-center justify-content-center px-3">
@@ -136,7 +146,7 @@
                   ref="itemSearchInput"
                   type="text"
                   class="form-control item-search-input"
-                  placeholder="Type product title, SKU, or scan barcode... (Press F2 to focus)"
+                  :placeholder="$t('Type product title, SKU, or scan barcode... (Press F2 to focus)')"
                   v-model="searchTerm"
                   @input="onSearchInput"
                   @keydown.down.prevent="navigateSearchResults(1)"
@@ -144,7 +154,7 @@
                   @keydown.enter.prevent="handleSearchEnter"
                   @keydown.esc="clearSearch"
                 >
-                <button type="button" class="btn btn-clear-search px-3" @click="clearSearch" v-if="searchTerm" title="Clear search">
+                <button type="button" class="btn btn-clear-search px-3" @click="clearSearch" v-if="searchTerm" :title="$t('Clear search')">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
@@ -162,15 +172,15 @@
                 >
                   <div>
                     <div class="fw-bold" :class="selectedSearchIndex === idx ? 'text-white' : 'text-dark'">{{ item.title }}</div>
-                    <small :class="selectedSearchIndex === idx ? 'text-white-50' : 'text-muted'" class="font-monospace me-2">Barcode: {{ item.barcode }}</small>
+                    <small :class="selectedSearchIndex === idx ? 'text-white-50' : 'text-muted'" class="font-monospace me-2">{{ $t('Barcode') }}: {{ item.barcode }}</small>
                     <span class="badge search-category-badge" :class="selectedSearchIndex === idx ? 'badge-on-dark' : 'badge-on-light'" v-if="item.category">
                       {{ item.category.title }}
                     </span>
                   </div>
                   <div class="d-flex align-items-center gap-2">
-                    <span class="small font-monospace" :class="selectedSearchIndex === idx ? 'text-white-50' : 'text-muted'" style="font-size: 11px;">[Enter to Select]</span>
+                    <span class="small font-monospace" :class="selectedSearchIndex === idx ? 'text-white-50' : 'text-muted'" style="font-size: 11px;">[{{ $t('Enter to Select') }}]</span>
                     <button type="button" class="btn btn-xs" :class="selectedSearchIndex === idx ? 'btn-light fw-bold text-dark' : 'btn-primary'">
-                      Select Item
+                      {{ $t('Select Item') }}
                     </button>
                   </div>
                 </div>
@@ -183,13 +193,13 @@
             <table class="table table-hover table-sm align-middle mb-0" style="font-size: 13px;">
               <thead class="table-light sticky-top" style="z-index: 2;">
                 <tr>
-                  <th style="width: 26%;">Item Title (পণ্যের নাম)</th>
-                  <th style="width: 18%;">Color / Size</th>
-                  <th style="width: 15%;" v-if="isElectronicsShop">Serial No</th>
-                  <th style="width: 11%;" class="text-center">Qty</th>
-                  <th style="width: 13%;" class="text-end">Price (দর)</th>
-                  <th style="width: 12%;" class="text-end">Total (মোট)</th>
-                  <th style="width: 5%;" class="text-center">Act</th>
+                  <th style="width: 26%;">{{ $t('Item Title') }}</th>
+                  <th style="width: 18%;">{{ $t('Color / Size') }}</th>
+                  <th style="width: 15%;" v-if="isElectronicsShop">{{ $t('Serial No') }}</th>
+                  <th style="width: 11%;" class="text-center">{{ $t('Qty') }}</th>
+                  <th style="width: 13%;" class="text-end">{{ $t('Price') }}</th>
+                  <th style="width: 12%;" class="text-end">{{ $t('Total') }}</th>
+                  <th style="width: 5%;" class="text-center">{{ $t('Act') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -201,10 +211,10 @@
                   <td>
                     <span class="badge bg-info text-dark me-1" v-if="cItem.color_title" style="font-size: 11px;">{{ cItem.color_title }}</span>
                     <span class="badge bg-secondary me-1" v-if="cItem.size_title" style="font-size: 11px;">{{ cItem.size_title }}</span>
-                    <span v-if="!cItem.color_title && !cItem.size_title" class="text-muted small">Standard</span>
+                    <span v-if="!cItem.color_title && !cItem.size_title" class="text-muted small">{{ $t('Standard') }}</span>
                   </td>
                   <td v-if="isElectronicsShop">
-                    <input type="text" class="form-control form-control-sm font-monospace p-1" style="max-width: 110px; font-size: 11px;" v-model="cItem.serial_no" placeholder="Optional">
+                    <input type="text" class="form-control form-control-sm font-monospace p-1" style="max-width: 110px; font-size: 11px;" v-model="cItem.serial_no" :placeholder="$t('Optional')">
                   </td>
                   <td class="text-center">
                     <input type="number" min="1" class="form-control form-control-sm text-center fw-bold p-1 mx-auto" style="max-width: 60px; font-size: 13px;" v-model.number="cItem.qty">
@@ -213,10 +223,10 @@
                     <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace p-1 ms-auto" style="max-width: 80px; font-size: 13px;" v-model.number="cItem.rate">
                   </td>
                   <td class="text-end font-monospace fw-bold fs-6" style="color: rgb(17 44 70);">
-                    {{ formatPrice(cItem.qty * cItem.rate) }}
+                    {{ $bnNum(formatPrice(cItem.qty * cItem.rate)) }}
                   </td>
                   <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" @click="removeCartItem(idx)" title="Remove">
+                    <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" @click="removeCartItem(idx)" :title="$t('Remove')">
                       <i class="fas fa-trash"></i>
                     </button>
                   </td>
@@ -224,7 +234,7 @@
                 <tr v-if="cart.length === 0">
                   <td colspan="7" class="text-center py-4 text-muted">
                     <i class="fas fa-shopping-basket fa-2x mb-2 text-secondary opacity-50"></i>
-                    <p class="mb-0 small">Cart is empty. Search items above or scan barcode (F2) to add products.</p>
+                    <p class="mb-0 small">{{ $t('Cart is empty. Search items above or scan barcode (F2) to add products.') }}</p>
                   </td>
                 </tr>
               </tbody>
@@ -234,11 +244,63 @@
           <!-- Compact Cart Footer Strip (Total Items & Clear Cart) -->
           <div class="card-footer bg-light py-1 px-3 d-flex justify-content-between align-items-center border-top small text-muted">
             <span>
-              <i class="fas fa-shopping-cart me-1 theme-icon"></i>Cart Items: <strong class="text-dark font-monospace">{{ cart.length }}</strong> (Total Qty: <strong class="text-dark font-monospace">{{ cartTotalQty }}</strong>)
+              <i class="fas fa-shopping-cart me-1 theme-icon"></i>{{ $t('Cart Items') }}: <strong class="text-dark font-monospace">{{ $bnNum(cart.length) }}</strong> ({{ $t('Total Qty') }}: <strong class="text-dark font-monospace">{{ $bnNum(cartTotalQty) }}</strong>)
             </span>
-            <button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" @click="clearCart" v-if="cart.length > 0" title="Clear all cart items">
-              <i class="fas fa-trash-alt me-1"></i>Clear Cart
+            <button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" @click="clearCart" v-if="cart.length > 0" :title="$t('Clear all cart items')">
+              <i class="fas fa-trash-alt me-1"></i>{{ $t('Clear Cart') }}
             </button>
+          </div>
+        </div>
+
+        <!-- 📜 Terms & Conditions Configuration below Cart (Active when site setting show_pos_terms is enabled) -->
+        <div v-if="showPosTermsConfig" class="card border-0 shadow-sm mb-3">
+          <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between border-bottom cursor-pointer" @click="showTermsSection = !showTermsSection">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fas fa-file-contract text-primary"></i>
+              <span class="fw-bold small text-dark">{{ $t('Terms & Conditions') }}</span>
+              <span class="badge bg-primary font-monospace" style="font-size: 10px;">
+                {{ $bnNum(selectedTermsList.length) }} {{ $t('selected') }}
+              </span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-semibold" @click.stop="addCustomTerm" :title="$t('Add Condition')">
+                <i class="fas fa-plus me-1"></i>{{ $t('Add Condition') }}
+              </button>
+              <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" @click.stop="resetInvoiceTerms" :title="$t('Reset')">
+                <i class="fas fa-sync-alt me-1"></i>{{ $t('Reset') }}
+              </button>
+              <i class="fas fa-chevron-down text-muted transition-all" :style="{ transform: showTermsSection ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '11px' }"></i>
+            </div>
+          </div>
+          <div v-show="showTermsSection" class="card-body p-2 bg-white" style="max-height: 180px; overflow-y: auto;">
+            <div v-if="invoiceTerms.length > 0" class="d-flex flex-column gap-2">
+              <div v-for="(term, tIdx) in invoiceTerms" :key="tIdx" class="d-flex align-items-center gap-2 p-1 px-2 rounded border" :class="term.selected ? 'bg-light border-primary border-opacity-25' : 'bg-white border-light opacity-75'">
+                <!-- Checkbox -->
+                <div class="form-check m-0">
+                  <input type="checkbox" class="form-check-input cursor-pointer"
+                    v-model="term.selected" :id="'pos_term_' + tIdx"
+                    :title="term.selected ? $t('Included in Invoice') : $t('Excluded from Invoice')">
+                </div>
+                
+                <!-- Editable Input Box -->
+                <input type="text" class="form-control form-control-sm font-monospace"
+                  :class="term.selected ? 'fw-semibold text-dark' : 'text-muted text-decoration-line-through'"
+                  style="font-size: 12px; height: 28px;"
+                  v-model="term.condition"
+                  :placeholder="$t('Condition text...')">
+                
+                <!-- Delete / Remove button -->
+                <button type="button" class="btn btn-xs btn-outline-danger border-0 p-1 text-muted" @click="removeCustomTerm(tIdx)" :title="$t('Remove this condition')">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <div v-else class="text-center text-muted small py-3">
+              <p class="mb-1">{{ $t('No conditions loaded for Invoice module.') }}</p>
+              <button type="button" class="btn btn-xs btn-primary theme_btn px-2" @click="addCustomTerm">
+                <i class="fas fa-plus me-1"></i> {{ $t('Add Custom Condition') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -250,11 +312,11 @@
             <!-- Calculations Breakdown -->
             <div class="p-2 px-3 bg-light rounded border mb-2">
               <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                <span class="text-muted small">Subtotal:</span>
-                <span class="fw-bold font-monospace">Tk. {{ formatPrice(cartSubtotal) }}</span>
+                <span class="text-muted small">{{ $t('Subtotal') }}:</span>
+                <span class="fw-bold font-monospace">{{ $t('Tk.') }} {{ $bnNum(formatPrice(cartSubtotal)) }}</span>
               </div>
               <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                <span class="text-muted small">Discount (ছাড়):</span>
+                <span class="text-muted small">{{ $t('Discount') }}:</span>
                 <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace py-0 px-2" style="max-width: 110px; height: 28px;" v-model.number="discount" placeholder="0.00">
               </div>
 
@@ -262,15 +324,15 @@
               <div v-if="client.coupon_enabled && client.points_balance > 0" class="p-1 px-2 my-1 bg-warning bg-opacity-10 border border-warning rounded">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                   <span class="small fw-bold text-dark d-flex align-items-center gap-1" style="font-size: 11px;">
-                    <i class="fas fa-gift text-warning"></i> Redeem (Max: {{ maxRedeemablePoints }} Pts):
+                    <i class="fas fa-gift text-warning"></i> {{ $t('Redeem') }} ({{ $t('Max') }}: {{ $bnNum(maxRedeemablePoints) }} {{ $t('Pts') }}):
                   </span>
                   <button type="button" class="btn btn-xs btn-outline-dark py-0 px-1" style="font-size: 9px;" @click="redeemAllPoints">
-                    All
+                    {{ $t('All') }}
                   </button>
                 </div>
                 <div class="input-group input-group-sm">
                   <input type="number" min="0" :max="maxRedeemablePoints" class="form-control font-monospace text-center fw-bold py-0" style="height: 26px;" placeholder="0" v-model.number="points_to_redeem">
-                  <span class="input-group-text bg-white small font-monospace text-success fw-bold py-0 px-1" style="font-size: 11px;">- Tk. {{ formatPrice(pointsDiscountAmount) }}</span>
+                  <span class="input-group-text bg-white small font-monospace text-success fw-bold py-0 px-1" style="font-size: 11px;">- {{ $t('Tk.') }} {{ $bnNum(formatPrice(pointsDiscountAmount)) }}</span>
                 </div>
               </div>
 
@@ -282,7 +344,7 @@
                       v-model="is_vat_applicable" @change="onVatSwitchToggle"
                       style="transform: scale(1.1); cursor: pointer;">
                     <label class="form-check-label fw-bold cursor-pointer small mb-0" for="posVatSwitch" :class="is_vat_applicable ? 'text-primary' : 'text-muted'" style="font-size: 11px;">
-                      <i class="fas fa-file-invoice-dollar me-1"></i>{{ is_vat_applicable ? 'With VAT (ভ্যাট সহ)' : 'Without VAT (ভ্যাট ছাড়া)' }}
+                      <i class="fas fa-file-invoice-dollar me-1"></i>{{ is_vat_applicable ? $t('With VAT') : $t('Without VAT') }}
                     </label>
                   </div>
 
@@ -297,94 +359,48 @@
                       style="max-width: 88px; height: 24px; font-size: 12px;" v-model.number="vat" placeholder="0.00">
                   </div>
                   <div v-else class="text-muted font-monospace small" style="font-size: 11px;">
-                    Tk. 0.00
+                    {{ $t('Tk.') }} {{ $bnNum('0.00') }}
                   </div>
                 </div>
               </div>
 
               <div class="d-flex justify-content-between align-items-center pt-2">
-                <span class="fw-bold text-dark fs-6">Net Payable:</span>
-                <span class="fw-bold font-monospace fs-5 text-success">Tk. {{ formatPrice(netPayable) }}</span>
+                <span class="fw-bold text-dark fs-6">{{ $t('Net Payable') }}:</span>
+                <span class="fw-bold font-monospace fs-5 text-success">{{ $t('Tk.') }} {{ $bnNum(formatPrice(netPayable)) }}</span>
               </div>
             </div>
 
             <!-- Payment Method & Paid Amount in Compact Row -->
             <div class="row g-2 mb-2">
               <div class="col-6">
-                <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">Payment Method</label>
+                <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">{{ $t('Payment Method') }}</label>
                 <select class="form-select form-select-sm font-monospace fw-bold py-1" style="height: 32px;" v-model="payment_method">
-                  <option value="Cash">Cash (নগদ)</option>
-                  <option value="Card">Card</option>
-                  <option value="bKash">bKash (বিকাশ)</option>
-                  <option value="Nagad">Nagad (নগদ)</option>
-                  <option value="Rocket">Rocket (রকেট)</option>
-                  <option value="Bank">Bank Transfer</option>
+                  <option value="Cash">{{ $t('Cash') }}</option>
+                  <option value="Card">{{ $t('Card') }}</option>
+                  <option value="bKash">{{ $t('bKash') }}</option>
+                  <option value="Nagad">{{ $t('Nagad') }}</option>
+                  <option value="Rocket">{{ $t('Rocket') }}</option>
+                  <option value="Bank">{{ $t('Bank Transfer') }}</option>
                 </select>
               </div>
               <div class="col-6">
                 <div class="d-flex justify-content-between align-items-center mb-0">
-                  <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">Paid Amount (প্রদত্ত টাকা)</label>
-                  <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none font-monospace fw-bold text-primary" style="font-size: 10px;" @click="paid_amount = netPayable" title="Pay Full Amount">Full Pay</button>
+                  <label class="form-label fw-bold text-muted mb-0" style="font-size: 11px;">{{ $t('Paid Amount') }}</label>
+                  <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none font-monospace fw-bold text-primary" style="font-size: 10px;" @click="setFullPay" :title="$t('Pay Full Amount (Press F7, F9, or Alt+F)')">{{ $t('Full Pay') }} (F7)</button>
                 </div>
-                <input type="number" step="0.01" min="0" class="form-control form-control-sm text-end font-monospace fw-bold text-primary py-1" style="height: 32px; font-size: 14px;" v-model.number="paid_amount" placeholder="0.00">
+                <input ref="paidAmountInput" type="number" step="0.01" min="0" class="form-control form-control-sm text-end font-monospace fw-bold text-primary py-1" style="height: 32px; font-size: 14px;" v-model.number="paid_amount" placeholder="0.00">
               </div>
               <div class="col-12" v-if="payment_method !== 'Cash'">
-                <input type="text" class="form-control form-control-sm font-monospace py-1" style="height: 28px;" placeholder="TrxID / Reference No." v-model="trxid">
+                <input type="text" class="form-control form-control-sm font-monospace py-1" style="height: 28px;" :placeholder="$t('TrxID / Reference No.')" v-model="trxid">
               </div>
             </div>
 
             <!-- Due / Change Return Amount (Compact Line) -->
-            <div class="d-flex justify-content-between align-items-center p-2 bg-light border rounded mb-2">
-              <span class="text-muted fw-bold small">{{ (paid_amount || 0) >= netPayable ? 'Change (ফেরত):' : 'Due Amount (বকেয়া):' }}</span>
+            <div class="d-flex justify-content-between align-items-center p-2 bg-light border rounded mb-3">
+              <span class="text-muted fw-bold small">{{ (paid_amount || 0) >= netPayable ? $t('Change:') : $t('Due Amount:') }}</span>
               <span class="fw-bold font-monospace fs-6" :class="(paid_amount || 0) >= netPayable ? 'text-success' : 'text-danger'">
-                Tk. {{ formatPrice((paid_amount || 0) >= netPayable ? ((paid_amount || 0) - netPayable) : (netPayable - (paid_amount || 0))) }}
+                {{ $t('Tk.') }} {{ $bnNum(formatPrice((paid_amount || 0) >= netPayable ? ((paid_amount || 0) - netPayable) : (netPayable - (paid_amount || 0)))) }}
               </span>
-            </div>
-
-            <!-- 📜 Terms & Conditions Configuration for this Invoice (Dependent on Site Setting) -->
-            <div v-if="showPosTermsConfig" class="card border mb-3 shadow-2xs">
-              <div class="card-header bg-light py-1 px-2 d-flex align-items-center justify-content-between cursor-pointer" @click="showTermsSection = !showTermsSection">
-                <div class="d-flex align-items-center gap-1">
-                  <i class="fas fa-file-contract text-primary" style="font-size: 11px;"></i>
-                  <span class="fw-bold small text-dark" style="font-size: 11px;">Terms & Conditions (শর্তাবলী)</span>
-                  <span class="badge bg-primary rounded-pill font-monospace" style="font-size: 9px;">
-                    {{ selectedTermsList.length }} active
-                  </span>
-                </div>
-                <div class="d-flex align-items-center gap-1">
-                  <button type="button" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 9px;" @click.stop="addCustomTerm" title="Add another condition">
-                    <i class="fas fa-plus me-1"></i>Add
-                  </button>
-                  <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 9px;" @click.stop="resetInvoiceTerms" title="Reset to default terms">
-                    <i class="fas fa-sync-alt"></i>
-                  </button>
-                  <i class="fas fa-chevron-down text-muted transition-all ms-1" :style="{ transform: showTermsSection ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '9px' }"></i>
-                </div>
-              </div>
-              <div v-show="showTermsSection" class="card-body p-2 bg-white" style="max-height: 160px; overflow-y: auto;">
-                <div v-if="invoiceTerms.length > 0" class="d-flex flex-column gap-1">
-                  <div v-for="(term, tIdx) in invoiceTerms" :key="tIdx" class="d-flex align-items-center gap-1 p-1 rounded border bg-light bg-opacity-50">
-                    <!-- Checkbox -->
-                    <input type="checkbox" class="form-check-input mt-0 ms-1 cursor-pointer"
-                      v-model="term.selected" style="min-width: 14px; height: 14px;" :title="term.selected ? 'Included in Invoice' : 'Excluded from Invoice'">
-                    
-                    <!-- Editable Input Box -->
-                    <input type="text" class="form-control form-control-sm py-0 px-2 font-monospace"
-                      :class="term.selected ? 'fw-semibold text-dark' : 'text-muted text-decoration-line-through opacity-75'"
-                      style="height: 24px; font-size: 11px;"
-                      v-model="term.condition"
-                      placeholder="Condition text...">
-                    
-                    <!-- Delete button -->
-                    <button type="button" class="btn btn-xs btn-outline-danger border-0 py-0 px-1 text-muted" @click="removeCustomTerm(tIdx)" title="Remove this condition">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-                <div v-else class="text-center text-muted small py-2 font-monospace" style="font-size: 10px;">
-                  No conditions. Click <strong>+Add</strong> to write condition for this invoice.
-                </div>
-              </div>
             </div>
 
             <!-- ⭐️ Complete Sale & Print Button (Prominent & Always Visible) -->
@@ -394,7 +410,7 @@
               @click="submitCheckout"
               :disabled="cart.length === 0 || isSubmitting"
             >
-              <i class="fas fa-print"></i> Complete Sale & Print (F8)
+              <i class="fas fa-print"></i> {{ $t('Complete Sale & Print') }} (F8)
             </button>
           </div>
         </div>
@@ -414,8 +430,8 @@
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-exclamation-triangle fs-5 text-dark"></i>
               <div>
-                <h5 class="modal-title fw-bold fs-6 mb-0">একাধিক পণ্য পাওয়া গেছে (Multiple Products Found)</h5>
-                <small class="font-monospace text-dark opacity-75">Barcode: <strong>{{ duplicateBarcodeScanned }}</strong> ({{ duplicateBarcodeItems.length }} টি পণ্য পাওয়া গেছে)</small>
+                <h5 class="modal-title fw-bold fs-6 mb-0">{{ $t('Multiple Products Found') }}</h5>
+                <small class="font-monospace text-dark opacity-75">{{ $t('Barcode') }}: <strong>{{ duplicateBarcodeScanned }}</strong> ({{ $bnNum(duplicateBarcodeItems.length) }} {{ $t('items found') }})</small>
               </div>
             </div>
             <button type="button" class="btn-close" @click="closeDuplicateModal"></button>
@@ -423,9 +439,9 @@
           <div class="modal-body p-3 bg-light">
             <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between">
               <div class="small">
-                <i class="fas fa-keyboard me-1"></i> কীবোর্ড শর্টকাট: নম্বর <strong>[1]</strong>, <strong>[2]</strong>, <strong>[3]</strong> চাপুন অথবা <strong>Arrow Keys (↑/↓)</strong> দিয়ে সিলেক্ট করে <strong>[Enter]</strong> চাপুন।
+                <i class="fas fa-keyboard me-1"></i> {{ $t('Shortcuts') }}: {{ $t('Press') }} <strong>[1]</strong>-<strong>[{{ Math.min(duplicateBarcodeItems.length, 9) }}]</strong> {{ $t('or') }} <strong>{{ $t('Arrow Keys (↑/↓)') }}</strong> {{ $t('then') }} <strong>[Enter]</strong>.
               </div>
-              <span class="badge bg-dark font-monospace">Esc = বন্ধ</span>
+              <span class="badge bg-dark font-monospace">Esc = {{ $t('Close') }}</span>
             </div>
 
             <div class="list-group shadow-sm">
@@ -443,7 +459,7 @@
                     :class="selectedDuplicateIndex === idx ? 'bg-white text-primary' : 'bg-primary text-white'"
                     style="width: 38px; height: 38px; min-width: 38px;"
                   >
-                    {{ idx + 1 }}
+                    {{ $bnNum(idx + 1) }}
                   </div>
                   <div>
                     <h6 class="fw-bold mb-1" :class="selectedDuplicateIndex === idx ? 'text-white' : 'text-dark'">{{ item.title }}</h6>
@@ -452,10 +468,10 @@
                         {{ item.category.title }}
                       </span>
                       <span class="font-monospace" :class="selectedDuplicateIndex === idx ? 'text-white-50' : 'text-muted'">
-                        Barcode: {{ item.barcode }}
+                        {{ $t('Barcode') }}: {{ item.barcode }}
                       </span>
                       <span class="font-monospace" :class="selectedDuplicateIndex === idx ? 'text-white' : ''">
-                        Stock: <strong :class="selectedDuplicateIndex === idx ? 'text-warning' : (getItemStock(item) > 0 ? 'text-success' : 'text-danger')">{{ getItemStock(item) }}</strong>
+                        {{ $t('Stock') }}: <strong :class="selectedDuplicateIndex === idx ? 'text-warning' : (getItemStock(item) > 0 ? 'text-success' : 'text-danger')">{{ $bnNum(getItemStock(item)) }}</strong>
                       </span>
                     </div>
                   </div>
@@ -463,14 +479,14 @@
 
                 <div class="text-end">
                   <div class="fs-5 fw-bold font-monospace" :class="selectedDuplicateIndex === idx ? 'text-white' : 'text-success'">
-                    Tk. {{ formatPrice(getItemPrice(item)) }}
+                    {{ $t('Tk.') }} {{ $bnNum(formatPrice(getItemPrice(item))) }}
                   </div>
                   <button
                     type="button"
                     class="btn btn-sm mt-1 px-3 fw-bold"
                     :class="selectedDuplicateIndex === idx ? 'btn-light text-primary shadow-sm' : 'btn-outline-primary'"
                   >
-                    <i class="fas fa-check me-1"></i> Select [{{ idx + 1 }}]
+                    <i class="fas fa-check me-1"></i> {{ $t('Select') }} [{{ $bnNum(idx + 1) }}]
                   </button>
                 </div>
               </div>
@@ -478,9 +494,9 @@
           </div>
           <div class="modal-footer py-2 d-flex justify-content-between align-items-center bg-white">
             <div class="small text-muted font-monospace">
-              Press <kbd>1</kbd>-<kbd>{{ Math.min(duplicateBarcodeItems.length, 9) }}</kbd> or <kbd>↑</kbd><kbd>↓</kbd> then <kbd>Enter</kbd>
+              {{ $t('Press') }} <kbd>1</kbd>-<kbd>{{ Math.min(duplicateBarcodeItems.length, 9) }}</kbd> {{ $t('or') }} <kbd>↑</kbd><kbd>↓</kbd> {{ $t('then') }} <kbd>Enter</kbd>
             </div>
-            <button type="button" class="btn btn-sm btn-secondary" @click="closeDuplicateModal">Cancel (Esc)</button>
+            <button type="button" class="btn btn-sm btn-secondary" @click="closeDuplicateModal">{{ $t('Cancel') }} (Esc)</button>
           </div>
         </div>
       </div>
@@ -498,7 +514,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0">
           <div class="modal-header bg-dark text-white py-2">
-            <h5 class="modal-title fw-bold fs-6"><i class="fas fa-box-open me-2"></i>Select Color, Size & Serial</h5>
+            <h5 class="modal-title fw-bold fs-6"><i class="fas fa-box-open me-2"></i>{{ $t('Select Color, Size & Serial') }}</h5>
             <button type="button" class="btn-close btn-close-white" @click="closeItemModal"></button>
           </div>
           <div class="modal-body p-3" v-if="activeItem">
@@ -506,7 +522,7 @@
               <img v-if="activeItem.image" :src="activeItem.image" class="img-fluid rounded border" style="height: 60px;" alt="Product">
               <div>
                 <h6 class="fw-bold text-dark mb-1">{{ activeItem.title }}</h6>
-                <small class="text-muted font-monospace me-2">Barcode: {{ activeItem.barcode }}</small>
+                <small class="text-muted font-monospace me-2">{{ $t('Barcode') }}: {{ activeItem.barcode }}</small>
                 <span class="badge bg-dark" v-if="activeItem.unit">{{ activeItem.unit.title }}</span>
               </div>
             </div>
@@ -514,7 +530,7 @@
             <div class="row g-3">
               <!-- Color Selection -->
               <div class="col-6" v-if="availableColors && availableColors.length > 0">
-                <label class="form-label fw-bold small text-muted">Color (রং)</label>
+                <label class="form-label fw-bold small text-muted">{{ $t('Color') }}</label>
                 <select
                   ref="modalColorSelect"
                   class="form-select form-select-sm"
@@ -522,14 +538,14 @@
                   @change="onVariantChange"
                   @keydown.enter.prevent="focusNextModalInput('size')"
                 >
-                  <option :value="null">-- Standard / Any Color --</option>
+                  <option :value="null">{{ $t('-- Standard / Any Color --') }}</option>
                   <option v-for="c in availableColors" :key="c.id" :value="c.id">{{ c.title }}</option>
                 </select>
               </div>
 
               <!-- Size Selection -->
               <div class="col-6" v-if="availableSizes && availableSizes.length > 0">
-                <label class="form-label fw-bold small text-muted">Size (সাইজ)</label>
+                <label class="form-label fw-bold small text-muted">{{ $t('Size') }}</label>
                 <select
                   ref="modalSizeSelect"
                   class="form-select form-select-sm"
@@ -537,7 +553,7 @@
                   @change="onVariantChange"
                   @keydown.enter.prevent="focusNextModalInput('qty')"
                 >
-                  <option :value="null">-- Standard / Any Size --</option>
+                  <option :value="null">{{ $t('-- Standard / Any Size --') }}</option>
                   <option v-for="s in availableSizes" :key="s.id" :value="s.id">{{ s.title }}</option>
                 </select>
               </div>
@@ -545,17 +561,17 @@
               <!-- Stock & Price Info -->
               <div class="col-12">
                 <div class="p-2 border rounded d-flex align-items-center justify-content-between" :class="modalSelection.available_stock > 0 ? 'bg-white' : 'bg-danger bg-opacity-10 border-danger'">
-                  <span class="small font-monospace">Available Stock: <strong :class="modalSelection.available_stock > 0 ? 'text-success fw-bold' : 'text-danger fw-bold'">{{ modalSelection.available_stock }} {{ modalSelection.available_stock <= 0 ? '(Out of Stock)' : '' }}</strong></span>
-                  <span class="small font-monospace">Selling Price: <strong class="text-success">Tk. {{ formatPrice(modalSelection.rate) }}</strong></span>
+                  <span class="small font-monospace">{{ $t('Available Stock:') }} <strong :class="modalSelection.available_stock > 0 ? 'text-success fw-bold' : 'text-danger fw-bold'">{{ $bnNum(modalSelection.available_stock) }} {{ modalSelection.available_stock <= 0 ? '(' + $t('Out of Stock') + ')' : '' }}</strong></span>
+                  <span class="small font-monospace">{{ $t('Selling Price:') }} <strong class="text-success">{{ $t('Tk.') }} {{ $bnNum(formatPrice(modalSelection.rate)) }}</strong></span>
                 </div>
               </div>
 
               <!-- Serial No (For items with purchase serials or serialized items) -->
               <div class="col-12" v-if="activeItem && (activeItem.has_purchase_serials || activeItem.is_serialized || isElectronicsShop)">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label class="form-label fw-bold small text-muted mb-0">Serial No. (সিরিয়াল নং)</label>
+                  <label class="form-label fw-bold small text-muted mb-0">{{ $t('Serial No') }}</label>
                   <span class="badge bg-info text-dark" v-if="modalAvailableSerials && modalAvailableSerials.length > 0">
-                    {{ modalAvailableSerials.length }} available in stock
+                    {{ $bnNum(modalAvailableSerials.length) }} {{ $t('available in stock') }}
                   </span>
                 </div>
                 <div class="input-group input-group-sm">
@@ -564,7 +580,7 @@
                     type="text"
                     list="availableSerialsDatalist"
                     class="form-control form-control-sm font-monospace"
-                    placeholder="Enter or select Serial No"
+                    :placeholder="$t('Enter or select Serial No')"
                     v-model="modalSelection.serial_no"
                     @keydown.enter.prevent="focusNextModalInput('qty')"
                   >
@@ -590,7 +606,7 @@
 
               <!-- Selling Price (Editable) -->
               <div class="col-6">
-                <label class="form-label fw-bold small text-muted">Unit Rate (দর)</label>
+                <label class="form-label fw-bold small text-muted">{{ $t('Unit Rate') }}</label>
                 <input
                   ref="modalRateInput"
                   type="number"
@@ -603,7 +619,7 @@
 
               <!-- Quantity -->
               <div class="col-6">
-                <label class="form-label fw-bold small text-muted">Quantity (পরিমাণ) <span class="text-primary">[Enter = Add]</span></label>
+                <label class="form-label fw-bold small text-muted">{{ $t('Quantity') }} <span class="text-primary">[{{ $t('Enter = Add') }}]</span></label>
                 <input
                   ref="modalQtyInput"
                   type="number"
@@ -618,12 +634,12 @@
           </div>
           <div class="modal-footer py-2 d-flex justify-content-between align-items-center">
             <div class="small text-muted">
-              <kbd>Enter</kbd> / <kbd>Ctrl+Enter</kbd> = Add to Cart | <kbd>Esc</kbd> = Close
+              <kbd>Enter</kbd> / <kbd>Ctrl+Enter</kbd> = {{ $t('Add to Cart') }} | <kbd>Esc</kbd> = {{ $t('Close') }}
             </div>
             <div class="d-flex gap-2">
-              <button type="button" class="btn btn-sm btn-secondary" @click="closeItemModal">Cancel (Esc)</button>
+              <button type="button" class="btn btn-sm btn-secondary" @click="closeItemModal">{{ $t('Cancel') }} (Esc)</button>
               <button ref="modalAddBtn" type="button" class="btn btn-sm btn-primary px-4 fw-bold shadow-sm" @click="addToCartFromModal">
-                <i class="fas fa-cart-plus me-1"></i> Add to Cart (Enter)
+                <i class="fas fa-cart-plus me-1"></i> {{ $t('Add to Cart') }} (Enter)
               </button>
             </div>
           </div>
@@ -658,10 +674,10 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
           <thead>
             <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
-              <th style="text-align: left; padding: 4px 0;">Item Description</th>
-              <th style="text-align: center; padding: 4px 0; width: 30px;">Qty</th>
-              <th style="text-align: right; padding: 4px 0; width: 48px;">Rate</th>
-              <th style="text-align: right; padding: 4px 0; width: 55px;">Total</th>
+              <th style="text-align: left; padding: 4px 0;">{{ $t('Item Description') }}</th>
+              <th style="text-align: center; padding: 4px 0; width: 30px;">{{ $t('Qty') }}</th>
+              <th style="text-align: right; padding: 4px 0; width: 48px;">{{ $t('Rate') }}</th>
+              <th style="text-align: right; padding: 4px 0; width: 55px;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -779,9 +795,9 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px; font-size: 8.5px;">
           <thead>
             <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
-              <th style="text-align: left; padding: 2px 0;">Item</th>
-              <th style="text-align: center; padding: 2px 0; width: 18px;">Q</th>
-              <th style="text-align: right; padding: 2px 0; width: 40px;">Total</th>
+              <th style="text-align: left; padding: 2px 0;">{{ $t('Item') }}</th>
+              <th style="text-align: center; padding: 2px 0; width: 18px;">{{ $t('Q') }}</th>
+              <th style="text-align: right; padding: 2px 0; width: 40px;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -881,7 +897,7 @@
         <!-- Bill To / Customer Details -->
         <div style="display: flex; justify-content: space-between; background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; font-size: 10px;">
           <div>
-            <strong>Bill To (গ্রাহক):</strong>
+            <strong>Bill To:</strong>
             <div style="font-weight: 600; font-size: 11px;">{{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
             <div v-if="completedInvoice.client?.mobile">Mobile: {{ completedInvoice.client.mobile }}</div>
             <div v-if="completedInvoice.client?.address">Address: {{ completedInvoice.client.address }}</div>
@@ -897,11 +913,11 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
           <thead>
             <tr style="background: #112C47; color: #fff;">
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: center; width: 25px;">#</th>
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: left;">Item Description & Details</th>
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: center; width: 35px;">Qty</th>
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: right; width: 55px;">Rate (৳)</th>
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: right; width: 65px;">Total (৳)</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: center; width: 25px;">{{ $t('#') }}</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: left;">{{ $t('Item Description & Details') }}</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: center; width: 35px;">{{ $t('Qty') }}</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: right; width: 55px;">{{ $t('Rate') }}</th>
+              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: right; width: 65px;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -1030,7 +1046,7 @@
         <!-- Customer & Bill To Box -->
         <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px;">
           <div>
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Bill To (ক্রেতার তথ্য):</div>
+            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Bill To:</div>
             <div style="font-size: 13px; font-weight: bold; color: #0f172a;">{{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
             <div style="font-size: 11px; color: #475569;" v-if="completedInvoice.client?.mobile"><strong>Mobile:</strong> {{ completedInvoice.client.mobile }}</div>
             <div style="font-size: 11px; color: #475569;" v-if="completedInvoice.client?.address"><strong>Address:</strong> {{ completedInvoice.client.address }}</div>
@@ -1048,11 +1064,11 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px;">
           <thead>
             <tr style="background: #112C47; color: #fff;">
-              <th style="border: 1px solid #112C47; padding: 6px 8px; text-align: center; width: 30px;">#</th>
-              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: left;">Item Description & Specifications</th>
-              <th style="border: 1px solid #112C47; padding: 6px 8px; text-align: center; width: 50px;">Qty</th>
-              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: right; width: 85px;">Unit Price (৳)</th>
-              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: right; width: 95px;">Total Amount (৳)</th>
+              <th style="border: 1px solid #112C47; padding: 6px 8px; text-align: center; width: 30px;">{{ $t('#') }}</th>
+              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: left;">{{ $t('Item Description & Specifications') }}</th>
+              <th style="border: 1px solid #112C47; padding: 6px 8px; text-align: center; width: 50px;">{{ $t('Qty') }}</th>
+              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: right; width: 85px;">{{ $t('Unit Price') }}</th>
+              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: right; width: 95px;">{{ $t('Total Amount') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -1171,15 +1187,15 @@
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-dark text-white py-2">
-            <h5 class="modal-title fs-6 text-white"><i class="fas fa-cash-register me-2 text-warning"></i>ক্যাশ কাউন্টার / পিওএস টার্মিনাল সহায়িকা</h5>
+            <h5 class="modal-title fs-6 text-white"><i class="fas fa-cash-register me-2 text-warning"></i>{{ $t('POS Terminal Help') }}</h5>
             <button type="button" class="btn-close btn-close-white" @click="showHelpModal = false"></button>
           </div>
           <div class="modal-body p-3">
             <div v-if="posHelpContent" v-html="posHelpContent"></div>
-            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> সহায়িকা লোড হচ্ছে...</div>
+            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> {{ $t('Loading help...') }}</div>
           </div>
           <div class="modal-footer py-1">
-            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">বন্ধ করুন</button>
+            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">{{ $t('Close') }}</button>
           </div>
         </div>
       </div>
@@ -1244,6 +1260,17 @@ export default {
     };
   },
   computed: {
+    localizedCurrentDate() {
+      if (this.$locale === 'bn') {
+        const now = new Date();
+        const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+        const d = this.$bnNum(now.getDate());
+        const m = months[now.getMonth()];
+        const y = this.$bnNum(now.getFullYear());
+        return `${d} ${m}, ${y}`;
+      }
+      return new Date().toLocaleDateString('en-GB');
+    },
     showPosTermsConfig() {
       return !!(this.$root.site?.show_pos_terms == 1 || this.$root.site?.show_pos_terms === true || this.$root.site?.show_pos_terms === '1');
     },
@@ -1379,27 +1406,17 @@ export default {
             this.rawDefaultTerms = JSON.parse(JSON.stringify(list));
             this.invoiceTerms = list.map(item => ({
               id: item.id,
-              condition: item.condition,
-              selected: item.is_default ? true : false,
-              is_default: item.is_default,
+              condition: item.condition_text || item.condition || '',
+              selected: item.is_default == 1 || item.is_default === true,
+              is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
             }));
           } else {
-            this.invoiceTerms = [
-              { id: null, condition: 'Goods once sold cannot be returned without cash memo within 7 days.', selected: true, is_default: 1 },
-              { id: null, condition: 'Physical damage, liquid damage or burn voids warranty.', selected: true, is_default: 1 },
-              { id: null, condition: 'Disputed items are inspected as per company service policy.', selected: true, is_default: 1 }
-            ];
-            this.rawDefaultTerms = JSON.parse(JSON.stringify(this.invoiceTerms));
+            this.invoiceTerms = [];
+            this.rawDefaultTerms = [];
           }
         })
         .catch(err => {
           console.error('Failed to load invoice terms:', err);
-          this.invoiceTerms = [
-            { id: null, condition: 'Goods once sold cannot be returned without cash memo within 7 days.', selected: true, is_default: 1 },
-            { id: null, condition: 'Physical damage, liquid damage or burn voids warranty.', selected: true, is_default: 1 },
-            { id: null, condition: 'Disputed items are inspected as per company service policy.', selected: true, is_default: 1 }
-          ];
-          this.rawDefaultTerms = JSON.parse(JSON.stringify(this.invoiceTerms));
         });
     },
     addCustomTerm() {
@@ -1418,12 +1435,12 @@ export default {
       if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
         this.invoiceTerms = JSON.parse(JSON.stringify(this.rawDefaultTerms)).map(item => ({
           id: item.id,
-          condition: item.condition,
-          selected: item.is_default ? true : false,
-          is_default: item.is_default,
+          condition: item.condition_text || item.condition || '',
+          selected: item.is_default == 1 || item.is_default === true,
+          is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
         }));
+        this.$toast('Invoice terms reset to default', 'info');
       }
-      this.$toast('Invoice terms reset to default', 'info');
     },
     openHelpModal() {
       this.showHelpModal = true;
@@ -1501,7 +1518,7 @@ export default {
       if (!this.client.mobile || this.client.mobile.trim() === '') return;
       const cleanMobile = this.client.mobile.trim();
       if (!/^\d{11}$/.test(cleanMobile)) {
-        this.$toast('Please enter an 11-digit mobile number (১১ ডিজিটের মোবাইল নম্বর দিন)', 'warning');
+        this.$toast('Please enter a valid 11-digit mobile number', 'warning');
         return;
       }
       axios.get(`pos/search-customer`, { params: { mobile: cleanMobile } })
@@ -1543,15 +1560,15 @@ export default {
     createQuickCustomer() {
       const mobile = (this.newClient.mobile || '').trim();
       if (!mobile) {
-        this.$toast('Mobile number is required (মোবাইল নম্বর দিন)', 'warning');
+        this.$toast('Mobile number is required', 'warning');
         return;
       }
       if (!/^\d{11}$/.test(mobile)) {
-        this.$toast('Mobile number must be exactly 11 digits (১১ ডিজিটের সঠিক মোবাইল নম্বর দিন)', 'warning');
+        this.$toast('Mobile number must be exactly 11 digits', 'warning');
         return;
       }
       if (!this.newClient.name || !this.newClient.name.trim()) {
-        this.$toast('Client name is required (গ্রাহকের নাম দিন)', 'warning');
+        this.$toast('Client name is required', 'warning');
         return;
       }
 
@@ -2100,6 +2117,16 @@ export default {
           this.$toast(err.response?.data?.exception || 'Failed to complete checkout', 'danger');
         });
     },
+    setFullPay() {
+      if (this.cart.length === 0) {
+        return;
+      }
+      this.paid_amount = Number(this.netPayable.toFixed(2));
+      this.$nextTick(() => {
+        this.$refs.paidAmountInput?.focus();
+        this.$refs.paidAmountInput?.select();
+      });
+    },
     resetPOS() {
       this.client = { id: null, name: '', mobile: '', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 };
       this.showNewClientForm = false;
@@ -2122,9 +2149,9 @@ export default {
       if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
         this.invoiceTerms = JSON.parse(JSON.stringify(this.rawDefaultTerms)).map(item => ({
           id: item.id,
-          condition: item.condition,
-          selected: item.is_default ? true : false,
-          is_default: item.is_default,
+          condition: item.condition_text || item.condition || '',
+          selected: item.is_default == 1 || item.is_default === true,
+          is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
         }));
       }
     },
@@ -2200,6 +2227,9 @@ export default {
         e.preventDefault();
         this.$refs.clientMobileInput?.focus();
         this.$refs.clientMobileInput?.select();
+      } else if (e.key === 'F7' || e.key === 'F9' || (e.altKey && (e.key === 'f' || e.key === 'F')) || (e.altKey && (e.key === 'p' || e.key === 'P'))) {
+        e.preventDefault();
+        this.setFullPay();
       } else if (e.key === 'F8' || (e.ctrlKey && e.key === 'p')) {
         e.preventDefault();
         this.submitCheckout();

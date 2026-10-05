@@ -6,7 +6,7 @@
         <div class="card-header theme-card-header py-2 d-flex justify-content-between align-items-center">
           <span class="fw-bold text-white d-flex align-items-center">
             <i class="fas fa-file-invoice-dollar me-2 text-warning fs-5"></i>
-            <span>Quotation Information (কোটেশনের সাধারণ তথ্য ও গ্রাহক বিবরণ)</span>
+            <span>{{ $t('Quotation Information') }}</span>
           </span>
           <span class="badge bg-light text-dark px-3 py-1 font-monospace fw-bold" v-if="data.quotation_no">
             <i class="fas fa-hashtag me-1 text-primary"></i> {{ data.quotation_no }}
@@ -16,29 +16,28 @@
           <div class="row g-2">
             <!-- Row 1: Quotation Metadata -->
             <!-- Quotation No -->
-            <Input v-model="data.quotation_no" field="data.quotation_no" col="3" title="Quotation No (কোটেশন নং)"
+            <Input v-model="data.quotation_no" field="data.quotation_no" col="3" title="Quotation No"
               placeholder="Auto Generated" :req="false" :readonly="true" />
 
             <!-- Quotation Date -->
             <date-picker id="quotation_date" v-model="data.quotation_date" field="data.quotation_date"
-              title="Quotation Date (তারিখ)" placeholder="Select Date" col="3" :req="true" />
+              title="Quotation Date" placeholder="Select Date" col="3" :req="true" />
 
             <!-- Validity Date -->
             <date-picker id="validity_date" v-model="data.validity_date" field="data.validity_date"
-              title="Valid Until (মেয়াদ শেষ)" placeholder="Select Validity" col="3" :req="false" />
+              title="Valid Until" placeholder="Select Validity" col="3" :req="false" />
 
             <!-- Status -->
             <div class="col-md-3">
               <label class="form-label fw-bold small text-theme mb-1">
-                <i class="fas fa-flag me-1"></i> Status (অবস্থা)
-              </label>
+                <i class="fas fa-flag me-1"></i>{{ $t('Status') }}</label>
               <select class="form-select form-select-sm shadow-sm" v-model="data.status">
-                <option value="draft">Draft (খসড়া)</option>
-                <option value="sent">Sent to Client (প্রেরিত)</option>
-                <option value="accepted">Accepted (গৃহীত)</option>
-                <option value="declined">Declined (বাতিল)</option>
-                <option value="converted">Converted to Invoice (ইনভয়েস)</option>
-                <option value="expired">Expired (মেয়াদোত্তীর্ণ)</option>
+                <option value="draft">{{ $t('Draft') }}</option>
+                <option value="sent">{{ $t('Sent to Client') }}</option>
+                <option value="accepted">{{ $t('Accepted') }}</option>
+                <option value="declined">{{ $t('Declined') }}</option>
+                <option value="converted">{{ $t('Converted to Invoice') }}</option>
+                <option value="expired">{{ $t('Expired') }}</option>
               </select>
             </div>
 
@@ -46,7 +45,7 @@
             <!-- Client Selector -->
             <div class="col-md-4">
               <label class="form-label fw-bold small text-theme mb-1 d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-user-tie me-1"></i> Customer / Client (গ্রাহক):</span>
+                <span><i class="fas fa-user-tie me-1"></i> {{ $t('Customer / Client') }}:</span>
                 <span class="text-muted small" v-if="selectedClientInfo">📱 {{ selectedClientInfo.mobile }}</span>
               </label>
               <v-select
@@ -54,7 +53,7 @@
                 :options="clients"
                 label="org_name"
                 :reduce="(obj) => obj.id"
-                placeholder="-- Select Client --"
+                :placeholder="$t('-- Select Client --')"
                 @option:selected="onClientSelect"
                 class="shadow-sm vs-compact"
               >
@@ -62,7 +61,7 @@
                   <div class="d-flex justify-content-between align-items-center">
                     <div>
                       <strong>{{ option.org_name || option.name }}</strong>
-                      <span class="text-muted small d-block" v-if="option.org_name && option.name">Attn: {{ option.name }}</span>
+                      <span class="text-muted small d-block" v-if="option.org_name && option.name">{{ $t('Attn:') }} {{ option.name }}</span>
                     </div>
                     <small class="text-primary font-monospace" v-if="option.mobile">📱 {{ option.mobile }}</small>
                   </div>
@@ -73,15 +72,15 @@
             <!-- Client / Org Name -->
             <div class="col-md-3">
               <label class="form-label fw-bold small text-theme mb-1">
-                <i class="fas fa-building me-1"></i> Client / Org Name
+                <i class="fas fa-building me-1"></i> {{ $t('Client / Org Name') }}
               </label>
-              <input type="text" class="form-control form-control-sm shadow-sm" v-model="data.client_name" placeholder="Client Name..." />
+              <input type="text" class="form-control form-control-sm shadow-sm" v-model="data.client_name" :placeholder="$t('Client Name...')" />
             </div>
 
             <!-- Client Phone -->
             <div class="col-md-2">
               <label class="form-label fw-semibold small text-theme mb-1">
-                <i class="fas fa-phone-alt me-1"></i> Phone No
+                <i class="fas fa-phone-alt me-1"></i> {{ $t('Phone No') }}
               </label>
               <input type="text" class="form-control form-control-sm" v-model="data.client_phone" placeholder="017xxxxxxxx" />
             </div>
@@ -89,7 +88,7 @@
             <!-- Client Email -->
             <div class="col-md-3">
               <label class="form-label fw-semibold small text-theme mb-1">
-                <i class="fas fa-envelope me-1"></i> Email Address
+                <i class="fas fa-envelope me-1"></i> {{ $t('Email Address') }}
               </label>
               <input type="email" class="form-control form-control-sm" v-model="data.client_email" placeholder="client@example.com" />
             </div>
@@ -98,16 +97,15 @@
             <!-- Quotation Subject -->
             <div class="col-md-5">
               <label class="form-label fw-bold small text-theme mb-1">
-                <i class="fas fa-heading me-1"></i> Quotation Subject (কোটেশনের বিষয়)
-              </label>
+                <i class="fas fa-heading me-1"></i>{{ $t('Quotation Subject') }}</label>
               <input type="text" class="form-control form-control-sm shadow-sm" v-model="data.subject"
-                placeholder="e.g. Commercial Quotation for Products & Services" />
+                :placeholder="$t('Commercial Quotation for Products & Services')" />
             </div>
 
             <!-- Reference / RFQ No -->
             <div class="col-md-3">
               <label class="form-label fw-semibold small text-theme mb-1">
-                <i class="fas fa-bookmark me-1"></i> Reference / RFQ No
+                <i class="fas fa-bookmark me-1"></i> {{ $t('Reference / RFQ No') }}
               </label>
               <input type="text" class="form-control form-control-sm" v-model="data.reference_no" placeholder="e.g. RFQ-2026-88" />
             </div>
@@ -115,9 +113,9 @@
             <!-- Billing / Delivery Address -->
             <div class="col-md-4">
               <label class="form-label fw-semibold small text-theme mb-1">
-                <i class="fas fa-map-marker-alt me-1 text-danger"></i> Delivery / Billing Address
+                <i class="fas fa-map-marker-alt me-1 text-danger"></i> {{ $t('Delivery / Billing Address') }}
               </label>
-              <input type="text" class="form-control form-control-sm" v-model="data.client_address" placeholder="Address..." />
+              <input type="text" class="form-control form-control-sm" v-model="data.client_address" :placeholder="$t('Address...')" />
             </div>
           </div>
         </div>
@@ -130,7 +128,7 @@
         <div class="card-header theme-card-header py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <span class="fw-bold text-white d-flex align-items-center">
             <i class="fas fa-cart-plus me-2 text-warning fs-5"></i>
-            <span>Add Items to Quotation (পণ্য ও সার্ভিস যোগ করুন)</span>
+            <span>{{ $t('Add Items to Quotation') }}</span>
           </span>
           <div class="d-flex align-items-center gap-2">
             <button
@@ -138,14 +136,13 @@
               class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 shadow-sm fw-semibold px-3"
               @click="addCustomItem('service')"
             >
-              <i class="fas fa-tools"></i> + Add Service (সার্ভিস যোগ)
-            </button>
+              <i class="fas fa-tools"></i>{{ $t('+ Add Service') }}</button>
             <button
               type="button"
               class="btn btn-sm btn-warning text-dark d-inline-flex align-items-center gap-1 shadow-sm fw-bold px-3"
               @click="addCustomItem('custom')"
             >
-              <i class="fas fa-plus-circle"></i> + Add Custom Item / Software
+              <i class="fas fa-plus-circle"></i> {{ $t('+ Add Custom Item / Software') }}
             </button>
           </div>
         </div>
@@ -154,11 +151,11 @@
             <!-- Category Filter -->
             <div class="col-md-4">
               <label class="form-label fw-bold small text-theme d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-layer-group me-1 text-primary"></i> 1. Filter Category:</span>
-                <span class="text-muted small" v-if="categories.length">({{ categories.length }} Categories)</span>
+                <span><i class="fas fa-layer-group me-1 text-primary"></i> 1. {{ $t('Filter Category:') }}</span>
+                <span class="text-muted small" v-if="categories.length">({{ $bnNum(categories.length) }} {{ $t('Categories') }})</span>
               </label>
               <select class="form-select shadow-sm" v-model="selectedCategoryId" @change="onCategoryChange">
-                <option :value="null">-- All Categories (সকল ক্যাটাগরি) --</option>
+                <option :value="null">{{ $t('-- All Categories --') }}</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                   {{ cat.title }}
                 </option>
@@ -168,7 +165,7 @@
             <!-- Barcode Scanner -->
             <div class="col-md-3">
               <label class="form-label fw-bold small text-theme">
-                <i class="fas fa-barcode me-1 text-danger"></i> 2. Barcode Scan:
+                <i class="fas fa-barcode me-1 text-danger"></i> 2. {{ $t('Barcode Scan:') }}
               </label>
               <div class="input-group shadow-sm">
                 <span class="input-group-text bg-white text-danger border-end-0">
@@ -180,7 +177,7 @@
                   class="form-control border-start-0"
                   v-model.trim="barcodeScanInput"
                   @keyup.enter="handleBarcodeScan"
-                  placeholder="Scan barcode & Enter..."
+                  :placeholder="$t('Scan barcode & Enter...')"
                   autocomplete="off"
                 />
               </div>
@@ -189,34 +186,34 @@
             <!-- Product Dropdown Search -->
             <div class="col-md-5">
               <label class="form-label fw-bold small text-theme">
-                <i class="fas fa-box-open me-1 text-primary"></i> 3. Search & Add Catalog Item (ক্যাটালগ পণ্য):
+                <i class="fas fa-box-open me-1 text-primary"></i> 3. {{ $t('Search & Add Catalog Item:') }}
               </label>
               <v-select
                 v-model="selectedItem"
                 :options="itemList"
                 label="title"
-                placeholder="Type item name or barcode to select..."
+                :placeholder="$t('Type product name or barcode...')"
                 @option:selected="onItemSelect"
                 @search="onSearchItems"
                 class="shadow-sm"
               >
                 <template #no-options="{ search, searching }">
                   <template v-if="searching">
-                    <span class="text-muted small">No items matching "<em>{{ search }}</em>"</span>
+                    <span class="text-muted small">{{ $t('No items matching') }} "<em>{{ search }}</em>"</span>
                   </template>
-                  <em v-else class="text-muted small">Type product name or barcode...</em>
+                  <em v-else class="text-muted small">{{ $t('Type product name or barcode...') }}</em>
                 </template>
                 <template #option="option">
                   <div class="d-flex justify-content-between align-items-center py-1">
                     <div>
                       <strong>{{ option.title }}</strong>
                       <div class="small text-muted">
-                        <span v-if="option.barcode">Barcode: <code>{{ option.barcode }}</code></span>
-                        <span v-if="option.unit" class="ms-2">Unit: {{ option.unit.title }}</span>
+                        <span v-if="option.barcode">{{ $t('Barcode') }}: <code>{{ option.barcode }}</code></span>
+                        <span v-if="option.unit" class="ms-2">{{ $t('Unit') }}: {{ option.unit.title }}</span>
                       </div>
                     </div>
                     <div class="text-end font-monospace">
-                      <span class="badge bg-success text-white">৳ {{ formatCurrencyNumber(option.selling_price) }}</span>
+                      <span class="badge bg-success text-white">{{ $t('Tk.') }} {{ $bnNum(formatCurrencyNumber(option.selling_price)) }}</span>
                     </div>
                   </div>
                 </template>
@@ -233,11 +230,11 @@
         <div class="card-header theme-card-header py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <span class="fw-bold text-white d-flex align-items-center">
             <i class="fas fa-list-ol me-2 text-warning fs-5"></i>
-            <span>Quotation Item Matrix (আইটেম তালিকা ও রেট)</span>
+            <span>{{ $t('Quotation Item Matrix') }}</span>
           </span>
           <div class="d-flex align-items-center gap-2">
             <span class="badge bg-light text-dark font-monospace px-3 py-1 fw-bold">
-              Total Lines: {{ details.length }}
+              {{ $t('Total Lines:') }} {{ $bnNum(details.length) }}
             </span>
             <button
               type="button"
@@ -245,7 +242,7 @@
               v-if="details.length > 0"
               @click="clearAllDetails"
             >
-              <i class="fas fa-trash me-1"></i> Clear All
+              <i class="fas fa-trash me-1"></i> {{ $t('Clear All') }}
             </button>
           </div>
         </div>
@@ -255,32 +252,32 @@
             <table class="table table-bordered table-hover align-middle mb-0 matrix-table">
               <thead class="theme-matrix-header text-center small text-uppercase">
                 <tr>
-                  <th style="width: 4%;">#</th>
-                  <th style="width: 10%;">Type</th>
-                  <th style="width: 32%;">Item / Service Name & Specification</th>
-                  <th style="width: 10%;">Unit</th>
-                  <th style="width: 10%;">Qty</th>
-                  <th style="width: 14%;">Unit Price (৳)</th>
-                  <th style="width: 15%;">Total (৳)</th>
-                  <th style="width: 5%;">Action</th>
+                  <th style="width: 4%;">{{ $t('#') }}</th>
+                  <th style="width: 10%;">{{ $t('Type') }}</th>
+                  <th style="width: 32%;">{{ $t('Item / Service Name & Specification') }}</th>
+                  <th style="width: 10%;">{{ $t('Unit') }}</th>
+                  <th style="width: 10%;">{{ $t('Qty') }}</th>
+                  <th style="width: 14%;">{{ $t('Unit Price') }}</th>
+                  <th style="width: 15%;">{{ $t('Total') }}</th>
+                  <th style="width: 5%;">{{ $t('Action') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <template v-if="details.length > 0">
                   <tr v-for="(row, index) in details" :key="index" :class="{ 'bg-service-row': row.item_type !== 'product' }">
                     <!-- SL -->
-                    <td class="text-center font-monospace text-muted fw-bold">{{ index + 1 }}</td>
+                    <td class="text-center font-monospace text-muted fw-bold">{{ $bnNum(index + 1) }}</td>
 
                     <!-- Type Badge -->
                     <td class="text-center">
                       <span class="badge bg-primary" v-if="row.item_type === 'product'">
-                        <i class="fas fa-box me-1"></i> Product
+                        <i class="fas fa-box me-1"></i> {{ $t('Product') }}
                       </span>
                       <span class="badge bg-success" v-else-if="row.item_type === 'service'">
-                        <i class="fas fa-tools me-1"></i> Service
+                        <i class="fas fa-tools me-1"></i> {{ $t('Service') }}
                       </span>
                       <span class="badge bg-info text-dark" v-else>
-                        <i class="fas fa-cube me-1"></i> Custom
+                        <i class="fas fa-cube me-1"></i> {{ $t('Custom') }}
                       </span>
                     </td>
 
@@ -290,13 +287,13 @@
                         type="text"
                         class="form-control form-control-sm fw-bold mb-1"
                         v-model="row.item_name"
-                        placeholder="Item or Service Name..."
+                        :placeholder="$t('Item or Service Name...')"
                       />
                       <textarea
                         class="form-control form-control-sm text-muted small"
                         rows="2"
                         v-model="row.description"
-                        placeholder="Technical specifications / details description..."
+                        :placeholder="$t('Technical specifications / details description...')"
                       ></textarea>
                     </td>
 
@@ -325,7 +322,7 @@
                     <!-- Unit Price (Selling Price - Editable Up/Down) -->
                     <td>
                       <div class="input-group input-group-sm">
-                        <span class="input-group-text font-monospace">৳</span>
+                        <span class="input-group-text font-monospace">{{ $t('Tk.') }}</span>
                         <input
                           type="number"
                           step="any"
@@ -339,7 +336,7 @@
 
                     <!-- Row Total Amount -->
                     <td class="text-end font-monospace fw-bold fs-6" style="color: #112C47;">
-                      ৳ {{ formatCurrencyNumber(row.total_price) }}
+                      {{ $t('Tk.') }} {{ $bnNum(formatCurrencyNumber(row.total_price)) }}
                     </td>
 
                     <!-- Action -->
@@ -348,7 +345,7 @@
                         type="button"
                         class="btn btn-sm btn-outline-danger p-1"
                         @click="removeRow(index)"
-                        title="Remove Item"
+                        :title="$t('Remove Item')"
                       >
                         <i class="fas fa-trash-alt"></i>
                       </button>
@@ -359,9 +356,9 @@
                   <tr>
                     <td colspan="8" class="text-center py-5 text-muted">
                       <i class="fas fa-file-invoice-dollar fa-3x mb-2 text-secondary opacity-25 d-block"></i>
-                      <h6 class="fw-bold text-secondary">No Items Added Yet</h6>
+                      <h6 class="fw-bold text-secondary">{{ $t('No Items Added Yet') }}</h6>
                       <p class="small text-muted mb-0">
-                        Please select an item from catalog above or click <strong>+ Add Custom Item / Service</strong>.
+                        {{ $t('Please select an item from catalog above or click') }} <strong>{{ $t('+ Add Custom Item / Service') }}</strong>.
                       </p>
                     </td>
                   </tr>
@@ -382,7 +379,7 @@
             <div class="card-header theme-card-header py-2">
               <span class="fw-bold text-white d-flex align-items-center">
                 <i class="fas fa-clipboard-list me-2 text-warning fs-5"></i>
-                <span>Commercial Terms & Conditions (পেমেন্ট ও ডেলিভারি শর্তাবলী)</span>
+                <span>{{ $t('Commercial Terms & Conditions') }}</span>
               </span>
             </div>
             <div class="card-body p-3">
@@ -390,37 +387,37 @@
                 <!-- Payment Terms -->
                 <div class="col-12">
                   <label class="form-label small fw-bold text-theme d-flex justify-content-between">
-                    <span><i class="fas fa-credit-card me-1"></i> Payment Terms (পেমেন্ট শর্ত):</span>
+                    <span><i class="fas fa-credit-card me-1"></i> {{ $t('Payment Terms') }}:</span>
                     <span class="small text-muted">
                       <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.payment_terms = '50% Advance along with Work Order, remaining 50% upon delivery/completion.'">Preset 1</button> |
                       <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.payment_terms = '100% Cash/Cheque on Delivery.'">Preset 2</button>
                     </span>
                   </label>
-                  <input type="text" class="form-control form-control-sm" v-model="data.payment_terms" placeholder="e.g. 50% Advance, 50% on Delivery..." />
+                  <input type="text" class="form-control form-control-sm" v-model="data.payment_terms" :placeholder="$t('e.g. 50% Advance, 50% on Delivery...')" />
                 </div>
 
                 <!-- Delivery Terms -->
                 <div class="col-12">
                   <label class="form-label small fw-bold text-theme d-flex justify-content-between">
-                    <span><i class="fas fa-truck me-1"></i> Delivery Terms & Lead Time (ডেলিভারি সময়সীমা):</span>
+                    <span><i class="fas fa-truck me-1"></i> {{ $t('Delivery Terms') }}:</span>
                     <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.delivery_terms = 'Within 3-5 working days after receiving confirmed work order.'">Preset</button>
                   </label>
-                  <input type="text" class="form-control form-control-sm" v-model="data.delivery_terms" placeholder="e.g. Within 3-5 working days..." />
+                  <input type="text" class="form-control form-control-sm" v-model="data.delivery_terms" :placeholder="$t('e.g. Within 3-5 working days...')" />
                 </div>
 
                 <!-- Warranty Terms -->
                 <div class="col-12">
                   <label class="form-label small fw-bold text-theme d-flex justify-content-between">
-                    <span><i class="fas fa-shield-alt me-1"></i> Warranty / Support Terms (ওয়ারেন্টি ও সাপোর্ট):</span>
+                    <span><i class="fas fa-shield-alt me-1"></i> {{ $t('Warranty Terms') }}:</span>
                     <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.warranty_terms = '1 Year official warranty & free technical support.'">Preset</button>
                   </label>
-                  <input type="text" class="form-control form-control-sm" v-model="data.warranty_terms" placeholder="e.g. 1 Year service warranty..." />
+                  <input type="text" class="form-control form-control-sm" v-model="data.warranty_terms" :placeholder="$t('e.g. 1 Year service warranty...')" />
                 </div>
 
                 <!-- Terms & Conditions Multiline -->
                 <div class="col-12">
                   <label class="form-label small fw-bold text-theme">
-                    <i class="fas fa-file-contract me-1"></i> Terms & Conditions (অন্যান্য সাধারণ শর্তাবলী):
+                    <i class="fas fa-file-contract me-1"></i> {{ $t('Terms & Conditions') }}:
                   </label>
                   <textarea class="form-control form-control-sm" rows="3" v-model="data.terms_conditions" placeholder="1. Quotation validity is 15 days.&#10;2. Prices are inclusive/exclusive of VAT.&#10;3. Physical signature required upon acceptance."></textarea>
                 </div>
@@ -428,9 +425,9 @@
                 <!-- Note -->
                 <div class="col-12">
                   <label class="form-label small fw-semibold text-theme">
-                    <i class="fas fa-sticky-note me-1"></i> Special Client Note (কোটেশনে বিশেষ নোট):
+                    <i class="fas fa-sticky-note me-1"></i> {{ $t('Special Client Note') }}:
                   </label>
-                  <input type="text" class="form-control form-control-sm" v-model="data.note" placeholder="Note shown on quotation..." />
+                  <input type="text" class="form-control form-control-sm" v-model="data.note" :placeholder="$t('Note shown on quotation...')" />
                 </div>
               </div>
             </div>
@@ -443,7 +440,7 @@
             <div class="card-header theme-card-header py-2">
               <span class="fw-bold text-white d-flex align-items-center">
                 <i class="fas fa-calculator me-2 text-warning fs-5"></i>
-                <span>Quotation Financial Summary (মোট হিসাব)</span>
+                <span>{{ $t('Quotation Financial Summary') }}</span>
               </span>
             </div>
             <div class="card-body p-3">
@@ -451,9 +448,9 @@
                 <tbody>
                   <!-- Sub Total -->
                   <tr class="border-bottom">
-                    <td class="fw-bold text-secondary">Sub Total (উপ-মোট):</td>
+                    <td class="fw-bold text-secondary">{{ $t('Subtotal') }}:</td>
                     <td class="text-end font-monospace fw-bold text-dark fs-6">
-                      ৳ {{ formatCurrencyNumber(calculatedSubTotal) }}
+                      {{ $t('Tk.') }} {{ $bnNum(formatCurrencyNumber(calculatedSubTotal)) }}
                     </td>
                   </tr>
 
@@ -461,10 +458,10 @@
                   <tr class="border-bottom">
                     <td>
                       <div class="d-flex align-items-center gap-1">
-                        <span class="fw-bold text-secondary">Discount:</span>
-                        <select class="form-select form-select-sm py-0 px-1" style="width: 75px;" v-model="data.discount_type" @change="recalculateSummary">
-                          <option value="fixed">Fixed ৳</option>
-                          <option value="percentage">% Percent</option>
+                        <span class="fw-bold text-secondary">{{ $t('Discount') }}:</span>
+                        <select class="form-select form-select-sm py-0 px-1" style="width: 85px;" v-model="data.discount_type" @change="recalculateSummary">
+                          <option value="fixed">{{ $t('Fixed') }} ৳</option>
+                          <option value="percentage">{{ $t('Percent') }} %</option>
                         </select>
                       </div>
                     </td>
@@ -482,7 +479,7 @@
                         <span class="input-group-text">{{ data.discount_type === 'percentage' ? '%' : '৳' }}</span>
                       </div>
                       <small class="text-muted d-block mt-1 font-monospace" v-if="data.discount_type === 'percentage'">
-                        - ৳ {{ formatCurrencyNumber(calculatedDiscountAmount) }}
+                        - {{ $t('Tk.') }} {{ $bnNum(formatCurrencyNumber(calculatedDiscountAmount)) }}
                       </small>
                     </td>
                   </tr>
@@ -491,7 +488,7 @@
                   <tr class="border-bottom">
                     <td>
                       <div class="d-flex align-items-center gap-1">
-                        <span class="fw-bold text-secondary">VAT / Tax (%):</span>
+                        <span class="fw-bold text-secondary">{{ $t('VAT / Tax') }} (%):</span>
                       </div>
                     </td>
                     <td class="text-end">
@@ -508,14 +505,14 @@
                         <span class="input-group-text">%</span>
                       </div>
                       <small class="text-muted d-block mt-1 font-monospace" v-if="data.tax_percent > 0">
-                        + ৳ {{ formatCurrencyNumber(calculatedTaxAmount) }}
+                        + {{ $t('Tk.') }} {{ $bnNum(formatCurrencyNumber(calculatedTaxAmount)) }}
                       </small>
                     </td>
                   </tr>
 
                   <!-- Shipping / Delivery Charge -->
                   <tr class="border-bottom">
-                    <td class="fw-bold text-secondary">Shipping / Handling:</td>
+                    <td class="fw-bold text-secondary">{{ $t('Shipping Cost') }}:</td>
                     <td class="text-end">
                       <div class="input-group input-group-sm justify-content-end" style="max-width: 140px; margin-left: auto;">
                         <span class="input-group-text">৳</span>
@@ -534,9 +531,9 @@
 
                   <!-- Net Grand Total Box -->
                   <tr class="theme-grand-total-box rounded">
-                    <td class="fw-bold fs-5 py-2" style="color: #112C47;">Grand Total (সর্বমোট):</td>
+                    <td class="fw-bold fs-5 py-2" style="color: #112C47;">{{ $t('Grand Total') }}:</td>
                     <td class="text-end font-monospace fw-bold fs-4 py-2" style="color: #112C47;">
-                      ৳ {{ formatCurrencyNumber(calculatedGrandTotal) }}
+                      {{ $t('Tk.') }} {{ $bnNum(formatCurrencyNumber(calculatedGrandTotal)) }}
                     </td>
                   </tr>
                 </tbody>
@@ -546,7 +543,7 @@
               <div class="mt-3 p-3 bg-light border rounded-3" style="border-left: 4px solid #112C47 !important;">
                 <div class="d-flex align-items-center gap-1 small fw-bold mb-1" style="color: #112C47;">
                   <i class="fas fa-money-bill-wave text-success"></i>
-                  <span>AMOUNT IN WORDS (টাকায় কথায়):</span>
+                  <span>{{ $t('AMOUNT IN WORDS:') }}</span>
                 </div>
                 <div class="fw-bold text-dark small font-monospace text-capitalize">
                   {{ $filter.numberToEnglishBD(calculatedGrandTotal) }}

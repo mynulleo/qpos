@@ -74,9 +74,9 @@
                 <table class="table table-sm table-hover table-striped mb-0 text-start align-middle">
                   <thead class="theme-bg text-white">
                     <tr>
-                      <th class="py-2" width="22%">Column Name</th>
-                      <th class="py-2" width="16%">Status</th>
-                      <th class="py-2">Rules & Sample Value</th>
+                      <th class="py-2" width="22%">{{ $t('Column Name') }}</th>
+                      <th class="py-2" width="16%">{{ $t('Status') }}</th>
+                      <th class="py-2">{{ $t('Rules & Sample Value') }}</th>
                     </tr>
                   </thead>
                   <tbody class="small font-monospace">
@@ -298,9 +298,9 @@
                 <thead class="theme-bg text-white">
                   <tr>
                     <th class="text-center py-2.5" width="10%">Row # (রো)</th>
-                    <th class="py-2.5" width="18%">Column / Field (কলাম)</th>
-                    <th class="py-2.5" width="22%">Submitted Value (প্রদত্ত মান)</th>
-                    <th class="py-2.5">Failure Reason & Suggestion (ত্রুটির কারণ ও সমাধান)</th>
+                    <th class="py-2.5" width="18%">{{ $t('Column / Field') }}</th>
+                    <th class="py-2.5" width="22%">{{ $t('Submitted Value') }}</th>
+                    <th class="py-2.5">{{ $t('Failure Reason & Suggestion') }}</th>
                   </tr>
                 </thead>
                 <tbody class="font-monospace small">

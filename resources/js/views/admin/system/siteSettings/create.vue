@@ -16,10 +16,10 @@
                     <div class="card-body p-3">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <Input title="Store Title (প্রতিষ্ঠানের নাম)" field="data.title" v-model="data.title" :req="true" col="12" placeholder="e.g. QPOS Clothing" />
+                                <Input title="Store Title" field="data.title" v-model="data.title" :req="true" col="12" placeholder="e.g. QPOS Clothing" />
                             </div>
                             <div class="col-md-6">
-                                <Input title="Short Title (সংক্ষিপ্ত নাম)" field="data.short_title" v-model="data.short_title" :req="true" col="12" placeholder="e.g. QPOS" />
+                                <Input title="Short Title" field="data.short_title" v-model="data.short_title" :req="true" col="12" placeholder="e.g. QPOS" />
                             </div>
                             <div class="col-md-6">
                                 <Input title="Contact Email" field="data.contact_email" v-model="data.contact_email" type="email" :req="false" col="12" placeholder="info@example.com" />
@@ -34,16 +34,16 @@
                                 <x-tel-input title="Secondary Mobile" field="data.mobile2" v-model="data.mobile2" @phoneValidate="x_tel_validates.mobile2 = $event" :req="false" col="12" />
                             </div>
                             <div class="col-12 border-top pt-2">
-                                <Textarea title="Primary Store Address (মূল ঠিকানা)" field="data.address" v-model="data.address" :req="false" col="12" rows="2" placeholder="Street, City, Post Code" />
+                                <Textarea title="Primary Store Address" field="data.address" v-model="data.address" :req="false" col="12" rows="2" placeholder="Street, City, Post Code" />
                             </div>
                             <div class="col-12">
-                                <Textarea title="Primary Google Maps Embed Link (ঐচ্ছিক)" field="data.map" v-model="data.map" :req="false" col="12" rows="2" placeholder="https://maps.google.com/..." />
+                                <Textarea title="Primary Google Maps Embed Link" field="data.map" v-model="data.map" :req="false" col="12" rows="2" placeholder="https://maps.google.com/..." />
                             </div>
                             <div class="col-12">
-                                <Textarea title="Secondary Address (শাখা ঠিকানা - ঐচ্ছিক)" field="data.address_two" v-model="data.address_two" :req="false" col="12" rows="2" placeholder="Branch Address" />
+                                <Textarea title="Secondary Address" field="data.address_two" v-model="data.address_two" :req="false" col="12" rows="2" placeholder="Branch Address" />
                             </div>
                             <div class="col-12">
-                                <Textarea title="Secondary Google Maps Link (ঐচ্ছিক)" field="data.map_two" v-model="data.map_two" :req="false" col="12" rows="2" placeholder="https://maps.google.com/..." />
+                                <Textarea title="Secondary Google Maps Link" field="data.map_two" v-model="data.map_two" :req="false" col="12" rows="2" placeholder="https://maps.google.com/..." />
                             </div>
                         </div>
                     </div>
@@ -90,8 +90,8 @@
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="shopGrocery" value="grocery" v-model="data.shop_type">
                                                 <label class="form-check-label cursor-pointer text-dark" for="shopGrocery">
-                                                    <div class="fw-bold small"><i class="fas fa-shopping-basket text-success me-1"></i> Grocery & Departmental (মুদি / ডিপার্টমেন্টাল)</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Fast POS (সরাসরি কার্টে যোগ, পপআপ ছাড়া ফাস্ট সেল)</div>
+                                                    <div class="fw-bold small"><i class="fas fa-shopping-basket text-success me-1"></i>{{ $t('Grocery & Departmental') }}</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('Fast POS') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -105,8 +105,8 @@
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="shopClothing" value="clothing" v-model="data.shop_type">
                                                 <label class="form-check-label cursor-pointer text-dark" for="shopClothing">
-                                                    <div class="fw-bold small"><i class="fas fa-tshirt text-info me-1"></i> Clothing & Fashion (গার্মেন্টস ও পোশাক)</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Color & Size variants (কালার ও সাইজ ভেরিয়েন্ট)</div>
+                                                    <div class="fw-bold small"><i class="fas fa-tshirt text-info me-1"></i>{{ $t('Clothing & Fashion') }}</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('Color & Size variants') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -120,8 +120,8 @@
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="shopElectronics" value="electronics" v-model="data.shop_type">
                                                 <label class="form-check-label cursor-pointer text-dark" for="shopElectronics">
-                                                    <div class="fw-bold small"><i class="fas fa-tv text-primary me-1"></i> Electronics & Gadgets (ইলেকট্রনিক্স)</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Warranty & Serial tracking (ওয়ারেন্টি ও সিরিয়াল ট্র্যাকিং)</div>
+                                                    <div class="fw-bold small"><i class="fas fa-tv text-primary me-1"></i>{{ $t('Electronics & Gadgets') }}</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('Warranty & Serial tracking') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -135,8 +135,8 @@
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="shopOthers" value="others" v-model="data.shop_type">
                                                 <label class="form-check-label cursor-pointer text-dark" for="shopOthers">
-                                                    <div class="fw-bold small"><i class="fas fa-boxes text-secondary me-1"></i> General Retail (সাধারণ রিটেইল)</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Standard inventory (স্ট্যান্ডার্ড ইনভেন্টরি)</div>
+                                                    <div class="fw-bold small"><i class="fas fa-boxes text-secondary me-1"></i>{{ $t('General Retail') }}</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('Standard inventory') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -158,7 +158,7 @@
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="natureRetail" value="retail" v-model="data.sale_nature">
                                                 <label class="form-check-label cursor-pointer text-dark w-100" for="natureRetail">
-                                                    <div class="fw-bold small text-primary"><i class="fas fa-shopping-bag me-1"></i> Retail (খুচরা)</div>
+                                                    <div class="fw-bold small text-primary"><i class="fas fa-shopping-bag me-1"></i>{{ $t('Retail') }}</div>
                                                     <div class="text-muted" style="font-size: 11px;">Direct consumer sales</div>
                                                 </label>
                                             </div>
@@ -173,7 +173,7 @@
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="natureWholesale" value="wholesale" v-model="data.sale_nature">
                                                 <label class="form-check-label cursor-pointer text-dark w-100" for="natureWholesale">
-                                                    <div class="fw-bold small text-success"><i class="fas fa-warehouse me-1"></i> Whole Sale (পাইকারি)</div>
+                                                    <div class="fw-bold small text-success"><i class="fas fa-warehouse me-1"></i>{{ $t('Whole Sale') }}</div>
                                                     <div class="text-muted" style="font-size: 11px;">Bulk dealer & agent sales</div>
                                                 </label>
                                             </div>
@@ -188,7 +188,7 @@
                                             <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="natureBoth" value="both" v-model="data.sale_nature">
                                                 <label class="form-check-label cursor-pointer text-dark w-100" for="natureBoth">
-                                                    <div class="fw-bold small text-dark"><i class="fas fa-layer-group text-warning me-1"></i> Both (উভয়ই)</div>
+                                                    <div class="fw-bold small text-dark"><i class="fas fa-layer-group text-warning me-1"></i>{{ $t('Both') }}</div>
                                                     <div class="text-muted" style="font-size: 11px;">Retail & wholesale together</div>
                                                 </label>
                                             </div>
@@ -282,8 +282,8 @@
                 </div>
             </div>
 
-            <!-- 🏛️ 3. Organization Memberships & Associations (Electronics / General Feature) -->
-            <div class="col-12" v-if="data.shop_type === 'electronics' || (memberships && memberships.length > 0)">
+            <!-- 🏛️ 3. Organization Memberships & Associations -->
+            <div class="col-12">
                 <div class="card border-0 shadow-sm form-section-card">
                     <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
@@ -292,15 +292,14 @@
                             </div>
                             <div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <h6 class="fw-bold mb-0 text-dark">Organization Memberships & Associations (অর্গানাইজেশন মেম্বারশিপ)</h6>
+                                    <h6 class="fw-bold mb-0 text-dark">{{ $t('Organization Memberships & Associations') }}</h6>
                                     <span class="badge bg-primary font-monospace" v-if="data.shop_type === 'electronics'">Electronics Feature</span>
                                 </div>
                                 <small class="text-muted" style="font-size: 11px;">Add trade bodies and associations (e.g. BCS, BASIS, ECAB) with logos to display on invoice bills</small>
                             </div>
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1 shadow-sm px-3" @click="openMembershipModal('create')">
-                            <i class="fas fa-plus-circle"></i> Add Membership (মেম্বারশিপ যোগ করুন)
-                        </button>
+                            <i class="fas fa-plus-circle"></i>{{ $t('Add Membership') }}</button>
                     </div>
                     <div class="card-body p-3">
                         <div v-if="memberships && memberships.length > 0" class="row g-3">
@@ -356,7 +355,7 @@
                                 <i class="fas fa-print"></i>
                             </div>
                             <div>
-                                <h6 class="fw-bold mb-0 text-dark">Printer & Paper Size Setup (প্রিন্টার ও পেপার সাইজ)</h6>
+                                <h6 class="fw-bold mb-0 text-dark">{{ $t('Printer & Paper Size Setup') }}</h6>
                                 <small class="text-muted" style="font-size: 11px;">Configure whether sales and warranty claims print on Thermal POS rolls or Normal (A4/A5) sheets</small>
                             </div>
                         </div>
@@ -384,7 +383,7 @@
                                                     <div class="fw-bold small text-success">
                                                         <i class="fas fa-receipt me-1"></i> Thermal Printer
                                                     </div>
-                                                    <div class="text-muted" style="font-size: 11px;">POS Receipt Roll (থার্মাল প্রিন্টার)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('POS Receipt Roll') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -401,7 +400,7 @@
                                                     <div class="fw-bold small text-primary">
                                                         <i class="fas fa-print me-1"></i> Normal Printer
                                                     </div>
-                                                    <div class="text-muted" style="font-size: 11px;">Laser / Inkjet (সাধারণ প্রিন্টার)</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('Laser / Inkjet') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -428,7 +427,7 @@
                                                         <div class="fw-bold small text-dark">
                                                             <i class="fas fa-file-invoice text-success me-1"></i> 80mm Roll (3")
                                                         </div>
-                                                        <div class="text-muted" style="font-size: 11px;">Standard POS (৩ ইঞ্চি স্ট্যান্ডার্ড)</div>
+                                                        <div class="text-muted" style="font-size: 11px;">{{ $t('Standard POS') }}</div>
                                                     </label>
                                                 </div>
                                             </div>
@@ -445,7 +444,7 @@
                                                         <div class="fw-bold small text-dark">
                                                             <i class="fas fa-receipt text-info me-1"></i> 60mm / 58mm (2")
                                                         </div>
-                                                        <div class="text-muted" style="font-size: 11px;">Compact POS (ছোট থার্মাল রোল)</div>
+                                                        <div class="text-muted" style="font-size: 11px;">{{ $t('Compact POS') }}</div>
                                                     </label>
                                                 </div>
                                             </div>
@@ -470,7 +469,7 @@
                                                         <div class="fw-bold small text-dark">
                                                             <i class="fas fa-file-alt text-primary me-1"></i> A4 Size Paper
                                                         </div>
-                                                        <div class="text-muted" style="font-size: 11px;">Full Page (ফুল সাইজ ইনভয়েস)</div>
+                                                        <div class="text-muted" style="font-size: 11px;">{{ $t('Full Page') }}</div>
                                                     </label>
                                                 </div>
                                             </div>
@@ -487,7 +486,7 @@
                                                         <div class="fw-bold small text-dark">
                                                             <i class="fas fa-file text-warning me-1"></i> A5 Size Paper
                                                         </div>
-                                                        <div class="text-muted" style="font-size: 11px;">Half Page (হাফ সাইজ ইনভয়েস)</div>
+                                                        <div class="text-muted" style="font-size: 11px;">{{ $t('Half Page') }}</div>
                                                     </label>
                                                 </div>
                                             </div>
@@ -623,7 +622,7 @@
                             <!-- Main Logo -->
                             <div class="col-12">
                                 <div class="p-3 border rounded bg-light h-100">
-                                    <File title="Main Logo (প্রাইমারি লোগো)" cropModalId="logo_crop_modal" field="data.original_logo" mime="img"
+                                    <File title="Main Logo" cropModalId="logo_crop_modal" field="data.original_logo" mime="img"
                                         fileClassName="file2" accept=".jpg, .jpeg, .png" :showCrop="true"
                                         :vHeight="$root.media_validators?.logo?.min_height ?? 100"
                                         :vWidth="$root.media_validators?.logo?.min_width ?? 300"
@@ -641,7 +640,7 @@
                             <!-- Small Logo -->
                             <div class="col-md-6 col-12">
                                 <div class="p-3 border rounded bg-light h-100">
-                                    <File title="Small Logo (সংক্ষিপ্ত লোগো)" cropModalId="logo_small_crop_modal"
+                                    <File title="Small Logo" cropModalId="logo_small_crop_modal"
                                         field="data.original_logo_small" mime="img" fileClassName="file2"
                                         accept=".jpg, .jpeg, .png" :showCrop="true"
                                         :vHeight="$root.media_validators?.logo_small?.min_height ?? 100"
@@ -660,7 +659,7 @@
                             <!-- Favicon -->
                             <div class="col-md-6 col-12">
                                 <div class="p-3 border rounded bg-light h-100">
-                                    <File title="Favicon (ট্যাব আইকন)" field="data.favicon" mime="img" fileClassName="file3"
+                                    <File title="Favicon" field="data.favicon" mime="img" fileClassName="file3"
                                         vHeight="50" vWidth="50" vSizeInKb="300" :deleteButton="false" col="12" :req="true" />
                                 </div>
                             </div>
@@ -722,29 +721,33 @@
                         <div class="modal-body p-4">
                             <!-- Organization Name -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold small text-dark">
-                                    Organization Name (সংস্থার নাম) <span class="text-danger">*</span>
+                                <label class="form-label fw-bold small text-dark">{{ $t('Organization Name') }}<span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control" v-model.trim="membershipForm.org_name"
-                                    placeholder="e.g. Bangladesh Computer Samity (BCS), BASIS, ECAB" required />
+                                    placeholder="e.g. Bangladesh Computer Samity (BCS), BASIS, ECAB" />
                                 <small class="text-muted" style="font-size: 11px;">Enter the official name of the trade association or board</small>
                             </div>
 
                             <!-- Logo Upload -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold small text-dark">
-                                    Organization Logo (লোগো)
-                                </label>
+                                <label class="form-label fw-bold small text-dark">{{ $t('Organization Logo') }}</label>
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="border rounded p-1 bg-light d-flex align-items-center justify-content-center"
-                                        style="width: 70px; height: 70px; min-width: 70px;">
-                                        <img v-if="membershipForm.logo_url || membershipForm.logo"
-                                            :src="membershipForm.logo_url || membershipForm.logo"
-                                            class="img-fluid rounded" style="max-height: 60px; max-width: 60px; object-fit: contain;" alt="Preview" />
+                                    <div class="border rounded p-1 bg-white d-flex align-items-center justify-content-center shadow-xs position-relative"
+                                        style="width: 70px; height: 70px; min-width: 70px; background-color: #fafafa;">
+                                        <img v-if="modalLogoPreview"
+                                            :src="modalLogoPreview"
+                                            class="img-fluid rounded"
+                                            style="max-height: 60px; max-width: 60px; object-fit: contain;"
+                                            alt="Preview" />
                                         <i v-else class="fas fa-image fs-3 text-muted opacity-50"></i>
+                                        <button v-if="modalLogoPreview" type="button" class="btn btn-danger btn-xs position-absolute top-0 end-0 p-0 rounded-circle d-flex align-items-center justify-content-center shadow-xs"
+                                            style="width: 20px; height: 20px; transform: translate(30%, -30%); font-size: 10px;"
+                                            @click="removeMembershipLogo" title="Remove Logo">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <input type="file" class="form-control form-control-sm" accept="image/*" @change="onMembershipLogoChange" />
+                                        <input ref="membershipFileInput" type="file" class="form-control form-control-sm" accept="image/*" @change="onMembershipLogoChange" />
                                         <small class="text-muted d-block mt-1" style="font-size: 10.5px;">Recommended size: Square PNG or JPG with transparent background</small>
                                     </div>
                                 </div>
@@ -753,7 +756,7 @@
                             <!-- Show in Invoice Toggle -->
                             <div class="p-3 border rounded bg-light d-flex align-items-center justify-content-between">
                                 <div>
-                                    <span class="small fw-bold text-dark d-block">Show in Invoice (ইনভয়েসে প্রদর্শন)</span>
+                                    <span class="small fw-bold text-dark d-block">{{ $t('Show in Invoice') }}</span>
                                     <small class="text-muted" style="font-size: 11px;">ইনভয়েস বিলের নিচে অর্গানাইজেশনের লোগো এবং নাম শো করবে</small>
                                 </div>
                                 <div class="form-check form-switch m-0 p-0">
@@ -785,6 +788,15 @@ export default {
     name: "SiteSettingsEdit",
     computed: {
         ...mapState("setting", ["colors"]),
+        modalLogoPreview() {
+            return (
+                this.membership_preview_blob ||
+                this.membershipForm.preview_url ||
+                this.membershipForm.logo_url ||
+                this.membershipForm.logo ||
+                ""
+            );
+        },
     },
     data() {
         return {
@@ -817,11 +829,13 @@ export default {
             showMembershipModal: false,
             membershipModalMode: "create",
             editingMembershipIndex: -1,
+            membership_preview_blob: "",
             membershipForm: {
                 id: null,
                 org_name: "",
                 logo: "",
                 logo_url: "",
+                preview_url: "",
                 show_in_invoice: 1,
             },
             image: {},
@@ -838,51 +852,88 @@ export default {
     },
     methods: {
         // Membership Modal Handlers
+        removeMembershipLogo() {
+            this.membership_preview_blob = "";
+            this.membershipForm.logo = "";
+            this.membershipForm.logo_url = "";
+            this.membershipForm.preview_url = "";
+            if (this.$refs.membershipFileInput) {
+                this.$refs.membershipFileInput.value = "";
+            }
+        },
+
         openMembershipModal(mode = "create", idx = -1) {
             this.membershipModalMode = mode;
             this.editingMembershipIndex = idx;
+            this.membership_preview_blob = "";
             if (mode === "edit" && idx >= 0 && this.memberships[idx]) {
                 const item = this.memberships[idx];
+                const logoVal = item.logo_url || item.logo || "";
                 this.membershipForm = {
                     id: item.id || null,
                     org_name: item.org_name || "",
-                    logo: item.logo || "",
-                    logo_url: item.logo_url || item.logo || "",
+                    logo: logoVal,
+                    logo_url: logoVal,
+                    preview_url: logoVal,
                     show_in_invoice: item.show_in_invoice !== undefined ? (item.show_in_invoice ? 1 : 0) : 1,
                 };
+                this.membership_preview_blob = logoVal;
             } else {
                 this.membershipForm = {
                     id: null,
                     org_name: "",
                     logo: "",
                     logo_url: "",
+                    preview_url: "",
                     show_in_invoice: 1,
                 };
+                this.membership_preview_blob = "";
+            }
+            if (this.$refs.membershipFileInput) {
+                this.$refs.membershipFileInput.value = "";
             }
             this.showMembershipModal = true;
         },
 
         closeMembershipModal() {
             this.showMembershipModal = false;
+            this.membership_preview_blob = "";
             this.membershipForm = {
                 id: null,
                 org_name: "",
                 logo: "",
                 logo_url: "",
+                preview_url: "",
                 show_in_invoice: 1,
             };
             this.editingMembershipIndex = -1;
+            if (this.$refs.membershipFileInput) {
+                this.$refs.membershipFileInput.value = "";
+            }
         },
 
         onMembershipLogoChange(e) {
             const file = e.target.files && e.target.files[0];
             if (!file) return;
 
-            // Preview & Base64
+            // 1. Instant zero-delay synchronous preview using Blob URL
+            try {
+                const blobUrl = URL.createObjectURL(file);
+                this.membership_preview_blob = blobUrl;
+                this.membershipForm.preview_url = blobUrl;
+                this.membershipForm.logo_url = blobUrl;
+            } catch (err) {
+                console.error("Blob URL error", err);
+            }
+
+            // 2. Base64 conversion for payload persistence
             const reader = new FileReader();
             reader.onload = (event) => {
-                this.membershipForm.logo = event.target.result;
-                this.membershipForm.logo_url = event.target.result;
+                const base64 = event.target.result;
+                this.membershipForm.logo = base64;
+                this.membershipForm.logo_url = base64;
+                this.membershipForm.preview_url = base64;
+                this.membership_preview_blob = base64;
             };
             reader.readAsDataURL(file);
         },
@@ -897,16 +948,18 @@ export default {
                 this.memberships = [];
             }
 
+            const logoVal = this.membershipForm.logo || this.membershipForm.logo_url || this.membership_preview_blob || "";
             const payload = {
-                id: this.membershipForm.id,
+                id: this.membershipForm.id || null,
                 org_name: this.membershipForm.org_name,
-                logo: this.membershipForm.logo,
-                logo_url: this.membershipForm.logo_url,
+                logo: logoVal,
+                logo_url: logoVal,
                 show_in_invoice: this.membershipForm.show_in_invoice ? 1 : 0,
             };
 
             if (this.membershipModalMode === "edit" && this.editingMembershipIndex >= 0) {
-                this.$set(this.memberships, this.editingMembershipIndex, payload);
+                this.memberships[this.editingMembershipIndex] = payload;
+                this.memberships = [...this.memberships];
             } else {
                 this.memberships.push(payload);
             }
@@ -918,6 +971,7 @@ export default {
         deleteMembership(idx) {
             if (confirm("Are you sure you want to remove this organization membership?")) {
                 this.memberships.splice(idx, 1);
+                this.memberships = [...this.memberships];
                 this.$toast("Membership removed", "info");
             }
         },
@@ -949,35 +1003,55 @@ export default {
                 if (res) {
                     var form = document.getElementById("form");
                     var formData = new FormData(form);
-                    formData.append("logo_base64", this.data.original_logo || "");
-                    formData.append("system_mode", this.data.system_mode || "live");
-                    formData.append("shop_type", this.data.shop_type || "clothing");
-                    formData.append("sale_nature", this.data.sale_nature || "both");
-                    formData.append("default_vat", this.data.default_vat ?? 0);
-                    formData.append("invoice_prefix", this.data.invoice_prefix || "POS");
-                    formData.append("show_pos_terms", this.data.show_pos_terms ? 1 : 0);
-                    formData.append("memberships", JSON.stringify(this.memberships || []));
-                    formData.append("printer_type", this.data.printer_type || "thermal");
-                    formData.append("normal_paper_size", this.data.normal_paper_size || "A4");
-                    formData.append("thermal_paper_size", this.data.thermal_paper_size || "80mm");
-                    formData.append("label_preset", this.data.label_preset || "4x2");
-                    formData.append("default_currency_id", this.data.default_currency_id);
-                    formData.append("coupon_enabled", this.data.coupon_enabled ? 1 : 0);
-                    formData.append("point_earn_rate", this.data.point_earn_rate ?? 1);
-                    formData.append("point_redeem_rate", this.data.point_redeem_rate ?? 10);
-                    formData.append("min_points_to_redeem", this.data.min_points_to_redeem ?? 10);
-                    formData.append(
-                        "logo_small_base64",
-                        this.data.original_logo_small || ""
-                    );
-                    formData.append(
-                        "logo_resize_value",
-                        this.$root.media_validators?.logo?.resize_value ?? ""
-                    );
-                    formData.append(
-                        "logo_small_resize_value",
-                        this.$root.media_validators?.logo_small?.resize_value ?? ""
-                    );
+
+                    // Ensure all fields from this.data are set in formData
+                    for (const key in this.data) {
+                        if (this.data[key] !== undefined && this.data[key] !== null) {
+                            if (!formData.has(key)) {
+                                formData.append(key, this.data[key]);
+                            }
+                        }
+                    }
+
+                    formData.set("title", this.data.title || "");
+                    formData.set("short_title", this.data.short_title || "");
+                    formData.set("contact_email", this.data.contact_email || "");
+                    formData.set("feedback_email", this.data.feedback_email || "");
+                    formData.set("mobile1", this.data.mobile1 || "");
+                    formData.set("mobile2", this.data.mobile2 || "");
+                    formData.set("address", this.data.address || "");
+                    formData.set("address_two", this.data.address_two || "");
+                    formData.set("map", this.data.map || "");
+                    formData.set("map_two", this.data.map_two || "");
+                    formData.set("system_mode", this.data.system_mode || "live");
+                    formData.set("shop_type", this.data.shop_type || "clothing");
+                    formData.set("sale_nature", this.data.sale_nature || "both");
+                    formData.set("default_vat", this.data.default_vat ?? 0);
+                    formData.set("invoice_prefix", this.data.invoice_prefix || "POS");
+                    formData.set("show_pos_terms", this.data.show_pos_terms ? 1 : 0);
+                    formData.set("memberships", JSON.stringify(this.memberships || []));
+                    formData.set("printer_type", this.data.printer_type || "thermal");
+                    formData.set("normal_paper_size", this.data.normal_paper_size || "A4");
+                    formData.set("thermal_paper_size", this.data.thermal_paper_size || "80mm");
+                    formData.set("label_preset", this.data.label_preset || "4x2");
+                    formData.set("default_currency_id", this.data.default_currency_id || 1);
+                    formData.set("coupon_enabled", this.data.coupon_enabled ? 1 : 0);
+                    formData.set("point_earn_rate", this.data.point_earn_rate ?? 1);
+                    formData.set("point_redeem_rate", this.data.point_redeem_rate ?? 10);
+                    formData.set("min_points_to_redeem", this.data.min_points_to_redeem ?? 10);
+                    formData.set("vat_no", this.data.vat_no || "");
+                    formData.set("hs_code", this.data.hs_code || "");
+                    formData.set("swift_code", this.data.swift_code || "");
+                    formData.set("bank_name", this.data.bank_name || "");
+                    formData.set("branch_name", this.data.branch_name || "");
+                    formData.set("account_number", this.data.account_number || "");
+                    formData.set("routing_number", this.data.routing_number || "");
+
+                    formData.set("logo_base64", this.data.original_logo || "");
+                    formData.set("logo_small_base64", this.data.original_logo_small || "");
+                    formData.set("logo_resize_value", this.$root.media_validators?.logo?.resize_value ?? "");
+                    formData.set("logo_small_resize_value", this.$root.media_validators?.logo_small?.resize_value ?? "");
+
                     this.store(this.model, formData);
                 }
             });
@@ -999,17 +1073,18 @@ export default {
                     if (!this.data.label_preset) this.data.label_preset = "4x2";
 
                     // Initialize memberships array
-                    if (Array.isArray(this.data.memberships)) {
-                        this.memberships = this.data.memberships;
-                    } else if (typeof this.data.memberships === "string") {
+                    let memList = this.data.memberships;
+                    if (typeof memList === "string") {
                         try {
-                            this.memberships = JSON.parse(this.data.memberships) || [];
+                            memList = JSON.parse(memList) || [];
+                            if (typeof memList === "string") {
+                                memList = JSON.parse(memList) || [];
+                            }
                         } catch (e) {
-                            this.memberships = [];
+                            memList = [];
                         }
-                    } else {
-                        this.memberships = [];
                     }
+                    this.memberships = Array.isArray(memList) ? memList : [];
                 })
                 .catch((error) => {
                     this.$toast(
@@ -1035,7 +1110,8 @@ export default {
                     this.$router.push({ name: "siteSetting.show" });
                 })
                 .catch((error) => {
-                    this.$toast("Error updating site settings", "error");
+                    const msg = error.response?.data?.message || "Error updating site settings";
+                    this.$toast(msg, "error");
                     console.log(error);
                 })
                 .finally(() => {

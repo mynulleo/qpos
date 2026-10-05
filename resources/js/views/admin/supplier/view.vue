@@ -3,37 +3,37 @@
     <div class="row custom_row g-3">
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Basic Information</span>
+          <span class="legend">{{ $t('Basic Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>SUP ID</th>
+                  <th>{{ $t('SUP ID') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.supid }}</td>
                 </tr>
                 <tr>
-                  <th>Organization </th>
+                  <th>{{ $t('Organization') }}</th>
                   <th>:</th>
                   <td>{{ data.org_name }}</td>
                 </tr>
                 <tr>
-                  <th>Contact Person</th>
+                  <th>{{ $t('Contact Person') }}</th>
                   <th>:</th>
                   <td>{{ data.name }}</td>
                 </tr>
                 <tr>
-                  <th>Designation</th>
+                  <th>{{ $t('Designation') }}</th>
                   <th>:</th>
                   <td>{{ data.designation }}</td>
                 </tr>
                 <tr>
-                  <th>Email</th>
+                  <th>{{ $t('Email') }}</th>
                   <th>:</th>
                   <td>{{ data.email }}</td>
                 </tr>
                 <tr>
-                  <th>Address</th>
+                  <th>{{ $t('Address') }}</th>
                   <th>:</th>
                   <td>{{ data.address }}</td>
                 </tr>
@@ -44,37 +44,37 @@
       </div>
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Office Information</span>
+          <span class="legend">{{ $t('Office Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Account</th>
+                  <th>{{ $t('Account') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.account_name }}</td>
                 </tr>
                 <tr>
-                  <th>Account No</th>
+                  <th>{{ $t('Account No') }}</th>
                   <th>:</th>
                   <td>{{ data.account_no }}</td>
                 </tr>
                 <tr>
-                  <th>Bank</th>
+                  <th>{{ $t('Bank') }}</th>
                   <th>:</th>
                   <td>{{ data.bank?.name }}</td>
                 </tr>
                 <tr>
-                  <th>Branch</th>
+                  <th>{{ $t('Branch') }}</th>
                   <th>:</th>
                   <td>{{ data.branch }}</td>
                 </tr>
                 <tr>
-                  <th>Routing</th>
+                  <th>{{ $t('Routing') }}</th>
                   <th>:</th>
                   <td>{{ data.routing }}</td>
                 </tr>
                 <tr>
-                  <th>Website</th>
+                  <th>{{ $t('Website') }}</th>
                   <th>:</th>
                   <td>{{ data.website }}</td>
                 </tr>

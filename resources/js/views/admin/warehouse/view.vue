@@ -10,23 +10,23 @@
             <table class="table table-striped mb-0">
               <tbody>
                 <tr>
-                  <th width="40%">Warehouse Name</th>
+                  <th width="40%">{{ $t('Warehouse Name') }}</th>
                   <td><strong>{{ data.name }}</strong></td>
                 </tr>
                 <tr>
-                  <th>Warehouse Code</th>
+                  <th>{{ $t('Warehouse Code') }}</th>
                   <td><span class="badge bg-secondary font-monospace">{{ data.code || 'N/A' }}</span></td>
                 </tr>
                 <tr>
-                  <th>Branch</th>
+                  <th>{{ $t('Branch') }}</th>
                   <td>{{ data.branch ? data.branch.title : 'All Branches' }}</td>
                 </tr>
                 <tr>
-                  <th>Capacity</th>
+                  <th>{{ $t('Capacity') }}</th>
                   <td>{{ data.capacity || 'Not Specified' }}</td>
                 </tr>
                 <tr>
-                  <th>Status</th>
+                  <th>{{ $t('Status') }}</th>
                   <td>
                     <span :class="data.status === 'active' ? 'badge bg-success' : 'badge bg-danger'">
                       {{ data.status }}
@@ -48,23 +48,23 @@
             <table class="table table-striped mb-0">
               <tbody>
                 <tr>
-                  <th width="40%">Contact Person</th>
+                  <th width="40%">{{ $t('Contact Person') }}</th>
                   <td><strong>{{ data.contact_person || 'N/A' }}</strong></td>
                 </tr>
                 <tr>
-                  <th>Contact Person Mobile</th>
+                  <th>{{ $t('Contact Person Mobile') }}</th>
                   <td>{{ data.contact_person_phone || 'N/A' }}</td>
                 </tr>
                 <tr>
-                  <th>Warehouse Phone</th>
+                  <th>{{ $t('Warehouse Phone') }}</th>
                   <td>{{ data.phone || 'N/A' }}</td>
                 </tr>
                 <tr>
-                  <th>Email</th>
+                  <th>{{ $t('Email') }}</th>
                   <td>{{ data.email || 'N/A' }}</td>
                 </tr>
                 <tr>
-                  <th>Physical Address</th>
+                  <th>{{ $t('Physical Address') }}</th>
                   <td>{{ data.address || 'N/A' }}</td>
                 </tr>
               </tbody>

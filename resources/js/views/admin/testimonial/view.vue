@@ -4,7 +4,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-6 col-lg-12">
                     <fieldset>
-                        <span class="legend">Media</span>
+                        <span class="legend">{{ $t('Media') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="col-lg-6">
@@ -39,17 +39,17 @@
 
                 <div class="col-xl-6 col-lg-12">
                     <fieldset>
-                        <span class="legend">Testimonial Details</span>
+                        <span class="legend">{{ $t('Testimonial Details') }}</span>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <tbody>
                                     <tr>
-                                        <th>Name</th>
+                                        <th>{{ $t('Name') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ ucfirst(data.name ?? "") }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Designation</th>
+                                        <th>{{ $t('Designation') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>
                                             {{
@@ -58,7 +58,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Sorting</th>
+                                        <th>{{ $t('Sorting') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>
                                             {{ ucfirst(data.sorting ?? "") }}
@@ -66,7 +66,7 @@
                                     </tr>
 
                                     <tr>
-                                        <th>Status</th>
+                                        <th>{{ $t('Status') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>
                                             <span
@@ -92,7 +92,7 @@
                 <div class="row custom_row g-3">
                     <div class="col-xl-12 col-lg-12">
                         <fieldset>
-                            <span class="legend"> Description</span>
+                            <span class="legend">{{ $t('Description') }}</span>
                             <div class="view_file">
                                 <div class="row g-4">
                                     <div class="col-lg-12">

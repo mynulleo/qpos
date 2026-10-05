@@ -25,7 +25,7 @@
         title="To Date" placeholder="To Date" col="3" :req="false"></date-picker>
 
       <!-- Customer / Client -->
-      <v-select-container title="Customer (গ্রাহক)" field="search_data.client_id" col="3">
+      <v-select-container title="Customer" field="search_data.client_id" col="3">
         <v-select v-model="search_data.client_id" label="name" :reduce="obj => obj.id" :options="clients"
           placeholder="-- All Customers --" :closeOnSelect="true">
           <template #option="option">
@@ -38,13 +38,13 @@
       </v-select-container>
 
       <!-- Category Filter -->
-      <v-select-container title="Category (ক্যাটাগরি)" field="search_data.category_id" col="3">
+      <v-select-container title="Category" field="search_data.category_id" col="3">
         <v-select v-model="search_data.category_id" label="title" :reduce="obj => obj.id" :options="categories"
           placeholder="-- All Categories --" :closeOnSelect="true" />
       </v-select-container>
 
       <!-- Item Filter -->
-      <v-select-container title="Item (পণ্য)" field="search_data.item_id" col="3">
+      <v-select-container title="Item" field="search_data.item_id" col="3">
         <v-select v-model="search_data.item_id" label="title" :reduce="obj => obj.id" :options="items"
           placeholder="-- All Items --" :closeOnSelect="true">
           <template #option="option">
@@ -57,17 +57,17 @@
       </v-select-container>
 
       <!-- Invoice No Search -->
-      <Input v-model="search_data.invoice_no" field="search_data.invoice_no" title="Invoice No (ইনভয়েস নং)"
+      <Input v-model="search_data.invoice_no" field="search_data.invoice_no" title="Invoice No"
         placeholder="e.g. POS-..." col="3" :req="false" />
 
       <!-- Sale Type Filter -->
       <div class="col-md-3">
         <div class="form-group">
-          <label class="form-label">Sale Type (বিক্রয়ের ধরন)</label>
+          <label class="form-label">{{ $t('Sale Type') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.sale_type">
             <option value="all">-- All Sales --</option>
-            <option value="pos">POS Sales (পিওএস বিক্রয়)</option>
-            <option value="general">General Invoices (সাধারণ ইনভয়েস)</option>
+            <option value="pos">{{ $t('POS Sales') }}</option>
+            <option value="general">{{ $t('General Invoices') }}</option>
           </select>
         </div>
       </div>
@@ -82,8 +82,7 @@
           <ul class="nav nav-pills custom-report-tabs">
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'overview' }" @click="activeTab = 'overview'">
-                <i class="fas fa-chart-pie me-1"></i> P&L Overview (আয়-ব্যয় সারাংশ)
-              </button>
+                <i class="fas fa-chart-pie me-1"></i>{{ $t('P&L Overview') }}</button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'invoices' }" @click="activeTab = 'invoices'">
@@ -143,7 +142,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-primary text-white h-100 position-relative overflow-hidden">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Net Sales (মোট বিক্রয়)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Net Sales') }}</div>
                   <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.net_sales) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-shopping-cart"></i></div>
@@ -159,7 +158,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-purple text-white h-100 position-relative overflow-hidden">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">COGS (ক্রয় খরচ)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('COGS') }}</div>
                   <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.total_cogs) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-boxes"></i></div>
@@ -175,7 +174,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-teal text-white h-100 position-relative overflow-hidden">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Gross Profit (মোট লাভ)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Gross Profit') }}</div>
                   <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.gross_profit) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-coins"></i></div>
@@ -192,7 +191,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-warning text-white h-100 position-relative overflow-hidden">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Expenses (মোট কর্তন)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Expenses') }}</div>
                   <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.total_deductions) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-wallet"></i></div>
@@ -238,9 +237,7 @@
           </p>
           <div class="border-top border-bottom py-2 my-2 bg-light">
             <h5 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-file-invoice-dollar me-1"></i>
-              Income Statement & Sales Profit (আয়-ব্যয় ও বিক্রয় লাভ প্রতিবেদন)
-            </h5>
+              <i class="fas fa-file-invoice-dollar me-1"></i>{{ $t('Income Statement & Sales Profit') }}</h5>
             <small class="text-muted">
               Period: <strong>{{ dateRangeDisplay }}</strong> | Generated on: <strong>{{ reportDate }}</strong>
             </small>
@@ -254,25 +251,25 @@
             <div class="col-lg-8 col-md-12">
               <div class="card border shadow-sm rounded-3 overflow-hidden">
                 <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2 px-3">
-                  <h6 class="mb-0 fw-bold"><i class="fas fa-balance-scale me-2"></i>Income Statement (আয়-ব্যয় বিবরণী)</h6>
+                  <h6 class="mb-0 fw-bold"><i class="fas fa-balance-scale me-2"></i>{{ $t('Income Statement') }}</h6>
                   <span class="badge bg-primary">{{ dateRangeDisplay }}</span>
                 </div>
                 <div class="table-responsive">
                   <table class="table table-bordered table-hover align-middle mb-0 financial-table">
                     <thead class="table-light">
                       <tr>
-                        <th width="60%">Particulars / Heads (বিবরণ)</th>
-                        <th width="20%" class="text-end">Amount (টাকা)</th>
-                        <th width="20%" class="text-end">Net Total (টাকা)</th>
+                        <th width="60%">{{ $t('Particulars / Heads') }}</th>
+                        <th width="20%" class="text-end">{{ $t('Amount') }}</th>
+                        <th width="20%" class="text-end">{{ $t('Net Total') }}</th>
                       </tr>
                     </thead>
                     <tbody>
                       <!-- 1. Operating Revenue -->
                       <tr class="table-primary fw-bold">
-                        <td colspan="3"><i class="fas fa-arrow-circle-right me-1 text-primary"></i> 1. Operating Revenue (বিক্রয় রাজস্ব)</td>
+                        <td colspan="3"><i class="fas fa-arrow-circle-right me-1 text-primary"></i>{{ $t('1. Operating Revenue') }}</td>
                       </tr>
                       <tr>
-                        <td class="ps-4">Gross Sales (মোট বিক্রয় মূল্য)</td>
+                        <td class="ps-4">{{ $t('Gross Sales') }}</td>
                         <td class="text-end">৳ {{ formatMoney(summary.gross_sales) }}</td>
                         <td></td>
                       </tr>
@@ -287,7 +284,7 @@
                         <td></td>
                       </tr>
                       <tr class="fw-bold bg-light">
-                        <td class="ps-4">Total Net Sales Revenue (মোট নিট বিক্রয়)</td>
+                        <td class="ps-4">{{ $t('Total Net Sales Revenue') }}</td>
                         <td></td>
                         <td class="text-end text-primary">৳ {{ formatMoney(summary.net_sales) }}</td>
                       </tr>
@@ -297,7 +294,7 @@
                         <td colspan="3"><i class="fas fa-arrow-circle-right me-1 text-secondary"></i> 2. Cost of Goods Sold (পণ্য ক্রয় খরচ / COGS)</td>
                       </tr>
                       <tr>
-                        <td class="ps-4">Total Purchase Cost of Sold Inventory (বিক্রিত পণ্যের মোট ক্রয়মূল্য)</td>
+                        <td class="ps-4">{{ $t('Total Purchase Cost of Sold Inventory') }}</td>
                         <td class="text-end text-danger">৳ {{ formatMoney(summary.total_cogs) }}</td>
                         <td></td>
                       </tr>
@@ -309,20 +306,19 @@
 
                       <!-- 3. Gross Profit -->
                       <tr class="table-success fw-bold fs-6">
-                        <td><i class="fas fa-plus-circle me-1 text-success"></i> 3. Gross Profit (মোট লাভ)</td>
+                        <td><i class="fas fa-plus-circle me-1 text-success"></i>{{ $t('3. Gross Profit') }}</td>
                         <td class="text-center"><span class="badge bg-success">Margin: {{ summary.gross_profit_margin }}%</span></td>
                         <td class="text-end text-success">৳ {{ formatMoney(summary.gross_profit) }}</td>
                       </tr>
 
                       <!-- 4. Operating Expenses & Deductions -->
                       <tr class="table-warning fw-bold">
-                        <td colspan="3"><i class="fas fa-arrow-circle-right me-1 text-warning"></i> 4. Operating Expenses & Deductions (পরিচালন ব্যয় ও কর্তন)</td>
+                        <td colspan="3"><i class="fas fa-arrow-circle-right me-1 text-warning"></i>{{ $t('4. Operating Expenses & Deductions') }}</td>
                       </tr>
                       <tr>
                         <td class="ps-4">
                           <a href="javascript:void(0)" @click="activeTab = 'expenses'" class="text-decoration-none text-dark">
-                            <i class="fas fa-receipt me-1 text-muted"></i> General & Office Expenses (অফিস ও পরিচালন খরচ)
-                          </a>
+                            <i class="fas fa-receipt me-1 text-muted"></i>{{ $t('General & Office Expenses') }}</a>
                         </td>
                         <td class="text-end">৳ {{ formatMoney(summary.total_expenses) }}</td>
                         <td></td>
@@ -330,8 +326,7 @@
                       <tr>
                         <td class="ps-4">
                           <a href="javascript:void(0)" @click="activeTab = 'salaries'" class="text-decoration-none text-dark">
-                            <i class="fas fa-user-tie me-1 text-muted"></i> Employee Salary Sheets (কর্মচারীদের বেতন)
-                          </a>
+                            <i class="fas fa-user-tie me-1 text-muted"></i>{{ $t('Employee Salary Sheets') }}</a>
                         </td>
                         <td class="text-end">৳ {{ formatMoney(summary.total_salaries) }}</td>
                         <td></td>
@@ -339,8 +334,7 @@
                       <tr>
                         <td class="ps-4">
                           <a href="javascript:void(0)" @click="activeTab = 'loans'" class="text-decoration-none text-dark">
-                            <i class="fas fa-hand-holding-usd me-1 text-muted"></i> Disbursed Loans & Advances (কর্মচারী ঋণ ও অগ্রিম)
-                          </a>
+                            <i class="fas fa-hand-holding-usd me-1 text-muted"></i>{{ $t('Disbursed Loans & Advances') }}</a>
                         </td>
                         <td class="text-end">৳ {{ formatMoney(summary.total_loans) }}</td>
                         <td></td>
@@ -348,14 +342,13 @@
                       <tr>
                         <td class="ps-4">
                           <a href="javascript:void(0)" @click="activeTab = 'commissions'" class="text-decoration-none text-dark">
-                            <i class="fas fa-percentage me-1 text-muted"></i> Agent & Staff Commissions (এজেন্ট ও স্টাফ কমিশন)
-                          </a>
+                            <i class="fas fa-percentage me-1 text-muted"></i>{{ $t('Agent & Staff Commissions') }}</a>
                         </td>
                         <td class="text-end">৳ {{ formatMoney(summary.total_commissions) }}</td>
                         <td></td>
                       </tr>
                       <tr class="fw-bold bg-light">
-                        <td class="ps-4">Total Operating Deductions (সর্বমোট পরিচালন খরচ)</td>
+                        <td class="ps-4">{{ $t('Total Operating Deductions') }}</td>
                         <td></td>
                         <td class="text-end text-warning text-dark">(৳ {{ formatMoney(summary.total_deductions) }})</td>
                       </tr>
@@ -384,8 +377,7 @@
               <!-- Deductions Breakdown Card -->
               <div class="card border shadow-sm rounded-3 mb-3">
                 <div class="card-header bg-light fw-bold">
-                  <i class="fas fa-pie-chart me-1 text-primary"></i> Deductions Breakdown (খরচের বণ্টন)
-                </div>
+                  <i class="fas fa-pie-chart me-1 text-primary"></i>{{ $t('Deductions Breakdown') }}</div>
                 <div class="card-body p-3">
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="small"><i class="fas fa-circle text-primary me-1"></i> General Expenses:</span>
@@ -465,27 +457,25 @@
         <div v-show="activeTab === 'invoices'">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-file-invoice me-1 text-primary"></i>
-              Sales Invoices & Per-Sale Profit Breakdown (ইনভয়েস ভিত্তিক লাভ-ক্ষতি)
-            </h6>
+              <i class="fas fa-file-invoice me-1 text-primary"></i>{{ $t('Sales Invoices & Per-Sale Profit Breakdown') }}</h6>
             <span class="badge bg-secondary">{{ invoices.length }} Invoices Found</span>
           </div>
           <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="3%">#</th>
-                  <th width="9%">Date</th>
-                  <th width="11%">Invoice No</th>
-                  <th width="14%">Customer Name</th>
-                  <th width="6%">Qty</th>
-                  <th width="9%">Gross Sales</th>
-                  <th width="7%">Discount</th>
-                  <th width="9%">Net Sales</th>
-                  <th width="9%">Purchase Cost</th>
-                  <th width="9%">Gross Profit</th>
-                  <th width="6%">Margin</th>
-                  <th width="8%" class="d-print-none">Items</th>
+                  <th width="3%">{{ $t('#') }}</th>
+                  <th width="9%">{{ $t('Date') }}</th>
+                  <th width="11%">{{ $t('Invoice No') }}</th>
+                  <th width="14%">{{ $t('Customer Name') }}</th>
+                  <th width="6%">{{ $t('Qty') }}</th>
+                  <th width="9%">{{ $t('Gross Sales') }}</th>
+                  <th width="7%">{{ $t('Discount') }}</th>
+                  <th width="9%">{{ $t('Net Sales') }}</th>
+                  <th width="9%">{{ $t('Purchase Cost') }}</th>
+                  <th width="9%">{{ $t('Gross Profit') }}</th>
+                  <th width="6%">{{ $t('Margin') }}</th>
+                  <th width="8%" class="d-print-none">{{ $t('Items') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -533,17 +523,17 @@
                             <table class="table table-sm table-bordered mb-0 small">
                               <thead class="table-secondary text-center">
                                 <tr>
-                                  <th width="3%">#</th>
-                                  <th width="24%">Item Title (পণ্যের নাম)</th>
-                                  <th width="12%">Barcode</th>
-                                  <th width="10%">Variant</th>
-                                  <th width="6%">Qty</th>
-                                  <th width="10%">Unit Purchase</th>
-                                  <th width="10%">Unit Sale</th>
-                                  <th width="10%">Total Cost</th>
-                                  <th width="10%">Total Sale</th>
-                                  <th width="10%">Line Profit</th>
-                                  <th width="5%">Margin</th>
+                                  <th width="3%">{{ $t('#') }}</th>
+                                  <th width="24%">{{ $t('Item Title') }}</th>
+                                  <th width="12%">{{ $t('Barcode') }}</th>
+                                  <th width="10%">{{ $t('Variant') }}</th>
+                                  <th width="6%">{{ $t('Qty') }}</th>
+                                  <th width="10%">{{ $t('Unit Purchase') }}</th>
+                                  <th width="10%">{{ $t('Unit Sale') }}</th>
+                                  <th width="10%">{{ $t('Total Cost') }}</th>
+                                  <th width="10%">{{ $t('Total Sale') }}</th>
+                                  <th width="10%">{{ $t('Line Profit') }}</th>
+                                  <th width="5%">{{ $t('Margin') }}</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -608,27 +598,25 @@
         <div v-show="activeTab === 'items'">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-boxes me-1 text-primary"></i>
-              Item-wise Sales & Profitability Analysis (পণ্যভিত্তিক বিক্রয় ও লাভ)
-            </h6>
+              <i class="fas fa-boxes me-1 text-primary"></i>{{ $t('Item-wise Sales & Profitability Analysis') }}</h6>
             <span class="badge bg-secondary">{{ item_breakdown.length }} Unique Items</span>
           </div>
           <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="3%">#</th>
-                  <th width="22%">Item Name (পণ্যের নাম)</th>
-                  <th width="11%">Barcode</th>
-                  <th width="12%">Category</th>
-                  <th width="10%">Variant</th>
-                  <th width="6%">Qty Sold</th>
-                  <th width="9%">Avg Purchase</th>
-                  <th width="9%">Avg Sale</th>
-                  <th width="9%">Total Cost</th>
-                  <th width="9%">Total Sales</th>
-                  <th width="9%">Gross Profit</th>
-                  <th width="6%">Margin</th>
+                  <th width="3%">{{ $t('#') }}</th>
+                  <th width="22%">{{ $t('Item Name') }}</th>
+                  <th width="11%">{{ $t('Barcode') }}</th>
+                  <th width="12%">{{ $t('Category') }}</th>
+                  <th width="10%">{{ $t('Variant') }}</th>
+                  <th width="6%">{{ $t('Qty Sold') }}</th>
+                  <th width="9%">{{ $t('Avg Purchase') }}</th>
+                  <th width="9%">{{ $t('Avg Sale') }}</th>
+                  <th width="9%">{{ $t('Total Cost') }}</th>
+                  <th width="9%">{{ $t('Total Sales') }}</th>
+                  <th width="9%">{{ $t('Gross Profit') }}</th>
+                  <th width="6%">{{ $t('Margin') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -684,22 +672,20 @@
         <div v-show="activeTab === 'expenses'">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-receipt me-1 text-primary"></i>
-              Operating & General Expenses Breakdown (অফিস ও পরিচালন খরচ)
-            </h6>
+              <i class="fas fa-receipt me-1 text-primary"></i>{{ $t('Operating & General Expenses Breakdown') }}</h6>
             <span class="badge bg-secondary">{{ expenses.length }} Records</span>
           </div>
           <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="4%">#</th>
-                  <th width="12%">Expense No</th>
-                  <th width="12%">Date</th>
-                  <th width="24%">Account Head</th>
-                  <th width="18%">Employee / Beneficiary</th>
-                  <th width="18%">Narration</th>
-                  <th width="12%">Amount</th>
+                  <th width="4%">{{ $t('#') }}</th>
+                  <th width="12%">{{ $t('Expense No') }}</th>
+                  <th width="12%">{{ $t('Date') }}</th>
+                  <th width="24%">{{ $t('Account Head') }}</th>
+                  <th width="18%">{{ $t('Employee / Beneficiary') }}</th>
+                  <th width="18%">{{ $t('Narration') }}</th>
+                  <th width="12%">{{ $t('Amount') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -734,24 +720,22 @@
         <div v-show="activeTab === 'salaries'">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-user-tie me-1 text-primary"></i>
-              Employee Salary Sheets Breakdown (কর্মচারীদের বেতন শীট)
-            </h6>
+              <i class="fas fa-user-tie me-1 text-primary"></i>{{ $t('Employee Salary Sheets Breakdown') }}</h6>
             <span class="badge bg-secondary">{{ salaries.length }} Records</span>
           </div>
           <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="4%">#</th>
-                  <th width="10%">Date</th>
-                  <th width="12%">Month / Year</th>
-                  <th width="20%">Employee Name</th>
-                  <th width="14%">Designation</th>
-                  <th width="10%">Basic</th>
-                  <th width="10%">Additions</th>
-                  <th width="10%">Deductions</th>
-                  <th width="10%">Net Salary</th>
+                  <th width="4%">{{ $t('#') }}</th>
+                  <th width="10%">{{ $t('Date') }}</th>
+                  <th width="12%">{{ $t('Month / Year') }}</th>
+                  <th width="20%">{{ $t('Employee Name') }}</th>
+                  <th width="14%">{{ $t('Designation') }}</th>
+                  <th width="10%">{{ $t('Basic') }}</th>
+                  <th width="10%">{{ $t('Additions') }}</th>
+                  <th width="10%">{{ $t('Deductions') }}</th>
+                  <th width="10%">{{ $t('Net Salary') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -788,23 +772,21 @@
         <div v-show="activeTab === 'loans'">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-hand-holding-usd me-1 text-primary"></i>
-              Employee Loans & Advances Disbursed (কর্মচারী ঋণ ও অগ্রিম)
-            </h6>
+              <i class="fas fa-hand-holding-usd me-1 text-primary"></i>{{ $t('Employee Loans & Advances Disbursed') }}</h6>
             <span class="badge bg-secondary">{{ loans.length }} Records</span>
           </div>
           <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="4%">#</th>
-                  <th width="12%">Trns ID</th>
-                  <th width="12%">Date</th>
-                  <th width="20%">Employee Name</th>
-                  <th width="12%">Type</th>
-                  <th width="10%">Installments</th>
-                  <th width="12%">Monthly Inst.</th>
-                  <th width="14%">Loan Amount</th>
+                  <th width="4%">{{ $t('#') }}</th>
+                  <th width="12%">{{ $t('Trns ID') }}</th>
+                  <th width="12%">{{ $t('Date') }}</th>
+                  <th width="20%">{{ $t('Employee Name') }}</th>
+                  <th width="12%">{{ $t('Type') }}</th>
+                  <th width="10%">{{ $t('Installments') }}</th>
+                  <th width="12%">{{ $t('Monthly Inst.') }}</th>
+                  <th width="14%">{{ $t('Loan Amount') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -844,22 +826,20 @@
         <div v-show="activeTab === 'commissions'">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-percentage me-1 text-primary"></i>
-              Agent & Staff Commissions Breakdown (এজেন্ট ও স্টাফ কমিশন)
-            </h6>
+              <i class="fas fa-percentage me-1 text-primary"></i>{{ $t('Agent & Staff Commissions Breakdown') }}</h6>
             <span class="badge bg-secondary">{{ commissions.length }} Records</span>
           </div>
           <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="4%">#</th>
-                  <th width="12%">Date</th>
+                  <th width="4%">{{ $t('#') }}</th>
+                  <th width="12%">{{ $t('Date') }}</th>
                   <th width="24%">Beneficiary (Agent / Staff)</th>
-                  <th width="20%">Customer</th>
-                  <th width="16%">Workorder / Ref</th>
-                  <th width="10%">Percentage</th>
-                  <th width="14%">Commission Amount</th>
+                  <th width="20%">{{ $t('Customer') }}</th>
+                  <th width="16%">{{ $t('Workorder / Ref') }}</th>
+                  <th width="10%">{{ $t('Percentage') }}</th>
+                  <th width="14%">{{ $t('Commission Amount') }}</th>
                 </tr>
               </thead>
               <tbody>

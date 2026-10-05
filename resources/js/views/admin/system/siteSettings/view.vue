@@ -107,11 +107,11 @@
                             <table class="table table-hover align-middle mb-0 custom-spec-table">
                                 <tbody>
                                     <tr>
-                                        <td class="spec-label"><i class="fas fa-heading me-2 text-muted"></i>Store Title (প্রতিষ্ঠানের নাম)</td>
+                                        <td class="spec-label"><i class="fas fa-heading me-2 text-muted"></i>{{ $t('Store Title') }}</td>
                                         <td class="spec-value fw-bold text-dark">{{ data?.title || 'N/A' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="spec-label"><i class="fas fa-tag me-2 text-muted"></i>Short Title (সংক্ষিপ্ত নাম)</td>
+                                        <td class="spec-label"><i class="fas fa-tag me-2 text-muted"></i>{{ $t('Short Title') }}</td>
                                         <td class="spec-value font-monospace fw-semibold">
                                             <span class="badge bg-light text-dark border font-monospace">{{ data?.short_title || 'N/A' }}</span>
                                         </td>
@@ -174,7 +174,7 @@
                             <table class="table table-hover align-middle mb-0 custom-spec-table">
                                 <tbody>
                                     <tr>
-                                        <td class="spec-label"><i class="fas fa-receipt me-2 text-muted"></i>Invoice Prefix (ইনভয়েস প্রিফিক্স)</td>
+                                        <td class="spec-label"><i class="fas fa-receipt me-2 text-muted"></i>{{ $t('Invoice Prefix') }}</td>
                                         <td class="spec-value">
                                             <span class="badge bg-primary font-monospace fw-bold px-2 py-1 fs-6">
                                                 {{ data?.invoice_prefix || 'POS' }}
@@ -226,11 +226,11 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="spec-label"><i class="fas fa-tags me-2 text-muted"></i>Sale Nature (বিক্রয়ের ধরণ)</td>
+                                        <td class="spec-label"><i class="fas fa-tags me-2 text-muted"></i>{{ $t('Sale Nature') }}</td>
                                         <td class="spec-value">
-                                            <span class="badge bg-primary" v-if="data?.sale_nature === 'retail'"><i class="fas fa-shopping-bag me-1"></i> Retail (খুচরা)</span>
-                                            <span class="badge bg-success" v-else-if="data?.sale_nature === 'wholesale'"><i class="fas fa-warehouse me-1"></i> Wholesale (পাইকারি)</span>
-                                            <span class="badge bg-dark" v-else><i class="fas fa-layer-group me-1"></i> Both Retail & Wholesale (খুচরা ও পাইকারি)</span>
+                                            <span class="badge bg-primary" v-if="data?.sale_nature === 'retail'"><i class="fas fa-shopping-bag me-1"></i>{{ $t('Retail') }}</span>
+                                            <span class="badge bg-success" v-else-if="data?.sale_nature === 'wholesale'"><i class="fas fa-warehouse me-1"></i>{{ $t('Wholesale') }}</span>
+                                            <span class="badge bg-dark" v-else><i class="fas fa-layer-group me-1"></i>{{ $t('Both Retail & Wholesale') }}</span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -393,13 +393,13 @@
                                         </td>
                                     </tr>
                                     <tr v-if="data?.coupon_enabled">
-                                        <td class="spec-label"><i class="fas fa-coins me-2 text-muted"></i>Earning Rate (১ টাকা ক্রয়ে পয়েন্ট)</td>
+                                        <td class="spec-label"><i class="fas fa-coins me-2 text-muted"></i>{{ $t('Earning Rate') }}</td>
                                         <td class="spec-value font-monospace fw-bold text-success">
                                             1 Tk Purchase = {{ data?.point_earn_rate || 1 }} Point(s)
                                         </td>
                                     </tr>
                                     <tr v-if="data?.coupon_enabled">
-                                        <td class="spec-label"><i class="fas fa-hand-holding-usd me-2 text-muted"></i>Redemption Rate (পয়েন্ট কনভার্সন)</td>
+                                        <td class="spec-label"><i class="fas fa-hand-holding-usd me-2 text-muted"></i>{{ $t('Redemption Rate') }}</td>
                                         <td class="spec-value font-monospace fw-bold text-primary">
                                             {{ data?.point_redeem_rate || 10 }} Points = 1 Tk Discount
                                         </td>
@@ -449,7 +449,7 @@
                             <table class="table table-hover align-middle mb-0 custom-spec-table">
                                 <tbody>
                                     <tr>
-                                        <td class="spec-label"><i class="fas fa-map-marker-alt me-2 text-danger"></i>Primary Address (মূল ঠিকানা)</td>
+                                        <td class="spec-label"><i class="fas fa-map-marker-alt me-2 text-danger"></i>{{ $t('Primary Address') }}</td>
                                         <td class="spec-value fw-semibold text-dark">{{ data?.address || 'N/A' }}</td>
                                     </tr>
                                     <tr>
@@ -465,7 +465,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="spec-label"><i class="fas fa-map-pin me-2 text-info"></i>Secondary Address (শাখা ঠিকানা)</td>
+                                        <td class="spec-label"><i class="fas fa-map-pin me-2 text-info"></i>{{ $t('Secondary Address') }}</td>
                                         <td class="spec-value text-dark">{{ data?.address_two || 'No secondary branch address' }}</td>
                                     </tr>
                                     <tr>
@@ -550,7 +550,7 @@
                                     <i class="fas fa-award"></i>
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-0 text-dark">Organization Memberships & Associations (অর্গানাইজেশন মেম্বারশিপ)</h6>
+                                    <h6 class="fw-bold mb-0 text-dark">{{ $t('Organization Memberships & Associations') }}</h6>
                                     <small class="text-muted" style="font-size: 11px;">Affiliated trade associations and business bodies displaying on sales bills</small>
                                 </div>
                             </div>
@@ -610,7 +610,7 @@
                                             />
                                         </div>
                                         <div class="w-100">
-                                            <div class="fw-bold text-dark">Main Brand Logo (প্রাইমারি লোগো)</div>
+                                            <div class="fw-bold text-dark">{{ $t('Main Brand Logo') }}</div>
                                             <span class="badge bg-light text-muted border mt-1" style="font-size: 11px;">Top Header & POS Invoices</span>
                                         </div>
                                     </div>
@@ -628,7 +628,7 @@
                                             />
                                         </div>
                                         <div class="w-100">
-                                            <div class="fw-bold text-dark">Small Brand Logo (সংক্ষিপ্ত লোগো)</div>
+                                            <div class="fw-bold text-dark">{{ $t('Small Brand Logo') }}</div>
                                             <span class="badge bg-light text-muted border mt-1" style="font-size: 11px;">Sidebar & Collapsed View</span>
                                         </div>
                                     </div>
@@ -646,7 +646,7 @@
                                             />
                                         </div>
                                         <div class="w-100">
-                                            <div class="fw-bold text-dark">Browser Favicon (ট্যাব আইকন)</div>
+                                            <div class="fw-bold text-dark">{{ $t('Browser Favicon') }}</div>
                                             <span class="badge bg-light text-muted border mt-1" style="font-size: 11px;">Browser Tab & Bookmarks</span>
                                         </div>
                                     </div>
@@ -682,17 +682,18 @@ export default {
     name: "SiteSettingView",
     computed: {
         parsedMemberships() {
-            if (Array.isArray(this.data?.memberships)) {
-                return this.data.memberships;
-            }
-            if (typeof this.data?.memberships === "string") {
+            let mem = this.data?.memberships;
+            if (typeof mem === "string") {
                 try {
-                    return JSON.parse(this.data.memberships) || [];
+                    mem = JSON.parse(mem);
+                    if (typeof mem === "string") {
+                        mem = JSON.parse(mem);
+                    }
                 } catch (e) {
-                    return [];
+                    mem = [];
                 }
             }
-            return [];
+            return Array.isArray(mem) ? mem : [];
         }
     },
     data() {

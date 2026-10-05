@@ -2,7 +2,7 @@
   <create-form @onSubmit='submit'>
     <div class="col-md-8">
       <fieldset>
-        <span class="legend">Form</span>
+        <span class="legend">{{ $t('Form') }}</span>
         <div class="row g-3">
           <SwitchBoolean v-model='data.is_employee' field='data.is_employee' title='Is Employee' col="3" on-label='Yes'
             off-label='No' :req='true'></SwitchBoolean>
@@ -37,7 +37,7 @@
     </div>
     <div class="col-md-4">
       <fieldset>
-        <span class="legend">Package Info</span>
+        <span class="legend">{{ $t('Package Info') }}</span>
         <div class="table table-striped">
           <table class="table table-striped">
             <tbody>
@@ -47,32 +47,32 @@
                 </td>
               </tr>
               <tr>
-                <th width="40%">Order No</th>
+                <th width="40%">{{ $t('Order No') }}</th>
                 <th width="5%">:</th>
                 <td>{{ data.workorder?.order_no }}</td>
               </tr>
               <tr>
-                <th>Order Date</th>
+                <th>{{ $t('Order Date') }}</th>
                 <th>:</th>
                 <td>{{ data.workorder?.order_date }}</td>
               </tr>
               <tr>
-                <th>Client</th>
+                <th>{{ $t('Client') }}</th>
                 <th>:</th>
                 <td>{{ data.workorder?.client?.org_name }}</td>
               </tr>
               <tr>
-                <th>Amount</th>
+                <th>{{ $t('Amount') }}</th>
                 <th>:</th>
                 <td>{{ data.workorder?.amount }}</td>
               </tr>
               <tr>
-                <th>Currency</th>
+                <th>{{ $t('Currency') }}</th>
                 <th>:</th>
                 <td>{{ data.workorder?.currency?.short_name }}</td>
               </tr>
               <tr>
-                <th>Currency Rate</th>
+                <th>{{ $t('Currency Rate') }}</th>
                 <th>:</th>
                 <td>{{ data.workorder?.currency_rate }}</td>
               </tr>
@@ -82,22 +82,22 @@
                 </td>
               </tr>
               <tr>
-                <th>Reference Name</th>
+                <th>{{ $t('Reference Name') }}</th>
                 <th>:</th>
                 <td>{{ data.reference_name }}</td>
               </tr>
               <tr>
-                <th>Reference Mobile</th>
+                <th>{{ $t('Reference Mobile') }}</th>
                 <th>:</th>
                 <td>{{ data.reference_mobile }}</td>
               </tr>
               <tr>
-                <th>Reference NID</th>
+                <th>{{ $t('Reference NID') }}</th>
                 <th>:</th>
                 <td>{{ data.reference_nid }}</td>
               </tr>
               <tr>
-                <th>Reference Address</th>
+                <th>{{ $t('Reference Address') }}</th>
                 <th>:</th>
                 <td>{{ data.reference_address }}</td>
               </tr>

@@ -3,31 +3,31 @@
         <!-- 🔍 Search & Filter Section -->
         <template v-slot:search-field>
             <!-- Warehouse Filter -->
-            <v-select-container title="Warehouse (গুদাম)" field="search_data.warehouse_id" col="3 mb-3">
+            <v-select-container title="Warehouse" field="search_data.warehouse_id" col="3 mb-3">
                 <v-select v-model="search_data.warehouse_id" label="name" :reduce="obj => obj.id" :options="warehouses"
                     placeholder="-- All Warehouses --" :closeOnSelect="true" />
             </v-select-container>
 
             <!-- Category Filter -->
-            <v-select-container title="Category (ক্যাটাগরি)" field="search_data.category_id" col="3 mb-3">
+            <v-select-container title="Category" field="search_data.category_id" col="3 mb-3">
                 <v-select v-model="search_data.category_id" label="title" :reduce="obj => obj.id" :options="categories"
                     placeholder="-- All Categories --" :closeOnSelect="true" />
             </v-select-container>
 
             <!-- Brand Filter (Dependent on shop type or available brands) -->
-            <v-select-container title="Brand (ব্র্যান্ড)" field="search_data.brand_id" col="3 mb-3" v-if="showBrandFilter">
+            <v-select-container title="Brand" field="search_data.brand_id" col="3 mb-3" v-if="showBrandFilter">
                 <v-select v-model="search_data.brand_id" label="title" :reduce="obj => obj.id" :options="brands"
                     :placeholder="search_data.category_id ? '-- Select Brand --' : '-- All Brands --'" :closeOnSelect="true" />
             </v-select-container>
 
             <!-- Model / Series Filter (Dependent on shop type: electronics) -->
-            <v-select-container title="Series (সিরিজ)" field="search_data.series_id" col="3 mb-3" v-if="showModelFilter">
+            <v-select-container title="Series" field="search_data.series_id" col="3 mb-3" v-if="showModelFilter">
                 <v-select v-model="search_data.series_id" label="title" :reduce="obj => obj.id" :options="seriesList"
                     :placeholder="search_data.brand_id ? '-- Select Model/Series --' : '-- All Models/Series --'" :closeOnSelect="true" />
             </v-select-container>
 
             <!-- Item Filter -->
-            <v-select-container title="Item (পণ্য)" field="search_data.item_id" col="3 mb-3">
+            <v-select-container title="Item" field="search_data.item_id" col="3 mb-3">
                 <v-select v-model="search_data.item_id" label="title" :reduce="obj => obj.id" :options="items"
                     placeholder="-- All Items --" :closeOnSelect="true">
                     <template #option="option">
@@ -40,13 +40,13 @@
             </v-select-container>
 
             <!-- Color Filter -->
-            <v-select-container title="Color (কালার)" field="search_data.color_id" col="3 mb-3">
+            <v-select-container title="Color" field="search_data.color_id" col="3 mb-3">
                 <v-select v-model="search_data.color_id" label="title" :reduce="obj => obj.id" :options="colors"
                     placeholder="-- All Colors --" :closeOnSelect="true" />
             </v-select-container>
 
             <!-- Size Filter -->
-            <v-select-container title="Size (সাইজ)" field="search_data.size_id" col="3 mb-3" v-if="!isElectronicsShop">
+            <v-select-container title="Size" field="search_data.size_id" col="3 mb-3" v-if="!isElectronicsShop">
                 <v-select v-model="search_data.size_id" label="title" :reduce="obj => obj.id" :options="sizes"
                     placeholder="-- All Sizes --" :closeOnSelect="true" />
             </v-select-container>
@@ -54,11 +54,11 @@
             <!-- Stock Status Filter -->
             <div class="col-md-2 mb-3">
                 <div class="form-group">
-                    <label class="form-label fw-bold">Stock Status (অবস্থা)</label>
+                    <label class="form-label fw-bold">{{ $t('Stock Status') }}</label>
                     <select class="form-select form-select-sm" v-model="search_data.stock_status" @change="onStockStatusFilterChange">
-                        <option value="low_stock">Low Stock (কম স্টক)</option>
-                        <option value="out_of_stock">Out of Stock (মজুদ শূন্য)</option>
-                        <option value="all">All Stocks (সকল পণ্য)</option>
+                        <option value="low_stock">{{ $t('Low Stock') }}</option>
+                        <option value="out_of_stock">{{ $t('Out of Stock') }}</option>
+                        <option value="all">{{ $t('All Stocks') }}</option>
                     </select>
                 </div>
             </div>
@@ -66,11 +66,11 @@
             <!-- Sort By Selector -->
             <div class="col-md-2 mb-3">
                 <div class="form-group">
-                    <label class="form-label fw-bold">Sort By (সাজানো)</label>
+                    <label class="form-label fw-bold">{{ $t('Sort By') }}</label>
                     <select class="form-select form-select-sm" v-model="search_data.sort_by">
-                        <option value="stock_asc">Stock: Low to High (কম থেকে বেশি)</option>
-                        <option value="stock_desc">Stock: High to Low (বেশি থেকে কম)</option>
-                        <option value="item_id">Item ID (আইটেম অনুযায়ী)</option>
+                        <option value="stock_asc">{{ $t('Stock: Low to High') }}</option>
+                        <option value="stock_desc">{{ $t('Stock: High to Low') }}</option>
+                        <option value="item_id">{{ $t('Item ID') }}</option>
                     </select>
                 </div>
             </div>
@@ -78,7 +78,7 @@
             <!-- Low Stock Threshold -->
             <div class="col-md-2 mb-3">
                 <div class="form-group">
-                    <label class="form-label fw-bold">Low Threshold (সতর্ক সীমা)</label>
+                    <label class="form-label fw-bold">{{ $t('Low Threshold') }}</label>
                     <input type="number" class="form-control form-control-sm" v-model.number="search_data.low_threshold"
                         placeholder="Default: 5" min="1" max="100" />
                 </div>
@@ -110,22 +110,19 @@
                         <li class="nav-item">
                             <button class="nav-link btn-theme-tab" :class="{ 'active tab-danger': activeTab === 'low_stock' }"
                                 @click="switchTab('low_stock')">
-                                <i class="fas fa-exclamation-triangle me-1 text-danger"></i> Low Stock Alert (কম স্টক)
-                                <span class="badge bg-danger ms-2 rounded-pill">{{ formatNumber(tabCounts.low_stock) }}</span>
+                                <i class="fas fa-exclamation-triangle me-1 text-danger"></i>{{ $t('Low Stock Alert') }}<span class="badge bg-danger ms-2 rounded-pill">{{ formatNumber(tabCounts.low_stock) }}</span>
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link btn-theme-tab" :class="{ 'active tab-warning': activeTab === 'out_of_stock' }"
                                 @click="switchTab('out_of_stock')">
-                                <i class="fas fa-times-circle me-1 text-warning"></i> Out of Stock (শূন্য মজুদ)
-                                <span class="badge bg-secondary ms-2 rounded-pill">{{ formatNumber(tabCounts.out_of_stock) }}</span>
+                                <i class="fas fa-times-circle me-1 text-warning"></i>{{ $t('Out of Stock') }}<span class="badge bg-secondary ms-2 rounded-pill">{{ formatNumber(tabCounts.out_of_stock) }}</span>
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link btn-theme-tab" :class="{ 'active tab-primary': activeTab === 'all' }"
                                 @click="switchTab('all')">
-                                <i class="fas fa-boxes me-1 text-primary"></i> All Stock (সকল পণ্য)
-                                <span class="badge bg-primary ms-2 rounded-pill">{{ formatNumber(tabCounts.all) }}</span>
+                                <i class="fas fa-boxes me-1 text-primary"></i>{{ $t('All Stock') }}<span class="badge bg-primary ms-2 rounded-pill">{{ formatNumber(tabCounts.all) }}</span>
                             </button>
                         </li>
                     </ul>
@@ -160,9 +157,7 @@
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-navy text-white h-100 position-relative overflow-hidden">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="text-white-50 small fw-bold text-uppercase tracking-wide">
-                                        Total Stock Value (ক্রয়মূল্য)
-                                    </div>
+                                    <div class="text-white-50 small fw-bold text-uppercase tracking-wide">{{ $t('Total Stock Value') }}</div>
                                     <div class="fs-4 fw-bold mt-1 text-white font-monospace">
                                         {{ formatCurrency(summaryData.global_total_purchase_value) }}
                                     </div>
@@ -183,9 +178,7 @@
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-blue text-white h-100 position-relative overflow-hidden">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="text-white-50 small fw-bold text-uppercase tracking-wide">
-                                        Total Retail Value (বিক্রয়মূল্য)
-                                    </div>
+                                    <div class="text-white-50 small fw-bold text-uppercase tracking-wide">{{ $t('Total Retail Value') }}</div>
                                     <div class="fs-4 fw-bold mt-1 text-white font-monospace">
                                         {{ formatCurrency(summaryData.global_total_selling_value) }}
                                     </div>
@@ -206,9 +199,7 @@
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-emerald text-white h-100 position-relative overflow-hidden">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="text-white-50 small fw-bold text-uppercase tracking-wide">
-                                        Potential Profit (সম্ভাব্য লাভ)
-                                    </div>
+                                    <div class="text-white-50 small fw-bold text-uppercase tracking-wide">{{ $t('Potential Profit') }}</div>
                                     <div class="fs-4 fw-bold mt-1 text-white font-monospace">
                                         {{ formatCurrency(summaryData.global_potential_profit) }}
                                     </div>
@@ -229,9 +220,7 @@
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-purple text-white h-100 position-relative overflow-hidden">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="text-white-50 small fw-bold text-uppercase tracking-wide">
-                                        In-Hand Stock (মজুদ আইটেম)
-                                    </div>
+                                    <div class="text-white-50 small fw-bold text-uppercase tracking-wide">{{ $t('In-Hand Stock') }}</div>
                                     <div class="fs-4 fw-bold mt-1 text-white font-monospace">
                                         {{ formatNumber(summaryData.total_current_stock) }} Pcs
                                     </div>
@@ -334,9 +323,7 @@
 
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                     <div>
-                        <h5 class="fw-bold mb-0 text-dark">
-                            Available Stock & Valuation Report (দোকানের বর্তমান মজুদ ও ক্রয়মূল্য ভিত্তিক রিপোর্ট)
-                        </h5>
+                        <h5 class="fw-bold mb-0 text-dark">{{ $t('Available Stock & Valuation Report') }}</h5>
                         <small class="text-muted">Report Generated: <strong>{{ reportDate }}</strong> | Filter: <strong class="text-primary">{{ activeFilterTitle }}</strong></small>
                     </div>
                     <div class="text-end">
@@ -351,17 +338,17 @@
                     <table class="table table-bordered table-hover align-middle mb-0 text-nowrap">
                         <thead class="table-dark text-center">
                             <tr class="fw-bold text-uppercase small">
-                                <th style="width: 3%;">#</th>
-                                <th style="width: 12%;">Category</th>
-                                <th style="width: 10%;">Barcode</th>
-                                <th style="width: 25%;">Item Details (নাম, সাইজ ও কালার)</th>
-                                <th style="width: 8%;">Current Stock</th>
-                                <th style="width: 9%;">Unit Cost (ক্রয়মূল্য)</th>
-                                <th style="width: 11%;">Total Cost (মোট ক্রয়মূল্য)</th>
-                                <th style="width: 9%;">Unit MRP (বিক্রয়মূল্য)</th>
-                                <th style="width: 11%;">Total MRP (মোট বিক্রয়মূল্য)</th>
-                                <th style="width: 10%;">Potential Profit (সম্ভাব্য লাভ)</th>
-                                <th style="width: 6%;">Status</th>
+                                <th style="width: 3%;">{{ $t('#') }}</th>
+                                <th style="width: 12%;">{{ $t('Category') }}</th>
+                                <th style="width: 10%;">{{ $t('Barcode') }}</th>
+                                <th style="width: 25%;">{{ $t('Item Details') }}</th>
+                                <th style="width: 8%;">{{ $t('Current Stock') }}</th>
+                                <th style="width: 9%;">{{ $t('Unit Cost') }}</th>
+                                <th style="width: 11%;">{{ $t('Total Cost') }}</th>
+                                <th style="width: 9%;">{{ $t('Unit MRP') }}</th>
+                                <th style="width: 11%;">{{ $t('Total MRP') }}</th>
+                                <th style="width: 10%;">{{ $t('Potential Profit') }}</th>
+                                <th style="width: 6%;">{{ $t('Status') }}</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -53,16 +53,16 @@
 
                     <thead class="table-light">
                         <tr class="fw-bold text-center">
-                            <th>#</th>
-                            <th>Expense Date</th>
-                            <th>Branch</th>
-                            <th>Account</th>
-                            <th>Employee</th>
-                            <th>Approved By</th>
-                            <th>Approved Date</th>
-                            <th>Amount</th>
-                            <th>Paid Amnt</th>
-                            <th>Due Amnt</th>
+                            <th>{{ $t('#') }}</th>
+                            <th>{{ $t('Expense Date') }}</th>
+                            <th>{{ $t('Branch') }}</th>
+                            <th>{{ $t('Account') }}</th>
+                            <th>{{ $t('Employee') }}</th>
+                            <th>{{ $t('Approved By') }}</th>
+                            <th>{{ $t('Approved Date') }}</th>
+                            <th>{{ $t('Amount') }}</th>
+                            <th>{{ $t('Paid Amnt') }}</th>
+                            <th>{{ $t('Due Amnt') }}</th>
                         </tr>
                     </thead>
                     <tbody>

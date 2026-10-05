@@ -37,12 +37,12 @@
       <!-- Transaction Type -->
       <div class="col-md-3">
         <div class="form-group">
-          <label class="form-label fw-bold small text-muted">Transaction Type (লেনদেনের ধরন)</label>
+          <label class="form-label fw-bold small text-muted">{{ $t('Transaction Type') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.type">
             <option value="">-- All Types (সকল ধরন) --</option>
-            <option value="Earn">Points Earned (পয়েন্ট জমা)</option>
-            <option value="Redeem">Points Redeemed (পয়েন্ট ছাড়/ডিসকাউন্ট)</option>
-            <option value="Convert_To_Cash">Converted to Cash (টাকায় রূপান্তর)</option>
+            <option value="Earn">{{ $t('Points Earned') }}</option>
+            <option value="Redeem">{{ $t('Points Redeemed') }}</option>
+            <option value="Convert_To_Cash">{{ $t('Converted to Cash') }}</option>
           </select>
         </div>
       </div>
@@ -62,7 +62,7 @@
           <div class="d-flex align-items-center">
             <h6 class="mb-0 fw-bold text-secondary d-flex align-items-center gap-2">
               <i class="fas fa-gift text-primary fs-5"></i>
-              <span>Coupon & Customer Loyalty Points Report (কুপন ও রিওয়ার্ড পয়েন্ট রিপোর্ট)</span>
+              <span>{{ $t('Coupon & Customer Loyalty Points Report') }}</span>
             </h6>
           </div>
 
@@ -176,15 +176,15 @@
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr class="small text-muted text-uppercase">
-                <th width="4%" class="text-center">#</th>
-                <th width="11%">Date</th>
-                <th width="20%">Customer Details</th>
-                <th width="12%" class="text-center">Type</th>
-                <th width="10%" class="text-end">Points In</th>
-                <th width="10%" class="text-end">Points Out</th>
+                <th width="4%" class="text-center">{{ $t('#') }}</th>
+                <th width="11%">{{ $t('Date') }}</th>
+                <th width="20%">{{ $t('Customer Details') }}</th>
+                <th width="12%" class="text-center">{{ $t('Type') }}</th>
+                <th width="10%" class="text-end">{{ $t('Points In') }}</th>
+                <th width="10%" class="text-end">{{ $t('Points Out') }}</th>
                 <th width="11%" class="text-end">Equivalent (Tk.)</th>
-                <th width="12%">Invoice / Ref</th>
-                <th width="10%" class="text-end">Balance After</th>
+                <th width="12%">{{ $t('Invoice / Ref') }}</th>
+                <th width="10%" class="text-end">{{ $t('Balance After') }}</th>
               </tr>
             </thead>
             <tbody>

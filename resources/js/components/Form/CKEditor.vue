@@ -6,7 +6,7 @@
                 class="form-label d-flex justify-content-between align-items-center gap-4"
             >
                 <div class="lft">
-                    <slot name="title"> {{ title }} </slot>
+                    <slot name="title"> {{ $t(title) }} </slot>
                     <sup v-if="required" class="text-danger ms-1">*</sup>
                     <!-- icon error -->
                     <span class="icon_error" v-if="has_error">

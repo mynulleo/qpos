@@ -24,8 +24,7 @@
         <div class="card-header bg-light d-flex justify-content-between align-items-center py-3 border-bottom">
           <div class="d-flex align-items-center gap-2">
             <span class="fs-6 fw-bold text-danger">
-              <i class="fas fa-boxes me-2"></i>Wastage / Damaged Items List (নষ্ট/ক্ষতিগ্রস্ত পণ্যের তালিকা)
-            </span>
+              <i class="fas fa-boxes me-2"></i>{{ $t('Wastage / Damaged Items List') }}</span>
             <span class="badge bg-danger rounded-pill px-2 py-1">{{ data.wastage_details.length }} Items</span>
           </div>
 
@@ -41,16 +40,16 @@
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center" style="font-size: 13px;">
                 <tr>
-                  <th style="width: 4%;">#</th>
-                  <th style="width: 24%;">Item / Product</th>
-                  <th style="width: 11%;">Variant</th>
-                  <th style="width: 14%;">Reason & Remarks</th>
-                  <th style="width: 10%;">Expired Date</th>
-                  <th style="width: 8%;">Stock</th>
-                  <th style="width: 7%;">Qty</th>
-                  <th style="width: 9%;">Unit Cost</th>
-                  <th style="width: 9%;">Total Loss</th>
-                  <th style="width: 8%;">Actions</th>
+                  <th style="width: 4%;">{{ $t('#') }}</th>
+                  <th style="width: 24%;">{{ $t('Item / Product') }}</th>
+                  <th style="width: 11%;">{{ $t('Variant') }}</th>
+                  <th style="width: 14%;">{{ $t('Reason & Remarks') }}</th>
+                  <th style="width: 10%;">{{ $t('Expired Date') }}</th>
+                  <th style="width: 8%;">{{ $t('Stock') }}</th>
+                  <th style="width: 7%;">{{ $t('Qty') }}</th>
+                  <th style="width: 9%;">{{ $t('Unit Cost') }}</th>
+                  <th style="width: 9%;">{{ $t('Total Loss') }}</th>
+                  <th style="width: 8%;">{{ $t('Actions') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -263,8 +262,7 @@
                       {{ modalItem.available_stock }} Units
                     </span>
                     <span v-if="modalItem.available_stock <= 0" class="badge bg-danger text-white">
-                      <i class="fas fa-ban me-1"></i>Out of Stock (স্টক ০ - এন্ট্রি বন্ধ)
-                    </span>
+                      <i class="fas fa-ban me-1"></i>{{ $t('Out of Stock') }}</span>
                     <span v-if="isFetchingStock" class="spinner-border spinner-border-sm text-secondary ms-1"></span>
                   </div>
                   <div class="small text-muted">
@@ -295,14 +293,14 @@
 
               <!-- Unit Cost Price -->
               <div class="col-md-4">
-                <label class="form-label small fw-semibold">Unit Cost / Purchase Price (৳) <span class="text-danger">*</span></label>
+                <label class="form-label small fw-semibold">{{ $t('Unit Cost / Purchase Price') }}<span class="text-danger">*</span></label>
                 <input type="number" step="any" min="0" class="form-control form-control-sm text-end font-monospace"
                   v-model="modalItem.unit_price" placeholder="0.00" />
               </div>
 
               <!-- Computed Total Loss -->
               <div class="col-md-4">
-                <label class="form-label small fw-semibold">Total Loss Value (৳)</label>
+                <label class="form-label small fw-semibold">{{ $t('Total Loss Value') }}</label>
                 <div class="form-control form-control-sm bg-light text-end font-monospace fw-bold text-danger">
                   {{ $filter.formatBDT(computedModalTotal) }}
                 </div>
@@ -310,17 +308,17 @@
 
               <!-- Wastage Reason -->
               <div class="col-md-6">
-                <label class="form-label small fw-semibold">Wastage Reason (ক্ষতির কারণ) <span class="text-danger">*</span></label>
+                <label class="form-label small fw-semibold">{{ $t('Wastage Reason') }}<span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" v-model="modalItem.reason">
-                  <option value="Damaged in Storage">Damaged in Storage (স্টোরেজে ক্ষতিগ্রস্ত)</option>
-                  <option value="Expired">Expired (মেয়াদোত্তীর্ণ)</option>
-                  <option value="Broken / Shattered">Broken / Shattered (ভাঙা / নষ্ট)</option>
-                  <option value="Spoiled / Rotten">Spoiled / Rotten (পচে গেছে / বিনষ্ট)</option>
-                  <option value="Factory / Quality Defect">Factory / Quality Defect (ত্রুটিপূর্ণ)</option>
-                  <option value="Lost / Theft">Lost / Theft (হারিয়ে গেছে / চুরি)</option>
-                  <option value="Audit Shortage">Audit Shortage (অডিটে ঘাটতি)</option>
-                  <option value="Packaging Defect">Packaging Defect (প্যাকেজিং নষ্ট)</option>
-                  <option value="Other">Other (অন্যান্য)</option>
+                  <option value="Damaged in Storage">{{ $t('Damaged in Storage') }}</option>
+                  <option value="Expired">{{ $t('Expired') }}</option>
+                  <option value="Broken / Shattered">{{ $t('Broken / Shattered') }}</option>
+                  <option value="Spoiled / Rotten">{{ $t('Spoiled / Rotten') }}</option>
+                  <option value="Factory / Quality Defect">{{ $t('Factory / Quality Defect') }}</option>
+                  <option value="Lost / Theft">{{ $t('Lost / Theft') }}</option>
+                  <option value="Audit Shortage">{{ $t('Audit Shortage') }}</option>
+                  <option value="Packaging Defect">{{ $t('Packaging Defect') }}</option>
+                  <option value="Other">{{ $t('Other') }}</option>
                 </select>
               </div>
 
@@ -445,19 +443,19 @@
             <table class="table table-sm table-bordered align-middle mb-0">
               <tbody>
                 <tr>
-                  <th class="bg-light text-muted" style="width: 40%;">Item Title:</th>
+                  <th class="bg-light text-muted" style="width: 40%;">{{ $t('Item Title:') }}</th>
                   <td class="fw-bold text-dark">{{ getItemTitle(viewingItem) }}</td>
                 </tr>
                 <tr v-if="getItemBarcode(viewingItem)">
-                  <th class="bg-light text-muted">Barcode:</th>
+                  <th class="bg-light text-muted">{{ $t('Barcode:') }}</th>
                   <td class="font-monospace">{{ getItemBarcode(viewingItem) }}</td>
                 </tr>
                 <tr>
-                  <th class="bg-light text-muted">Category:</th>
+                  <th class="bg-light text-muted">{{ $t('Category:') }}</th>
                   <td>{{ getCategoryTitle(viewingItem) || 'N/A' }}</td>
                 </tr>
                 <tr>
-                  <th class="bg-light text-muted">Variant:</th>
+                  <th class="bg-light text-muted">{{ $t('Variant:') }}</th>
                   <td>
                     <span v-if="getColorTitle(viewingItem)" class="badge bg-light text-dark border me-1">{{ getColorTitle(viewingItem) }}</span>
                     <span v-if="getSizeTitle(viewingItem)" class="badge bg-light text-dark border">{{ getSizeTitle(viewingItem) }}</span>
@@ -465,25 +463,25 @@
                   </td>
                 </tr>
                 <tr>
-                  <th class="bg-light text-muted">Stock at Audit:</th>
+                  <th class="bg-light text-muted">{{ $t('Stock at Audit:') }}</th>
                   <td><span class="badge bg-success">{{ viewingItem.available_stock ?? '-' }} Units</span></td>
                 </tr>
                 <tr>
-                  <th class="bg-light text-muted">Wasted Quantity:</th>
+                  <th class="bg-light text-muted">{{ $t('Wasted Quantity:') }}</th>
                   <td class="fw-bold fs-6 text-warning">{{ viewingItem.quantity }}</td>
                 </tr>
                 <tr>
-                  <th class="bg-light text-muted">Unit Cost Price:</th>
+                  <th class="bg-light text-muted">{{ $t('Unit Cost Price:') }}</th>
                   <td class="font-monospace">{{ $filter.formatBDT(viewingItem.unit_price) }}</td>
                 </tr>
                 <tr>
-                  <th class="bg-light text-muted">Total Loss Value:</th>
+                  <th class="bg-light text-muted">{{ $t('Total Loss Value:') }}</th>
                   <td class="font-monospace fw-bold text-danger fs-6">
                     {{ $filter.formatBDT(Number(viewingItem.quantity || 0) * Number(viewingItem.unit_price || 0)) }}
                   </td>
                 </tr>
                 <tr>
-                  <th class="bg-light text-muted">Wastage Reason:</th>
+                  <th class="bg-light text-muted">{{ $t('Wastage Reason:') }}</th>
                   <td>
                     <span class="badge" :class="getReasonBadgeClass(viewingItem.reason)">
                       {{ viewingItem.reason || 'Damaged' }}
@@ -491,7 +489,7 @@
                   </td>
                 </tr>
                 <tr v-if="viewingItem.expired_date">
-                  <th class="bg-light text-muted">Expired Date:</th>
+                  <th class="bg-light text-muted">{{ $t('Expired Date:') }}</th>
                   <td class="text-danger fw-bold"><i class="fas fa-calendar-times me-1"></i>{{ viewingItem.expired_date }}</td>
                 </tr>
                 <tr v-if="isElectronicsShop && viewingItem.serial_no">
@@ -499,7 +497,7 @@
                   <td class="font-monospace text-primary fw-bold">{{ viewingItem.serial_no }}</td>
                 </tr>
                 <tr v-if="viewingItem.remarks">
-                  <th class="bg-light text-muted">Remarks / Notes:</th>
+                  <th class="bg-light text-muted">{{ $t('Remarks / Notes:') }}</th>
                   <td>{{ viewingItem.remarks }}</td>
                 </tr>
               </tbody>

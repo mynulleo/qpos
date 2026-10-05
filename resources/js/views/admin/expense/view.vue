@@ -86,7 +86,7 @@
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Expense Heads (খাত)</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Expense Heads') }}</span>
                 <div class="stat-icon theme-bg-soft text-theme rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-list-ol"></i>
                 </div>
@@ -237,9 +237,7 @@
               <i class="fas fa-list-ol"></i>
             </span>
             <div>
-              <h6 class="mb-0 fw-bold text-dark">
-                Expense Items & Account Breakdown (খরচের খাত ও বিবরণী)
-              </h6>
+              <h6 class="mb-0 fw-bold text-dark">{{ $t('Expense Items & Account Breakdown') }}</h6>
               <small class="text-muted">Itemized breakdown of all accounts charged in this voucher</small>
             </div>
           </div>
@@ -253,10 +251,10 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr class="small text-muted text-uppercase">
-                  <th style="width: 5%;" class="text-center">#</th>
-                  <th style="width: 35%;">Expense Account Head (খাত)</th>
-                  <th style="width: 42%;">Narration / Description (বিবরণ)</th>
-                  <th style="width: 18%;" class="text-end">Amount (টাকা)</th>
+                  <th style="width: 5%;" class="text-center">{{ $t('#') }}</th>
+                  <th style="width: 35%;">{{ $t('Expense Account Head') }}</th>
+                  <th style="width: 42%;">{{ $t('Narration / Description') }}</th>
+                  <th style="width: 18%;" class="text-end">{{ $t('Amount') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -425,18 +423,10 @@
         <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; margin-bottom: 0; font-size: 12.5px;">
           <thead>
             <tr style="background-color: #e2e8f0;">
-              <th style="width: 6%; border: 1px solid #000000; padding: 8px 10px; text-align: center; font-weight: 800; color: #000000; font-size: 12.5px;">
-                #
-              </th>
-              <th style="width: 38%; border: 1px solid #000000; padding: 8px 10px; text-align: left; font-weight: 800; color: #000000; font-size: 12.5px;">
-                Expense Account Head (খরচের খাত)
-              </th>
-              <th style="width: 36%; border: 1px solid #000000; padding: 8px 10px; text-align: left; font-weight: 800; color: #000000; font-size: 12.5px;">
-                Narration / Description (বিবরণ)
-              </th>
-              <th style="width: 20%; border: 1px solid #000000; padding: 8px 10px; text-align: right; font-weight: 800; color: #000000; font-size: 12.5px;">
-                Amount (টাকা)
-              </th>
+              <th style="width: 6%; border: 1px solid #000000; padding: 8px 10px; text-align: center; font-weight: 800; color: #000000; font-size: 12.5px;">{{ $t('#') }}</th>
+              <th style="width: 38%; border: 1px solid #000000; padding: 8px 10px; text-align: left; font-weight: 800; color: #000000; font-size: 12.5px;">{{ $t('Expense Account Head') }}</th>
+              <th style="width: 36%; border: 1px solid #000000; padding: 8px 10px; text-align: left; font-weight: 800; color: #000000; font-size: 12.5px;">{{ $t('Narration / Description') }}</th>
+              <th style="width: 20%; border: 1px solid #000000; padding: 8px 10px; text-align: right; font-weight: 800; color: #000000; font-size: 12.5px;">{{ $t('Amount') }}</th>
             </tr>
           </thead>
           <tbody>

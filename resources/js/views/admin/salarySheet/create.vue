@@ -15,13 +15,13 @@
         <table class="table table-bordered">
           <thead>
             <tr>
-              <th>Employee</th>
-              <th>Designation</th>
-              <th>Salary</th>
-              <th>Bonus</th>
-              <th>Installment</th>
-              <th>Deduct</th>
-              <th>Total</th>
+              <th>{{ $t('Employee') }}</th>
+              <th>{{ $t('Designation') }}</th>
+              <th>{{ $t('Salary') }}</th>
+              <th>{{ $t('Bonus') }}</th>
+              <th>{{ $t('Installment') }}</th>
+              <th>{{ $t('Deduct') }}</th>
+              <th>{{ $t('Total') }}</th>
             </tr>
           </thead>
 

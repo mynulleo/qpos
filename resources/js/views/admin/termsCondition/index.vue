@@ -1,176 +1,373 @@
 <template>
-  <div class="container-fluid p-3 terms-condition-page">
-    <!-- Header Banner -->
-    <div class="card border-0 shadow-sm mb-3 text-white" style="background-color: #112C47;">
-      <div class="card-body py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div class="d-flex align-items-center gap-3">
-          <div class="rounded-circle bg-white bg-opacity-10 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-            <i class="fas fa-file-contract fs-5 text-warning"></i>
-          </div>
-          <div>
-            <h5 class="mb-0 fw-bold text-white">Terms & Conditions Management (শর্তাবলী ব্যবস্থাপনা)</h5>
-            <small class="text-white-50" style="font-size: 12px;">Configure default terms and conditions for Invoices, Purchase Orders, Warranty Claims, and Quotations</small>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm d-flex align-items-center gap-2 px-3" @click="openModal('create')">
-            <i class="fas fa-plus"></i> Add New Condition (শর্ত যোগ করুন)
-          </button>
-        </div>
-      </div>
-    </div>
+  <div class="terms-condition-page">
+    <div id="list_page_wrapper">
+      <!-- 🌟 Standard Modern Page Header Card matching QPOS Theme -->
+      <div class="card border-0 shadow-sm mb-2 page_header_card">
+        <div class="card-body py-2 px-3">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <!-- Left: Page Title & Total Count -->
+            <div class="d-flex align-items-center gap-2">
+              <h5 class="mb-0 fw-bold text-dark text-nowrap form_card_title d-flex align-items-center gap-2">
+                <i class="fas fa-file-contract text-primary"></i>
+                <span>Terms & Conditions List</span>
+              </h5>
+              <span class="badge bg-secondary font-monospace" style="font-size: 11px;">
+                {{ filteredList.length }}
+              </span>
+            </div>
 
-    <!-- Filter & Search Controls Bar -->
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-body p-3">
-        <div class="row g-2 align-items-center justify-content-between">
-          <!-- Module Filter Tabs -->
-          <div class="col-lg-8 col-md-12">
-            <div class="d-flex flex-wrap gap-1">
+            <!-- Center: Quick Search Bar -->
+            <div class="header_base_search flex-grow-1 mx-md-3" style="max-width: 480px;">
+              <div class="input-group input-group-sm">
+                <!-- Module Filter Selector inside search bar -->
+                <select
+                  class="form-select form-select-sm"
+                  style="max-width: 150px;"
+                  v-model="selectedModule"
+                  @change="applyFilters"
+                >
+                  <option value="all">All Modules</option>
+                  <option value="Invoice">Invoice</option>
+                  <option value="Purchase Order">Purchase Order</option>
+                  <option value="Warranty">Warranty</option>
+                  <option value="Quotation">Quotation</option>
+                </select>
+
+                <!-- Keyword Search Input -->
+                <input
+                  type="search"
+                  class="form-control"
+                  placeholder="Search conditions... (Press Enter)"
+                  v-model="searchKeyword"
+                  @keyup.enter="applyFilters"
+                  @input="applyFilters"
+                />
+
+                <!-- Search Button -->
+                <button
+                  type="button"
+                  class="btn btn-sm px-3 theme_search_btn"
+                  @click="applyFilters"
+                  title="Search"
+                >
+                  <i class="fas fa-search"></i>
+                </button>
+
+                <!-- Clear Search Button -->
+                <button
+                  v-if="searchKeyword || selectedModule !== 'all' || selectedStatus !== 'all' || selectedDefault !== 'all'"
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  @click="resetFilters"
+                  title="Clear Filters"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right: Filter Toggle, Excel, Print & Add New Button -->
+            <div class="d-flex align-items-center gap-2 right_page_header">
+              <!-- Advance Filter Toggle Button -->
               <button
                 type="button"
-                v-for="m in moduleOptions"
-                :key="m.value"
-                class="btn btn-sm font-monospace"
-                :class="selectedModule === m.value ? 'btn-primary active fw-bold shadow-sm' : 'btn-outline-secondary'"
-                @click="filterByModule(m.value)"
+                class="advance_filter_btn position-relative"
+                @click="showAdvanceFilter = !showAdvanceFilter"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                data-bs-title="Advance Filter"
+                title="Advance Filter"
               >
-                <i :class="m.icon" class="me-1"></i> {{ m.label }}
-                <span class="badge ms-1" :class="selectedModule === m.value ? 'bg-white text-dark' : 'bg-secondary'">
-                  {{ getCountForModule(m.value) }}
+                <i class="fas fa-sliders-h"></i>
+                <span
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style="font-size: 9px; padding: 2px 4px;"
+                  v-if="activeFilterCount > 0"
+                >
+                  {{ activeFilterCount }}
                 </span>
               </button>
-            </div>
-          </div>
 
-          <!-- Keyword Search & Status Filter -->
-          <div class="col-lg-4 col-md-12">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text bg-light"><i class="fas fa-search"></i></span>
-              <input
-                type="text"
-                class="form-control form-control-sm"
-                placeholder="Search conditions..."
-                v-model="searchKeyword"
-                @input="applyFilters"
-              />
-              <button v-if="searchKeyword" class="btn btn-outline-secondary" type="button" @click="searchKeyword = ''; applyFilters()">
-                <i class="fas fa-times"></i>
+              <!-- Excel Export -->
+              <button
+                v-if="filteredList.length > 0"
+                type="button"
+                class="p_btn"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                data-bs-title="Excel Export"
+                title="Excel Export"
+              >
+                <download-excel
+                  :data="filteredList"
+                  :fields="json_fields"
+                  name="terms_conditions.xls"
+                  title="Terms and Conditions"
+                  class="d-flex align-items-center justify-content-center w-100 h-100 cursor-pointer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-excel">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                    <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" />
+                    <path d="M10 12l4 5" />
+                    <path d="M10 17l4 -5" />
+                  </svg>
+                </download-excel>
+              </button>
+
+              <!-- Print Button -->
+              <button
+                type="button"
+                class="p_btn"
+                @click="printTable"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                data-bs-title="Print Table"
+                title="Print Table"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" />
+                  <path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" />
+                  <path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" />
+                </svg>
+              </button>
+
+              <!-- Add New Button -->
+              <button
+                type="button"
+                class="btn btn-primary btn-sm theme_btn px-3 d-flex align-items-center gap-1 shadow-sm"
+                @click="openModal('create')"
+              >
+                <i class="fas fa-plus"></i>
+                <span class="d-none d-sm-inline">Add New</span>
               </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Terms List Table / Card -->
-    <div class="card border-0 shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive" v-if="filteredList.length > 0">
+      <!-- 🔍 Collapsible Advance Filter Bar -->
+      <div class="card border-0 shadow-sm mb-2" v-if="showAdvanceFilter">
+        <div class="card-body p-3 bg-light rounded">
+          <div class="row g-2 align-items-center">
+            <div class="col-md-4 col-sm-6">
+              <label class="form-label small fw-bold mb-1">Filter by Module:</label>
+              <select class="form-select form-select-sm" v-model="selectedModule" @change="applyFilters">
+                <option value="all">-- All Modules --</option>
+                <option value="Invoice">Invoice (POS / Sales)</option>
+                <option value="Purchase Order">Purchase Order</option>
+                <option value="Warranty">Warranty & Claims</option>
+                <option value="Quotation">Quotation</option>
+              </select>
+            </div>
+
+            <div class="col-md-4 col-sm-6">
+              <label class="form-label small fw-bold mb-1">Filter by Default State:</label>
+              <select class="form-select form-select-sm" v-model="selectedDefault" @change="applyFilters">
+                <option value="all">-- All Defaults --</option>
+                <option value="1">{{ $t('Default Only') }}</option>
+                <option value="0">{{ $t('Optional Only') }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-4 col-sm-6">
+              <label class="form-label small fw-bold mb-1">Filter by Status:</label>
+              <select class="form-select form-select-sm" v-model="selectedStatus" @change="applyFilters">
+                <option value="all">-- All Statuses --</option>
+                <option value="active">{{ $t('Active') }}</option>
+                <option value="inactive">{{ $t('Inactive') }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📋 Standard Base Table Matching QPOS Theme -->
+      <div class="base_table_list">
+        <div id="printArea" class="table-responsive text-nowrap table-basic table_wrapper shadow-sm rounded bg-white">
           <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light table-head-custom">
-              <tr>
-                <th style="width: 50px;" class="text-center">#</th>
-                <th style="width: 170px;">Module Name</th>
-                <th>Condition Description / Text</th>
-                <th style="width: 140px;" class="text-center">Default (ডিফল্ট)</th>
-                <th style="width: 120px;" class="text-center">Status</th>
-                <th style="width: 120px;" class="text-center">Actions</th>
+            <thead>
+              <tr class="tr_stick">
+                <th class="sl text-center" style="width: 55px; min-width: 55px;">
+                  <span class="heading">SL</span>
+                </th>
+                <th style="width: 150px; min-width: 140px;">
+                  <span class="heading">Module</span>
+                </th>
+                <th style="min-width: 320px;">
+                  <span class="heading">Condition Description</span>
+                </th>
+                <th class="text-center" style="width: 110px; min-width: 100px;">
+                  <span class="heading">Default</span>
+                </th>
+                <th class="text-center" style="width: 90px; min-width: 80px;">
+                  <span class="heading">Sorting</span>
+                </th>
+                <th class="text-center" style="width: 100px; min-width: 90px;">
+                  <span class="heading">Status</span>
+                </th>
+                <th class="text-center" style="width: 90px; min-width: 90px;">
+                  <span class="heading">Action</span>
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, idx) in filteredList" :key="item.id">
-                <td class="text-center font-monospace text-muted">{{ idx + 1 }}</td>
+              <tr v-for="(item, index) in filteredList" :key="item.id">
+                <!-- SL -->
+                <td class="text-center text-muted font-monospace" style="font-size: 12px;">
+                  {{ index + 1 }}
+                </td>
+
+                <!-- Module Name Badge (Theme size: small & compact) -->
                 <td>
-                  <span class="badge" :class="getModuleBadgeClass(item.module_name)" style="font-size: 11.5px; padding: 5px 8px;">
+                  <span class="badge" :class="getModuleBadgeClass(item.module_name)" style="font-size: 10.5px; font-weight: 600; padding: 3px 7px;">
                     <i :class="getModuleIcon(item.module_name)" class="me-1"></i>
                     {{ item.module_name }}
                   </span>
                 </td>
+
+                <!-- Condition Description Text -->
                 <td>
-                  <div class="fw-semibold text-dark">{{ item.condition_text }}</div>
-                  <small class="text-muted font-monospace" v-if="item.sorting > 0">Order: {{ item.sorting }}</small>
+                  <div class="fw-semibold text-dark text-wrap" style="max-width: 550px; font-size: 12.5px; line-height: 1.45;">
+                    {{ item.condition_text }}
+                  </div>
                 </td>
+
+                <!-- Default Status Badge (Crystal Clear Visibility & Compact) -->
                 <td class="text-center">
-                  <button
-                    type="button"
-                    class="btn btn-xs py-1 px-2 font-monospace border-0 rounded-pill"
-                    :class="item.is_default ? 'btn-success bg-opacity-25 text-success fw-bold' : 'btn-light text-muted'"
+                  <span
+                    v-if="item.is_default"
+                    class="badge bg-success text-white px-2 py-1 cursor-pointer shadow-xs"
+                    style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px;"
                     @click="toggleDefault(item)"
-                    title="Toggle default inclusion"
+                    title="Click to toggle Default state"
                   >
-                    <i :class="item.is_default ? 'fas fa-check-circle me-1' : 'far fa-circle me-1'"></i>
-                    {{ item.is_default ? 'Checked Default' : 'Optional' }}
-                  </button>
+                    <i class="fas fa-check me-1"></i> DEFAULT
+                  </span>
+                  <span
+                    v-else
+                    class="badge bg-secondary text-white px-2 py-1 cursor-pointer shadow-xs"
+                    style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px;"
+                    @click="toggleDefault(item)"
+                    title="Click to toggle Default state"
+                  >
+                    <i class="fas fa-minus me-1"></i> OPTIONAL
+                  </span>
                 </td>
+
+                <!-- Sorting Input (Standard QPOS Table Sorting Number) -->
                 <td class="text-center">
-                  <button
-                    type="button"
-                    class="btn btn-xs py-1 px-2 font-monospace border-0 rounded-pill"
-                    :class="item.status === 'active' ? 'btn-primary bg-opacity-10 text-primary fw-bold' : 'btn-danger bg-opacity-10 text-danger fw-bold'"
+                  <div class="table_sorting_number mx-auto">
+                    <input
+                      type="number"
+                      min="0"
+                      v-model.number="item.sorting"
+                      @change="updateSorting(item)"
+                      @keyup.enter="updateSorting(item)"
+                      class="form-control form-control-sm text-center font-monospace p-1"
+                      style="width: 55px; height: 26px; font-size: 11.5px;"
+                    />
+                  </div>
+                </td>
+
+                <!-- Status Badge (Theme matching compact badge) -->
+                <td class="text-center">
+                  <span
+                    v-if="item.status === 'active'"
+                    class="badge bg-success text-white px-2 py-1 cursor-pointer shadow-xs"
+                    style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px;"
                     @click="toggleStatus(item)"
-                    title="Toggle Active Status"
+                    title="Click to toggle Status"
                   >
-                    <i class="fas fa-dot-circle me-1"></i>
-                    {{ item.status === 'active' ? 'Active' : 'Inactive' }}
-                  </button>
+                    ACTIVE
+                  </span>
+                  <span
+                    v-else
+                    class="badge bg-danger text-white px-2 py-1 cursor-pointer shadow-xs"
+                    style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px;"
+                    @click="toggleStatus(item)"
+                    title="Click to toggle Status"
+                  >
+                    INACTIVE
+                  </span>
                 </td>
+
+                <!-- Actions: Edit & Delete -->
                 <td class="text-center">
-                  <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2" @click="openModal('edit', item)" title="Edit">
-                      <i class="fas fa-edit"></i>
+                  <div class="d-flex align-items-center justify-content-center gap-1">
+                    <button
+                      type="button"
+                      class="btn btn-xs btn-outline-primary p-1 border-0"
+                      @click="openModal('edit', item)"
+                      title="Edit"
+                      style="width: 26px; height: 26px; border-radius: 4px;"
+                    >
+                      <i class="fas fa-edit" style="font-size: 11px;"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2" @click="deleteItem(item.id)" title="Delete">
-                      <i class="fas fa-trash-alt"></i>
+                    <button
+                      type="button"
+                      class="btn btn-xs btn-outline-danger p-1 border-0"
+                      @click="deleteItem(item.id)"
+                      title="Delete"
+                      style="width: 26px; height: 26px; border-radius: 4px;"
+                    >
+                      <i class="fas fa-trash-alt" style="font-size: 11px;"></i>
                     </button>
                   </div>
+                </td>
+              </tr>
+
+              <!-- Empty State -->
+              <tr v-if="filteredList.length === 0">
+                <td colspan="7" class="text-center py-5 text-muted">
+                  <i class="fas fa-file-contract fs-1 opacity-25 d-block mb-2"></i>
+                  <span class="fw-bold">No Terms & Conditions Found</span>
+                  <p class="small text-muted mb-3">Add conditions for your invoices, purchase orders, or warranty documents.</p>
+                  <button type="button" class="btn btn-primary btn-sm theme_btn px-3" @click="openModal('create')">
+                    <i class="fas fa-plus me-1"></i> Add First Condition
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <!-- Empty State -->
-        <div v-else class="text-center py-5">
-          <i class="fas fa-file-contract fs-1 text-muted opacity-25 mb-3"></i>
-          <h6 class="fw-bold text-muted">No Terms & Conditions Found</h6>
-          <p class="text-muted small mb-3">Add conditions for your invoices, purchase orders, or warranty documents.</p>
-          <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm" @click="openModal('create')">
-            <i class="fas fa-plus me-1"></i> Add First Condition
-          </button>
-        </div>
       </div>
     </div>
 
-    <!-- Create / Edit Modal -->
+    <!-- 🌟 Create / Edit Modal (Standard QPOS Modal Theme) -->
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1060;" v-if="showModal">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0">
-          <div class="modal-header py-3 text-white" style="background-color: #112C47;">
-            <h6 class="modal-title fw-bold text-white mb-0">
-              <i class="fas fa-file-contract me-2 text-warning"></i>
-              {{ modalMode === 'create' ? 'Add Terms & Condition' : 'Edit Terms & Condition' }}
+          <div class="modal-header py-2 px-3 text-white" style="background-color: #112C47;">
+            <h6 class="modal-title fw-bold text-white mb-0 d-flex align-items-center gap-2" style="font-size: 13.5px;">
+              <i class="fas fa-file-contract text-warning"></i>
+              <span>{{ modalMode === 'create' ? 'Add Terms & Condition' : 'Edit Terms & Condition' }}</span>
             </h6>
-            <button type="button" class="btn-close btn-close-white" @click="showModal = false"></button>
+            <button type="button" class="btn-close btn-close-white" @click="showModal = false" style="font-size: 10px;"></button>
           </div>
           <div class="modal-body p-3">
             <form @submit.prevent="saveForm">
+              <!-- Module Selection -->
               <div class="mb-3">
-                <label class="form-label fw-bold small text-dark">
-                  <i class="fas fa-layer-group text-primary me-1"></i> Target Module (মডিউলের নাম):
+                <label class="form-label fw-bold small text-dark mb-1">
+                  <i class="fas fa-layer-group text-primary me-1"></i> Target Module (মডিউল):
                 </label>
                 <select class="form-select form-select-sm fw-bold" v-model="formData.module_name" required>
-                  <option value="Invoice">Invoice (বিক্রয় রশিদ / চালান)</option>
-                  <option value="Purchase Order">Purchase Order (ক্রয় আদেশ)</option>
-                  <option value="Warranty">Warranty & Claims (ওয়ারেন্টি ও সার্ভিস)</option>
-                  <option value="Quotation">Quotation (কোটেশন / প্রস্তাবনা)</option>
+                  <option value="Invoice">{{ $t('Invoice') }}</option>
+                  <option value="Purchase Order">{{ $t('Purchase Order') }}</option>
+                  <option value="Warranty">{{ $t('Warranty & Claims') }}</option>
+                  <option value="Quotation">{{ $t('Quotation') }}</option>
                 </select>
-                <small class="text-muted" style="font-size: 11px;">Conditions under <strong>Invoice</strong> will show in the POS Terminal and Sales Receipts.</small>
+                <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                  Conditions under <strong>Invoice</strong> will show in the POS Terminal and Sales Receipts.
+                </small>
               </div>
 
+              <!-- Condition Text -->
               <div class="mb-3">
-                <label class="form-label fw-bold small text-dark">
-                  <i class="fas fa-pen-nib text-primary me-1"></i> Condition Text (শর্তাবলী বিবরণ):
+                <label class="form-label fw-bold small text-dark mb-1">
+                  <i class="fas fa-pen-nib text-primary me-1"></i> Condition Description (শর্তাবলীর বিবরণ):
                 </label>
                 <textarea
                   class="form-control form-control-sm"
@@ -181,21 +378,23 @@
                 ></textarea>
               </div>
 
+              <!-- Sorting & Status Row -->
               <div class="row g-2 mb-3">
                 <div class="col-6">
-                  <label class="form-label fw-bold small text-dark">Sorting Order (ক্রম):</label>
+                  <label class="form-label fw-bold small text-dark mb-1">Sorting Order (ক্রম):</label>
                   <input type="number" class="form-control form-control-sm font-monospace" v-model.number="formData.sorting" placeholder="1" />
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-bold small text-dark">Status (স্ট্যাটাস):</label>
+                  <label class="form-label fw-bold small text-dark mb-1">Status (স্ট্যাটাস):</label>
                   <select class="form-select form-select-sm" v-model="formData.status">
-                    <option value="active">Active (সক্রিয়)</option>
-                    <option value="inactive">Inactive (নিষ্ক্রিয়)</option>
+                    <option value="active">{{ $t('Active') }}</option>
+                    <option value="inactive">{{ $t('Inactive') }}</option>
                   </select>
                 </div>
               </div>
 
-              <div class="p-2 border rounded bg-light mb-2">
+              <!-- Default Toggle Box with high clarity -->
+              <div class="p-2 border rounded bg-light mb-3">
                 <div class="form-check form-switch m-0 d-flex align-items-center gap-2">
                   <input
                     class="form-check-input mt-0 cursor-pointer"
@@ -205,14 +404,16 @@
                     v-model="formData.is_default"
                   />
                   <label class="form-check-label fw-bold text-dark cursor-pointer small" for="modalDefaultSwitch">
-                    Included / Checked by Default in POS Terminal & Documents
+                    <i class="fas fa-check-circle text-success me-1"></i>
+                    Included by Default in POS Terminal & Receipts
                   </label>
                 </div>
               </div>
 
+              <!-- Modal Footer -->
               <div class="modal-footer px-0 pb-0 pt-2 border-0 d-flex justify-content-end gap-2">
                 <button type="button" class="btn btn-sm btn-secondary" @click="showModal = false">Cancel</button>
-                <button type="submit" class="btn btn-sm btn-primary px-3 fw-bold shadow-sm" :disabled="isSaving">
+                <button type="submit" class="btn btn-sm btn-primary theme_btn px-3 fw-bold shadow-sm" :disabled="isSaving">
                   <i class="fas fa-spinner fa-spin me-1" v-if="isSaving"></i>
                   <i class="fas fa-save me-1" v-else></i>
                   {{ modalMode === 'create' ? 'Save Condition' : 'Update Condition' }}
@@ -236,10 +437,20 @@ export default {
       terms: [],
       filteredList: [],
       selectedModule: "all",
+      selectedStatus: "all",
+      selectedDefault: "all",
       searchKeyword: "",
+      showAdvanceFilter: false,
       showModal: false,
       modalMode: "create",
       isSaving: false,
+      json_fields: {
+        "Module Name": "module_name",
+        "Condition Text": "condition_text",
+        "Sorting": "sorting",
+        "Default": "is_default",
+        "Status": "status",
+      },
       formData: {
         id: null,
         module_name: "Invoice",
@@ -248,14 +459,16 @@ export default {
         is_default: true,
         status: "active",
       },
-      moduleOptions: [
-        { value: "all", label: "All Modules", icon: "fas fa-list" },
-        { value: "Invoice", label: "Invoice (POS / Sales)", icon: "fas fa-file-invoice" },
-        { value: "Purchase Order", label: "Purchase Order", icon: "fas fa-shopping-cart" },
-        { value: "Warranty", label: "Warranty", icon: "fas fa-shield-alt" },
-        { value: "Quotation", label: "Quotation", icon: "fas fa-file-invoice-dollar" },
-      ],
     };
+  },
+  computed: {
+    activeFilterCount() {
+      let count = 0;
+      if (this.selectedModule !== "all") count++;
+      if (this.selectedStatus !== "all") count++;
+      if (this.selectedDefault !== "all") count++;
+      return count;
+    },
   },
   methods: {
     fetchTerms() {
@@ -270,41 +483,56 @@ export default {
           this.$toast("Failed to load Terms & Conditions", "error");
         });
     },
-    filterByModule(module) {
-      this.selectedModule = module;
-      this.applyFilters();
-    },
     applyFilters() {
       let list = [...this.terms];
+
+      // Module filter
       if (this.selectedModule !== "all") {
         list = list.filter((item) => item.module_name === this.selectedModule);
       }
+
+      // Status filter
+      if (this.selectedStatus !== "all") {
+        list = list.filter((item) => item.status === this.selectedStatus);
+      }
+
+      // Default state filter
+      if (this.selectedDefault !== "all") {
+        const isDef = this.selectedDefault === "1";
+        list = list.filter((item) => !!item.is_default === isDef);
+      }
+
+      // Keyword search
       if (this.searchKeyword && this.searchKeyword.trim()) {
         const kw = this.searchKeyword.trim().toLowerCase();
         list = list.filter(
           (item) =>
-            item.condition_text.toLowerCase().includes(kw) ||
-            item.module_name.toLowerCase().includes(kw)
+            (item.condition_text && item.condition_text.toLowerCase().includes(kw)) ||
+            (item.module_name && item.module_name.toLowerCase().includes(kw))
         );
       }
+
       this.filteredList = list;
     },
-    getCountForModule(module) {
-      if (module === "all") return this.terms.length;
-      return this.terms.filter((t) => t.module_name === module).length;
+    resetFilters() {
+      this.selectedModule = "all";
+      this.selectedStatus = "all";
+      this.selectedDefault = "all";
+      this.searchKeyword = "";
+      this.applyFilters();
     },
     getModuleBadgeClass(mod) {
       switch (mod) {
         case "Invoice":
-          return "bg-primary";
+          return "bg-primary text-white";
         case "Purchase Order":
-          return "bg-success";
+          return "bg-success text-white";
         case "Warranty":
           return "bg-warning text-dark";
         case "Quotation":
           return "bg-info text-dark";
         default:
-          return "bg-secondary";
+          return "bg-secondary text-white";
       }
     },
     getModuleIcon(mod) {
@@ -357,7 +585,7 @@ export default {
       const method = this.modalMode === "create" ? "post" : "put";
 
       axios[method](url, this.formData)
-        .then((res) => {
+        .then(() => {
           this.isSaving = false;
           this.showModal = false;
           this.$toast(
@@ -368,9 +596,25 @@ export default {
           );
           this.fetchTerms();
         })
-        .catch((err) => {
+        .catch(() => {
           this.isSaving = false;
           this.$toast("Failed to save condition", "error");
+        });
+    },
+    updateSorting(item) {
+      axios
+        .put(`termsCondition/${item.id}`, {
+          module_name: item.module_name,
+          condition_text: item.condition_text,
+          sorting: item.sorting,
+          is_default: item.is_default,
+          status: item.status,
+        })
+        .then(() => {
+          this.$toast("Sorting order updated", "success");
+        })
+        .catch(() => {
+          this.$toast("Failed to update sorting", "error");
         });
     },
     toggleDefault(item) {
@@ -379,6 +623,7 @@ export default {
         .then((res) => {
           item.is_default = res.data.is_default;
           this.$toast("Default status updated", "success");
+          this.applyFilters();
         })
         .catch(() => {
           this.$toast("Failed to update status", "error");
@@ -390,6 +635,7 @@ export default {
         .then((res) => {
           item.status = res.data.status;
           this.$toast("Status updated", "success");
+          this.applyFilters();
         })
         .catch(() => {
           this.$toast("Failed to update status", "error");
@@ -407,6 +653,35 @@ export default {
           this.$toast("Failed to delete condition", "error");
         });
     },
+    printTable() {
+      const printContents = document.getElementById("printArea").innerHTML;
+      const win = window.open("", "_blank");
+      win.document.write(`
+        <html>
+          <head>
+            <title>Terms and Conditions List</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+            <style>
+              body { font-family: sans-serif; padding: 20px; }
+              table { width: 100%; border-collapse: collapse; font-size: 12px; }
+              th, td { border: 1px solid #ddd; padding: 6px 8px; }
+              th { background-color: #f2f2f2; }
+              .badge { border: 1px solid #333; padding: 2px 4px; font-size: 10px; }
+            </style>
+          </head>
+          <body>
+            <h4 class="mb-3">Terms & Conditions List</h4>
+            ${printContents}
+          </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      setTimeout(() => {
+        win.print();
+        win.close();
+      }, 500);
+    },
   },
   created() {
     this.fetchTerms();
@@ -416,14 +691,81 @@ export default {
 
 <style scoped>
 .terms-condition-page {
-  font-family: inherit;
+  padding: 0 4px;
 }
-.table-head-custom th {
-  font-size: 12px;
-  font-weight: 700;
+.cursor-pointer {
+  cursor: pointer;
+}
+.shadow-xs {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.theme_search_btn {
+  background-color: #112c47;
+  color: #fff;
+  border: 1px solid #112c47;
+}
+.theme_search_btn:hover {
+  background-color: #0c1f33;
+  color: #fff;
+}
+.theme_btn {
+  background-color: #112c47 !important;
+  border-color: #112c47 !important;
+  color: #fff !important;
+}
+.theme_btn:hover {
+  background-color: #0c1f33 !important;
+  border-color: #0c1f33 !important;
+}
+.advance_filter_btn {
+  width: 32px;
+  height: 32px;
+  background-color: #112c47;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+.advance_filter_btn:hover {
+  background-color: #0c1f33;
+  color: #fff;
+}
+.p_btn {
+  width: 32px;
+  height: 32px;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+.p_btn:hover {
+  background-color: #f8f9fa;
   color: #112c47;
+  border-color: #112c47;
+}
+.table-basic thead th {
+  background-color: #f8fafc;
+  color: #112c47;
+  font-size: 11.5px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 10px 12px;
+  padding: 9px 10px;
+  border-bottom: 2px solid #edf2f7;
+}
+.table-basic tbody td {
+  padding: 8px 10px;
+  font-size: 12px;
+  vertical-align: middle;
 }
 </style>

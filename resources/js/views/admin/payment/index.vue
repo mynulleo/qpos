@@ -157,10 +157,10 @@
           title='To Payment Date' placeholder='To Date' col='3' :req='false'
           :disablePastDates="search_data.from_payment_date"></date-picker>
 
-        <Input v-model="search_data.min_amount" field="search_data.min_amount" title="Min Amount (৳)"
+        <Input v-model="search_data.min_amount" field="search_data.min_amount" title="Min Amount"
           placeholder="e.g. 100" col="2" :req="false" type="number" />
 
-        <Input v-model="search_data.max_amount" field="search_data.max_amount" title="Max Amount (৳)"
+        <Input v-model="search_data.max_amount" field="search_data.max_amount" title="Max Amount"
           placeholder="e.g. 50000" col="2" :req="false" type="number" />
 
         <v-select-container title="Status" field="search_data.status" col="2">

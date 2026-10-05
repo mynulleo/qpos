@@ -13,7 +13,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-6 col-lg-12">
                     <fieldset>
-                        <span class="legend">Robots.txt</span>
+                        <span class="legend">{{ $t('Robots.txt') }}</span>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <tbody>
@@ -29,7 +29,7 @@
                 </div>
                 <div class="col-xl-6 col-lg-12">
                     <fieldset>
-                        <span class="legend">Edit Robots.txt</span>
+                        <span class="legend">{{ $t('Edit Robots.txt') }}</span>
                         <div class="viewer_devider"></div>
                         <div class="table-responsive">
                             <textarea

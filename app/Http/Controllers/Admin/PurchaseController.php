@@ -177,6 +177,12 @@ class PurchaseController extends BaseController
                 if (empty($data['invoiceno'])) {
                     $data['invoiceno'] = Purchase::generateInvoiceNo();
                 }
+                if (isset($data['terms_conditions']) && is_string($data['terms_conditions'])) {
+                    $decoded = json_decode($data['terms_conditions'], true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $data['terms_conditions'] = $decoded;
+                    }
+                }
                 $purchasedetails = $data['purchase_details'];
                 $data['purchase_date'] = date('Y-m-d', strtotime($data['purchase_date']));
                 unset($data['purchase_details']);
@@ -306,6 +312,12 @@ class PurchaseController extends BaseController
             try {
                 $data = $request->all();
                 $data['purchase_date'] = date('Y-m-d', strtotime($data['purchase_date']));
+                if (isset($data['terms_conditions']) && is_string($data['terms_conditions'])) {
+                    $decoded = json_decode($data['terms_conditions'], true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $data['terms_conditions'] = $decoded;
+                    }
+                }
                 $purchasedetails = $data['purchase_details'];
                 unset($data['purchase_details']);
                 // push the update text

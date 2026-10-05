@@ -9,7 +9,7 @@
             label="name"
             :reduce="(obj) => obj.id"
             :options="countries"
-            placeholder="--Select One--"
+            :placeholder="$t('--Select One--')"
             :closeOnSelect="true"
             :req="true"
         ></v-select>
@@ -18,7 +18,7 @@
     <div :class="getClass()" class="col-sm-6 col-lg-4 col-xxl-3">
         <div class="form-element mt-5">
             <label for="" class="d-block w-100" v-if="tooltip">
-                <slot name="title"> {{ title.replaceAll("_", " ") }} </slot>
+                <slot name="title"> {{ $t(title ? title.replaceAll("_", " ") : '') }} </slot>
                 <sup v-if="req" class="text-danger">*</sup>
                 <span class="ms-1 position-relative">
                     <i
@@ -39,7 +39,7 @@
                         data-bs-toggle="tooltip"
                         data-bs-placement="left"
                         :title="
-                            `Please Put ` + title.replaceAll('_', ' ') + ` Here`
+                            `Please Put ` + (title ? title.replaceAll('_', ' ') : '') + ` Here`
                         "
                         ref="info"
                     ></i>
@@ -52,7 +52,7 @@
                 :value="modelValue"
                 :class="errorClass()"
                 :placeholder="
-                    placeholder ? placeholder : title.replaceAll('_', ' ')
+                    placeholder ? $t(placeholder) : (title ? $t(title.replaceAll('_', ' ')) : '')
                 "
                 :disabled="disabled"
                 :readonly="readonly"

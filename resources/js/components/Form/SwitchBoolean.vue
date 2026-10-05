@@ -2,7 +2,7 @@
   <div :class="`col-md-${col} align-self-center`">
     <div class="form-group">
       <label class="form-label" :for="id ?? `input-${uuid}`">
-        {{ title }}
+        {{ $t(title) }}
         <sup v-if="req" class="text-danger">*</sup>
 
         <!-- icon error -->
@@ -24,8 +24,8 @@
             :name="name ?? `input-${uuid}`" v-model="status" @change="updateModel" :disabled="disabled" />
         </div>
         <div class="action">
-          <span class="active" v-if="status">{{ onLabel }}</span>
-          <span class="deactive" v-else>{{ offLabel }}</span>
+          <span class="active" v-if="status">{{ $t(onLabel) }}</span>
+          <span class="deactive" v-else>{{ $t(offLabel) }}</span>
         </div>
       </div>
     </div>

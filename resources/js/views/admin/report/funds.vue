@@ -30,8 +30,7 @@
         <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
           <div class="d-flex align-items-center">
             <h6 class="mb-0 fw-bold text-secondary">
-              <i class="fas fa-wallet me-1 text-primary"></i> Fund Accounts Overview (ফান্ড অ্যাকাউন্টস)
-            </h6>
+              <i class="fas fa-wallet me-1 text-primary"></i>{{ $t('Fund Accounts Overview') }}</h6>
           </div>
 
           <!-- Print & Export Buttons -->
@@ -72,7 +71,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-primary text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Opening Balance (প্রারম্ভিক)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Opening Balance') }}</div>
                   <div class="fs-4 fw-bold mt-1">Tk. {{ formatMoney(summaryData.total_opening) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-balance-scale"></i></div>
@@ -85,7 +84,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-info text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Total Inflow / Received (মোট জমা)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Total Inflow / Received') }}</div>
                   <div class="fs-4 fw-bold mt-1">Tk. {{ formatMoney(summaryData.total_income) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-hand-holding-usd"></i></div>
@@ -98,7 +97,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-danger text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Total Outflow / Paid (মোট খরচ)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Total Outflow / Paid') }}</div>
                   <div class="fs-4 fw-bold mt-1">Tk. {{ formatMoney(summaryData.total_expense) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-file-invoice-dollar"></i></div>
@@ -120,9 +119,7 @@
           </p>
           <div class="border-top border-bottom py-2 my-2 bg-light">
             <h5 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-wallet me-1"></i>
-              Fund Balance Report (ফান্ড ব্যালেন্স প্রতিবেদন)
-            </h5>
+              <i class="fas fa-wallet me-1"></i>{{ $t('Fund Balance Report') }}</h5>
             <small class="text-muted">
               Period: <strong>{{ dateRange }}</strong> | Report Date: <strong>{{ reportDate }}</strong>
             </small>
@@ -134,12 +131,12 @@
           <table class="table table-bordered table-striped table-hover align-middle mb-0">
             <thead class="table-dark text-center">
               <tr>
-                <th width="5%">#</th>
-                <th width="30%">Account Name (অ্যাকাউন্টের নাম)</th>
-                <th width="15%">Opening Balance (প্রারম্ভিক স্থিতি)</th>
-                <th width="16%">Total Inflow / Received (মোট জমা)</th>
-                <th width="16%">Total Outflow / Paid (মোট খরচ)</th>
-                <th width="18%">Current Balance (বর্তমান স্থিতি)</th>
+                <th width="5%">{{ $t('#') }}</th>
+                <th width="30%">{{ $t('Account Name') }}</th>
+                <th width="15%">{{ $t('Opening Balance') }}</th>
+                <th width="16%">{{ $t('Total Inflow / Received') }}</th>
+                <th width="16%">{{ $t('Total Outflow / Paid') }}</th>
+                <th width="18%">{{ $t('Current Balance') }}</th>
               </tr>
             </thead>
             <tbody>

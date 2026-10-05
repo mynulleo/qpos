@@ -41,16 +41,16 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <fieldset>
-                            <span class="legend">Asset</span>
+                            <span class="legend">{{ $t('Asset') }}</span>
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
-                                            <th>Code</th>
-                                            <th>Account Name</th>
-                                            <th class="text-md-end">Debit</th>
-                                            <th class="text-md-end">Credit</th>
-                                            <th class="text-md-end">Amount</th>
+                                            <th>{{ $t('Code') }}</th>
+                                            <th>{{ $t('Account Name') }}</th>
+                                            <th class="text-md-end">{{ $t('Debit') }}</th>
+                                            <th class="text-md-end">{{ $t('Credit') }}</th>
+                                            <th class="text-md-end">{{ $t('Amount') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -74,17 +74,17 @@
                     </div>
                     <div class="col-md-6">
                         <fieldset>
-                            <span class="legend">Liabilities & Equity</span>
+                            <span class="legend">{{ $t('Liabilities & Equity') }}</span>
                             <h5 class="mt-2">Liabilities</h5>
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
-                                            <th>Code</th>
-                                            <th>Account Name</th>
-                                            <th class="text-md-end">Debit</th>
-                                            <th class="text-md-end">Credit</th>
-                                            <th class="text-md-end">Amount</th>
+                                            <th>{{ $t('Code') }}</th>
+                                            <th>{{ $t('Account Name') }}</th>
+                                            <th class="text-md-end">{{ $t('Debit') }}</th>
+                                            <th class="text-md-end">{{ $t('Credit') }}</th>
+                                            <th class="text-md-end">{{ $t('Amount') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -104,11 +104,11 @@
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
-                                            <th>Code</th>
-                                            <th>Account Name</th>
-                                            <th class="text-md-end">Debit</th>
-                                            <th class="text-md-end">Credit</th>
-                                            <th class="text-md-end">Amount</th>
+                                            <th>{{ $t('Code') }}</th>
+                                            <th>{{ $t('Account Name') }}</th>
+                                            <th class="text-md-end">{{ $t('Debit') }}</th>
+                                            <th class="text-md-end">{{ $t('Credit') }}</th>
+                                            <th class="text-md-end">{{ $t('Amount') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>

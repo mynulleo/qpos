@@ -12,7 +12,7 @@
         <div class="left-title">
           <h3 style="text-transform: capitalize" v-if="breadcrumbs[0]">
             {{
-              capitalize(
+              $t(
                 breadcrumbs[Object.keys(breadcrumbs).length - 1]["title"]
               )
             }}
@@ -26,7 +26,7 @@
           <ul>
             <li>
               <router-link :to="{ name: 'dashboard.index' }"
-                >Dashboard</router-link
+                >{{ $t('Dashboard') }}</router-link
               >
             </li>
             <template v-if="!isDashboardRoute">
@@ -37,7 +37,7 @@
                 style="text-transform: capitalize"
               >
                 <a v-if="Object.keys(breadcrumbs).length == index1 + 1">
-                  {{ menu.title }}
+                  {{ $t(menu.title) }}
                 </a>
                 <router-link
                   v-else-if="menu.slug"
@@ -46,10 +46,10 @@
                     params: { slug: menu.slug },
                   }"
                 >
-                  {{ menu.title }}
+                  {{ $t(menu.title) }}
                 </router-link>
                 <router-link v-else :to="{ name: menu.route }">
-                  {{ menu.title }}
+                  {{ $t(menu.title) }}
                 </router-link>
               </li>
             </template>

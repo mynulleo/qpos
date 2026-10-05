@@ -11,6 +11,7 @@ export default {
         keyword: "",
         categoriesModuleNames: {},
         unitModuleNames: {},
+        locale: localStorage.getItem('qpos_locale') || 'en',
         subscription: {
             organization_name: '',
             expired_date: null,
@@ -81,6 +82,10 @@ export default {
         setKeyword(state, keyword) {
             state.keyword = keyword;
         },
+
+        setLocale(state, locale) {
+            state.locale = locale;
+        },
     },
     actions: {
         setGlobal(context, data) {
@@ -89,6 +94,9 @@ export default {
         updateKeyword(context, keyword) {
             context.commit("setKeyword", keyword);
             context.commit("filterMenus");
+        },
+        updateLocale(context, locale) {
+            context.commit("setLocale", locale);
         },
     },
 };

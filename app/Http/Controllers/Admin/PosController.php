@@ -545,9 +545,15 @@ class PosController extends BaseController
             $createdBy = $authAdmin ? $authAdmin->id : 1;
 
             $termsConditions = $request->input('terms_conditions');
-            if (is_array($termsConditions)) {
-                $termsConditions = json_encode($termsConditions, JSON_UNESCAPED_UNICODE);
+            if (is_string($termsConditions)) {
+                $termsConditions = json_decode($termsConditions, true) ?? [$termsConditions];
             }
+            if (!is_array($termsConditions)) {
+                $termsConditions = [];
+            }
+            $termsConditions = array_values(array_filter($termsConditions, function ($t) {
+                return !empty(trim((string)$t));
+            }));
 
             // Create Invoice
             $invoiceData = [

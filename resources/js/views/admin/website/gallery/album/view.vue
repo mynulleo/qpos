@@ -200,7 +200,7 @@
 
                 <div class="col-xl-4 col-lg-12">
                     <fieldset>
-                        <span class="legend">Information</span>
+                        <span class="legend">{{ $t('Information') }}</span>
                         <div class="profile_info">
                             <div class="row g-3">
                                 <div class="col-md-6 col-xl-12">
@@ -230,12 +230,12 @@
                                                 <table class="table table-striped mt-0">
                                                     <tbody>
                                                         <tr>
-                                                            <th>Album Name</th>
+                                                            <th>{{ $t('Album Name') }}</th>
                                                             <th style="text-align: center;">:</th>
                                                             <td>{{ data?.name ?? "" }}</td>
                                                         </tr>
                                                         <tr>
-                                                            <th>Album Type</th>
+                                                            <th>{{ $t('Album Type') }}</th>
                                                             <th style="text-align: center;">:</th>
                                                             <td>{{ data?.type ?? "" }}</td>
                                                         </tr>
@@ -246,7 +246,7 @@
                                                             <td v-if="data.photos_count">{{ data?.photos_count ?? 0 }}</td>
                                                         </tr>
                                                         <tr>
-                                                            <th>Status</th>
+                                                            <th>{{ $t('Status') }}</th>
                                                             <th style="text-align: center;">:</th>
                                                             <td><span :class="[
                                                                 data?.status == 'active'

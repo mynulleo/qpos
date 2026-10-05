@@ -51,12 +51,12 @@
                             <table class="table tabled-striped">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Voucher no</th>
-                                        <th>Description</th>
-                                        <th class="text-md-center">Debit</th>
-                                        <th class="text-md-center">Credit</th>
-                                        <th class="text-md-center">Balance</th>
+                                        <th>{{ $t('Date') }}</th>
+                                        <th>{{ $t('Voucher no') }}</th>
+                                        <th>{{ $t('Description') }}</th>
+                                        <th class="text-md-center">{{ $t('Debit') }}</th>
+                                        <th class="text-md-center">{{ $t('Credit') }}</th>
+                                        <th class="text-md-center">{{ $t('Balance') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

@@ -4,7 +4,7 @@
             <div class="row g-4">
                 <div class="col-md-12">
                     <fieldset>
-                        <span class="legend">Challan</span>
+                        <span class="legend">{{ $t('Challan') }}</span>
                         <div class="row g-3">
                             <Select title='Work Order' v-model='data.workorder_id' field='data.workorder_id'
                                 label='name' :reduce='(obj) => obj.id' :options='workorders'
@@ -22,7 +22,7 @@
                 </div>
                 <div class="col-md-8">
                     <fieldset>
-                        <span class="legend">Receiver Info</span>
+                        <span class="legend">{{ $t('Receiver Info') }}</span>
                         <div class="row">
                             <Input v-model='data.receive_by' field='data.receive_by' title='Name' :req='false'
                                 col="4" />
@@ -35,7 +35,7 @@
                 </div>
                 <div class="col-md-4">
                     <fieldset>
-                        <span class="legend">Delivered By</span>
+                        <span class="legend">{{ $t('Delivered By') }}</span>
                         <div class="row">
                             <Input v-model='data.delivery_by' field='data.delivery_by' title='Name' :req='false' />
                             <Input v-model='data.delivery_by_mobile' field='data.delivery_by_mobile' title='Mobile'
@@ -48,41 +48,41 @@
         </div>
         <div class="col-md-4">
             <fieldset>
-                <span class="legend">Workorder Info</span>
+                <span class="legend">{{ $t('Workorder Info') }}</span>
                 <table class="table table-striped">
                     <tbody>
                         <tr>
-                            <th width="40%">Order No</th>
+                            <th width="40%">{{ $t('Order No') }}</th>
                             <th width="5%">:</th>
                             <td></td>
                         </tr>
                         <tr>
-                            <th>UNO No</th>
+                            <th>{{ $t('UNO No') }}</th>
                             <th>:</th>
                             <td>{{ data.workorder?.order_no }}</td>
                         </tr>
                         <tr>
-                            <th>Oorder Date</th>
+                            <th>{{ $t('Order Date') }}</th>
                             <th>:</th>
                             <td>{{ data.workorder?.order_date }}</td>
                         </tr>
                         <tr>
-                            <th>Client</th>
+                            <th>{{ $t('Client') }}</th>
                             <th>:</th>
                             <td>{{ data.workorder?.client?.org_name }}</td>
                         </tr>
                         <tr>
-                            <th>Delivery Date</th>
+                            <th>{{ $t('Delivery Date') }}</th>
                             <th>:</th>
                             <td>{{ data.workorder?.delivery_date }}</td>
                         </tr>
                         <tr>
-                            <th>Shipping</th>
+                            <th>{{ $t('Shipping') }}</th>
                             <th>:</th>
                             <td>{{ data.workorder?.shipping }}</td>
                         </tr>
                         <tr>
-                            <th>Remarks</th>
+                            <th>{{ $t('Remarks') }}</th>
                             <th>:</th>
                             <td>{{ data.workorder?.remarks }}</td>
                         </tr>
@@ -92,15 +92,15 @@
         </div>
         <div class="col-md-12">
             <fieldset>
-                <span class="legend">Challan Details</span>
+                <span class="legend">{{ $t('Challan Details') }}</span>
                 <table class="table">
                     <thead>
                         <tr>
-                            <th width="20%">Item</th>
-                            <th width="30%">Description</th>
-                            <th style="width:15%">Order Qty</th>
-                            <th style="width:15%">Receive Qty</th>
-                            <th style="width:25%">Remarks</th>
+                            <th width="20%">{{ $t('Item') }}</th>
+                            <th width="30%">{{ $t('Description') }}</th>
+                            <th style="width:15%">{{ $t('Order Qty') }}</th>
+                            <th style="width:15%">{{ $t('Receive Qty') }}</th>
+                            <th style="width:25%">{{ $t('Remarks') }}</th>
                             <th style="width:10%"></th>
                         </tr>
                     </thead>

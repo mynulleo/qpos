@@ -127,12 +127,12 @@
                                     <th class="text-center" style="width: 44px; min-width: 44px;">
                                         <input type="checkbox" class="form-check-input" :checked="isAllSelected" @change="toggleSelectAll" title="Select / Deselect All" />
                                     </th>
-                                    <th style="min-width: 160px;">Ref / Bill Info</th>
-                                    <th style="min-width: 140px;">Account Head</th>
-                                    <th class="text-end" style="min-width: 110px;">Total Bill</th>
-                                    <th class="text-end" style="min-width: 100px;">Paid</th>
-                                    <th class="text-end" style="min-width: 110px;">Due (৳)</th>
-                                    <th class="text-end" style="width: 115px; min-width: 115px;">Adjust (৳)</th>
+                                    <th style="min-width: 160px;">{{ $t('Ref / Bill Info') }}</th>
+                                    <th style="min-width: 140px;">{{ $t('Account Head') }}</th>
+                                    <th class="text-end" style="min-width: 110px;">{{ $t('Total Bill') }}</th>
+                                    <th class="text-end" style="min-width: 100px;">{{ $t('Paid') }}</th>
+                                    <th class="text-end" style="min-width: 110px;">{{ $t('Due') }}</th>
+                                    <th class="text-end" style="width: 115px; min-width: 115px;">{{ $t('Adjust') }}</th>
                                     <th class="text-center" style="width: 70px; min-width: 70px;">Closed?</th>
                                 </tr>
                             </thead>

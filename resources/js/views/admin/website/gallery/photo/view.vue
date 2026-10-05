@@ -4,7 +4,7 @@
             <div class="row custom_row g-3">
                 <div class="col-xl-4 col-lg-12">
                     <fieldset>
-                        <span class="legend">Media</span>
+                        <span class="legend">{{ $t('Media') }}</span>
                         <div class="view_file">
                             <div class="row g-4">
                                 <div class="col-lg-12">
@@ -20,12 +20,12 @@
 
                 <div class="col-xl-8 col-lg-12">
                     <fieldset>
-                        <span class="legend">Information</span>
+                        <span class="legend">{{ $t('Information') }}</span>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <tbody>
                                     <tr>
-                                        <th>Album</th>
+                                        <th>{{ $t('Album') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>
                                             <router-link :to="{
@@ -39,12 +39,12 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Title</th>
+                                        <th>{{ $t('Title') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>{{ data?.title ?? "N/A" }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Status</th>
+                                        <th>{{ $t('Status') }}</th>
                                         <th style="text-align: center">:</th>
                                         <td>
                                             <span :class="[

@@ -149,14 +149,14 @@
             <table class="table table-bordered table-striped align-middle mb-0 text-center">
               <thead class="table-light">
                 <tr>
-                  <th width="4%">#</th>
-                  <th width="26%" class="text-start">Product (পণ্য)</th>
-                  <th width="14%">Variant (ভ্যারিয়েন্ট)</th>
-                  <th width="10%">Unit Cost</th>
-                  <th width="12%">System Stock (পূর্বে)</th>
-                  <th width="12%">Physical Count (বাস্তব)</th>
-                  <th width="12%">Difference (সমন্বয়)</th>
-                  <th width="10%" class="text-end">Total Amount</th>
+                  <th width="4%">{{ $t('#') }}</th>
+                  <th width="26%" class="text-start">{{ $t('Product') }}</th>
+                  <th width="14%">{{ $t('Variant') }}</th>
+                  <th width="10%">{{ $t('Unit Cost') }}</th>
+                  <th width="12%">{{ $t('System Stock') }}</th>
+                  <th width="12%">{{ $t('Physical Count') }}</th>
+                  <th width="12%">{{ $t('Difference') }}</th>
+                  <th width="10%" class="text-end">{{ $t('Total Amount') }}</th>
                 </tr>
               </thead>
               <tbody>

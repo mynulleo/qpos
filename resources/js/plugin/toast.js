@@ -15,10 +15,12 @@ export default {
                         method = 'info';
                     }
                     if (this.toast && typeof this.toast[method] === 'function') {
+                        const translatedMsg = typeof this.$t === 'function' && message ? this.$t(message) : message;
+                        const translatedTitle = title ? (typeof this.$t === 'function' ? this.$t(title) : title) : (type || 'INFO').toUpperCase() + " !!";
                         this.toast[method]({
                             position: 'topCenter',
-                            title: title ? title : (type || 'INFO').toUpperCase() + " !!",
-                            message: message || '',
+                            title: translatedTitle,
+                            message: translatedMsg || '',
                             timeout: time,
                         });
                     }

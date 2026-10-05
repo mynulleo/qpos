@@ -2,7 +2,7 @@
   <create-form @onSubmit='submit'>
     <div class="col-md-8">
       <fieldset>
-        <span class="legend">Office Information</span>
+        <span class="legend">{{ $t('Office Information') }}</span>
         <div class="row g-3">
           <div class="col-3">
             <File title='Image' field='data.image' mime='img' fileClassName='data.image' col="12" :req='false' />
@@ -31,7 +31,7 @@
     </div>
     <div class="col-md-4">
       <fieldset>
-        <span class="legend">Bank Information</span>
+        <span class="legend">{{ $t('Bank Information') }}</span>
         <div class="row g-3 mt-3">
           <Input v-model='data.account_name' field='data.account_name' title='Account Name' col="6" :req='false' />
           <Input v-model='data.account_no' field='data.account_no' title='Account No' col="6" :req='false' />
@@ -43,7 +43,7 @@
     </div>
     <div class="col-md-8">
       <fieldset class="mt-3">
-        <span class="legend">Family Info</span>
+        <span class="legend">{{ $t('Family Info') }}</span>
         <div class="row g-3 mt-3">
           <!-- Father Information -->
           <Input v-model='data.father_name' field='data.father_name' col="3" title='Father Name' :req='false' />
@@ -68,12 +68,12 @@
     </div>
     <div class="col-md-4">
       <fieldset class="mt-3">
-        <span class="legend">Salary</span>
+        <span class="legend">{{ $t('Salary') }}</span>
         <table class="table table-striped table-sm">
           <thead>
             <tr>
-              <th>Parameter</th>
-              <th>Amount</th>
+              <th>{{ $t('Parameter') }}</th>
+              <th>{{ $t('Amount') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -84,7 +84,7 @@
               </td>
             </tr>
             <tr>
-              <th>Total</th>
+              <th>{{ $t('Total') }}</th>
               <th>{{ Number(totalSalary).toFixed(2) }}</th>
             </tr>
           </tbody>

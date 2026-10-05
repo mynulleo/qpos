@@ -17,6 +17,10 @@ class Purchase extends BaseModel
     protected $logName = "Purchase";
     protected $appends = ['can_edit', 'can_delete'];
 
+    protected $casts = [
+        'terms_conditions' => 'array',
+    ];
+
     public function getCanEditAttribute()
     {
         if (isset($this->attributes['receive_status']) && in_array($this->attributes['receive_status'], ['Partial', 'Received'])) {

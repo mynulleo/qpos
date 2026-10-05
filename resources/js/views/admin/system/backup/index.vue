@@ -233,11 +233,11 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light text-muted small text-uppercase">
                                     <tr>
-                                        <th class="ps-4">File Name</th>
-                                        <th>Size</th>
-                                        <th>Date</th>
-                                        <th>Type</th>
-                                        <th class="text-end pe-4">Actions</th>
+                                        <th class="ps-4">{{ $t('File Name') }}</th>
+                                        <th>{{ $t('Size') }}</th>
+                                        <th>{{ $t('Date') }}</th>
+                                        <th>{{ $t('Type') }}</th>
+                                        <th class="text-end pe-4">{{ $t('Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

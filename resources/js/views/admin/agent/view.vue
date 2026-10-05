@@ -3,7 +3,7 @@
     <div class="row custom_row g-3">
       <div class="col-md-4 text-center">
         <fieldset>
-          <span class="legend">Agent Image</span>
+          <span class="legend">{{ $t('Agent Image') }}</span>
           <div class="p-3">
             <img v-if="data.image" :src="data.image" class="img-fluid rounded border" style="max-height: 200px;" alt="Agent Image" />
             <p v-else class="text-muted">No Image Available</p>
@@ -12,37 +12,37 @@
       </div>
       <div class="col-md-8">
         <fieldset>
-          <span class="legend">Agent Information</span>
+          <span class="legend">{{ $t('Agent Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th width="30%">Full Name</th>
+                  <th width="30%">{{ $t('Full Name') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.full_name }}</td>
                 </tr>
                 <tr>
-                  <th>Mobile</th>
+                  <th>{{ $t('Mobile') }}</th>
                   <th>:</th>
                   <td>{{ data.mobile }}</td>
                 </tr>
                 <tr>
-                  <th>Organization</th>
+                  <th>{{ $t('Organization') }}</th>
                   <th>:</th>
                   <td>{{ data.organization }}</td>
                 </tr>
                 <tr>
-                  <th>Designation</th>
+                  <th>{{ $t('Designation') }}</th>
                   <th>:</th>
                   <td>{{ data.designation }}</td>
                 </tr>
                 <tr>
-                  <th>Address</th>
+                  <th>{{ $t('Address') }}</th>
                   <th>:</th>
                   <td>{{ data.address }}</td>
                 </tr>
                 <tr>
-                  <th>Status</th>
+                  <th>{{ $t('Status') }}</th>
                   <th>:</th>
                   <td>
                     <span :class="data.status === 'active' ? 'badge bg-success' : 'badge bg-danger'">

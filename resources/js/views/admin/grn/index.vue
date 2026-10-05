@@ -8,7 +8,7 @@
           <div class="card border-0 shadow-sm kpi_card h-100 kpi_blue">
             <div class="card-body p-3 d-flex align-items-center justify-content-between">
               <div>
-                <div class="text-muted text-uppercase fw-semibold small tracking-wider">Total GRN Received</div>
+                <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('Total GRN Received') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
                   {{ Number(stats.total_grns || 0).toLocaleString() }}
                 </div>
@@ -30,7 +30,7 @@
           <div class="card border-0 shadow-sm kpi_card h-100 kpi_green">
             <div class="card-body p-3 d-flex align-items-center justify-content-between">
               <div>
-                <div class="text-muted text-uppercase fw-semibold small tracking-wider">Total Received Qty</div>
+                <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('Total Received Qty') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
                   {{ Number(stats.total_received_qty || 0).toLocaleString() }} <span class="fs-6 fw-normal text-muted">Units</span>
                 </div>
@@ -50,7 +50,7 @@
           <div class="card border-0 shadow-sm kpi_card h-100 kpi_purple">
             <div class="card-body p-3 d-flex align-items-center justify-content-between">
               <div>
-                <div class="text-muted text-uppercase fw-semibold small tracking-wider">Stock Valuation</div>
+                <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('Stock Valuation') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
                   ৳ {{ Number(stats.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                 </div>
@@ -70,7 +70,7 @@
           <div class="card border-0 shadow-sm kpi_card h-100 kpi_amber">
             <div class="card-body p-3 d-flex align-items-center justify-content-between">
               <div>
-                <div class="text-muted text-uppercase fw-semibold small tracking-wider">Direct Settlement</div>
+                <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('Direct Settlement') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
                   ৳ {{ Number(stats.total_paid || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                 </div>

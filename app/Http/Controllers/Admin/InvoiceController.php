@@ -13,6 +13,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceDetails;
 use App\Models\Voucher;
 use App\Models\InvoiceMonth;
+use App\Models\System\SiteSetting;
 use Illuminate\Http\Request;
 use App\Models\PaymentDetail;
 use App\Models\VoucherDetail;
@@ -415,6 +416,7 @@ class InvoiceController extends BaseController
             'details' => $details,
             'payment_details' => $invoice->payment_details,
             'returns' => $returns,
+            'terms_conditions' => $invoice->terms_conditions ?? [],
         ]);
     }
 
@@ -528,6 +530,18 @@ class InvoiceController extends BaseController
             $previous_due = $this->previousDue($client_id, $invoice->id);
             $invoice->previous_due = $previous_due;
             $invoice->total_amount  = $invoice->amount + $previous_due;
+
+            $site = SiteSetting::first();
+            if ($site) {
+                $siteData = $site->toArray();
+                if (is_string($site->organization_memberships)) {
+                    $siteData['memberships'] = json_decode($site->organization_memberships, true);
+                    $siteData['organization_memberships'] = $siteData['memberships'];
+                } elseif (is_array($site->organization_memberships)) {
+                    $siteData['memberships'] = $site->organization_memberships;
+                }
+                $invoice->site_setting = $siteData;
+            }
         }
 
         return $invoice ? $invoice->toArray() : [];

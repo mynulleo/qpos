@@ -211,14 +211,14 @@
                 <table class="table table-hover align-middle mb-0 custom-items-table">
                   <thead class="table-light">
                     <tr>
-                      <th class="text-center" style="width: 45px;">#</th>
-                      <th>Product Details (পণ্য ও বিবরণ)</th>
-                      <th style="width: 110px;" v-if="hasAnyVariants">Variant</th>
-                      <th class="text-center" style="width: 80px;">Ordered</th>
-                      <th class="text-center" style="width: 110px;">Received Qty</th>
-                      <th class="text-end" style="width: 110px;">Unit Cost</th>
-                      <th class="text-center" style="width: 110px;" v-if="hasAnySerials">Serial Numbers</th>
-                      <th class="text-end" style="width: 140px;">Total Value</th>
+                      <th class="text-center" style="width: 45px;">{{ $t('#') }}</th>
+                      <th>{{ $t('Product Details') }}</th>
+                      <th style="width: 110px;" v-if="hasAnyVariants">{{ $t('Variant') }}</th>
+                      <th class="text-center" style="width: 80px;">{{ $t('Ordered') }}</th>
+                      <th class="text-center" style="width: 110px;">{{ $t('Received Qty') }}</th>
+                      <th class="text-end" style="width: 110px;">{{ $t('Unit Cost') }}</th>
+                      <th class="text-center" style="width: 110px;" v-if="hasAnySerials">{{ $t('Serial Numbers') }}</th>
+                      <th class="text-end" style="width: 140px;">{{ $t('Total Value') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -401,14 +401,14 @@
         <table class="table table-bordered align-middle print-items-table mb-0">
           <thead class="table-light">
             <tr>
-              <th class="text-center" style="width: 35px;">#</th>
-              <th>Product Details & Barcode</th>
-              <th style="width: 90px;" v-if="hasAnyVariants">Variant</th>
-              <th class="text-center" style="width: 75px;">Ordered</th>
-              <th class="text-center" style="width: 90px;">Received</th>
-              <th class="text-end" style="width: 95px;">Unit Rate</th>
-              <th class="text-center" style="width: 110px;" v-if="hasAnySerials">Serial Numbers</th>
-              <th class="text-end" style="width: 115px;">Total (৳)</th>
+              <th class="text-center" style="width: 35px;">{{ $t('#') }}</th>
+              <th>{{ $t('Product Details & Barcode') }}</th>
+              <th style="width: 90px;" v-if="hasAnyVariants">{{ $t('Variant') }}</th>
+              <th class="text-center" style="width: 75px;">{{ $t('Ordered') }}</th>
+              <th class="text-center" style="width: 90px;">{{ $t('Received') }}</th>
+              <th class="text-end" style="width: 95px;">{{ $t('Unit Rate') }}</th>
+              <th class="text-center" style="width: 110px;" v-if="hasAnySerials">{{ $t('Serial Numbers') }}</th>
+              <th class="text-end" style="width: 115px;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>

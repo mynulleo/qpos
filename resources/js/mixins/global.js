@@ -15,6 +15,9 @@ export default {
         filteredMenus() {
             return this.$store.state.global.filteredMenus;
         },
+        currentLocale() {
+            return this.$locale;
+        },
         permissions() {
             return this.$store.state.global.permissions;
         },
@@ -74,6 +77,22 @@ export default {
                 return Object.values(perms).includes(routeName);
             }
             return false;
+        },
+        toggleLanguage() {
+            if (typeof this.$toggleLanguage === "function") {
+                return this.$toggleLanguage();
+            }
+            const nextLocale = this.$locale === "bn" ? "en" : "bn";
+            if (typeof this.$setLocale === "function") {
+                this.$setLocale(nextLocale);
+            }
+            try {
+                if (typeof this.callApi === "function") {
+                    this.callApi("post", "set-locale", { locale: nextLocale }, false);
+                } else if (window.axios) {
+                    window.axios.post("set-locale", { locale: nextLocale }).catch(() => {});
+                }
+            } catch (e) {}
         },
     },
 };

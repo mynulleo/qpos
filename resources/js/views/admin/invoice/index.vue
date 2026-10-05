@@ -7,9 +7,8 @@
           <!-- Left: Page Title -->
           <div class="d-flex align-items-center gap-2">
             <h5 class="mb-0 fw-bold text-dark text-nowrap">
-              <i class="fas fa-file-invoice-dollar text-primary me-1"></i> Invoices (ইনভয়েস)
-            </h5>
-            <span class="badge bg-secondary font-monospace" v-if="pagination.total > 0">{{ pagination.total }}</span>
+              <i class="fas fa-file-invoice-dollar text-primary me-1"></i>{{ $t('Invoices') }}</h5>
+            <span class="badge bg-secondary font-monospace" v-if="pagination.total > 0">{{ $bnNum(pagination.total) }}</span>
           </div>
 
           <!-- Center: Default Quick Search Bar -->
@@ -19,14 +18,14 @@
               <input
                 type="text"
                 class="form-control"
-                placeholder="Search Invoice No, Customer Mobile, Name... (Press Enter)"
+                :placeholder="$t('Search Invoice No, Customer Mobile, Name... (Press Enter)')"
                 v-model="filter.keyword"
                 @keyup.enter="fetchInvoices(1)"
               >
               <button type="button" class="btn btn-sm px-3 theme_search_btn" @click="fetchInvoices(1)">
-                <i class="fas fa-search me-1"></i> Search
+                <i class="fas fa-search me-1"></i> {{ $t('Search') }}
               </button>
-              <button type="button" class="btn btn-outline-secondary btn-sm" v-if="filter.keyword" @click="filter.keyword = ''; fetchInvoices(1)">
+              <button type="button" class="btn btn-outline-secondary btn-sm" v-if="filter.keyword" @click="filter.keyword = ''; fetchInvoices(1)" :title="$t('Clear Search')">
                 <i class="fas fa-times"></i>
               </button>
             </div>
@@ -39,11 +38,11 @@
               type="button"
               class="advance_filter_btn position-relative"
               @click="showAdvanced = !showAdvanced"
-              title="Advance Filter"
+              :title="$t('Advance Filter')"
             >
               <i class="fas fa-sliders-h"></i>
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;" v-if="activeFilterCount > 0">
-                {{ activeFilterCount }}
+                {{ $bnNum(activeFilterCount) }}
               </span>
             </button>
 
@@ -52,9 +51,9 @@
               type="button"
               class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm"
               @click="openHelpModal"
-              title="Help Manual (সহায়িকা)"
+              :title="$t('Help Manual')"
             >
-              <i class="fas fa-question-circle"></i> Help
+              <i class="fas fa-question-circle"></i> {{ $t('Help') }}
             </button>
 
             <!-- Export & Print Dropdown / Buttons -->
@@ -64,7 +63,7 @@
               :data="exportData"
               :fields="exportFields"
               name="invoices.xls"
-              title="Export to Excel"
+              :title="$t('Export to Excel')"
             >
               <i class="fas fa-file-excel"></i>
             </download-excel>
@@ -73,21 +72,21 @@
               type="button"
               class="btn btn-sm btn-outline-dark"
               @click="printTable"
-              title="Print Table"
+              :title="$t('Print Table')"
             >
               <i class="fas fa-print"></i>
             </button>
 
-            <router-link to="/pos/return" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 font-monospace" title="Sales Return">
-              <i class="fas fa-undo"></i> Return
+            <router-link to="/pos/return" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 font-monospace" :title="$t('Sales Return')">
+              <i class="fas fa-undo"></i> {{ $t('Return') }}
             </router-link>
 
             <!-- New POS Sale Button (Theme Color #112C47) -->
-            <router-link to="/pos" class="btn-pos-sale shadow-sm" title="New POS Sale">
+            <router-link to="/pos" class="btn-pos-sale shadow-sm" :title="$t('New POS Sale')">
               <span>
                 <i class="fas fa-cash-register"></i>
               </span>
-              New Sale (POS)
+              {{ $t('New Sale (POS)') }}
             </router-link>
           </div>
         </div>
@@ -97,43 +96,43 @@
           <div class="row g-2 align-items-end">
             <!-- Customer Filter -->
             <div class="col-md-3 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Customer (গ্রাহক)</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('Customer') }}</label>
               <select class="form-select form-select-sm" v-model="filter.client_id" @change="fetchInvoices(1)">
-                <option value="">-- All Customers --</option>
+                <option value="">-- {{ $t('All Customers') }} --</option>
                 <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }} ({{ c.mobile }})</option>
               </select>
             </div>
 
             <!-- Payment Status Filter -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Payment Status</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('Payment Status') }}</label>
               <select class="form-select form-select-sm" v-model="filter.payment_status" @change="fetchInvoices(1)">
-                <option value="">-- All Statuses --</option>
-                <option value="paid">Paid (পরিশোধিত)</option>
-                <option value="partial">Partial (আংশিক)</option>
-                <option value="due">Due (বকেয়া)</option>
+                <option value="">-- {{ $t('All Statuses') }} --</option>
+                <option value="paid">{{ $t('Paid') }}</option>
+                <option value="partial">{{ $t('Partial') }}</option>
+                <option value="due">{{ $t('Due') }}</option>
               </select>
             </div>
 
             <!-- From Date -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">From Date</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('From Date') }}</label>
               <input type="date" class="form-control form-control-sm" v-model="filter.from_invoice_date" @change="fetchInvoices(1)">
             </div>
 
             <!-- To Date -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">To Date</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t('To Date') }}</label>
               <input type="date" class="form-control form-control-sm" v-model="filter.to_invoice_date" @change="fetchInvoices(1)">
             </div>
 
             <!-- Action Buttons in Filter -->
             <div class="col-md-3 col-sm-12 d-flex gap-2">
               <button type="button" class="btn btn-sm theme_search_btn flex-grow-1 fw-bold" @click="fetchInvoices(1)">
-                <i class="fas fa-filter me-1"></i> Apply Filter
+                <i class="fas fa-filter me-1"></i> {{ $t('Apply Filter') }}
               </button>
               <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="resetFilter">
-                <i class="fas fa-undo me-1"></i> Reset
+                <i class="fas fa-undo me-1"></i> {{ $t('Reset') }}
               </button>
             </div>
           </div>
@@ -147,15 +146,15 @@
         <table class="table table-hover table-sm align-middle mb-0" style="font-size: 13px;">
           <thead class="table-dark sticky-top" style="z-index: 2;">
             <tr>
-              <th width="4%" class="text-center">#</th>
-              <th width="14%">Invoice No</th>
-              <th width="12%">Date</th>
-              <th width="24%">Customer (গ্রাহক)</th>
-              <th width="11%" class="text-end">Original (Tk)</th>
-              <th width="9%" class="text-end">Discount</th>
-              <th width="12%" class="text-end">Net Total</th>
-              <th width="11%" class="text-end">Paid (পরিশোধ)</th>
-              <th width="10%" class="text-center">Status</th>
+              <th width="4%" class="text-center">{{ $t('#') }}</th>
+              <th width="14%">{{ $t('Invoice No') }}</th>
+              <th width="12%">{{ $t('Date') }}</th>
+              <th width="24%">{{ $t('Customer') }}</th>
+              <th width="11%" class="text-end">{{ $t('Original (Tk)') }}</th>
+              <th width="9%" class="text-end">{{ $t('Discount') }}</th>
+              <th width="12%" class="text-end">{{ $t('Net Total') }}</th>
+              <th width="11%" class="text-end">{{ $t('Paid') }}</th>
+              <th width="10%" class="text-center">{{ $t('Status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -164,9 +163,9 @@
               :key="inv.id"
               class="invoice-table-row"
             >
-              <td class="text-center text-muted">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
+              <td class="text-center text-muted">{{ $bnNum((pagination.current_page - 1) * pagination.per_page + index + 1) }}</td>
               <td>
-                <router-link :to="{ name: 'invoice.show', params: { id: inv.id } }" class="fw-bold font-monospace text-primary text-decoration-none" title="Click to View Details">
+                <router-link :to="{ name: 'invoice.show', params: { id: inv.id } }" class="fw-bold font-monospace text-primary text-decoration-none" :title="$t('Click to View Details')">
                   {{ inv.invoice_no }}
                 </router-link>
               </td>
@@ -179,16 +178,16 @@
                   <small class="text-muted font-monospace"><i class="fas fa-phone-alt me-1" style="font-size: 10px;"></i>{{ inv.client.mobile }}</small>
                 </div>
                 <div v-else class="text-muted small">
-                  <i class="fas fa-walking me-1"></i>Walk-in Customer
+                  <i class="fas fa-walking me-1"></i>{{ $t('Walk-in Customer') }}
                 </div>
               </td>
-              <td class="text-end font-monospace">{{ formatPrice(inv.original_amount) }}</td>
-              <td class="text-end font-monospace text-muted">{{ formatPrice(inv.discount) }}</td>
-              <td class="text-end font-monospace fw-bold text-dark fs-6">{{ formatPrice(inv.amount) }}</td>
-              <td class="text-end font-monospace fw-bold text-success">{{ formatPrice(inv.paid_amount) }}</td>
+              <td class="text-end font-monospace">{{ $bnNum(formatPrice(inv.original_amount)) }}</td>
+              <td class="text-end font-monospace text-muted">{{ $bnNum(formatPrice(inv.discount)) }}</td>
+              <td class="text-end font-monospace fw-bold text-dark fs-6">{{ $bnNum(formatPrice(inv.amount)) }}</td>
+              <td class="text-end font-monospace fw-bold text-success">{{ $bnNum(formatPrice(inv.paid_amount)) }}</td>
               <td class="text-center position-relative">
                 <span class="badge font-monospace" :class="getPaymentStatusBadge(inv)">
-                  {{ getPaymentStatusText(inv) }}
+                  {{ $t(getPaymentStatusText(inv)) }}
                 </span>
 
                 <!-- ⭐️ Floating Hover Action Buttons on this specific row -->
@@ -198,7 +197,7 @@
                     <router-link
                       :to="{ name: 'invoice.show', params: { id: inv.id } }"
                       class="btn btn-xs btn-outline-primary border-0"
-                      title="View Invoice Details"
+                      :title="$t('View Invoice Details')"
                     >
                       <i class="fas fa-eye"></i>
                     </router-link>
@@ -208,7 +207,7 @@
                       type="button"
                       class="btn btn-xs btn-outline-secondary border-0"
                       @click.stop="printReceipt(inv)"
-                      title="Print POS Thermal Receipt (80mm)"
+                      :title="$t('Print POS Thermal Receipt (80mm)')"
                     >
                       <i class="fas fa-receipt"></i>
                     </button>
@@ -217,7 +216,7 @@
                     <router-link
                       :to="{ name: 'invoice.bill', params: { id: inv.id } }"
                       class="btn btn-xs btn-outline-dark border-0"
-                      title="Print Standard A4 Invoice Bill"
+                      :title="$t('Print Standard A4 Invoice Bill')"
                     >
                       <i class="fas fa-print"></i>
                     </router-link>
@@ -226,7 +225,7 @@
                     <router-link
                       :to="{ name: 'invoice.mushak', params: { id: inv.id } }"
                       class="btn btn-xs btn-outline-success border-0 fw-bold"
-                      title="Print [মূসক-৬.৩] Invoice"
+                      :title="$t('Print [মূসক-৬.৩] Invoice')"
                     >
                       <span style="font-size: 10px;">[৬.৩]</span>
                     </router-link>
@@ -238,13 +237,13 @@
             <tr v-if="invoices.length === 0 && !loading">
               <td colspan="9" class="text-center py-5 text-muted">
                 <i class="fas fa-file-invoice fa-3x mb-2 text-secondary opacity-50"></i>
-                <p class="mb-0">No invoices found matching the selected filters.</p>
+                <p class="mb-0">{{ $t('No invoices found matching the selected filters.') }}</p>
               </td>
             </tr>
             <tr v-if="loading">
               <td colspan="9" class="text-center py-5">
                 <div class="spinner-border text-primary" role="status"></div>
-                <div class="mt-2 small text-muted">Loading invoices...</div>
+                <div class="mt-2 small text-muted">{{ $t('Loading invoices...') }}</div>
               </td>
             </tr>
           </tbody>
@@ -259,27 +258,27 @@
           <!-- Small KPI Summary Information at the bottom -->
           <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 12px;">
             <div class="d-flex align-items-center gap-1">
-              <span class="text-muted fw-bold">Invoices:</span>
-              <span class="badge bg-primary font-monospace">{{ kpi.total_invoices }}</span>
+              <span class="text-muted fw-bold">{{ $t('Invoices') }}:</span>
+              <span class="badge bg-primary font-monospace">{{ $bnNum(kpi.total_invoices) }}</span>
             </div>
             <div class="d-flex align-items-center gap-1">
-              <span class="text-muted fw-bold">Total Sales:</span>
-              <span class="badge bg-info text-dark font-monospace">Tk. {{ formatPrice(kpi.total_sales) }}</span>
+              <span class="text-muted fw-bold">{{ $t('Total Sales') }}:</span>
+              <span class="badge bg-info text-dark font-monospace">{{ $t('Tk.') }} {{ $bnNum(formatPrice(kpi.total_sales)) }}</span>
             </div>
             <div class="d-flex align-items-center gap-1">
-              <span class="text-muted fw-bold">Collected:</span>
-              <span class="badge bg-success font-monospace">Tk. {{ formatPrice(kpi.total_paid) }}</span>
+              <span class="text-muted fw-bold">{{ $t('Collected') }}:</span>
+              <span class="badge bg-success font-monospace">{{ $t('Tk.') }} {{ $bnNum(formatPrice(kpi.total_paid)) }}</span>
             </div>
             <div class="d-flex align-items-center gap-1">
-              <span class="text-muted fw-bold">Total Due:</span>
-              <span class="badge bg-danger font-monospace">Tk. {{ formatPrice(kpi.total_due) }}</span>
+              <span class="text-muted fw-bold">{{ $t('Total Due') }}:</span>
+              <span class="badge bg-danger font-monospace">{{ $t('Tk.') }} {{ $bnNum(formatPrice(kpi.total_due)) }}</span>
             </div>
           </div>
 
           <!-- Pagination & Per Page Selector -->
           <div class="d-flex align-items-center gap-2" v-if="pagination.total > 0">
             <span class="small text-muted font-monospace d-none d-md-inline" style="font-size: 11px;">
-              {{ pagination.from || 0 }}-{{ pagination.to || 0 }} of {{ pagination.total }}
+              {{ $bnNum(pagination.from || 0) }}-{{ $bnNum(pagination.to || 0) }} {{ $t('of') }} {{ $bnNum(pagination.total) }}
             </span>
 
             <div class="d-flex align-items-center gap-1">
@@ -362,10 +361,10 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 10px;">
           <thead>
             <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000;">
-              <th style="text-align: left; padding: 3px 0; width: 48%;">Item</th>
-              <th style="text-align: center; padding: 3px 0; width: 14%;">Qty</th>
-              <th style="text-align: right; padding: 3px 0; width: 18%;">Rate</th>
-              <th style="text-align: right; padding: 3px 0; width: 20%;">Total</th>
+              <th style="text-align: left; padding: 3px 0; width: 48%;">{{ $t('Item') }}</th>
+              <th style="text-align: center; padding: 3px 0; width: 14%;">{{ $t('Qty') }}</th>
+              <th style="text-align: right; padding: 3px 0; width: 18%;">{{ $t('Rate') }}</th>
+              <th style="text-align: right; padding: 3px 0; width: 20%;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -445,11 +444,11 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
           <thead>
             <tr style="background: #112C47; color: #fff;">
-              <th style="padding: 6px; text-align: center; width: 5%;">#</th>
-              <th style="padding: 6px; text-align: left;">Item Description</th>
-              <th style="padding: 6px; text-align: center; width: 12%;">Qty</th>
-              <th style="padding: 6px; text-align: right; width: 18%;">Unit Price</th>
-              <th style="padding: 6px; text-align: right; width: 20%;">Total (৳)</th>
+              <th style="padding: 6px; text-align: center; width: 5%;">{{ $t('#') }}</th>
+              <th style="padding: 6px; text-align: left;">{{ $t('Item Description') }}</th>
+              <th style="padding: 6px; text-align: center; width: 12%;">{{ $t('Qty') }}</th>
+              <th style="padding: 6px; text-align: right; width: 18%;">{{ $t('Unit Price') }}</th>
+              <th style="padding: 6px; text-align: right; width: 20%;">{{ $t('Total') }}</th>
             </tr>
           </thead>
           <tbody>

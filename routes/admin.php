@@ -42,6 +42,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('get-permissions', [App\Http\Controllers\Admin\System\RoleController::class, 'getPermissions']);
     Route::get('get-menus/{any?}', [App\Http\Controllers\Admin\System\MenuController::class, 'menus']);
     Route::get('initialize-systems', [App\Http\Controllers\Admin\System\LibController::class, 'systems']);
+    Route::post('set-locale', [App\Http\Controllers\Admin\System\LocaleController::class, 'setLocale'])->name('setLocale');
     Route::post('subscription/initiate-payment', [App\Http\Controllers\SubscriptionPaymentController::class, 'initiatePayment'])->name('subscription.initiatePayment');
 
     // Software / Database Update Routes (Accessible to authenticated users without role permission blocking)
@@ -132,6 +133,11 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::post('pos/convert-points', [App\Http\Controllers\Admin\PosController::class, 'convertPoints']);
     Route::get('report/coupon', [App\Http\Controllers\Admin\ReportController::class, 'coupon']);
 
+    Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'pendingpurchases'])->name('grn.pendingpurchases');
+    Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
+    Route::get('grn/statistics', [App\Http\Controllers\Admin\GrnController::class, 'statistics'])->name('grn.statistics');
+    Route::post('grn/check-serials', [App\Http\Controllers\Admin\GrnController::class, 'checkSerials'])->name('grn.checkserials');
+    
     // Label Print & Barcode Utility Routes
     Route::get('generate-item-barcode', [App\Http\Controllers\Admin\ItemController::class, 'getGeneratedBarcode']);
 
@@ -232,10 +238,6 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('warrantyClaim/{id}/add-log', [App\Http\Controllers\Admin\WarrantyClaimController::class, 'addTrackingLog'])->name('warrantyClaim.addLog');
         Route::resource('warrantyClaim', App\Http\Controllers\Admin\WarrantyClaimController::class);
         Route::resource('warehouse', App\Http\Controllers\Admin\WarehouseController::class);
-        Route::get('grn/pending-purchases', [App\Http\Controllers\Admin\GrnController::class, 'pendingpurchases'])->name('grn.pendingpurchases');
-        Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
-        Route::get('grn/statistics', [App\Http\Controllers\Admin\GrnController::class, 'statistics'])->name('grn.statistics');
-        Route::post('grn/check-serials', [App\Http\Controllers\Admin\GrnController::class, 'checkSerials'])->name('grn.checkserials');
         Route::resource('grn', App\Http\Controllers\Admin\GrnController::class);
         Route::resource('stockAdjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);
         Route::resource('stock-adjustment', App\Http\Controllers\Admin\StockAdjustmentController::class);

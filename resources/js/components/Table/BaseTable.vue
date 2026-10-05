@@ -7,13 +7,13 @@
                     <div class="top_pagination d-flex gap-4 align-items-center">
                         <div class="pagination">
                             <p>
-                                <span>{{ safeNumber(table.meta.from) }}</span> -
-                                <span>{{ safeNumber(table.meta.to) }}</span> of
-                                <span>{{ safeNumber(table.meta.total) }}</span>
+                                <span>{{ $locale === 'bn' ? $bnNum(safeNumber(table.meta.from)) : safeNumber(table.meta.from) }}</span> -
+                                <span>{{ $locale === 'bn' ? $bnNum(safeNumber(table.meta.to)) : safeNumber(table.meta.to) }}</span> {{ $t('of') }}
+                                <span>{{ $locale === 'bn' ? $bnNum(safeNumber(table.meta.total)) : safeNumber(table.meta.total) }}</span>
                             </p>
                         </div>
                         <div class="show_item d-flex align-items-center gap-3 ms-3">
-                            <h4 class="sh">Show</h4>
+                            <h4 class="sh">{{ $t('Show') }}</h4>
                             <select class="form-select form-select-lg shadow-none" v-model="search_data.pagination"
                                 @change="() => {
                                     $root.tableSpinner = true;
@@ -26,13 +26,13 @@
                                 <option value="100" :disabled="isDisableShowOption(80)">100</option>
                                 <option value="200" :disabled="isDisableShowOption(100)">200</option>
                                 <option value="500" :disabled="isDisableShowOption(200)">500</option>
-                                <option value="99999999">All</option>
+                                <option value="99999999">{{ $t('All') }}</option>
                             </select>
                         </div>
                         <div class="prev_next_btn">
                             <button class="btns bg-transparent border-0" @click="goPrevAndNext(-1)"
                                 :class="back_prev_page_class" data-bs-toggle="tooltip" data-bs-placement="top"
-                                data-bs-title="Previous" v-x-tooltip>
+                                :data-bs-title="$t('Previous')" v-x-tooltip>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round"
@@ -43,7 +43,7 @@
                             </button>
                             <button class="btns bg-transparent border-0" @click="goPrevAndNext(1)"
                                 :class="go_next_page_class" data-bs-toggle="tooltip" data-bs-placement="top"
-                                data-bs-title="Next" v-x-tooltip>
+                                :data-bs-title="$t('Next')" v-x-tooltip>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round"
@@ -59,7 +59,7 @@
                 <div class="col-md-6">
                     <div class="d-flex gap-3 align-items-center justify-content-end">
                         <div class="print_action text-end">
-                            <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print"
+                            <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Print')"
                                 v-x-tooltip @click="print('printArea', model)">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -71,10 +71,10 @@
                                     <path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" />
                                     <path
                                         d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" />
-                                </svg>
+                                 </svg>
                             </button>
 
-                            <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Excel"
+                            <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Excel')"
                                 v-x-tooltip>
                                 <download-excel :title="ucfirst(model)" v-if="table.datas" :data="table.datas"
                                     :fields="json_fields" :name="model + '.xls'">
@@ -92,7 +92,7 @@
                                 </download-excel>
                             </button>
 
-                            <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="PDF"
+                            <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('PDF')"
                                 @click="generatePdf" v-x-tooltip>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -118,28 +118,16 @@
                 <table id="pdf-table" class="table">
                     <thead>
                         <tr class="tr_stick">
-                            <!-- <th class="check">
-                                <div class="form-check">
-                                    <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        value=""
-                                        id="flexCheckDefault"
-                                    />
-                                </div>
-                            </th> -->
-
                             <th class="sl" style="min-width: 70px">
-                                <span class="heading"> SL </span>
+                                <span class="heading"> {{ $t('SL') }} </span>
                             </th>
 
                             <slot name="columns">
                                 <th v-for="(column, index) in table.columns" :key="'a' + index"
                                     @click="sort(column.field, column.enable_data_sorting)"
                                     :style="'text-align:' + column.align">
-                                    <!-- :style="'text-align:' + column.align +'; min-width: 70px'" -->
                                     <span class="heading">
-                                        {{ column.title.replaceAll("_", " ") }}
+                                        {{ $t(column.title.replaceAll("_", " ")) }}
                                         <img v-if="column.enable_data_sorting == null || column.enable_data_sorting === true"
                                             class="icon-up" :src="`${$root.asset_url}/images/icon-up.png`"
                                             alt="icon-up" />
@@ -172,10 +160,10 @@
                             " :title="item.is_delete ? 'Deleted Row' : ''"
                             :style="{ background: item.is_delete ? 'red' : '' }">
                             <td v-if="table.meta" @click="pushToViewRoute(item.id)">
-                                {{ table.meta.from + index }}
+                                {{ $bnNum(table.meta.from + index) }}
                             </td>
                             <td v-else @click="pushToViewRoute(item.id)">
-                                {{ index + 1 }}
+                                {{ $bnNum(index + 1) }}
                             </td>
 
                             <slot v-for="(column, index) in table.columns" :name="column.field" :item="item">
@@ -291,7 +279,7 @@
                                                 column.field,
                                                 column.subfield
                                             ) == 1
-                                        ">ACTIVE</span>
+                                        ">{{ $t('ACTIVE') }}</span>
                                         <span class="status pending" v-if="
                                             itemValue(
                                                 item,
@@ -303,7 +291,7 @@
                                                 column.field,
                                                 column.subfield
                                             ) == 0
-                                        ">DRAFT</span>
+                                        ">{{ $t('DRAFT') }}</span>
                                         <span class="status cancel" v-if="
                                             itemValue(
                                                 item,
@@ -315,56 +303,56 @@
                                                 column.field,
                                                 column.subfield
                                             ) == 0
-                                        ">DEACTIVE</span>
+                                        ">{{ $t('DEACTIVE') }}</span>
                                         <span class="status pending" v-if="
                                             itemValue(
                                                 item,
                                                 column.field,
                                                 column.subfield
                                             ) == 'ur'
-                                        ">UNREAD</span>
+                                        ">{{ $t('UNREAD') }}</span>
                                         <span class="status approved" v-if="
                                             itemValue(
                                                 item,
                                                 column.field,
                                                 column.subfield
                                             ) == 'r'
-                                        ">READ</span>
+                                        ">{{ $t('READ') }}</span>
                                         <span class="status cancel" v-if="
                                             itemValue(
                                                 item,
                                                 column.field,
                                                 column.subfield
                                             ) == 'restored'
-                                        ">RESTORED</span>
+                                        ">{{ $t('RESTORED') }}</span>
                                         <span class="status pending" v-if="
                                             itemValue(
                                                 item,
                                                 column.field,
                                                 column.subfield
                                             ) == 'pending'
-                                        ">PENDING</span>
+                                        ">{{ $t('PENDING') }}</span>
                                         <span class="status approved" v-if="
                                             itemValue(
                                                 item,
                                                 column.field,
                                                 column.subfield
                                             ) == 'approved'
-                                        ">APPROVED</span>
+                                        ">{{ $t('APPROVED') }}</span>
                                         <span class="status cancel" v-if="
                                             itemValue(
                                                 item,
                                                 column.field,
                                                 column.subfield
                                             ) == 'rejected'
-                                        ">REJECTED</span>
+                                        ">{{ $t('REJECTED') }}</span>
                                         <span class="status approved" v-if="
                                             itemValue(
                                                 item,
                                                 column.field,
                                                 column.subfield
                                             ) == 'success'
-                                        ">SUCCESS</span>
+                                        ">{{ $t('SUCCESS') }}</span>
                                     </span>
                                     <template v-else>
                                         <span v-if="column.to">
@@ -457,7 +445,7 @@
                             <td :colspan="Object.keys(table.columns).length + 2"
                                 style="text-align: center; background: #fff">
                                 <p class="p-2 text-center text-red no-data">
-                                    No data found.
+                                    {{ $t('No data found.') }}
                                 </p>
                             </td>
                         </tr>
@@ -472,14 +460,14 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title text-black" id="deleteModalLabel">
-                            Are you sure want to
-                            {{ is_delete ? "return back" : "delete" }} this?
+                            {{ $t('Are you sure want to') }}
+                            {{ is_delete ? $t('return back') : $t('delete') }} {{ $t('this?') }}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <h6 class="mb-3 text-black">
-                            Please confirm your login password
+                            {{ $t('Please confirm your login password') }}
                         </h6>
                         <div class="d-flex justify-content-center mb-3">
                             <input v-model="delete_password" type="password" placeholder="********"
@@ -490,11 +478,11 @@
                                 :disabled="$root.submit">
                                 <span v-if="$root.submit">
                                     <i class="fa fa-spinner fa-spin"></i>
-                                    processing...
+                                    {{ $t('processing...') }}
                                 </span>
                                 <template v-else>
-                                    <span v-if="is_delete">Return Back</span>
-                                    <span v-else> Confirm </span>
+                                    <span v-if="is_delete">{{ $t('Return Back') }}</span>
+                                    <span v-else> {{ $t('Confirm') }} </span>
                                 </template>
                             </button>
                         </div>

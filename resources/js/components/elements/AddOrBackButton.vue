@@ -8,7 +8,7 @@
                     name: route,
                     query: { page: icon != 'plus' ? $route.query.page : '' },
                 }"
-                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add" v-x-tooltip
+                data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Add')" v-x-tooltip
             >
                 <span>
                     <svg
@@ -29,7 +29,7 @@
                         <path d="M5 12l14 0" />
                     </svg>
                 </span>
-                Add
+                {{ title ? $t(title) : $t('Add') }}
             </router-link>
             <a
                 href="javascript:void(0)"
@@ -38,7 +38,7 @@
                 @click="pushToBack"
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
-                data-bs-title="Back"
+                :data-bs-title="$t('Back')"
                 v-x-tooltip
             >
                 <span>
@@ -60,14 +60,14 @@
                         <path d="M5 12l6 -6" />
                     </svg>
                 </span>
-                Back
+                {{ title ? $t(title) : $t('Back') }}
             </a>
             <!-- Edit button -->
             <router-link
                 v-if="editRoute"
                 class="back_or_add_btn"
                 :to="editRoute"
-                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Edit" v-x-tooltip
+                data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Edit')" v-x-tooltip
             >
                 <span>
                     <svg
@@ -89,7 +89,7 @@
                         <path d="M13.5 6.5l4 4" />
                     </svg>
                 </span>
-                Edit
+                {{ title ? $t(title) : $t('Edit') }}
             </router-link>
         </template>
     </div>

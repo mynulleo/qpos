@@ -7,12 +7,12 @@
           <table class="table table-striped">
             <tbody>
               <tr>
-                <th width="35%">Audit Number</th>
+                <th width="35%">{{ $t('Audit Number') }}</th>
                 <th width="5%">:</th>
                 <td>{{ data.audit_number }}</td>
               </tr>
               <tr>
-                <th>Audit Date</th>
+                <th>{{ $t('Audit Date') }}</th>
                 <th>:</th>
                 <td>{{ data.audit_date }}</td>
               </tr>
@@ -22,22 +22,22 @@
                 <td>{{ data.audited_by || 'N/A' }}</td>
               </tr>
               <tr>
-                <th>Lead Auditor</th>
+                <th>{{ $t('Lead Auditor') }}</th>
                 <th>:</th>
                 <td>{{ data.auditor?.title || data.auditor?.full_name || 'N/A' }}</td>
               </tr>
               <tr v-if="data.branch">
-                <th>Branch</th>
+                <th>{{ $t('Branch') }}</th>
                 <th>:</th>
                 <td>{{ data.branch?.title }}</td>
               </tr>
               <tr>
-                <th>Created By</th>
+                <th>{{ $t('Created By') }}</th>
                 <th>:</th>
                 <td>{{ data.creator?.name || 'System Admin' }}</td>
               </tr>
               <tr v-if="data.note">
-                <th>Note / Remarks</th>
+                <th>{{ $t('Note / Remarks') }}</th>
                 <th>:</th>
                 <td>{{ data.note }}</td>
               </tr>
@@ -50,17 +50,17 @@
           <table class="table table-striped">
             <tbody>
               <tr>
-                <th width="35%">Total Quantity</th>
+                <th width="35%">{{ $t('Total Quantity') }}</th>
                 <th width="5%">:</th>
                 <td>{{ data.total_qty }}</td>
               </tr>
               <tr>
-                <th>Total Loss Amount</th>
+                <th>{{ $t('Total Loss Amount') }}</th>
                 <th>:</th>
                 <td>{{ data.total_loss_amount }}</td>
               </tr>
               <tr>
-                <th>Status</th>
+                <th>{{ $t('Status') }}</th>
                 <th>:</th>
                 <td>
                   <span class="badge bg-success" v-if="data.approved_by || data.status === 'approved'">Approved</span>
@@ -68,12 +68,12 @@
                 </td>
               </tr>
               <tr>
-                <th>Approved By</th>
+                <th>{{ $t('Approved By') }}</th>
                 <th>:</th>
                 <td>{{ data.approved_admin?.name || data.approved_admin?.full_name || 'N/A' }}</td>
               </tr>
               <tr>
-                <th>Approved Date</th>
+                <th>{{ $t('Approved Date') }}</th>
                 <th>:</th>
                 <td>{{ data.approved_date || 'N/A' }}</td>
               </tr>
@@ -87,15 +87,15 @@
           <table class="table table-striped table-bordered align-middle">
             <thead>
               <tr>
-                <th width="5%" class="text-center">#</th>
-                <th width="15%">Category</th>
-                <th width="25%">Item</th>
-                <th width="10%" class="text-center">Variant</th>
-                <th width="12%">Reason</th>
-                <th width="10%" class="text-center">Expired Date</th>
-                <th width="8%" class="text-center">Quantity</th>
-                <th width="8%" class="text-end">Unit Cost</th>
-                <th width="8%" class="text-end">Total Amount</th>
+                <th width="5%" class="text-center">{{ $t('#') }}</th>
+                <th width="15%">{{ $t('Category') }}</th>
+                <th width="25%">{{ $t('Item') }}</th>
+                <th width="10%" class="text-center">{{ $t('Variant') }}</th>
+                <th width="12%">{{ $t('Reason') }}</th>
+                <th width="10%" class="text-center">{{ $t('Expired Date') }}</th>
+                <th width="8%" class="text-center">{{ $t('Quantity') }}</th>
+                <th width="8%" class="text-end">{{ $t('Unit Cost') }}</th>
+                <th width="8%" class="text-end">{{ $t('Total Amount') }}</th>
               </tr>
             </thead>
             <tbody>

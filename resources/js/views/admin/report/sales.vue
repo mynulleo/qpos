@@ -22,7 +22,7 @@
         title="To Date" placeholder="To Date" col="3" :req="false"></date-picker>
 
       <!-- Customer / Client -->
-      <v-select-container title="Customer (গ্রাহক)" field="search_data.client_id" col="3">
+      <v-select-container title="Customer" field="search_data.client_id" col="3">
         <v-select v-model="search_data.client_id" label="name" :reduce="obj => obj.id" :options="clients"
           placeholder="-- All Customers --" :closeOnSelect="true">
           <template #option="option">
@@ -35,13 +35,13 @@
       </v-select-container>
 
       <!-- Category Filter -->
-      <v-select-container title="Category (ক্যাটাগরি)" field="search_data.category_id" col="3">
+      <v-select-container title="Category" field="search_data.category_id" col="3">
         <v-select v-model="search_data.category_id" label="title" :reduce="obj => obj.id" :options="categories"
           placeholder="-- All Categories --" :closeOnSelect="true" />
       </v-select-container>
 
       <!-- Item Filter -->
-      <v-select-container title="Item (পণ্য)" field="search_data.item_id" col="3">
+      <v-select-container title="Item" field="search_data.item_id" col="3">
         <v-select v-model="search_data.item_id" label="title" :reduce="obj => obj.id" :options="items"
           placeholder="-- All Items --" :closeOnSelect="true">
           <template #option="option">
@@ -54,17 +54,17 @@
       </v-select-container>
 
       <!-- Invoice No Search -->
-      <Input v-model="search_data.invoice_no" field="search_data.invoice_no" title="Invoice No (ইনভয়েস নং)"
+      <Input v-model="search_data.invoice_no" field="search_data.invoice_no" title="Invoice No"
         placeholder="e.g. POS-2026..." col="3" :req="false" />
 
       <!-- Payment Status Filter -->
       <div class="col-md-3">
         <div class="form-group">
-          <label class="form-label">Payment Status (পরিশোধের অবস্থা)</label>
+          <label class="form-label">{{ $t('Payment Status') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.payment_status">
             <option value="all">-- All Statuses --</option>
-            <option value="paid">Paid (পরিশোধিত)</option>
-            <option value="due">Due / Partial (বকেয়া / আংশিক)</option>
+            <option value="paid">{{ $t('Paid') }}</option>
+            <option value="due">{{ $t('Due / Partial') }}</option>
           </select>
         </div>
       </div>
@@ -72,11 +72,11 @@
       <!-- Sale Type Filter -->
       <div class="col-md-3">
         <div class="form-group">
-          <label class="form-label">Sale Type (বিক্রয়ের ধরন)</label>
+          <label class="form-label">{{ $t('Sale Type') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.sale_type">
             <option value="all">-- All Sales --</option>
-            <option value="pos">POS Sales (পিওএস বিক্রয়)</option>
-            <option value="general">General Invoices (সাধারণ ইনভয়েস)</option>
+            <option value="pos">{{ $t('POS Sales') }}</option>
+            <option value="general">{{ $t('General Invoices') }}</option>
           </select>
         </div>
       </div>
@@ -149,7 +149,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-info text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Qty Sold (পরিমাণ)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Qty Sold') }}</div>
                   <div class="fs-4 fw-bold mt-1">{{ Number(summary.total_qty || 0).toLocaleString() }} <span class="fs-6">Pcs</span></div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-box-open"></i></div>
@@ -162,7 +162,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-success text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Net Sales (মোট বিক্রয়)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Net Sales') }}</div>
                   <div class="fs-4 fw-bold mt-1">Tk. {{ formatMoney(summary.net_sales) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-dollar-sign"></i></div>
@@ -175,7 +175,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-teal text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Collected (আদায়)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Collected') }}</div>
                   <div class="fs-4 fw-bold mt-1 text-white">Tk. {{ formatMoney(summary.total_paid) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-hand-holding-usd"></i></div>
@@ -188,7 +188,7 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-danger text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Outstanding Due (বকেয়া)</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Outstanding Due') }}</div>
                   <div class="fs-4 fw-bold mt-1 text-white">Tk. {{ formatMoney(summary.total_due) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-exclamation-circle"></i></div>
@@ -225,18 +225,18 @@
             <table class="table table-bordered table-hover align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="4%">#</th>
-                  <th width="10%">Date</th>
-                  <th width="12%">Invoice No</th>
-                  <th width="16%">Customer Name</th>
-                  <th width="8%">Items/Qty</th>
-                  <th width="10%">Subtotal</th>
-                  <th width="8%">Discount</th>
-                  <th width="10%">Net Total</th>
-                  <th width="10%">Paid</th>
-                  <th width="10%">Due</th>
-                  <th width="6%">Status</th>
-                  <th width="6%" class="d-print-none">Action</th>
+                  <th width="4%">{{ $t('#') }}</th>
+                  <th width="10%">{{ $t('Date') }}</th>
+                  <th width="12%">{{ $t('Invoice No') }}</th>
+                  <th width="16%">{{ $t('Customer Name') }}</th>
+                  <th width="8%">{{ $t('Items/Qty') }}</th>
+                  <th width="10%">{{ $t('Subtotal') }}</th>
+                  <th width="8%">{{ $t('Discount') }}</th>
+                  <th width="10%">{{ $t('Net Total') }}</th>
+                  <th width="10%">{{ $t('Paid') }}</th>
+                  <th width="10%">{{ $t('Due') }}</th>
+                  <th width="6%">{{ $t('Status') }}</th>
+                  <th width="6%" class="d-print-none">{{ $t('Action') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -289,15 +289,15 @@
                           <table class="table table-sm table-bordered mb-0">
                             <thead class="table-secondary">
                               <tr class="text-center small">
-                                <th>Item Title (পণ্যের নাম)</th>
-                                <th>Barcode</th>
-                                <th>Category</th>
-                                <th>Color</th>
-                                <th>Size</th>
-                                <th>Serial No</th>
-                                <th>Qty</th>
-                                <th>Rate (মূল্য)</th>
-                                <th>Total (মোট)</th>
+                                <th>{{ $t('Item Title') }}</th>
+                                <th>{{ $t('Barcode') }}</th>
+                                <th>{{ $t('Category') }}</th>
+                                <th>{{ $t('Color') }}</th>
+                                <th>{{ $t('Size') }}</th>
+                                <th>{{ $t('Serial No') }}</th>
+                                <th>{{ $t('Qty') }}</th>
+                                <th>{{ $t('Rate') }}</th>
+                                <th>{{ $t('Total') }}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -350,15 +350,15 @@
             <table class="table table-bordered table-striped align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="4%">#</th>
-                  <th width="24%">Item Title (পণ্যের নাম)</th>
-                  <th width="12%">Barcode</th>
-                  <th width="14%">Category</th>
-                  <th width="10%">Color</th>
-                  <th width="8%">Size</th>
-                  <th width="10%">Sold Qty</th>
-                  <th width="10%">Avg Selling Rate</th>
-                  <th width="12%">Total Sales Amount</th>
+                  <th width="4%">{{ $t('#') }}</th>
+                  <th width="24%">{{ $t('Item Title') }}</th>
+                  <th width="12%">{{ $t('Barcode') }}</th>
+                  <th width="14%">{{ $t('Category') }}</th>
+                  <th width="10%">{{ $t('Color') }}</th>
+                  <th width="8%">{{ $t('Size') }}</th>
+                  <th width="10%">{{ $t('Sold Qty') }}</th>
+                  <th width="10%">{{ $t('Avg Selling Rate') }}</th>
+                  <th width="12%">{{ $t('Total Sales Amount') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -401,14 +401,14 @@
             <table class="table table-bordered table-striped align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="5%">#</th>
-                  <th width="12%">Customer ID</th>
-                  <th width="25%">Customer Name</th>
-                  <th width="15%">Mobile</th>
-                  <th width="10%">Invoices Count</th>
-                  <th width="13%">Total Purchased</th>
-                  <th width="10%">Total Paid</th>
-                  <th width="10%">Total Due</th>
+                  <th width="5%">{{ $t('#') }}</th>
+                  <th width="12%">{{ $t('Customer ID') }}</th>
+                  <th width="25%">{{ $t('Customer Name') }}</th>
+                  <th width="15%">{{ $t('Mobile') }}</th>
+                  <th width="10%">{{ $t('Invoices Count') }}</th>
+                  <th width="13%">{{ $t('Total Purchased') }}</th>
+                  <th width="10%">{{ $t('Total Paid') }}</th>
+                  <th width="10%">{{ $t('Total Due') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -453,15 +453,15 @@
             <table class="table table-bordered table-striped align-middle mb-0">
               <thead class="table-dark text-center">
                 <tr>
-                  <th width="5%">#</th>
-                  <th width="15%">Date</th>
-                  <th width="10%">Invoices Count</th>
-                  <th width="10%">Total Qty Sold</th>
-                  <th width="15%">Gross Amount</th>
-                  <th width="10%">Discount</th>
-                  <th width="15%">Net Sales</th>
-                  <th width="12%">Paid</th>
-                  <th width="12%">Due</th>
+                  <th width="5%">{{ $t('#') }}</th>
+                  <th width="15%">{{ $t('Date') }}</th>
+                  <th width="10%">{{ $t('Invoices Count') }}</th>
+                  <th width="10%">{{ $t('Total Qty Sold') }}</th>
+                  <th width="15%">{{ $t('Gross Amount') }}</th>
+                  <th width="10%">{{ $t('Discount') }}</th>
+                  <th width="15%">{{ $t('Net Sales') }}</th>
+                  <th width="12%">{{ $t('Paid') }}</th>
+                  <th width="12%">{{ $t('Due') }}</th>
                 </tr>
               </thead>
               <tbody>

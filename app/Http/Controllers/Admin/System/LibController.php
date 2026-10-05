@@ -181,6 +181,7 @@ class LibController extends Controller
             'menus' => App::make('sideMenus'),
             'categoriesModuleNames' => $this->categoriesModuleNames(),
             'user' => auth('admin')->user(),
+            'locale' => session('locale', config('app.locale', 'en')),
             'subscription' => [
                 'organization_name' => $orgName ?? 'My Organization',
                 'expired_date' => $expiredDate,

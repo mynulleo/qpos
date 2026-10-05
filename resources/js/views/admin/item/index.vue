@@ -3,10 +3,10 @@
     <template v-slot:button>
       <div class="d-flex gap-2 align-items-center">
         <router-link :to="{ name: 'bulkdataimport.item' }" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm fw-semibold">
-          <i class="fas fa-file-import"></i> Bulk Import
+          <i class="fas fa-file-import"></i> {{ $t('Bulk Import') }}
         </router-link>
         <router-link :to="{ name: 'pos.labelprint' }" class="btn btn-sm btn-info text-white d-inline-flex align-items-center gap-1 shadow-sm">
-          <i class="fas fa-barcode"></i> Label Print
+          <i class="fas fa-barcode"></i> {{ $t('Label Print') }}
         </router-link>
         <AddOrBackButton :route="model + '.create'" :portion="model" :icon="'plus'" />
       </div>

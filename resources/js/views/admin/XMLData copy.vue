@@ -124,7 +124,7 @@
                       <i class="bi bi-caret-down-fill sort-down"></i> --></span
                     >
                   </th>
-                  <th width="10%" class="action text-center">Action</th>
+                  <th width="10%" class="action text-center">{{ $t('Action') }}</th>
                 </tr>
               </thead>
               <tbody style="border-top: 0px">

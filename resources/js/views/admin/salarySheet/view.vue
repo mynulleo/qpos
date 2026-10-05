@@ -3,22 +3,22 @@
     <div class="row custom_row g-3">
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Salary Information</span>
+          <span class="legend">{{ $t('Salary Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Generated Date</th>
+                  <th>{{ $t('Generated Date') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.generated_date }}</td>
                 </tr>
                 <tr>
-                  <th>Title</th>
+                  <th>{{ $t('Title') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.title }}</td>
                 </tr>
                 <tr>
-                  <th>Month & Year</th>
+                  <th>{{ $t('Month & Year') }}</th>
                   <th width="5%">:</th>
                   <td>{{ data.month }} - {{ data.year }}</td>
                 </tr>
@@ -29,22 +29,22 @@
       </div>
       <div class="col-md-6">
         <fieldset>
-          <span class="legend">Approval Information</span>
+          <span class="legend">{{ $t('Approval Information') }}</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>Total Salary</th>
+                  <th>{{ $t('Total Salary') }}</th>
                   <th width="5%">:</th>
                   <td>{{ totalSalary }}</td>
                 </tr>
                 <tr>
-                  <th>Approved By</th>
+                  <th>{{ $t('Approved By') }}</th>
                   <th>:</th>
                   <td>{{ data.approved_admin?.full_name }}</td>
                 </tr>
                 <tr>
-                  <th>Approved Date</th>
+                  <th>{{ $t('Approved Date') }}</th>
                   <th>:</th>
                   <td>{{ data.approved_date }}</td>
                 </tr>
@@ -55,7 +55,7 @@
       </div>
       <div class="col-md-12">
         <fieldset>
-          <span class="legend">Salary Sheet</span>
+          <span class="legend">{{ $t('Salary Sheet') }}</span>
           <div class="table-responsive" id="salarySheet">
             <div class="text-center mb-2 report-title">
               <h3 class="fw-bold">{{ $root.site.title }}.</h3>
@@ -74,14 +74,14 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th>Sl</th>
-                  <th>Emp Info</th>
-                  <th>Designation</th>
-                  <th class="text-center">Salary</th>
-                  <th class="text-center">Bonus</th>
-                  <th class="text-center">Installment</th>
-                  <th class="text-center">Deduct</th>
-                  <th class="text-center">Total</th>
+                  <th>{{ $t('Sl') }}</th>
+                  <th>{{ $t('Emp Info') }}</th>
+                  <th>{{ $t('Designation') }}</th>
+                  <th class="text-center">{{ $t('Salary') }}</th>
+                  <th class="text-center">{{ $t('Bonus') }}</th>
+                  <th class="text-center">{{ $t('Installment') }}</th>
+                  <th class="text-center">{{ $t('Deduct') }}</th>
+                  <th class="text-center">{{ $t('Total') }}</th>
                 </tr>
               </thead>
               <tbody>

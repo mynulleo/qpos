@@ -14,11 +14,11 @@
                         <div class="d-flex align-items-center gap-2">
                             <h5 class="mb-0 fw-bold text-dark text-nowrap form_card_title">
                                 <slot name="title">
-                                    {{ $parent.page_title ?? (model ? ucfirst(model) : "Page Title") }}
+                                    {{ $t($parent.page_title ?? (model ? ucfirst(model) : "Page Title")) }}
                                 </slot>
                             </h5>
                             <span class="badge bg-secondary font-monospace" v-if="table && table.meta && table.meta.total">
-                                {{ table.meta.total }}
+                                {{ $locale === 'bn' ? $bnNum(table.meta.total) : table.meta.total }}
                             </span>
                         </div>
 
@@ -31,7 +31,7 @@
                                     style="max-width: 140px;"
                                     v-model="search_data.field_name">
                                     <option v-for="(item, key) in fields_name" :value="key === 'default' ? '' : key" :key="key">
-                                        {{ item }}
+                                        {{ $t(item) }}
                                     </option>
                                 </select>
 
@@ -61,7 +61,7 @@
                                     data-1p-ignore="true"
                                     data-form-type="other"
                                     class="form-control"
-                                    placeholder="Search... (Press Enter)"
+                                    :placeholder="$t('Search... (Press Enter)')"
                                     v-model="search_data.value"
                                     @keyup.enter="handleEnterSearch"
                                 />
@@ -71,7 +71,7 @@
                                     type="button"
                                     class="btn btn-sm px-3 theme_search_btn"
                                     @click="handleEnterSearch"
-                                    title="Search"
+                                    :title="$t('Search')"
                                 >
                                     <i class="fas fa-search"></i>
                                 </button>
@@ -82,7 +82,7 @@
                                     type="button"
                                     class="btn btn-outline-secondary btn-sm"
                                     @click="resetSearchDataAndUpdate"
-                                    title="Clear Search"
+                                    :title="$t('Clear Search')"
                                 >
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -99,8 +99,8 @@
                                 @click="show_advance_filter = !show_advance_filter"
                                 data-bs-toggle="tooltip"
                                 data-bs-placement="top"
-                                data-bs-title="Advance Filter"
-                                title="Advance Filter"
+                                :data-bs-title="$t('Advance Filter')"
+                                :title="$t('Advance Filter')"
                                 v-x-tooltip
                             >
                                 <i class="fas fa-sliders-h"></i>
@@ -110,7 +110,7 @@
                             </button>
 
                             <!-- Help Button -->
-                            <button class="help_btn btn btn-sm btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Help" v-x-tooltip>
+                            <button class="help_btn btn btn-sm btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Help')" v-x-tooltip>
                                 <i class="fas fa-question-circle"></i>
                             </button>
 
@@ -130,10 +130,10 @@
 
                                 <div class="col-md-3 col-sm-12 d-flex gap-2 ms-auto">
                                     <button type="submit" class="btn btn-sm theme_search_btn flex-grow-1 fw-bold">
-                                        <i class="fas fa-filter me-1"></i> Apply Filter
+                                        <i class="fas fa-filter me-1"></i> {{ $t('Apply Filter') }}
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="resetSearchDataAndUpdate">
-                                        <i class="fas fa-undo me-1"></i> Reset
+                                        <i class="fas fa-undo me-1"></i> {{ $t('Reset') }}
                                     </button>
                                 </div>
                             </div>
@@ -150,15 +150,15 @@
             <div class="help_info_sidebar position-fixed">
                 <div class="help_info_sidebar_content p-4">
                     <h3 class="help_title d-flex align-items-center gap-3">
-                        <img width="30" :src="helpInfoIcon()" alt=""> Help
+                        <img width="30" :src="helpInfoIcon()" alt=""> {{ $t('Help') }}
                     </h3>
                     <div class="information_box" v-if="$root.helpInfo.description">
-                        <h5 class="top-title"><img width="30" :src="bookImage()" alt="">{{ $parent.page_title }}</h5>
+                        <h5 class="top-title"><img width="30" :src="bookImage()" alt="">{{ $t($parent.page_title) }}</h5>
                         <div v-html="$root.helpInfo.description"></div>
                     </div>
                     <p v-else class="text-danger fw-medium no_help_info fs-5">
                         <img width="70" :src="noInfoFound()" alt="">
-                        <span class="d-block mt-3">No Help Info Found !!</span>
+                        <span class="d-block mt-3">{{ $t('No Help Info Found !!') }}</span>
                     </p>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 <template>
   <ul>
     <li class="menu-title">
-      <a href="#" class="mini-dashboard"> {{ root_menu }} </a>
+      <a href="#" class="mini-dashboard"> {{ $t(root_menu) }} </a>
     </li>
 
     <li v-for="(child_menu, index) in child_menus" :key="index">
@@ -9,7 +9,7 @@
         <a href="javascript:void(0)">
           <em v-if="child_menu.icon" v-html="child_menu.icon"></em>
           <i v-else class="fas fa-chevron-right"></i>
-          {{ child_menu.menu_name }}
+          {{ $t(child_menu.menu_name) }}
         </a>
 
         <!-- ===================Children Menu=================== -->
@@ -24,7 +24,7 @@
         }">
           <em v-if="child_menu.icon" v-html="child_menu.icon"></em>
           <i v-else class="fas fa-chevron-right"></i> &nbsp;
-          <span> {{ child_menu.menu_name }}</span>
+          <span> {{ $t(child_menu.menu_name) }}</span>
         </router-link>
       </slot>
     </li>

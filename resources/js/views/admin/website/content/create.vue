@@ -119,9 +119,9 @@
                             <table class="table table-bordered mb-0 mt-0">
                                 <thead>
                                     <tr>
-                                        <th>Title</th>
-                                        <th>File</th>
-                                        <th>Action</th>
+                                        <th>{{ $t('Title') }}</th>
+                                        <th>{{ $t('File') }}</th>
+                                        <th>{{ $t('Action') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

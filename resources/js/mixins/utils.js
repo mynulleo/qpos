@@ -222,8 +222,42 @@ export default {
                 $(".base-table-thead").addClass("bg-purple text-white");
             }, 500);
             const prtHtml = document.getElementById(elementId).innerHTML;
-            let customStyle =
-                "<style>table{border-collapse: collapse;}</style>";
+            let customStyle = `
+                <style>
+                    @page {
+                        size: auto;
+                        margin: 4mm 5mm;
+                    }
+                    * {
+                        box-sizing: border-box !important;
+                    }
+                    html, body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: #fff !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        color-adjust: exact !important;
+                    }
+                    table {
+                        border-collapse: collapse !important;
+                    }
+                    .invoice-box {
+                        box-shadow: none !important;
+                        border: none !important;
+                        padding: 0 !important;
+                        margin: 0 auto !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                    .container, .invoice-wrapper {
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                </style>
+            `;
             let stylesHtml = "";
             for (const node of [
                 ...document.querySelectorAll('link[rel="stylesheet"], style'),
@@ -233,7 +267,7 @@ export default {
             const WinPrint = window.open(
                 "",
                 "",
-                "left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0"
+                "left=0,top=0,width=850,height=900,toolbar=0,scrollbars=1,status=0"
             );
             WinPrint.document.write(`<!DOCTYPE html>
                 <html>
@@ -248,7 +282,7 @@ export default {
                 </html>`);
             WinPrint.document.close();
             WinPrint.focus();
-            setTimeout(() => WinPrint.print(), 300);
+            setTimeout(() => WinPrint.print(), 350);
             // WinPrint.close();
         },
 
