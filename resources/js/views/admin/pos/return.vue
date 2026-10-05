@@ -192,13 +192,13 @@
                         <i class="fas fa-tasks me-1 text-primary"></i> {{ $t('Return Reason') }}:
                       </label>
                       <span v-if="return_reason === 'Client request'" class="badge bg-success px-2 py-1 shadow-sm">
-                        <i class="fas fa-check-circle me-1"></i> {{ $t('পণ্য সরাসরি স্টকে যুক্ত হবে (Stock In)') }}
+                        <i class="fas fa-check-circle me-1"></i> {{ $t('Item will be restocked directly (Stock In)') }}
                       </span>
                       <span v-else-if="return_reason === 'Wastage'" class="badge bg-danger px-2 py-1 shadow-sm">
-                        <i class="fas fa-exclamation-triangle me-1"></i> {{ $t('ওয়েস্টেজ এন্ট্রি হবে, স্টকে ঢুকবে না') }}
+                        <i class="fas fa-exclamation-triangle me-1"></i> {{ $t('Recorded as wastage, will not be added to stock') }}
                       </span>
                       <span v-else-if="return_reason === 'Date Expaired'" class="badge bg-warning text-dark px-2 py-1 shadow-sm">
-                        <i class="fas fa-calendar-times me-1"></i> {{ $t('মেয়াদোত্তীর্ণ হিসেবে ওয়েস্টেজ এন্ট্রি হবে, স্টকে ঢুকবে না') }}
+                        <i class="fas fa-calendar-times me-1"></i> {{ $t('Recorded as expired wastage, will not be added to stock') }}
                       </span>
                     </div>
                     
@@ -208,7 +208,7 @@
                           <input type="radio" class="form-check-input me-2 mt-0" value="Client request" v-model="return_reason">
                           <div>
                             <div class="fw-bold text-dark small"><i class="fas fa-user-check me-1 text-primary"></i> 1. {{ $t('Client request') }}</div>
-                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('ভালো পণ্য - স্টকে পুনরায় জমা হবে') }}</small>
+                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('Good item - Restocked into inventory') }}</small>
                           </div>
                         </label>
                       </div>
@@ -217,7 +217,7 @@
                           <input type="radio" class="form-check-input me-2 mt-0" value="Wastage" v-model="return_reason">
                           <div>
                             <div class="fw-bold text-danger small"><i class="fas fa-trash-alt me-1 text-danger"></i> 2. {{ $t('Wastage') }}</div>
-                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('নষ্ট/ড্যামেজ - ওয়েস্টেজ এন্ট্রি হবে, স্টকে নয়') }}</small>
+                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('Damaged/Broken - Recorded as wastage, not restocked') }}</small>
                           </div>
                         </label>
                       </div>
@@ -226,7 +226,7 @@
                           <input type="radio" class="form-check-input me-2 mt-0" value="Date Expaired" v-model="return_reason">
                           <div>
                             <div class="fw-bold text-dark small"><i class="fas fa-calendar-times me-1 text-warning"></i> 3. {{ $t('Date Expaired') }}</div>
-                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('মেয়াদ শেষ - ওয়েস্টেজ এন্ট্রি হবে, স্টকে নয়') }}</small>
+                            <small class="text-muted d-block" style="font-size: 11px;">{{ $t('Expired - Recorded as wastage, not restocked') }}</small>
                           </div>
                         </label>
                       </div>
@@ -266,7 +266,7 @@
                     <textarea
                       class="form-control form-control-sm"
                       rows="2"
-                      :placeholder="$t('ফেরত সংক্রান্ত কোনো অতিরিক্ত তথ্য বা মন্তব্য থাকলে লিখুন...')"
+                      :placeholder="$t('Enter any additional return notes or remarks...')"
                       v-model="return_note"
                     ></textarea>
                   </div>

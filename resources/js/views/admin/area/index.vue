@@ -1,9 +1,9 @@
 <template>
   <index-page>
     <template v-slot:search-field>
-      <v-select-container title="Select District" field="search_data.district_id" col="3">
+      <v-select-container title="District" field="search_data.district_id" col="3">
         <v-select v-model="search_data.district_id" label="district_name" :reduce="(obj) => obj.id"
-          :options="$root.global.districts" placeholder="--Select District--" :closeOnSelect="true"></v-select>
+          :options="$root.global.districts" :placeholder="$t('--Select District--')" :closeOnSelect="true"></v-select>
       </v-select-container>
     </template>
   </index-page>

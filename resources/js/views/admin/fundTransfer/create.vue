@@ -28,7 +28,7 @@
             <!-- Instruction -->
             <div class="text-center text-muted py-3 mb-3">
               <i class="fas fa-info-circle me-1"></i>
-              Please select an account from the form to view account balance.
+              {{ $t("Please select an account from the form to view account balance.") }}
             </div>
             <!-- Account Name -->
             <div class="d-flex justify-content-between align-items-center mb-2">

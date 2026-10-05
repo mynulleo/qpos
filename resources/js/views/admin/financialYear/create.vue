@@ -9,7 +9,7 @@
       :req='true' col="3"></SwitchBoolean>
     <SwitchBoolean v-model='data.is_closed' field='data.is_closed' title='Is Closed' on-label='ON' off-label='OFF'
       :req='true' col="3"></SwitchBoolean>
-    <Switch v-model='data.status' field='data.status' title='status' on-label='Active' off-label='Deactive' :req='true'
+    <Switch v-model='data.status' field='data.status' title='Status' on-label='Active' off-label='Deactive' :req='true'
       col="3">
     </Switch>
 

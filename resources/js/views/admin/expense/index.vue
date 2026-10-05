@@ -44,7 +44,7 @@
                       </td>
                     </tr>
                     <tr>
-                      <td class="text-muted">Total Approved Expense</td>
+                      <td class="text-muted">{{ $t("Total Approved Expense") }}</td>
                       <td class="text-end fw-semibold">{{ totalApprovedExpense }}</td>
                     </tr>
                   </tbody>

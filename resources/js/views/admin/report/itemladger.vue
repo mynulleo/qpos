@@ -39,10 +39,10 @@
             <!-- Transaction Type Filter -->
             <div class="col-md-2 mb-3">
                 <div class="form-group">
-                    <label class="form-label fw-bold">Transaction Type</label>
+                    <label class="form-label fw-bold">{{ $t('Transaction Type') }}</label>
                     <select class="form-select form-select-sm" v-model="search_data.transaction_type">
-                        <option :value="null">-- All Types --</option>
-                        <option value="Opening">Opening Balance</option>
+                        <option :value="null">{{ $t('-- All Types --') }}</option>
+                        <option value="Opening">{{ $t('Opening Balance') }}</option>
                         <option value="Purchase">{{ $t('Purchase') }}</option>
                         <option value="GRN">{{ $t('GRN') }}</option>
                         <option value="Sale">{{ $t('Sale / Issue') }}</option>
@@ -97,7 +97,7 @@
                     <div class="d-flex align-items-center gap-2 flex-shrink-0">
                         <button class="btn btn-sm btn-primary shadow-xs d-inline-flex align-items-center gap-1 px-3"
                             @click="print('printArea', model)">
-                            <i class="fas fa-print"></i> Print Statement
+                            <i class="fas fa-print"></i> {{ $t('Print Statement') }}
                         </button>
                     </div>
                 </div>
@@ -130,7 +130,7 @@
                                     </div>
                                     <div class="small text-muted d-flex flex-wrap gap-3">
                                         <span>Unit: <strong class="text-dark">{{ itemProfile.unit ? itemProfile.unit.title : 'Pcs' }}</strong></span>
-                                        <span>Reorder: <strong class="text-dark">{{ formatQty(itemProfile.reorder_level) }}</strong></span>
+                                        <span>{{ $t("Reorder:") }} <strong class="text-dark">{{ formatQty(itemProfile.reorder_level) }}</strong></span>
                                         <span v-if="itemProfile.item_type">Type: <strong class="text-dark text-capitalize">{{ itemProfile.item_type }}</strong></span>
                                     </div>
                                 </div>
@@ -145,7 +145,7 @@
                         <!-- Live Current Stock KPI -->
                         <div class="col-sm-3 col-6">
                             <div class="card border-0 shadow-sm rounded-3 p-3 text-center h-100 bg-white border-top-primary">
-                                <small class="text-muted fw-semibold text-uppercase tracking-wider">Current Live Stock</small>
+                                <small class="text-muted fw-semibold text-uppercase tracking-wider">{{ $t('Current Live Stock') }}</small>
                                 <div class="fs-4 fw-bold text-primary my-1">
                                     {{ metrics ? formatQty(metrics.current_stock) : 0 }} <small class="fs-6 text-muted">{{ itemProfile.unit ? itemProfile.unit.title : 'Pcs' }}</small>
                                 </div>
@@ -158,18 +158,18 @@
                         <!-- Lifetime Stock In KPI -->
                         <div class="col-sm-3 col-6">
                             <div class="card border-0 shadow-sm rounded-3 p-3 text-center h-100 bg-white border-top-success">
-                                <small class="text-muted fw-semibold text-uppercase tracking-wider">Lifetime Inflow</small>
+                                <small class="text-muted fw-semibold text-uppercase tracking-wider">{{ $t('Lifetime Inflow') }}</small>
                                 <div class="fs-4 fw-bold text-success my-1">
                                     +{{ metrics ? formatQty(metrics.total_qty_in) : 0 }}
                                 </div>
-                                <small class="text-muted">Total Received</small>
+                                <small class="text-muted">{{ $t('Total Received') }}</small>
                             </div>
                         </div>
 
                         <!-- Lifetime Sold & Out KPI -->
                         <div class="col-sm-3 col-6">
                             <div class="card border-0 shadow-sm rounded-3 p-3 text-center h-100 bg-white border-top-danger">
-                                <small class="text-muted fw-semibold text-uppercase tracking-wider">Total Sales / Out</small>
+                                <small class="text-muted fw-semibold text-uppercase tracking-wider">{{ $t('Total Sales / Out') }}</small>
                                 <div class="fs-4 fw-bold text-danger my-1">
                                     -{{ metrics ? formatQty(metrics.total_sold) : 0 }}
                                 </div>
@@ -180,7 +180,7 @@
                         <!-- Stock Valuation KPI -->
                         <div class="col-sm-3 col-6">
                             <div class="card border-0 shadow-sm rounded-3 p-3 text-center h-100 bg-white border-top-info">
-                                <small class="text-muted fw-semibold text-uppercase tracking-wider">Stock Valuation</small>
+                                <small class="text-muted fw-semibold text-uppercase tracking-wider">{{ $t('Stock Valuation') }}</small>
                                 <div class="fs-5 fw-bold text-dark my-1">
                                     ৳ {{ metrics ? formatNumber(metrics.stock_purchase_value) : '0.00' }}
                                 </div>
@@ -197,28 +197,28 @@
             <div class="row g-2 mb-3 d-print-none" v-if="datas.length > 0">
                 <div class="col-md-3 col-6">
                     <div class="card border-0 shadow-sm p-2 text-center bg-white rounded-3">
-                        <small class="text-muted d-block fw-semibold">Period Opening Stock</small>
+                        <small class="text-muted d-block fw-semibold">{{ $t('Period Opening Stock') }}</small>
                         <span class="fs-5 fw-bold text-secondary">{{ summaryData.opening }}</span>
                         <small class="text-muted" style="font-size: 10px;">Before {{ search_data.start_date }}</small>
                     </div>
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="card border-0 shadow-sm p-2 text-center bg-white rounded-3">
-                        <small class="text-muted d-block fw-semibold text-success">Period Stock In (+)</small>
+                        <small class="text-muted d-block fw-semibold text-success">{{ $t('Period Stock In') }}</small>
                         <span class="fs-5 fw-bold text-success">+{{ summaryData.totalIn }}</span>
-                        <small class="text-muted" style="font-size: 10px;">Purchases & Returns</small>
+                        <small class="text-muted" style="font-size: 10px;">{{ $t("Purchases & Returns") }}</small>
                     </div>
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="card border-0 shadow-sm p-2 text-center bg-white rounded-3">
                         <small class="text-muted d-block fw-semibold text-danger">{{ $t('Period Stock Out') }}</small>
                         <span class="fs-5 fw-bold text-danger">-{{ summaryData.totalOut }}</span>
-                        <small class="text-muted" style="font-size: 10px;">Sales & Wastages</small>
+                        <small class="text-muted" style="font-size: 10px;">{{ $t("Sales & Wastages") }}</small>
                     </div>
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="card border-0 shadow-sm p-2 text-center bg-white rounded-3">
-                        <small class="text-muted d-block fw-semibold text-primary">Period Closing Balance</small>
+                        <small class="text-muted d-block fw-semibold text-primary">{{ $t('Period Closing Balance') }}</small>
                         <span class="fs-5 fw-bold text-primary">{{ summaryData.closing }}</span>
                         <small class="text-muted" style="font-size: 10px;">Balance at {{ search_data.end_date }}</small>
                     </div>
@@ -241,7 +241,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
                     <div>
                         <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
-                            <span>Item Ledger Statement</span>
+                            <span>{{ $t('Item Ledger Statement') }}</span>
                             <span v-if="itemProfile" class="badge bg-primary fs-6 fw-normal">{{ itemProfile.title }}</span>
                         </h5>
                         <div class="small text-muted d-flex flex-wrap gap-3">
@@ -273,7 +273,7 @@
                                 <!-- Serial No Column (Based on Shop Type / Serial availability) -->
                                 <th v-if="showSerialColumn" style="width: 110px;">{{ $t('Serial No') }}</th>
                                 <th class="text-end" style="width: 100px;">{{ $t('Unit Rate') }}</th>
-                                <th class="text-end text-success" style="width: 100px;">Stock In (+)</th>
+                                <th class="text-end text-success" style="width: 100px;">{{ $t('Stock In') }} (+)</th>
                                 <th class="text-end text-danger" style="width: 100px;">{{ $t('Stock Out') }}</th>
                                 <th class="text-end text-primary" style="width: 110px;">{{ $t('Balance') }}</th>
                             </tr>
@@ -348,7 +348,7 @@
                                             @click.stop="openSerialModal(ledger)"
                                             title="Click to view full serial numbers list">
                                             <i class="fas fa-barcode text-primary"></i>
-                                            <span class="fw-bold">{{ ledger.serial_count }} Serials</span>
+                                            <span class="fw-bold">{{ $bnNum(ledger.serial_count) }} {{ $t("Total Serials") }}</span>
                                             <i class="fas fa-external-link-alt text-muted ms-1" style="font-size: 8px;"></i>
                                         </button>
                                         <span v-else class="text-muted small">-</span>
@@ -393,7 +393,7 @@
                         </tbody>
                         <tfoot v-if="datas.length > 0" class="table-light fw-bold">
                             <tr>
-                                <td :colspan="7 + (showSizeColumn ? 1 : 0) + (showSerialColumn ? 1 : 0)" class="text-end text-uppercase text-secondary small">Period Summary Total:</td>
+                                <td :colspan="7 + (showSizeColumn ? 1 : 0) + (showSerialColumn ? 1 : 0)" class="text-end text-uppercase text-secondary small">{{ $t('Period Summary Total:') }}</td>
                                 <td class="text-end text-success font-monospace">+{{ summaryData.totalIn }}</td>
                                 <td class="text-end text-danger font-monospace">-{{ summaryData.totalOut }}</td>
                                 <td class="text-end text-primary font-monospace fs-6">{{ summaryData.closing }}</td>
@@ -405,11 +405,11 @@
                 <!-- 📌 Printable Footer -->
                 <div class="mt-4 pt-3 border-top small text-muted d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="mb-0">Generated by: <strong>{{ $root.user ? $root.user.name : 'Administrator' }}</strong></p>
+                        <p class="mb-0">{{ $t("Generated by:") }} <strong>{{ $root.user ? $root.user.name : 'Administrator' }}</strong></p>
                         <p class="mb-0" style="font-size: 11px;">Print Timestamp: {{ reportTimestamp }}</p>
                     </div>
                     <div class="text-end">
-                        <p class="mb-0">This is an authorized system-generated stock ledger.</p>
+                        <p class="mb-0">{{ $t("This is an authorized system-generated stock ledger.") }}</p>
                         <div class="d-none d-print-block mt-4">
                             <span class="border-top pt-1 px-4">Authorized Signature</span>
                         </div>

@@ -8,11 +8,11 @@
         :disablePastDates="search_data.from_gen_date"></date-picker>
       <v-select-container title="Month" field="search_data.month" col="3">
         <v-select v-model="search_data.month" label="name" :reduce="(obj) => obj.value"
-          :options="$root.global.montharray" placeholder="--Select Month--" :closeOnSelect="true"></v-select>
+          :options="$root.global.montharray" :placeholder="$t('--Select Month--')" :closeOnSelect="true"></v-select>
       </v-select-container>
       <v-select-container title="Year" field="search_data.year" col="3">
         <v-select v-model="search_data.year" label="name" :reduce="(obj) => obj.value"
-          :options="$root.global.recentyears" placeholder="--Select Year--" :closeOnSelect="true"></v-select>
+          :options="$root.global.recentyears" :placeholder="$t('--Select Year--')" :closeOnSelect="true"></v-select>
       </v-select-container>
     </template>
   </index-page>

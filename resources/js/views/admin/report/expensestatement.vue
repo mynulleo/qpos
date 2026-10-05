@@ -1,7 +1,7 @@
 <template>
     <index-page :defaultTable="false" :show_status="false">
         <template v-slot:search-field>
-            <v-select-container title="Brance" field="search_data.branch_id" col="3 mb-3">
+            <v-select-container title="Branch" field="search_data.branch_id" col="3 mb-3">
                 <v-select v-model="search_data.branch_id" label="branch_name" :reduce="obj => obj.id"
                     :options="$root.global.branches" placeholder="--Select One--" :closeOnSelect="true" />
             </v-select-container>
@@ -23,7 +23,7 @@
             <div class="col-md-12">
                 <div class="d-flex gap-3 align-items-center justify-content-end">
                     <div class="print_action text-end">
-                        <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print"
+                        <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Print')"
                             v-x-tooltip @click="print('printArea', model)">
                             <i class="fas fa-print"></i>
                         </button>
@@ -41,8 +41,8 @@
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h5 class="fw-bold mb-1">Expense Statement</h5>
-                        <small class="text-muted">Report Date: <strong>{{ reportDate }}</strong></small>
+                        <h5 class="fw-bold mb-1">{{ $t("Expense Statement") }}</h5>
+                        <small class="text-muted">{{ $t("Report Date") }}: <strong>{{ reportDate }}</strong></small>
                     </div>
                     <div class="text-end">
 
@@ -85,7 +85,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="7" class="text-md-end"><strong>Total</strong></td>
+                                <td colspan="7" class="text-md-end"><strong>{{ $t("Total") }}</strong></td>
                                 <td class="text-md-end">
                                     <strong>{{ datas.total_expense.toLocaleString('en-BD') }}</strong>
                                 </td>

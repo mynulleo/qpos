@@ -1,13 +1,13 @@
 <template>
     <index-page>
         <template v-slot:search-field>
-            <v-select-container title="Select Role" field="search_data.role_id">
+            <v-select-container title="Role" field="search_data.role_id">
                 <v-select
                     v-model="search_data.role_id"
                     label="name"
                     :reduce="(obj) => obj.id"
                     :options="extraData.roles"
-                    placeholder="--Select Role--"
+                    :placeholder="$t('--Select Role--')"
                     :closeOnSelect="true"
                 ></v-select>
             </v-select-container>

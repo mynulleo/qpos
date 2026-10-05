@@ -32,10 +32,10 @@
               <div>
                 <div class="text-muted text-uppercase fw-semibold small tracking-wider">{{ $t('Total Received Qty') }}</div>
                 <div class="fs-4 fw-bolder text-dark font-monospace mt-1">
-                  {{ Number(stats.total_received_qty || 0).toLocaleString() }} <span class="fs-6 fw-normal text-muted">Units</span>
+                  {{ Number(stats.total_received_qty || 0).toLocaleString() }} <span class="fs-6 fw-normal text-muted">{{ $t("Units") }}</span>
                 </div>
                 <div class="small text-muted mt-1">
-                  <i class="fas fa-arrow-down text-success me-1"></i> Inventory Stock In
+                  <i class="fas fa-arrow-down text-success me-1"></i> {{ $t("Inventory Stock In") }}
                 </div>
               </div>
               <div class="kpi_icon_box bg-success bg-opacity-10 text-success">
@@ -55,7 +55,7 @@
                   ৳ {{ Number(stats.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                 </div>
                 <div class="small text-muted mt-1">
-                  <i class="fas fa-shield-alt text-primary me-1"></i> Cumulative Purchase Value
+                  <i class="fas fa-shield-alt text-primary me-1"></i> {{ $t("Cumulative Purchase Value") }}
                 </div>
               </div>
               <div class="kpi_icon_box" style="background-color: rgba(99, 102, 241, 0.1); color: #6366f1;">
@@ -92,55 +92,55 @@
     <!-- 🔍 Advanced & Professional Filter Controls -->
     <template v-slot:search-field>
       <!-- Row 1: Mode Type, Supplier, Warehouse, Status -->
-      <v-select-container title="GRN Mode / Type" field="search_data.grn_type" col="3">
+      <v-select-container :title="$t('GRN Mode / Type')" field="search_data.grn_type" col="3">
         <select v-model="search_data.grn_type" class="form-select" @change="onFilterChange">
-          <option value="">-- All GRN Types --</option>
-          <option value="po">1. PO Based (From Purchase Order)</option>
-          <option value="supplier">2. Supplier Based (Manual GRN)</option>
-          <option value="direct">3. Direct Purchase (Instant Pay)</option>
+          <option value="">-- {{ $t('All GRN Types') }} --</option>
+          <option value="po">{{ $t('1. PO Based (From Purchase Order)') }}</option>
+          <option value="supplier">{{ $t('2. Supplier Based (Manual GRN)') }}</option>
+          <option value="direct">{{ $t('3. Direct Purchase (Instant Pay)') }}</option>
         </select>
       </v-select-container>
 
-      <v-select-container title="Supplier" field="search_data.supplier_id" col="3">
+      <v-select-container :title="$t('Supplier')" field="search_data.supplier_id" col="3">
         <v-select v-model="search_data.supplier_id" label="org_name" :reduce="(obj) => obj.id"
-          :options="suppliersList" placeholder="-- Select Supplier --" :closeOnSelect="true"
+          :options="suppliersList" :placeholder="$t('-- Select Supplier --')" :closeOnSelect="true"
           @update:modelValue="onFilterChange"></v-select>
       </v-select-container>
 
-      <v-select-container title="Warehouse" field="search_data.warehouse_id" col="3">
+      <v-select-container :title="$t('Warehouse')" field="search_data.warehouse_id" col="3">
         <v-select v-model="search_data.warehouse_id" label="name" :reduce="(obj) => obj.id"
-          :options="warehousesList" placeholder="-- Select Warehouse --" :closeOnSelect="true"
+          :options="warehousesList" :placeholder="$t('-- Select Warehouse --')" :closeOnSelect="true"
           @update:modelValue="onFilterChange"></v-select>
       </v-select-container>
 
       <div class="col-md-3">
-        <label class="form-label small fw-semibold text-muted mb-1">Status</label>
+        <label class="form-label small fw-semibold text-muted mb-1">{{ $t('Status') }}</label>
         <select v-model="search_data.status" class="form-select form-select-sm" @change="onFilterChange">
-          <option value="">-- All Status --</option>
-          <option value="active">Active</option>
-          <option value="deactive">Deactive</option>
+          <option value="">-- {{ $t('All Status') }} --</option>
+          <option value="active">{{ $t('Active') }}</option>
+          <option value="deactive">{{ $t('Deactive') }}</option>
         </select>
       </div>
 
       <!-- Row 2: Date Filters & Quick Presets -->
       <date-picker id="grn_from_date" v-model="search_data.from_date" field="search_data.from_date"
-        title="From GRN Date" placeholder="From Date" col="3" :req="false" @change="onFilterChange"></date-picker>
+        title="From GRN Date" :placeholder="$t('From Date')" col="3" :req="false" @change="onFilterChange"></date-picker>
 
       <date-picker id="grn_to_date" v-model="search_data.to_date" field="search_data.to_date"
-        title="To GRN Date" placeholder="To Date" col="3" :req="false"
+        title="To GRN Date" :placeholder="$t('To Date')" col="3" :req="false"
         :disablePastDates="search_data.from_date" @change="onFilterChange"></date-picker>
 
       <!-- Quick Date Preset Pills -->
       <div class="col-md-6 d-flex align-items-end mb-2">
         <div class="w-100">
-          <label class="form-label small fw-semibold text-muted mb-1 d-block">Quick Date Presets</label>
+          <label class="form-label small fw-semibold text-muted mb-1 d-block">{{ $t('Quick Date Presets') }}</label>
           <div class="btn-group btn-group-sm w-100 flex-wrap" role="group">
-            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('today') }" @click="applyDatePreset('today')">Today</button>
-            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('yesterday') }" @click="applyDatePreset('yesterday')">Yesterday</button>
-            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('last7') }" @click="applyDatePreset('last7')">Last 7 Days</button>
-            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('thisMonth') }" @click="applyDatePreset('thisMonth')">This Month</button>
+            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('today') }" @click="applyDatePreset('today')">{{ $t('Today') }}</button>
+            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('yesterday') }" @click="applyDatePreset('yesterday')">{{ $t('Yesterday') }}</button>
+            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('last7') }" @click="applyDatePreset('last7')">{{ $t('Last 7 Days') }}</button>
+            <button type="button" class="btn btn-outline-secondary" :class="{ 'active': isDateActive('thisMonth') }" @click="applyDatePreset('thisMonth')">{{ $t('This Month') }}</button>
             <button type="button" class="btn btn-outline-danger" v-if="search_data.from_date || search_data.to_date" @click="applyDatePreset('clear')">
-              <i class="fas fa-times me-1"></i> Clear Dates
+              <i class="fas fa-times me-1"></i> {{ $t('Clear Dates') }}
             </button>
           </div>
         </div>
@@ -151,14 +151,14 @@
     <template v-slot:grn_no="{ item }">
       <td>
         <div class="d-flex align-items-center gap-1">
-          <router-link :to="{ name: 'grn.show', params: { id: item.id } }" class="fw-bold font-monospace text-primary text-decoration-none" title="View GRN Details">
+          <router-link :to="{ name: 'grn.show', params: { id: item.id } }" class="fw-bold font-monospace text-primary text-decoration-none" :title="$t('View GRN Details')">
             <i class="fas fa-file-invoice me-1 text-primary"></i>{{ item.grn_no }}
           </router-link>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-1 mt-1 small text-muted">
           <span><i class="far fa-calendar-alt me-1 text-muted"></i>{{ item.grn_date }}</span>
           <span v-if="item.challan_no" class="badge bg-light text-secondary border py-0 px-1 font-monospace">
-            Ch: {{ item.challan_no }}
+            {{ $t('Ch') }}: {{ item.challan_no }}
           </span>
         </div>
       </td>
@@ -168,7 +168,7 @@
       <td class="text-center">
         <span class="badge rounded-pill px-2 py-1 shadow-none" :class="getGrnTypeBadgeClass(item.grn_type)">
           <i :class="getGrnTypeIcon(item.grn_type)" class="me-1"></i>
-          {{ formatGrnType(item.grn_type) }}
+          {{ $t(formatGrnType(item.grn_type)) }}
         </span>
       </td>
     </template>
@@ -179,10 +179,10 @@
           <i class="fas fa-file-invoice-dollar me-1 text-primary"></i>{{ item.purchase.invoiceno }}
         </span>
         <span v-else-if="item.grn_type === 'direct'" class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 px-2 py-1">
-          <i class="fas fa-bolt me-1 text-warning"></i> Direct Purchase
+          <i class="fas fa-bolt me-1 text-warning"></i> {{ $t('Direct Purchase') }}
         </span>
         <span v-else class="text-muted small fst-italic">
-          <i class="fas fa-layer-group me-1"></i> Direct GRN
+          <i class="fas fa-layer-group me-1"></i> {{ $t('Direct GRN') }}
         </span>
       </td>
     </template>
@@ -197,10 +197,10 @@
         </div>
         <div v-else-if="item.grn_type === 'direct'">
           <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
-            <i class="fas fa-wallet me-1"></i>{{ item.fund_account ? item.fund_account.account_name : 'Direct Cash / Fund' }}
+            <i class="fas fa-wallet me-1"></i>{{ item.fund_account ? item.fund_account.account_name : $t('Direct Cash / Fund') }}
           </span>
         </div>
-        <span v-else class="text-muted small">N/A</span>
+        <span v-else class="text-muted small">{{ $t('N/A') }}</span>
       </td>
     </template>
 
@@ -209,14 +209,14 @@
         <span v-if="item.warehouse" class="badge bg-secondary bg-opacity-10 text-dark border px-2 py-1">
           <i class="fas fa-warehouse me-1 text-primary"></i>{{ item.warehouse.name }}
         </span>
-        <span v-else class="text-muted small">N/A</span>
+        <span v-else class="text-muted small">{{ $t('N/A') }}</span>
       </td>
     </template>
 
     <template v-slot:total_qty="{ item }">
       <td class="text-center">
         <span class="badge bg-primary bg-opacity-10 text-primary fw-bold font-monospace px-2 py-1 fs-7">
-          {{ Number(item.total_qty || 0).toLocaleString() }} Units
+          {{ Number(item.total_qty || 0).toLocaleString() }} {{ $t('Units') }}
         </span>
       </td>
     </template>
@@ -224,14 +224,14 @@
     <template v-slot:total_amount="{ item }">
       <td class="text-end">
         <div class="fw-bold font-monospace text-dark">
-          <small class="text-muted fw-normal me-1">Total:</small>৳ {{ Number(item.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+          <small class="text-muted fw-normal me-1">{{ $t('Total') }}:</small>৳ {{ Number(item.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
         </div>
         <div class="small font-monospace mt-1">
           <span v-if="Number(item.paid_amount) > 0" class="text-success fw-semibold">
-            <small class="text-muted fw-normal me-1">Paid:</small>৳ {{ Number(item.paid_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+            <small class="text-muted fw-normal me-1">{{ $t('Paid') }}:</small>৳ {{ Number(item.paid_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
           </span>
           <span v-else class="text-muted">
-            <small class="text-muted fw-normal me-1">Paid:</small>৳ 0.00
+            <small class="text-muted fw-normal me-1">{{ $t('Paid') }}:</small>৳ 0.00
           </span>
         </div>
       </td>
@@ -239,8 +239,8 @@
 
     <template v-slot:status="{ item }">
       <td class="text-center">
-        <span class="status approved" v-if="item.status === 'active' || item.status === 1">ACTIVE</span>
-        <span class="status cancel" v-else>DEACTIVE</span>
+        <span class="status approved" v-if="item.status === 'active' || item.status === 1">{{ $t('ACTIVE') }}</span>
+        <span class="status cancel" v-else>{{ $t('DEACTIVE') }}</span>
       </td>
     </template>
   </index-page>

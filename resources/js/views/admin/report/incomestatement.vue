@@ -6,15 +6,15 @@
       <div class="col-12 mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center">
           <span class="text-muted small fw-bold me-1">
-            <i class="fas fa-calendar-alt me-1 text-primary"></i>Quick Date:
+            <i class="fas fa-calendar-alt me-1 text-primary"></i>{{ $t("Quick Date:") }}
           </span>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'today' }" @click="applyDatePreset('today')">Today</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'yesterday' }" @click="applyDatePreset('yesterday')">Yesterday</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'last7' }" @click="applyDatePreset('last7')">Last 7 Days</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisMonth' }" @click="applyDatePreset('thisMonth')">This Month</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'lastMonth' }" @click="applyDatePreset('lastMonth')">Last Month</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisYear' }" @click="applyDatePreset('thisYear')">This Year</button>
-          <button type="button" class="btn btn-xs btn-outline-secondary" :class="{ 'active': activePreset === 'all' }" @click="applyDatePreset('all')">All Time</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'today' }" @click="applyDatePreset('today')">{{ $t("Today") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'yesterday' }" @click="applyDatePreset('yesterday')">{{ $t("Yesterday") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'last7' }" @click="applyDatePreset('last7')">{{ $t("Last 7 Days") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisMonth' }" @click="applyDatePreset('thisMonth')">{{ $t("This Month") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'lastMonth' }" @click="applyDatePreset('lastMonth')">{{ $t("Last Month") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisYear' }" @click="applyDatePreset('thisYear')">{{ $t("This Year") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-secondary" :class="{ 'active': activePreset === 'all' }" @click="applyDatePreset('all')">{{ $t("All Time") }}</button>
         </div>
       </div>
 
@@ -65,7 +65,7 @@
         <div class="form-group">
           <label class="form-label">{{ $t('Sale Type') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.sale_type">
-            <option value="all">-- All Sales --</option>
+            <option value="all">{{ $t("-- All Sales --") }}</option>
             <option value="pos">{{ $t('POS Sales') }}</option>
             <option value="general">{{ $t('General Invoices') }}</option>
           </select>
@@ -86,32 +86,32 @@
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'invoices' }" @click="activeTab = 'invoices'">
-                <i class="fas fa-file-invoice me-1"></i> Invoices & Profit (ইনভয়েস সমূহ) ({{ invoices.length }})
+                <i class="fas fa-file-invoice me-1"></i> {{ $t("Invoices & Profit") }} ({{ invoices.length }})
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'items' }" @click="activeTab = 'items'">
-                <i class="fas fa-boxes me-1"></i> Item Profit (পণ্যভিত্তিক লাভ) ({{ item_breakdown.length }})
+                <i class="fas fa-boxes me-1"></i> {{ $t("Item Profit") }} ({{ item_breakdown.length }})
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'expenses' }" @click="activeTab = 'expenses'">
-                <i class="fas fa-receipt me-1"></i> Expenses (খরচ) ({{ expenses.length }})
+                <i class="fas fa-receipt me-1"></i> {{ $t("Expenses") }} ({{ expenses.length }})
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'salaries' }" @click="activeTab = 'salaries'">
-                <i class="fas fa-user-tie me-1"></i> Salaries (বেতন) ({{ salaries.length }})
+                <i class="fas fa-user-tie me-1"></i> {{ $t("Salaries") }} ({{ salaries.length }})
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'loans' }" @click="activeTab = 'loans'">
-                <i class="fas fa-hand-holding-usd me-1"></i> Loans/Advances (ঋণ) ({{ loans.length }})
+                <i class="fas fa-hand-holding-usd me-1"></i> {{ $t("Loans/Advances") }} ({{ loans.length }})
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'commissions' }" @click="activeTab = 'commissions'">
-                <i class="fas fa-percentage me-1"></i> Commissions (কমিশন) ({{ commissions.length }})
+                <i class="fas fa-percentage me-1"></i> {{ $t("Commissions") }} ({{ commissions.length }})
               </button>
             </li>
           </ul>
@@ -123,12 +123,12 @@
               class="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
               :data="exportData"
               :name="exportFileName">
-              <i class="fas fa-file-excel"></i> Export Excel
+              <i class="fas fa-file-excel"></i> {{ $t("Export Excel") }}
             </download-excel>
             <button class="p_btn btn btn-sm btn-dark d-inline-flex align-items-center gap-1"
               data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print Report"
               v-x-tooltip @click="print('printArea', model)">
-              <i class="fas fa-print"></i> Print Report
+              <i class="fas fa-print"></i> {{ $t("Print Report") }}
             </button>
           </div>
         </div>

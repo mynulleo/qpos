@@ -65,8 +65,8 @@
 
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <h5 class="fw-bold mb-1">Salary Sheet</h5>
-                <small class="text-muted">Report Date: <strong>{{ reportDate }}</strong></small>
+                <h5 class="fw-bold mb-1">{{ $t('Salary Sheet') }}</h5>
+                <small class="text-muted">{{ $t('Report Date') }}: <strong>{{ reportDate }}</strong></small>
               </div>
               <div class="text-end">
               </div>
@@ -96,7 +96,7 @@
                   <td class="text-end">{{ row.total }}</td>
                 </tr>
                 <tr>
-                  <td colspan="3"><strong>Total</strong></td>
+                  <td colspan="3"><strong>{{ $t('Total') }}</strong></td>
                   <td class="text-end"><strong>{{ totalSalary }}</strong></td>
                   <td class="text-end"><strong>{{ totalBonus }}</strong></td>
                   <td class="text-end"><strong>{{ totalInstallment }}</strong></td>
@@ -111,42 +111,40 @@
       <div class="col-12">
         <div class="card shadow-sm border-0">
           <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-semibold">Approval Information</h6>
-            <span class="badge bg-secondary" v-if="!data.approved_by">Pending</span>
-            <span class="badge bg-success" v-else>Approved</span>
+            <h6 class="mb-0 fw-semibold">{{ $t('Approval Information') }}</h6>
+            <span class="badge bg-secondary" v-if="!data.approved_by">{{ $t('Pending') }}</span>
+            <span class="badge bg-success" v-else>{{ $t('Approved') }}</span>
           </div>
           <div class="card-body">
             <div class="row">
               <div class="col-12">
                 <!-- Guidelines + Approve Button -->
                 <div class="alert alert-info border-0 shadow-sm mb-0">
-                  <h6 class="alert-heading fw-semibold mb-2">Salary Sheet Approval Guidelines</h6>
+                  <h6 class="alert-heading fw-semibold mb-2">{{ $t('Salary Sheet Approval Guidelines') }}</h6>
                   <p class="mb-1">
-                    Please carefully review the Salary Sheet information above and verify the details if necessary.
+                    {{ $t('Please carefully review the Salary Sheet information above and verify the details if necessary.') }}
                   </p>
                   <p class="mb-1">
-                    Once the Salary Sheet is approved, the approver’s information and approval time will be
-                    automatically
-                    recorded.
+                    {{ $t('Once the Salary Sheet is approved, the approver’s information and approval time will be automatically recorded.') }}
                   </p>
                   <p class="mb-1 text-danger fw-semibold">
-                    After approval, the Salary Sheet cannot be edited or deleted.
+                    {{ $t('After approval, the Salary Sheet cannot be edited or deleted.') }}
                   </p>
                   <p class="mb-3 text-danger fw-semibold">
-                    After the payment for this Salary Sheet is cleared, the approval cannot be canceled.
+                    {{ $t('After the payment for this Salary Sheet is cleared, the approval cannot be canceled.') }}
                   </p>
 
                   <!-- Action Button Inside Alert -->
                   <div class="d-flex justify-content-end" v-if="!data.approved_by">
                     <router-link v-if="$root.checkPermission('salarySheet.approved')" to="#"
                       @click.native.prevent="approved" class="btn btn-success fw-semibold px-4">
-                      <i class="bi bi-check-circle me-1"></i> Approve Salary Sheet
+                      <i class="bi bi-check-circle me-1"></i> {{ $t('Approve Salary Sheet') }}
                     </router-link>
                   </div>
                   <div class="d-flex justify-content-end" v-else>
                     <router-link v-if="$root.checkPermission('salarySheet.approvalcancel')" to="#"
                       @click.native.prevent="approvalcancel" class="btn btn-danger fw-semibold px-4">
-                      <i class="bi bi-x-circle me-1"></i> Cancel Approval
+                      <i class="bi bi-x-circle me-1"></i> {{ $t('Cancel Approval') }}
                     </router-link>
                   </div>
                 </div>
@@ -223,7 +221,7 @@ export default {
   },
   methods: {
     approved() {
-      if (!confirm('Are you sure you want to approve this salary sheet?')) {
+      if (!confirm(this.$t('Are you sure you want to approve this salary sheet?'))) {
         return;
       }
 
@@ -242,7 +240,7 @@ export default {
         });
     },
     approvalcancel() {
-      if (!confirm('Are you sure you want to cancel the approval of this commission?')) {
+      if (!confirm(this.$t('Are you sure you want to cancel the approval of this salary sheet?'))) {
         return;
       }
 

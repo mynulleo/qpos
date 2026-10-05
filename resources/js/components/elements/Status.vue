@@ -9,7 +9,7 @@
             label="name"
             :reduce="(obj) => obj.value"
             :options="modules"
-            placeholder="--Select Status--"
+            :placeholder="$t('--Select Status--')"
             :closeOnSelect="true"
         ></v-select>
     </v-select-container>
@@ -18,14 +18,14 @@
 <script>
 export default {
     inject: ["search_data"],
-    data() {
-        return {
-            modules: [
-                { name: "All", value: "" },
-                { name: "Active", value: "active" },
-                { name: "Deactive", value: "deactive" },
-            ],
-        };
+    computed: {
+        modules() {
+            return [
+                { name: this.$t("All"), value: "" },
+                { name: this.$t("Active"), value: "active" },
+                { name: this.$t("Deactive"), value: "deactive" },
+            ];
+        },
     },
 };
 </script>

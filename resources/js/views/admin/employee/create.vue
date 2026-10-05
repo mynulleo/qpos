@@ -20,7 +20,7 @@
               <Input v-model='data.full_name' field='data.full_name' col="12" title='Full Name' :req='true' />
               <Input v-model='data.email' field='data.email' col="3" title='Email' :req='false' />
               <Input v-model='data.mobile' field='data.mobile' col="3" title='Mobile' :req='true' />
-              <date-picker id='date6' v-model='data.dob' col="3" field='data.dob' title='DOB' placeholder='Dob'
+              <date-picker id='date6' v-model='data.dob' col="3" field='data.dob' title='Date of Birth' placeholder='Date of Birth'
                 :req='false'></date-picker>
               <Input v-model='data.nid' field='data.nid' col="3" title='Nid' :req='true' />
               <Textarea v-model='data.address' field='data.address' :required='true' title="Address" col="12" />

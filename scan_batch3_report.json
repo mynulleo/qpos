@@ -1,0 +1,283 @@
+{
+  "resources/js/views/admin/designation/index.vue": {
+    "missingTableTitles": [
+      "House Rent",
+      "Medical"
+    ],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/designation/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": [
+      {
+        "attr": "title",
+        "val": "House Rent"
+      },
+      {
+        "attr": "title",
+        "val": "Medical"
+      }
+    ]
+  },
+  "resources/js/views/admin/designation/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/salarySheet/index.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/salarySheet/create.vue": {
+    "missingTableTitles": [
+      "Salary Sheet of "
+    ],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/salarySheet/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [
+      "Salary Sheet",
+      "Report Date:",
+      "Total",
+      "Approval Information",
+      "Pending",
+      "Approved",
+      "Salary Sheet Approval Guidelines",
+      "After approval, the Salary Sheet cannot be edited or deleted.",
+      "Approve Salary Sheet",
+      "Cancel Approval"
+    ],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/salaryParameter/index.vue": {
+    "missingTableTitles": [
+      "Is Basic",
+      "Percentage of Basic"
+    ],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/salaryParameter/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": [
+      {
+        "attr": "title",
+        "val": "is Basic"
+      },
+      {
+        "attr": "title",
+        "val": "percentage of Basic"
+      }
+    ]
+  },
+  "resources/js/views/admin/salaryParameter/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/warehouse/index.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/warehouse/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": [
+      {
+        "attr": "title",
+        "val": "Warehouse Email"
+      }
+    ]
+  },
+  "resources/js/views/admin/warehouse/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [
+      "Warehouse Information"
+    ],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/category/index.vue": {
+    "missingTableTitles": [
+      "Category List"
+    ],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/category/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": [
+      {
+        "attr": "title",
+        "val": "Module name"
+      }
+    ]
+  },
+  "resources/js/views/admin/category/view.vue": {
+    "missingTableTitles": [
+      "Categroy View"
+    ],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/brand/index.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/brand/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/brand/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/series/index.vue": {
+    "missingTableTitles": [
+      "Series Title"
+    ],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/series/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": [
+      {
+        "attr": "title",
+        "val": "Series Title"
+      }
+    ]
+  },
+  "resources/js/views/admin/series/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/unit/index.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": [
+      {
+        "attr": "title",
+        "val": "Select Module"
+      }
+    ]
+  },
+  "resources/js/views/admin/unit/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/unit/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/color/index.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/color/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/color/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/size/index.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/size/create.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/views/admin/size/view.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/components/Form/Checkbox.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/components/elements/Status.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/components/AppBreadcrumb.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/components/AppSidebarRecursive.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/components/Table/ViewBaseTable.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  },
+  "resources/js/components/Table/Pagination.vue": {
+    "missingTableTitles": [],
+    "missingTKeys": [],
+    "rawTextInTemplate": [],
+    "staticAttrs": []
+  }
+}

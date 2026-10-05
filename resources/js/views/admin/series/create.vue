@@ -6,7 +6,7 @@
     
     <Select title='Brand' v-model='data.brand_id' field='data.brand_id' label='title'
       :reduce='(obj) => obj.id' :options='brands'
-      :placeholder="data.category_id ? (brands.length ? '--Select Brand--' : 'No Brand in Category') : '--Select Brand--'"
+      :placeholder="data.category_id ? (brands.length ? $t('--Select Brand--') : $t('No Brand in Category')) : $t('--Select Brand--')"
       :closeOnSelect='true'
       :required='true' />
 
@@ -17,7 +17,7 @@
     <Switch
         v-model='data.status'
         field='data.status'
-        title='status'
+        title='Status'
         on-label='Active'
         off-label='Deactive'
         :req='true'

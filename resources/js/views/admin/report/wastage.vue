@@ -6,32 +6,26 @@
       <div class="col-12 mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center">
           <span class="text-muted small fw-bold me-1">
-            <i class="fas fa-calendar-alt me-1 text-primary"></i> Quick Date:
+            <i class="fas fa-calendar-alt me-1 text-primary"></i> {{ $t("Quick Date:") }}
           </span>
           <button
             type="button"
             class="btn btn-xs btn-outline-primary"
             :class="{ 'active': activePreset === 'today' }"
             @click="applyDatePreset('today')"
-          >
-            Today
-          </button>
+          >{{ $t("Today") }}</button>
           <button
             type="button"
             class="btn btn-xs btn-outline-primary"
             :class="{ 'active': activePreset === 'yesterday' }"
             @click="applyDatePreset('yesterday')"
-          >
-            Yesterday
-          </button>
+          >{{ $t("Yesterday") }}</button>
           <button
             type="button"
             class="btn btn-xs btn-outline-primary"
             :class="{ 'active': activePreset === 'last7' }"
             @click="applyDatePreset('last7')"
-          >
-            Last 7 Days
-          </button>
+          >{{ $t("Last 7 Days") }}</button>
           <button
             type="button"
             class="btn btn-xs btn-outline-primary"
@@ -43,25 +37,19 @@
             class="btn btn-xs btn-outline-primary"
             :class="{ 'active': activePreset === 'lastMonth' }"
             @click="applyDatePreset('lastMonth')"
-          >
-            Last Month
-          </button>
+          >{{ $t("Last Month") }}</button>
           <button
             type="button"
             class="btn btn-xs btn-outline-primary"
             :class="{ 'active': activePreset === 'thisYear' }"
             @click="applyDatePreset('thisYear')"
-          >
-            This Year
-          </button>
+          >{{ $t("This Year") }}</button>
           <button
             type="button"
             class="btn btn-xs btn-outline-secondary"
             :class="{ 'active': activePreset === 'all' }"
             @click="applyDatePreset('all')"
-          >
-            All Time
-          </button>
+          >{{ $t("All Time") }}</button>
         </div>
       </div>
 
@@ -830,7 +818,7 @@ export default {
   data() {
     return {
       model: model,
-      page_title: "Wastage & Disposal Audit Report (ক্ষতি ও নষ্ট পণ্য অডিট রিপোর্ট)",
+      page_title: "Wastage & Disposal Audit Report",
       reportDate: moment().format("D MMMM, YYYY h:mm A"),
       activeTab: "audits",
       activePreset: "thisMonth",

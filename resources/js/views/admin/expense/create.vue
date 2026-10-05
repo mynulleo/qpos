@@ -11,19 +11,19 @@
               </div>
               <div>
                 <h5 class="fw-bold mb-0 text-dark">{{ $t('Expense Voucher Entry') }}</h5>
-                <p class="text-muted small mb-0">Record and track office, operational, staff, and maintenance expenses.</p>
+                <p class="text-muted small mb-0">{{ $t("Record and track office, operational, staff, and maintenance expenses.") }}</p>
               </div>
             </div>
 
             <div class="col-md-6 d-flex justify-content-md-end align-items-center gap-2">
               <div class="bg-white px-3 py-2 rounded-3 border shadow-sm text-end">
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Total Amount</div>
+                <div class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">{{ $t("Total Amount") }}</div>
                 <div class="fs-4 fw-bold font-monospace text-success">
                   Tk. {{ $filter.formatBDT(data.total_amount || 0) }}
                 </div>
               </div>
               <div class="bg-white px-3 py-2 rounded-3 border shadow-sm text-center">
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Total Heads</div>
+                <div class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">{{ $t("Total Heads") }}</div>
                 <div class="fs-4 fw-bold font-monospace text-primary">
                   {{ (data.expense_details || []).length }}
                 </div>
@@ -57,7 +57,7 @@
             ></date-picker>
 
             <Select
-              title="Workorder (ওয়ার্কঅর্ডার - Optional)"
+              title="Workorder (Optional)"
               v-model="data.workorder_id"
               col="3"
               field="data.workorder_id"
@@ -119,7 +119,7 @@
               type="button"
               class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1"
               @click.prevent="addExpenseDetailsRow">
-              <i class="fas fa-plus-circle"></i> Add Expense Item
+              <i class="fas fa-plus-circle"></i> {{ $t("Add Expense Item") }}
             </button>
           </div>
         </div>
@@ -128,7 +128,7 @@
           <!-- Quick Add Common Expense Category Chips -->
           <div class="mb-3 p-2 bg-light rounded-3 border d-flex flex-wrap align-items-center gap-2" v-if="quickExpenseOptions.length > 0">
             <span class="small fw-bold text-secondary d-flex align-items-center gap-1 me-1">
-              <i class="fas fa-bolt text-warning"></i> Quick Add Heads:
+              <i class="fas fa-bolt text-warning"></i> {{ $t("Quick Add Heads:") }}
             </span>
             <button
               type="button"
@@ -234,7 +234,7 @@
               <tfoot class="table-light">
                 <tr>
                   <td colspan="3" class="text-end fw-bold py-2">
-                    <span class="text-muted small me-2 text-uppercase">Total Expense (সর্বমোট খরচ):</span>
+                    <span class="text-muted small me-2 text-uppercase">{{ $t("Total Expense:") }}</span>
                   </td>
                   <td class="text-end font-monospace fw-bold text-success fs-6 py-2">
                     Tk. {{ $filter.formatBDT(data.total_amount || 0) }}
@@ -244,7 +244,7 @@
                       type="button"
                       class="btn btn-xs btn-link text-primary text-decoration-none fw-bold p-0"
                       @click="addExpenseDetailsRow">
-                      + Add Row
+                      {{ $t("+ Add Row") }}
                     </button>
                   </td>
                 </tr>

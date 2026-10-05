@@ -93,7 +93,7 @@
                 >
                     <div class="form-group">
                         <label class="form-label opacity-0">
-                            Block <sup class="text-danger">*</sup>
+                            {{ $t('Block') }} <sup class="text-danger">*</sup>
                         </label>
                         <div
                             class="check_box block_admin_check_box align-items-center"
@@ -103,7 +103,7 @@
                                     class="form-check-label fs-4"
                                     for="flexCheckChecked1"
                                 >
-                                    Do you want to block?
+                                    {{ $t('Do you want to block?') }}
                                 </label>
                             </div>
                             <label class="content">
@@ -140,9 +140,9 @@
                             </label>
                             <div class="action">
                                 <span v-if="data.block" class="deactive"
-                                    >Blocked</span
+                                    >{{ $t('Blocked') }}</span
                                 >
-                                <span v-else class="active">Unblocked</span>
+                                <span v-else class="active">{{ $t('Unblocked') }}</span>
                             </div>
                         </div>
                     </div>

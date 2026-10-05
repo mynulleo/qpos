@@ -3,12 +3,12 @@
     <template v-slot:search-field>
       <v-select-container title="Category" field="search_data.category_id" col="3">
         <v-select v-model="search_data.category_id" label="title" :reduce="(obj) => obj.id" :options="categories"
-          placeholder="--Select Category--" :closeOnSelect="true"></v-select>
+          :placeholder="$t('--Select Category--')" :closeOnSelect="true"></v-select>
       </v-select-container>
 
       <v-select-container title="Brand" field="search_data.brand_id" col="3">
         <v-select v-model="search_data.brand_id" label="title" :reduce="(obj) => obj.id" :options="brands"
-          placeholder="--Select Brand--" :closeOnSelect="true"></v-select>
+          :placeholder="$t('--Select Brand--')" :closeOnSelect="true"></v-select>
       </v-select-container>
     </template>
   </index-page>

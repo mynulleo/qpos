@@ -10,7 +10,7 @@
           :options="$root.global.branches" placeholder="--Select Branch--" :closeOnSelect="true"></v-select>
       </v-select-container>
       <date-picker id='date1' v-model='search_data.from_joining_date' field='data.from_joining_date'
-        title='From Joining Date' placeholder='Joining Date' col='3' :req='true'></date-picker>
+        title='From Joining Date' placeholder='From Joining Date' col='3' :req='true'></date-picker>
       <date-picker id='date2' v-model='search_data.to_joining_date' field='data.to_joining_date' title='To Joining Date'
         placeholder='Joining Date' col='3' :req='true'></date-picker>
     </template>
@@ -25,7 +25,7 @@ const tableColumns = [
   { field: "image", title: "Image", image: true, imgWidth: "30px", align: "center" },
   { field: "empid", title: "Empid" },
   { field: "joining_date", title: "Joining Date" },
-  { field: "designation_id", title: "Designation Id", subfield: "designation.title" },
+  { field: "designation_id", title: "Designation", subfield: "designation.title" },
   { field: "full_name", title: "Full Name" },
   { field: "email", title: "Email" },
   { field: "mobile", title: "Mobile" },
@@ -35,7 +35,7 @@ const tableColumns = [
 ];
 
 const json_fields = {
-  "Empid": "empid", "Joining Date": "joining_date", "Designation Id": "designation_id", "Full Name": "full_name", "Email": "email", "Mobile": "mobile", "Dob": "dob", "Nid": "nid", "Address": "address", "Branch Id": "branch_id", "Image": "image",
+  "Empid": "empid", "Joining Date": "joining_date", "Designation": "designation_id", "Full Name": "full_name", "Email": "email", "Mobile": "mobile", "Dob": "dob", "Nid": "nid", "Address": "address", "Branch Id": "branch_id", "Image": "image",
 };
 
 export default {

@@ -20,12 +20,12 @@
               <input
                 type="text"
                 class="form-control"
-                placeholder="Search Serial/IMEI, Invoice, Customer, Product... (Enter)"
+                :placeholder="$t('Search Serial/IMEI, Invoice, Customer, Product... (Enter)')"
                 v-model="search_data.keyword"
                 @keyup.enter="search"
               >
               <button type="button" class="btn btn-sm px-3 theme_search_btn" @click="search">
-                <i class="fas fa-search me-1"></i> Search
+                <i class="fas fa-search me-1"></i> {{ $t("Search") }}
               </button>
               <button type="button" class="btn btn-outline-secondary btn-sm" v-if="search_data.keyword" @click="search_data.keyword = ''; search()">
                 <i class="fas fa-times"></i>
@@ -40,7 +40,7 @@
               type="button"
               class="advance_filter_btn position-relative"
               @click="showAdvanced = !showAdvanced"
-              title="Advance Filter"
+              :title="$t('Advance Filter')"
             >
               <i class="fas fa-sliders-h"></i>
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;" v-if="activeFilterCount > 0">
@@ -55,7 +55,7 @@
               :data="exportData"
               :fields="exportFields"
               name="serial_warranty_audit_report.xls"
-              title="Export to Excel"
+              :title="$t('Export to Excel')"
             >
               <i class="fas fa-file-excel"></i>
             </download-excel>
@@ -65,9 +65,9 @@
               type="button"
               class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1"
               @click="triggerPrint"
-              title="Print Report"
+              :title="$t('Print Report')"
             >
-              <i class="fas fa-print"></i> Print
+              <i class="fas fa-print"></i> {{ $t("Print") }}
             </button>
 
             <!-- Help Info Button -->
@@ -75,9 +75,9 @@
               type="button"
               class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-sm"
               @click="openHelpModal"
-              title="Help Manual"
+              :title="$t('Help Manual')"
             >
-              <i class="fas fa-question-circle"></i> Help
+              <i class="fas fa-question-circle"></i> {{ $t("Help") }}
             </button>
           </div>
         </div>
@@ -87,9 +87,9 @@
           <div class="row g-2 align-items-end">
             <!-- Sales Status Filter -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Sales Status</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Sales Status") }}</label>
               <select class="form-select form-select-sm" v-model="search_data.sales_status" @change="search">
-                <option value="all">-- All Sales Status --</option>
+                <option value="all">{{ $t("-- All Sales Status --") }}</option>
                 <option value="sold">{{ $t('Sold') }}</option>
                 <option value="unsold">{{ $t('In Stock / Unsold') }}</option>
               </select>
@@ -97,11 +97,11 @@
 
             <!-- Claim & Lifecycle Status Filter -->
             <div class="col-md-3 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Claim & Expiry Lifecycle</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Claim & Expiry Lifecycle") }}</label>
               <select class="form-select form-select-sm" v-model="search_data.claim_status" @change="search">
-                <option value="all">-- All Lifecycles --</option>
-                <option value="sold_unclaimed_active">Sold & Never Claimed (Active Policy)</option>
-                <option value="sold_unclaimed_expired">Sold & Never Claimed (Expired Policy)</option>
+                <option value="all">{{ $t("-- All Lifecycles --") }}</option>
+                <option value="sold_unclaimed_active">{{ $t("Sold & Never Claimed (Active Policy)") }}</option>
+                <option value="sold_unclaimed_expired">{{ $t("Sold & Never Claimed (Expired Policy)") }}</option>
                 <option value="claimed">{{ $t('Claimed') }}</option>
                 <option value="unsold">{{ $t('In Stock / Unsold') }}</option>
               </select>
@@ -109,9 +109,9 @@
 
             <!-- Warranty Expiry Status Filter -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Warranty Policy Status</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Warranty Policy Status") }}</label>
               <select class="form-select form-select-sm" v-model="search_data.warranty_status" @change="search">
-                <option value="all">-- All Warranty States --</option>
+                <option value="all">{{ $t("-- All Warranty States --") }}</option>
                 <option value="active">{{ $t('Active') }}</option>
                 <option value="expired">{{ $t('Expired') }}</option>
                 <option value="no_warranty">{{ $t('No Policy') }}</option>
@@ -120,13 +120,13 @@
 
             <!-- Sale From Date -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Sale Date From</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Sale Date From") }}</label>
               <input type="date" class="form-control form-control-sm" v-model="search_data.from_date" @change="search">
             </div>
 
             <!-- Sale To Date -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Sale Date To</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Sale Date To") }}</label>
               <input type="date" class="form-control form-control-sm" v-model="search_data.to_date" @change="search">
             </div>
 
@@ -151,7 +151,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold">Total Serials</div>
+              <div class="text-muted small fw-semibold">{{ $t("Total Serials") }}</div>
               <h4 class="mb-0 fw-bold theme-text font-monospace">{{ summary.total_serials || 0 }}</h4>
             </div>
             <div class="kpi-icon-box theme-bg-soft text-dark">
@@ -166,7 +166,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold">Sold Products</div>
+              <div class="text-muted small fw-semibold">{{ $t("Sold Products") }}</div>
               <h4 class="mb-0 fw-bold text-success font-monospace">{{ summary.total_sold || 0 }}</h4>
             </div>
             <div class="kpi-icon-box bg-success bg-opacity-10 text-success">
@@ -181,7 +181,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold">In Stock (Unsold)</div>
+              <div class="text-muted small fw-semibold">{{ $t("In Stock (Unsold)") }}</div>
               <h4 class="mb-0 fw-bold text-secondary font-monospace">{{ summary.total_unsold || 0 }}</h4>
             </div>
             <div class="kpi-icon-box bg-secondary bg-opacity-10 text-secondary">
@@ -196,7 +196,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-info">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Sold and never claimed with active warranty">Active Unclaimed</div>
+              <div class="text-muted small fw-semibold" :title="$t('Sold and never claimed with active warranty')">{{ $t("Active Unclaimed") }}</div>
               <h4 class="mb-0 fw-bold text-info font-monospace">{{ summary.total_unclaimed_active || 0 }}</h4>
             </div>
             <div class="kpi-icon-box bg-info bg-opacity-10 text-info">
@@ -211,7 +211,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-warning">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Sold and expired without filing any claims">Expired Unclaimed</div>
+              <div class="text-muted small fw-semibold" :title="$t('Sold and expired without filing any claims')">{{ $t("Expired Unclaimed") }}</div>
               <h4 class="mb-0 fw-bold text-danger font-monospace">{{ summary.total_unclaimed_expired || 0 }}</h4>
             </div>
             <div class="kpi-icon-box bg-danger bg-opacity-10 text-danger">
@@ -226,7 +226,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-primary">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold">Claims Filed</div>
+              <div class="text-muted small fw-semibold">{{ $t("Claims Filed") }}</div>
               <h4 class="mb-0 fw-bold theme-text font-monospace">{{ summary.total_claimed || 0 }}</h4>
             </div>
             <div class="kpi-icon-box theme-bg-soft theme-text">
@@ -250,22 +250,22 @@
           <h5 class="fw-bold mb-0 text-dark">
             <i class="fas fa-barcode me-1"></i>{{ $t('Serial Number & Warranty Lifecycle Audit Report') }}</h5>
           <small class="text-muted">
-            Total Records: <strong>{{ meta.total || (records ? records.length : 0) }}</strong> | Generated on: <strong>{{ currentDate }}</strong>
+            {{ $t("Total Records:") }} <strong>{{ meta.total || (records ? records.length : 0) }}</strong> | {{ $t("Generated on:") }} <strong>{{ currentDate }}</strong>
           </small>
         </div>
 
         <!-- Print KPI Summary Strip -->
         <div class="row g-2 mb-2 text-start">
           <div class="col-4 border p-1 text-center bg-light">
-            <small class="d-block text-muted">Total Serials</small>
+            <small class="d-block text-muted">{{ $t("Total Serials") }}</small>
             <strong class="font-monospace">{{ summary.total_serials || 0 }}</strong>
           </div>
           <div class="col-4 border p-1 text-center bg-light">
-            <small class="d-block text-muted">Sold Products</small>
+            <small class="d-block text-muted">{{ $t("Sold Products") }}</small>
             <strong class="text-success font-monospace">{{ summary.total_sold || 0 }}</strong>
           </div>
           <div class="col-4 border p-1 text-center bg-light">
-            <small class="d-block text-muted">In Stock (Unsold)</small>
+            <small class="d-block text-muted">{{ $t("In Stock (Unsold)") }}</small>
             <strong class="text-secondary font-monospace">{{ summary.total_unsold || 0 }}</strong>
           </div>
         </div>
@@ -328,7 +328,7 @@
                 <td>
                   <div v-if="row.is_sold">
                     <div class="d-flex align-items-center gap-1">
-                      <span class="badge bg-success bg-opacity-10 text-success border border-success font-monospace px-1 py-0.5" style="font-size: 10px;">SOLD</span>
+                      <span class="badge bg-success bg-opacity-10 text-success border border-success font-monospace px-1 py-0.5" style="font-size: 10px;">{{ $t("SOLD") }}</span>
                       <router-link
                         v-if="row.invoice_id"
                         :to="{ name: 'invoice.show', params: { id: row.invoice_id } }"
@@ -350,7 +350,7 @@
                   </div>
                   <div v-else>
                     <span class="badge bg-secondary bg-opacity-10 text-secondary border font-monospace px-2 py-1">
-                      <i class="fas fa-box-open me-1 d-print-none"></i>In Stock (Unsold)
+                      <i class="fas fa-box-open me-1 d-print-none"></i>{{ $t("In Stock (Unsold)") }}
                     </span>
                   </div>
                 </td>
@@ -359,7 +359,7 @@
                 <td>
                   <div v-if="row.warranty_type && row.warranty_type !== 'none'">
                     <span class="badge" :class="row.warranty_type === 'guarantee' ? 'bg-success' : 'theme-bg text-white'">
-                      {{ row.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}
+                      {{ row.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }}
                     </span>
                     <span class="small font-monospace text-dark ms-1 fw-bold">{{ row.warranty_period }}</span>
                     <small class="text-secondary d-block mt-1 font-monospace" v-if="row.warranty_expiry_date" style="font-size: 11px;">
@@ -367,7 +367,7 @@
                     </small>
                   </div>
                   <div v-else class="text-muted small">
-                    <span>No Policy</span>
+                    <span>{{ $t("No Policy") }}</span>
                   </div>
                 </td>
 
@@ -376,7 +376,7 @@
                   <!-- Case 1: Claimed -->
                   <div v-if="row.claim_status === 'claimed'">
                     <span class="badge bg-primary px-2 py-1 rounded-pill">
-                      <i class="fas fa-tools me-1 d-print-none"></i>Claimed ({{ row.claims_count }})
+                      <i class="fas fa-tools me-1 d-print-none"></i>{{ $t("Claimed") }} ({{ row.claims_count }})
                     </span>
                     <div v-if="row.claims && row.claims.length > 0" class="mt-1">
                       <router-link :to="{ name: 'warrantyClaim.show', params: { id: row.claims[0].id } }" class="small font-monospace theme-text fw-bold text-decoration-none d-print-none">
@@ -389,30 +389,30 @@
                   <!-- Case 2: Sold & Unclaimed (Active Policy) -->
                   <div v-else-if="row.claim_status === 'sold_unclaimed_active'">
                     <span class="badge bg-info text-dark px-2 py-1 rounded-pill">
-                      <i class="fas fa-check-circle me-1 d-print-none"></i>Sold (Never Claimed)
+                      <i class="fas fa-check-circle me-1 d-print-none"></i>{{ $t("Sold (Never Claimed)") }}
                     </span>
-                    <small class="text-muted d-block mt-0.5 font-monospace" style="font-size: 10px;">Active Policy</small>
+                    <small class="text-muted d-block mt-0.5 font-monospace" style="font-size: 10px;">{{ $t("Active Policy") }}</small>
                   </div>
 
                   <!-- Case 3: Sold & Expired (Never Claimed) -->
                   <div v-else-if="row.claim_status === 'sold_unclaimed_expired'">
                     <span class="badge bg-danger text-white px-2 py-1 rounded-pill">
-                      <i class="fas fa-history me-1 d-print-none"></i>Expired (Never Claimed)
+                      <i class="fas fa-history me-1 d-print-none"></i>{{ $t("Expired (Never Claimed)") }}
                     </span>
-                    <small class="text-danger d-block mt-0.5 font-monospace" style="font-size: 10px;">No claims recorded</small>
+                    <small class="text-danger d-block mt-0.5 font-monospace" style="font-size: 10px;">{{ $t("No claims recorded") }}</small>
                   </div>
 
                   <!-- Case 4: In Stock / Unsold -->
                   <div v-else-if="row.claim_status === 'unsold'">
                     <span class="badge bg-light text-secondary border px-2 py-1 rounded-pill">
-                      <i class="fas fa-store me-1 d-print-none"></i>Unsold In Stock
+                      <i class="fas fa-store me-1 d-print-none"></i>{{ $t("Unsold In Stock") }}
                     </span>
                   </div>
 
                   <!-- Case 5: Sold without policy -->
                   <div v-else>
                     <span class="badge bg-light text-muted border px-2 py-1 rounded-pill">
-                      Sold (No Warranty)
+                      {{ $t("Sold (No Warranty)") }}
                     </span>
                   </div>
                 </td>
@@ -449,9 +449,9 @@
                         v-if="row.is_sold"
                         :to="{ name: 'warrantyClaim.create', query: { serial_no: row.serial_no } }"
                         class="btn btn-xs btn-outline-warning border-0"
-                        title="File New Warranty Claim for this Serial"
+                        :title="$t('File New Warranty Claim for this Serial')"
                       >
-                        <i class="fas fa-plus-circle me-1"></i>Claim
+                        <i class="fas fa-plus-circle me-1"></i>{{ $t("Claim") }}
                       </router-link>
 
                       <!-- View Claim (if claimed) -->
@@ -459,7 +459,7 @@
                         v-if="row.claims && row.claims.length > 0"
                         :to="{ name: 'warrantyClaim.show', params: { id: row.claims[0].id } }"
                         class="btn btn-xs btn-outline-primary border-0"
-                        title="View Claim Ticket"
+                        :title="$t('View Claim Ticket')"
                       >
                         <i class="fas fa-shield-alt"></i>
                       </router-link>
@@ -482,8 +482,8 @@
               <tr v-if="!loading && (!records || records.length === 0)">
                 <td colspan="7" class="text-center py-5 text-secondary">
                   <i class="fas fa-barcode fa-3x theme-text opacity-50 mb-3 d-block"></i>
-                  <h6 class="fw-bold text-dark">No Serial Numbers Found</h6>
-                  <p class="small text-muted mb-0">Try changing your search keywords or filter criteria.</p>
+                  <h6 class="fw-bold text-dark">{{ $t("No Serial Numbers Found") }}</h6>
+                  <p class="small text-muted mb-0">{{ $t("Try changing your search keywords or filter criteria.") }}</p>
                 </td>
               </tr>
 
@@ -491,7 +491,7 @@
               <tr v-if="loading">
                 <td colspan="7" class="text-center py-5">
                   <div class="spinner-border theme-text" role="status"></div>
-                  <div class="mt-2 small text-secondary fw-semibold">Auditing serial numbers and warranty statuses...</div>
+                  <div class="mt-2 small text-secondary fw-semibold">{{ $t("Auditing serial numbers and warranty statuses...") }}</div>
                 </td>
               </tr>
             </tbody>
@@ -503,11 +503,11 @@
       <div class="mt-3 pt-2 border-top small text-muted d-none d-print-block">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <p class="mb-0">Generated by: <strong>{{ ($root.auth && $root.auth.name) ? $root.auth.name : 'Admin' }}</strong></p>
-            <p class="mb-0">This is a system generated audit report from QPOS.</p>
+            <p class="mb-0">{{ $t("Generated by:") }} <strong>{{ ($root.auth && $root.auth.name) ? $root.auth.name : 'Admin' }}</strong></p>
+            <p class="mb-0">{{ $t("This is a system generated audit report from QPOS.") }}</p>
           </div>
           <div class="text-end font-monospace">
-            <p class="mb-0">Page 1 of 1</p>
+            <p class="mb-0">{{ $t("Page 1 of 1") }}</p>
           </div>
         </div>
       </div>
@@ -520,7 +520,7 @@
           <!-- Summary count on bottom left -->
           <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 12px;">
             <div class="d-flex align-items-center gap-1">
-              <span class="text-muted fw-bold">Filtered Serials:</span>
+              <span class="text-muted fw-bold">{{ $t("Filtered Serials:") }}</span>
               <span class="badge theme-bg text-white font-monospace">{{ meta.total || 0 }}</span>
             </div>
             <div class="small text-secondary font-monospace d-none d-md-inline" v-if="meta.total > 0">

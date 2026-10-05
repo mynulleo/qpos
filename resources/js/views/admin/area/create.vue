@@ -1,10 +1,10 @@
 <template>
   <create-form @onSubmit='submit'>
-    <Select title='District Id' v-model='data.district_id' field='data.district_id' label='district_name'
-      :reduce='(obj) => obj.id' :options='$root.global.districts' placeholder='--Select One--' :closeOnSelect='true'
+    <Select title='District' v-model='data.district_id' field='data.district_id' label='district_name'
+      :reduce='(obj) => obj.id' :options='$root.global.districts' placeholder='--Select District--' :closeOnSelect='true'
       :required='true' />
     <Input v-model='data.area_name' field='data.area_name' title='Area Name' :req='true' />
-    <Switch v-model='data.status' field='data.status' title='status' on-label='Active' off-label='Deactive' :req='true'>
+    <Switch v-model='data.status' field='data.status' title='Status' on-label='Active' off-label='Deactive' :req='true'>
     </Switch>
 
   </create-form>

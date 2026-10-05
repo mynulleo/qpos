@@ -73,7 +73,7 @@
                     <tr>
                       <th>{{ $t('Status') }}</th>
                       <th>:</th>
-                      <td>{{ data.status }}</td>
+                      <td>{{ $t(data.status) }}</td>
                     </tr>
                   </tbody>
                 </table>

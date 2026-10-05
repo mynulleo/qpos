@@ -4,11 +4,19 @@ import bn from "../lang/bn";
 
 const savedLocale = localStorage.getItem("qpos_locale") || "en";
 
+function flattenDict(mod) {
+    if (!mod) return {};
+    if (mod.default && typeof mod.default === "object") {
+        return Object.assign({}, mod, mod.default);
+    }
+    return Object.assign({}, mod);
+}
+
 export const i18nState = reactive({
     locale: savedLocale,
     messages: {
-        en: en,
-        bn: bn,
+        en: flattenDict(en),
+        bn: flattenDict(bn),
     },
 });
 
@@ -40,13 +48,26 @@ export function translate(key, defaultText = "") {
         return dict[trimmed];
     }
 
-    // 3. De-underscored match (e.g., 'invoice_no' -> 'invoice no' or 'Invoice No')
+    // 3. Trailing colon flexibility (e.g. 'Total Refund Amount:' vs 'Total Refund Amount')
+    if (trimmed.endsWith(":")) {
+        const withoutColon = trimmed.slice(0, -1).trim();
+        if (dict[withoutColon] !== undefined) {
+            return dict[withoutColon].endsWith(":") ? dict[withoutColon] : dict[withoutColon] + ":";
+        }
+    } else {
+        const withColon = trimmed + ":";
+        if (dict[withColon] !== undefined) {
+            return dict[withColon].endsWith(":") ? dict[withColon].slice(0, -1).trim() : dict[withColon];
+        }
+    }
+
+    // 4. De-underscored match (e.g., 'invoice_no' -> 'invoice no' or 'Invoice No')
     const deUnderscore = trimmed.replaceAll("_", " ");
     if (dict[deUnderscore] !== undefined) {
         return dict[deUnderscore];
     }
 
-    // 4. Case-insensitive match in current locale dictionary
+    // 5. Case-insensitive match in current locale dictionary
     const lower = trimmed.toLowerCase();
     for (const k in dict) {
         if (k.toLowerCase() === lower) {
@@ -60,7 +81,7 @@ export function translate(key, defaultText = "") {
         }
     }
 
-    // 5. Fallback to English dictionary if locale is bn
+    // 6. Fallback to English dictionary if locale is bn
     if (locale !== "en") {
         const enDict = i18nState.messages["en"] || {};
         if (enDict[key] !== undefined) {
@@ -68,6 +89,12 @@ export function translate(key, defaultText = "") {
         }
         if (enDict[trimmed] !== undefined) {
             return enDict[trimmed];
+        }
+        if (trimmed.endsWith(":")) {
+            const withoutColon = trimmed.slice(0, -1).trim();
+            if (enDict[withoutColon] !== undefined) {
+                return enDict[withoutColon].endsWith(":") ? enDict[withoutColon] : enDict[withoutColon] + ":";
+            }
         }
         if (enDict[deUnderscore] !== undefined) {
             return enDict[deUnderscore];

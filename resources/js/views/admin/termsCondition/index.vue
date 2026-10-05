@@ -9,7 +9,7 @@
             <div class="d-flex align-items-center gap-2">
               <h5 class="mb-0 fw-bold text-dark text-nowrap form_card_title d-flex align-items-center gap-2">
                 <i class="fas fa-file-contract text-primary"></i>
-                <span>Terms & Conditions List</span>
+                <span>{{ $t('Terms & Conditions List') }}</span>
               </h5>
               <span class="badge bg-secondary font-monospace" style="font-size: 11px;">
                 {{ filteredList.length }}
@@ -26,18 +26,18 @@
                   v-model="selectedModule"
                   @change="applyFilters"
                 >
-                  <option value="all">All Modules</option>
-                  <option value="Invoice">Invoice</option>
-                  <option value="Purchase Order">Purchase Order</option>
-                  <option value="Warranty">Warranty</option>
-                  <option value="Quotation">Quotation</option>
+                  <option value="all">{{ $t('All Modules') }}</option>
+                  <option value="Invoice">{{ $t('Invoice') }}</option>
+                  <option value="Purchase Order">{{ $t('Purchase Order') }}</option>
+                  <option value="Warranty">{{ $t('Warranty & Claims') }}</option>
+                  <option value="Quotation">{{ $t('Quotation') }}</option>
                 </select>
 
                 <!-- Keyword Search Input -->
                 <input
                   type="search"
                   class="form-control"
-                  placeholder="Search conditions... (Press Enter)"
+                  :placeholder="$t('Search conditions... (Press Enter)')"
                   v-model="searchKeyword"
                   @keyup.enter="applyFilters"
                   @input="applyFilters"
@@ -48,7 +48,7 @@
                   type="button"
                   class="btn btn-sm px-3 theme_search_btn"
                   @click="applyFilters"
-                  title="Search"
+                  :title="$t('Search')"
                 >
                   <i class="fas fa-search"></i>
                 </button>
@@ -59,7 +59,7 @@
                   type="button"
                   class="btn btn-outline-secondary btn-sm"
                   @click="resetFilters"
-                  title="Clear Filters"
+                  :title="$t('Clear Filters')"
                 >
                   <i class="fas fa-times"></i>
                 </button>
@@ -75,8 +75,8 @@
                 @click="showAdvanceFilter = !showAdvanceFilter"
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
-                data-bs-title="Advance Filter"
-                title="Advance Filter"
+                :data-bs-title="$t('Advance Filter')"
+                :title="$t('Advance Filter')"
               >
                 <i class="fas fa-sliders-h"></i>
                 <span
@@ -95,8 +95,8 @@
                 class="p_btn"
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
-                data-bs-title="Excel Export"
-                title="Excel Export"
+                :data-bs-title="$t('Excel Export')"
+                :title="$t('Excel Export')"
               >
                 <download-excel
                   :data="filteredList"
@@ -122,8 +122,8 @@
                 @click="printTable"
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
-                data-bs-title="Print Table"
-                title="Print Table"
+                :data-bs-title="$t('Print Table')"
+                :title="$t('Print Table')"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer">
                   <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -140,7 +140,7 @@
                 @click="openModal('create')"
               >
                 <i class="fas fa-plus"></i>
-                <span class="d-none d-sm-inline">Add New</span>
+                <span class="d-none d-sm-inline">{{ $t('Add New') }}</span>
               </button>
             </div>
           </div>
@@ -152,29 +152,29 @@
         <div class="card-body p-3 bg-light rounded">
           <div class="row g-2 align-items-center">
             <div class="col-md-4 col-sm-6">
-              <label class="form-label small fw-bold mb-1">Filter by Module:</label>
+              <label class="form-label small fw-bold mb-1">{{ $t('Filter by Module') }}:</label>
               <select class="form-select form-select-sm" v-model="selectedModule" @change="applyFilters">
-                <option value="all">-- All Modules --</option>
-                <option value="Invoice">Invoice (POS / Sales)</option>
-                <option value="Purchase Order">Purchase Order</option>
-                <option value="Warranty">Warranty & Claims</option>
-                <option value="Quotation">Quotation</option>
+                <option value="all">-- {{ $t('All Modules') }} --</option>
+                <option value="Invoice">{{ $t('Invoice') }} ({{ $t('POS / Sales') }})</option>
+                <option value="Purchase Order">{{ $t('Purchase Order') }}</option>
+                <option value="Warranty">{{ $t('Warranty & Claims') }}</option>
+                <option value="Quotation">{{ $t('Quotation') }}</option>
               </select>
             </div>
 
             <div class="col-md-4 col-sm-6">
-              <label class="form-label small fw-bold mb-1">Filter by Default State:</label>
+              <label class="form-label small fw-bold mb-1">{{ $t('Filter by Default State') }}:</label>
               <select class="form-select form-select-sm" v-model="selectedDefault" @change="applyFilters">
-                <option value="all">-- All Defaults --</option>
+                <option value="all">-- {{ $t('All Defaults') }} --</option>
                 <option value="1">{{ $t('Default Only') }}</option>
                 <option value="0">{{ $t('Optional Only') }}</option>
               </select>
             </div>
 
             <div class="col-md-4 col-sm-6">
-              <label class="form-label small fw-bold mb-1">Filter by Status:</label>
+              <label class="form-label small fw-bold mb-1">{{ $t('Filter by Status') }}:</label>
               <select class="form-select form-select-sm" v-model="selectedStatus" @change="applyFilters">
-                <option value="all">-- All Statuses --</option>
+                <option value="all">-- {{ $t('All Statuses') }} --</option>
                 <option value="active">{{ $t('Active') }}</option>
                 <option value="inactive">{{ $t('Inactive') }}</option>
               </select>
@@ -190,25 +190,25 @@
             <thead>
               <tr class="tr_stick">
                 <th class="sl text-center" style="width: 55px; min-width: 55px;">
-                  <span class="heading">SL</span>
+                  <span class="heading">{{ $t('SL') }}</span>
                 </th>
                 <th style="width: 150px; min-width: 140px;">
-                  <span class="heading">Module</span>
+                  <span class="heading">{{ $t('Module') }}</span>
                 </th>
                 <th style="min-width: 320px;">
-                  <span class="heading">Condition Description</span>
+                  <span class="heading">{{ $t('Condition Description') }}</span>
                 </th>
                 <th class="text-center" style="width: 110px; min-width: 100px;">
-                  <span class="heading">Default</span>
+                  <span class="heading">{{ $t('Default') }}</span>
                 </th>
                 <th class="text-center" style="width: 90px; min-width: 80px;">
-                  <span class="heading">Sorting</span>
+                  <span class="heading">{{ $t('Sorting') }}</span>
                 </th>
                 <th class="text-center" style="width: 100px; min-width: 90px;">
-                  <span class="heading">Status</span>
+                  <span class="heading">{{ $t('Status') }}</span>
                 </th>
                 <th class="text-center" style="width: 90px; min-width: 90px;">
-                  <span class="heading">Action</span>
+                  <span class="heading">{{ $t('Action') }}</span>
                 </th>
               </tr>
             </thead>
@@ -223,7 +223,7 @@
                 <td>
                   <span class="badge" :class="getModuleBadgeClass(item.module_name)" style="font-size: 10.5px; font-weight: 600; padding: 3px 7px;">
                     <i :class="getModuleIcon(item.module_name)" class="me-1"></i>
-                    {{ item.module_name }}
+                    {{ $t(item.module_name) }}
                   </span>
                 </td>
 
@@ -241,18 +241,18 @@
                     class="badge bg-success text-white px-2 py-1 cursor-pointer shadow-xs"
                     style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px;"
                     @click="toggleDefault(item)"
-                    title="Click to toggle Default state"
+                    :title="$t('Click to toggle Default state')"
                   >
-                    <i class="fas fa-check me-1"></i> DEFAULT
+                    <i class="fas fa-check me-1"></i> {{ $t('DEFAULT') }}
                   </span>
                   <span
                     v-else
                     class="badge bg-secondary text-white px-2 py-1 cursor-pointer shadow-xs"
                     style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px;"
                     @click="toggleDefault(item)"
-                    title="Click to toggle Default state"
+                    :title="$t('Click to toggle Default state')"
                   >
-                    <i class="fas fa-minus me-1"></i> OPTIONAL
+                    <i class="fas fa-minus me-1"></i> {{ $t('OPTIONAL') }}
                   </span>
                 </td>
 
@@ -278,18 +278,18 @@
                     class="badge bg-success text-white px-2 py-1 cursor-pointer shadow-xs"
                     style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px;"
                     @click="toggleStatus(item)"
-                    title="Click to toggle Status"
+                    :title="$t('Click to toggle Status')"
                   >
-                    ACTIVE
+                    {{ $t('ACTIVE') }}
                   </span>
                   <span
                     v-else
                     class="badge bg-danger text-white px-2 py-1 cursor-pointer shadow-xs"
                     style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px;"
                     @click="toggleStatus(item)"
-                    title="Click to toggle Status"
+                    :title="$t('Click to toggle Status')"
                   >
-                    INACTIVE
+                    {{ $t('INACTIVE') }}
                   </span>
                 </td>
 
@@ -300,7 +300,7 @@
                       type="button"
                       class="btn btn-xs btn-outline-primary p-1 border-0"
                       @click="openModal('edit', item)"
-                      title="Edit"
+                      :title="$t('Edit')"
                       style="width: 26px; height: 26px; border-radius: 4px;"
                     >
                       <i class="fas fa-edit" style="font-size: 11px;"></i>
@@ -309,7 +309,7 @@
                       type="button"
                       class="btn btn-xs btn-outline-danger p-1 border-0"
                       @click="deleteItem(item.id)"
-                      title="Delete"
+                      :title="$t('Delete')"
                       style="width: 26px; height: 26px; border-radius: 4px;"
                     >
                       <i class="fas fa-trash-alt" style="font-size: 11px;"></i>
@@ -322,10 +322,10 @@
               <tr v-if="filteredList.length === 0">
                 <td colspan="7" class="text-center py-5 text-muted">
                   <i class="fas fa-file-contract fs-1 opacity-25 d-block mb-2"></i>
-                  <span class="fw-bold">No Terms & Conditions Found</span>
-                  <p class="small text-muted mb-3">Add conditions for your invoices, purchase orders, or warranty documents.</p>
+                  <span class="fw-bold">{{ $t('No Terms & Conditions Found') }}</span>
+                  <p class="small text-muted mb-3">{{ $t('Add conditions for your invoices, purchase orders, or warranty documents.') }}</p>
                   <button type="button" class="btn btn-primary btn-sm theme_btn px-3" @click="openModal('create')">
-                    <i class="fas fa-plus me-1"></i> Add First Condition
+                    <i class="fas fa-plus me-1"></i> {{ $t('Add First Condition') }}
                   </button>
                 </td>
               </tr>
@@ -342,7 +342,7 @@
           <div class="modal-header py-2 px-3 text-white" style="background-color: #112C47;">
             <h6 class="modal-title fw-bold text-white mb-0 d-flex align-items-center gap-2" style="font-size: 13.5px;">
               <i class="fas fa-file-contract text-warning"></i>
-              <span>{{ modalMode === 'create' ? 'Add Terms & Condition' : 'Edit Terms & Condition' }}</span>
+              <span>{{ modalMode === 'create' ? $t('Add Terms & Condition') : $t('Edit Terms & Condition') }}</span>
             </h6>
             <button type="button" class="btn-close btn-close-white" @click="showModal = false" style="font-size: 10px;"></button>
           </div>
@@ -351,7 +351,7 @@
               <!-- Module Selection -->
               <div class="mb-3">
                 <label class="form-label fw-bold small text-dark mb-1">
-                  <i class="fas fa-layer-group text-primary me-1"></i> Target Module (মডিউল):
+                  <i class="fas fa-layer-group text-primary me-1"></i> {{ $t('Target Module') }}:
                 </label>
                 <select class="form-select form-select-sm fw-bold" v-model="formData.module_name" required>
                   <option value="Invoice">{{ $t('Invoice') }}</option>
@@ -360,19 +360,19 @@
                   <option value="Quotation">{{ $t('Quotation') }}</option>
                 </select>
                 <small class="text-muted d-block mt-1" style="font-size: 11px;">
-                  Conditions under <strong>Invoice</strong> will show in the POS Terminal and Sales Receipts.
+                  {{ $t('Conditions under Invoice will show in the POS Terminal and Sales Receipts.') }}
                 </small>
               </div>
 
               <!-- Condition Text -->
               <div class="mb-3">
                 <label class="form-label fw-bold small text-dark mb-1">
-                  <i class="fas fa-pen-nib text-primary me-1"></i> Condition Description (শর্তাবলীর বিবরণ):
+                  <i class="fas fa-pen-nib text-primary me-1"></i> {{ $t('Condition Description') }}:
                 </label>
                 <textarea
                   class="form-control form-control-sm"
                   rows="4"
-                  placeholder="e.g. Please preserve this invoice for any warranty claims and exchange within 7 days."
+                  :placeholder="$t('e.g. Please preserve this invoice for any warranty claims and exchange within 7 days.')"
                   v-model="formData.condition_text"
                   required
                 ></textarea>
@@ -381,11 +381,11 @@
               <!-- Sorting & Status Row -->
               <div class="row g-2 mb-3">
                 <div class="col-6">
-                  <label class="form-label fw-bold small text-dark mb-1">Sorting Order (ক্রম):</label>
+                  <label class="form-label fw-bold small text-dark mb-1">{{ $t('Sorting Order') }}:</label>
                   <input type="number" class="form-control form-control-sm font-monospace" v-model.number="formData.sorting" placeholder="1" />
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-bold small text-dark mb-1">Status (স্ট্যাটাস):</label>
+                  <label class="form-label fw-bold small text-dark mb-1">{{ $t('Status') }}:</label>
                   <select class="form-select form-select-sm" v-model="formData.status">
                     <option value="active">{{ $t('Active') }}</option>
                     <option value="inactive">{{ $t('Inactive') }}</option>
@@ -405,18 +405,18 @@
                   />
                   <label class="form-check-label fw-bold text-dark cursor-pointer small" for="modalDefaultSwitch">
                     <i class="fas fa-check-circle text-success me-1"></i>
-                    Included by Default in POS Terminal & Receipts
+                    {{ $t('Included by Default in POS Terminal & Receipts') }}
                   </label>
                 </div>
               </div>
 
               <!-- Modal Footer -->
               <div class="modal-footer px-0 pb-0 pt-2 border-0 d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-sm btn-secondary" @click="showModal = false">Cancel</button>
+                <button type="button" class="btn btn-sm btn-secondary" @click="showModal = false">{{ $t('Cancel') }}</button>
                 <button type="submit" class="btn btn-sm btn-primary theme_btn px-3 fw-bold shadow-sm" :disabled="isSaving">
                   <i class="fas fa-spinner fa-spin me-1" v-if="isSaving"></i>
                   <i class="fas fa-save me-1" v-else></i>
-                  {{ modalMode === 'create' ? 'Save Condition' : 'Update Condition' }}
+                  {{ modalMode === 'create' ? $t('Save Condition') : $t('Update Condition') }}
                 </button>
               </div>
             </form>

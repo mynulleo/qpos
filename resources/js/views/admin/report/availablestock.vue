@@ -130,7 +130,7 @@
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
                             @click="resetSearchData">
-                            <i class="fas fa-sync-alt"></i> Reset
+                            <i class="fas fa-sync-alt"></i> {{ $t("Reset") }}
                         </button>
                         <download-excel
                             v-if="exportData.length > 0"
@@ -143,7 +143,7 @@
                         <button class="p_btn btn btn-sm btn-dark d-inline-flex align-items-center gap-1"
                             data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print Report"
                             v-x-tooltip @click="print('printArea', model)">
-                            <i class="fas fa-print"></i> Print
+                            <i class="fas fa-print"></i> {{ $t("Print") }}
                         </button>
                     </div>
                 </div>
@@ -167,7 +167,7 @@
                                 </div>
                             </div>
                             <div class="mt-2 pt-2 border-top border-white-10 d-flex justify-content-between align-items-center small text-white-50">
-                                <span>দোকানের মোট মালের ইনভেস্টমেন্ট</span>
+                                <span>{{ $t("Total Shop Stock Investment") }}</span>
                                 <span class="badge bg-white text-dark font-monospace">{{ formatNumber(summaryData.global_total_stock_qty) }} Pcs</span>
                             </div>
                         </div>
@@ -188,8 +188,8 @@
                                 </div>
                             </div>
                             <div class="mt-2 pt-2 border-top border-white-10 d-flex justify-content-between align-items-center small text-white-50">
-                                <span>সর্বমোট সম্ভাব্য বিক্রয়মূল্য (MRP)</span>
-                                <span class="badge bg-info text-white">Expected Revenue</span>
+                                <span>{{ $t("Total Estimated Selling Value (MRP)") }}</span>
+                                <span class="badge bg-info text-white">{{ $t("Expected Revenue") }}</span>
                             </div>
                         </div>
                     </div>
@@ -209,7 +209,7 @@
                                 </div>
                             </div>
                             <div class="mt-2 pt-2 border-top border-white-10 d-flex justify-content-between align-items-center small text-white-50">
-                                <span>প্রত্যাশিত মোট গ্রস প্রফিট</span>
+                                <span>{{ $t("Expected Total Gross Profit") }}</span>
                                 <span class="badge bg-white text-success fw-bold">{{ summaryData.global_potential_margin }}% Margin</span>
                             </div>
                         </div>
@@ -242,14 +242,14 @@
             <div v-if="isFiltered" class="alert alert-primary bg-light border-primary py-2 px-3 small d-flex justify-content-between align-items-center mb-3 d-print-none rounded-3">
                 <div>
                     <i class="fas fa-filter text-primary me-1"></i>
-                    <strong>Filtered Results:</strong> Total <strong>{{ datas.length }}</strong> items matching filter |
+                    <strong>{{ $t("Filtered Results:") }}</strong> Total <strong>{{ datas.length }}</strong> items matching filter |
                     Qty: <strong>{{ formatNumber(displayedTotals.total_current_stock) }} Pcs</strong> |
                     Stock Cost: <strong class="text-dark">{{ formatCurrency(displayedTotals.total_purchase_value) }}</strong> |
                     Retail Value: <strong class="text-primary">{{ formatCurrency(displayedTotals.total_selling_value) }}</strong> |
                     Potential Profit: <strong class="text-success">{{ formatCurrency(displayedTotals.total_potential_profit) }}</strong>
                 </div>
                 <button class="btn btn-xs btn-outline-secondary" @click="resetSearchData">
-                    <i class="fas fa-times me-1"></i> Clear Filters
+                    <i class="fas fa-times me-1"></i> {{ $t("Clear Filters") }}
                 </button>
             </div>
 
@@ -265,7 +265,7 @@
                     <!-- Page Size Selector & Controls -->
                     <div class="d-flex align-items-center gap-2">
                         <div class="d-flex align-items-center gap-1 small text-muted">
-                            <span>Per Page:</span>
+                            <span>{{ $t("Per Page:") }}</span>
                             <select class="form-select form-select-sm py-0 px-2" style="width: auto; height: 30px;" v-model="perPage" @change="onPerPageChange">
                                 <option :value="25">25</option>
                                 <option :value="50">50</option>
@@ -499,8 +499,8 @@
                 <div class="mt-4 pt-3 border-top small text-muted d-none d-print-block">
                     <div class="d-flex justify-content-between align-items-end">
                         <div>
-                            <p class="mb-0">Report Generated By: <strong>{{ $root.admin ? $root.admin.name : 'System Admin' }}</strong></p>
-                            <p class="mb-0">This is a system generated available stock valuation report and does not require manual signature.</p>
+                            <p class="mb-0">{{ $t("Report Generated By:") }} <strong>{{ $root.admin ? $root.admin.name : 'System Admin' }}</strong></p>
+                            <p class="mb-0">{{ $t("This is a system generated available stock valuation report and does not require manual signature.") }}</p>
                         </div>
                         <div class="text-center" style="min-width: 160px;">
                             <div style="border-bottom: 1px solid #000; width: 140px; margin: 0 auto 5px auto;"></div>

@@ -6,7 +6,7 @@
     <SwitchBoolean v-model='data.is_default' field='data.is_default' title='Is Default' on-label='Yes' off-label='No'
       col="2">
     </SwitchBoolean>
-    <Switch v-model='data.status' field='data.status' title='status' on-label='Active' off-label='Deactive' col="3"
+    <Switch v-model='data.status' field='data.status' title='Status' on-label='Active' off-label='Deactive' col="3"
       :req='true'>
     </Switch>
 

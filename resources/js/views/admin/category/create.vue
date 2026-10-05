@@ -1,11 +1,11 @@
 <template>
     <create-form @onSubmit="submit">
-        <Select field="data.module_name" :req="true" title="Module name" col="4" v-model="data.module_name" label="name"
+        <Select field="data.module_name" :req="true" title="Module Name" col="4" v-model="data.module_name" label="name"
             :reduce="(obj) => obj.value" :options="modules" placeholder="--Select One--" :closeOnSelect="true" />
 
         <Input v-model="data.title" field="data.title" title="Title" :req="true" col="4 col-xl-3" />
         <Input title="Sorting" field="data.sorting" v-model="data.sorting" :req="true" col="4 col-xl-3" type="number" />
-        <Switch v-model="data.status" on-label="Active" off-label="Deactive" :req="true"></Switch>
+        <Switch v-model="data.status" title="Status" on-label="Active" off-label="Deactive" :req="true"></Switch>
     </create-form>
 </template>
 

@@ -13,7 +13,7 @@
         :closeOnSelect='true' :required='false' />
 
       <div class="col-md-12">
-        <label class="form-label small fw-semibold">Audit Notes / General Remarks</label>
+        <label class="form-label small fw-semibold">{{ $t("Audit Notes / General Remarks") }}</label>
         <textarea class="form-control" rows="2" v-model="data.note" placeholder="Enter general audit description, location, or findings..."></textarea>
       </div>
     </div>
@@ -30,7 +30,7 @@
 
           <!-- Add Item Button (Right Side) -->
           <button type="button" class="btn btn-danger btn-sm px-3 fw-bold shadow-sm d-flex align-items-center gap-2" @click="openAddItemModal">
-            <i class="fas fa-plus-circle"></i> Add Another Item
+            <i class="fas fa-plus-circle"></i> {{ $t("Add Another Item") }}
           </button>
         </div>
 
@@ -232,7 +232,7 @@
                   </span>
                 </label>
                 <select class="form-select form-select-sm" v-model="modalItem.color_id" @change="onVariantChange">
-                  <option :value="null">-- Standard (No Color) --</option>
+                  <option :value="null">{{ $t("-- Standard (No Color) --") }}</option>
                   <option v-for="c in colors" :key="c.id" :value="c.id">{{ c.title }}</option>
                 </select>
               </div>
@@ -246,7 +246,7 @@
                   </span>
                 </label>
                 <select class="form-select form-select-sm" v-model="modalItem.size_id" @change="onVariantChange">
-                  <option :value="null">-- Standard (No Size) --</option>
+                  <option :value="null">{{ $t("-- Standard (No Size) --") }}</option>
                   <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.title }}</option>
                 </select>
               </div>
@@ -381,14 +381,14 @@
                 </div>
 
                 <div class="small text-muted mt-1 d-flex justify-content-between">
-                  <span><i class="fas fa-info-circle me-1"></i>Type serial and press <strong>Enter</strong> or comma (<strong>,</strong>) to validate & add tag.</span>
-                  <span v-if="isCheckingSerial" class="text-primary fw-semibold"><i class="fas fa-spinner fa-spin me-1"></i>Verifying sales status...</span>
+                  <span><i class="fas fa-info-circle me-1"></i>{{ $t("Type serial and press") }} <strong>Enter</strong> or comma (<strong>,</strong>) to validate & add tag.</span>
+                  <span v-if="isCheckingSerial" class="text-primary fw-semibold"><i class="fas fa-spinner fa-spin me-1"></i>{{ $t("Verifying sales status...") }}</span>
                 </div>
 
                 <!-- Available Serials Quick-Chips -->
                 <div v-if="modalItem.available_serials && modalItem.available_serials.length > 0" class="mt-2 p-2 bg-light rounded border">
                   <div class="small fw-semibold text-muted mb-1 d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-tags me-1 text-success"></i>Available In-Stock Serials (Click to toggle tag):</span>
+                    <span><i class="fas fa-tags me-1 text-success"></i>{{ $t("Available In-Stock Serials (Click to toggle tag):") }}</span>
                     <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
                       {{ modalItem.available_serials.length }} available
                     </span>
