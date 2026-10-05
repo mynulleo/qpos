@@ -389,8 +389,8 @@
                   <label class="form-label small fw-bold text-theme d-flex justify-content-between">
                     <span><i class="fas fa-credit-card me-1"></i> {{ $t('Payment Terms') }}:</span>
                     <span class="small text-muted">
-                      <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.payment_terms = '50% Advance along with Work Order, remaining 50% upon delivery/completion.'">Preset 1</button> |
-                      <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.payment_terms = '100% Cash/Cheque on Delivery.'">Preset 2</button>
+                      <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.payment_terms = '50% Advance along with Work Order, remaining 50% upon delivery/completion.'">{{ $t("Preset 1") }}</button> |
+                      <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.payment_terms = '100% Cash/Cheque on Delivery.'">{{ $t("Preset 2") }}</button>
                     </span>
                   </label>
                   <input type="text" class="form-control form-control-sm" v-model="data.payment_terms" :placeholder="$t('e.g. 50% Advance, 50% on Delivery...')" />
@@ -400,7 +400,7 @@
                 <div class="col-12">
                   <label class="form-label small fw-bold text-theme d-flex justify-content-between">
                     <span><i class="fas fa-truck me-1"></i> {{ $t('Delivery Terms') }}:</span>
-                    <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.delivery_terms = 'Within 3-5 working days after receiving confirmed work order.'">Preset</button>
+                    <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.delivery_terms = 'Within 3-5 working days after receiving confirmed work order.'">{{ $t("Preset") }}</button>
                   </label>
                   <input type="text" class="form-control form-control-sm" v-model="data.delivery_terms" :placeholder="$t('e.g. Within 3-5 working days...')" />
                 </div>
@@ -409,7 +409,7 @@
                 <div class="col-12">
                   <label class="form-label small fw-bold text-theme d-flex justify-content-between">
                     <span><i class="fas fa-shield-alt me-1"></i> {{ $t('Warranty Terms') }}:</span>
-                    <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.warranty_terms = '1 Year official warranty & free technical support.'">Preset</button>
+                    <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" @click="data.warranty_terms = '1 Year official warranty & free technical support.'">{{ $t("Preset") }}</button>
                   </label>
                   <input type="text" class="form-control form-control-sm" v-model="data.warranty_terms" :placeholder="$t('e.g. 1 Year service warranty...')" />
                 </div>
@@ -919,10 +919,10 @@ export default {
     this.fetchItems();
 
     if (this.$route.params.id) {
-      this.page_title = "Edit Quotation (কোটেশন সংশোধন)";
+      this.page_title = "Edit Quotation";
       this.loadQuotationData(this.$route.params.id);
     } else {
-      this.page_title = "Create New Quotation (নতুন কোটেশন তৈরি)";
+      this.page_title = "Create Quotation";
     }
   },
 

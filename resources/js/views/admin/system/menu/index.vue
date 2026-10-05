@@ -1,9 +1,9 @@
 <template>
     <index-page>
         <template v-slot:search-field>
-            <v-select-container title="Select Parent Menu" field="search_data.role_id" col="4">
+            <v-select-container title="Parent Menu" field="search_data.role_id" col="4">
                 <v-select v-model="search_data.parent_id" label="menu_name" :reduce="(obj) => obj.id"
-                    :options="parent_menus" placeholder="--Select Parent Menu--" :closeOnSelect="true"></v-select>
+                    :options="parent_menus" :placeholder="$t('--Select Parent Menu--')" :closeOnSelect="true"></v-select>
             </v-select-container>
 
             <div class="col-md-4">
@@ -11,7 +11,7 @@
                     <input class="form-check-input bs-checkbox" type="checkbox" id="show_dashboard"
                         v-model="search_data.show_dashboard">
                     <label class="form-check-label" for="show_dashboard" style="padding-top: 2px;">
-                        Show Dashboard
+                        {{ $t('Show Dashboard') }}
                     </label>
                 </div>
             </div>

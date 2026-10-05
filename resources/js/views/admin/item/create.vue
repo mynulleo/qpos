@@ -7,7 +7,7 @@
         <div class="col-12">
           <div class="card border shadow-sm">
             <div class="card-header bg-light py-2">
-              <span class="fw-bold small text-dark"><i class="fas fa-image me-1 text-primary"></i> Item Image</span>
+              <span class="fw-bold small text-dark"><i class="fas fa-image me-1 text-primary"></i> {{ $t("Item Image") }}</span>
             </div>
             <div class="card-body p-3">
               <File
@@ -74,7 +74,7 @@
               </div>
               <div class="fw-bold font-monospace fs-6 text-dark mt-1">{{ data.barcode }}</div>
               <button type="button" class="btn btn-xs btn-outline-secondary mt-2 w-100" @click="fetchGeneratedBarcode" title="Regenerate Next Barcode">
-                <i class="fas fa-sync-alt me-1"></i> Auto Barcode
+                <i class="fas fa-sync-alt me-1"></i> {{ $t("Auto Barcode") }}
               </button>
             </div>
           </div>
@@ -122,27 +122,27 @@
                   :required='false' />
                 
                 <!-- 4. Series (Brand -> Series - for Electronics Shop) -->
-                <Select v-if="isElectronicsShop" title='Series (সিরিজ)' v-model='data.series_id' field='data.series_id' label='title'
+                <Select v-if="isElectronicsShop" title='Series' v-model='data.series_id' field='data.series_id' label='title'
                   :reduce='(obj) => obj.id' col="4" :options='seriesList'
                   :placeholder="data.brand_id ? (seriesList.length ? '--Select Series--' : 'No Series in Brand') : '--Select Brand First--'"
                   :closeOnSelect='true'
                   :required='false' />
 
                 <!-- 5. Title* -->
-                <Input v-model='data.title' field='data.title' title='Title (নাম)' col="4" :req='true' />
+                <Input v-model='data.title' field='data.title' title='Title' col="4" :req='true' />
 
                 <!-- 6. Unit* -->
-                <Select title='Unit (একক)' v-model='data.unit_id' field='data.unit_id' label='title' :reduce='(obj) => obj.id' col="4"
+                <Select title='Unit' v-model='data.unit_id' field='data.unit_id' label='title' :reduce='(obj) => obj.id' col="4"
                   :options='units' placeholder='--Select Unit--' :closeOnSelect='true' :required='true' />
 
                 <!-- 7. Model (Input Box for Electronics Shop) -->
-                <Input v-if="isElectronicsShop" v-model='data.model_no' field='data.model_no' title='Model (মডেল)' col="4" placeholder="e.g. Inspiron 15, Pro 14..." :req='false' />
+                <Input v-if="isElectronicsShop" v-model='data.model_no' field='data.model_no' title='Model' col="4" placeholder="e.g. Inspiron 15, Pro 14..." :req='false' />
 
                 <!-- 8. Purchase Price -->
-                <Input v-model='data.purchase_price' col="4" field='data.purchase_price' title='Purchase Price (ক্রয় মূল্য)' type="number" step="0.01" :req='false' />
+                <Input v-model='data.purchase_price' col="4" field='data.purchase_price' title='Purchase Price' type="number" step="0.01" :req='false' />
 
                 <!-- 9. Selling Price -->
-                <Input v-model='data.selling_price' col="4" field='data.selling_price' title='Selling Price (বিক্রয় মূল্য)' type="number" step="0.01" :req='false' />
+                <Input v-model='data.selling_price' col="4" field='data.selling_price' title='Selling Price' type="number" step="0.01" :req='false' />
                 
                 <!-- 10. Description -->
                 <Textarea v-model='data.description' field='data.description' :required='false' title="Description" col="12" />
@@ -162,7 +162,7 @@
               <div class="row g-3 align-items-center">
                 <!-- Radio Options -->
                 <div class="col-md-5">
-                  <label class="form-label fw-bold small text-dark d-block mb-2">Coverage Type (ধরণ):</label>
+                  <label class="form-label fw-bold small text-dark d-block mb-2">{{ $t('Coverage Type:') }}</label>
                   <div class="d-flex flex-wrap gap-3">
                     <div class="form-check form-check-inline">
                       <input class="form-check-input cursor-pointer" type="radio" id="warrantyNone" value="none" v-model="data.warranty_type">
@@ -184,7 +184,7 @@
                 <!-- Warranty Period Field (Visible when warranty or guarantee selected) -->
                 <div class="col-md-7" v-if="data.warranty_type === 'warranty' || data.warranty_type === 'guarantee'">
                   <label class="form-label fw-bold small text-dark mb-1">
-                    {{ data.warranty_type === 'guarantee' ? 'Guarantee Period (গ্যারান্টি মেয়াদ)' : 'Warranty Period (ওয়ারেন্টি মেয়াদ)' }}:
+                    {{ data.warranty_type === 'guarantee' ? $t('Guarantee Period') : $t('Warranty Period') }}:
                   </label>
                   <div class="input-group input-group-sm">
                     <span class="input-group-text bg-light text-primary">
@@ -224,7 +224,7 @@
                   <i class="fas fa-edit me-1"></i>{{ $t('Price Modification / Add Production Stock') }}</label>
               </div>
               <small class="d-block text-muted mt-2">
-                <i class="fas fa-info-circle me-1"></i> Enable this switch to modify purchase/selling prices or add new production stock for specific color & size variants.
+                <i class="fas fa-info-circle me-1"></i> {{ $t("Enable this switch to modify purchase/selling prices or add new production stock for specific color & size variants.") }}
               </small>
             </div>
           </div>
@@ -236,7 +236,7 @@
             <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-2">
               <div class="d-flex align-items-center flex-wrap gap-2">
                 <span class="fw-bold fs-6">
-                  <i class="fas fa-tags me-2"></i>{{ isElectronicsShop ? 'Color Wise Price & Stock Matrix' : 'Color & Size Wise Price & Stock Matrix' }}
+                  <i class="fas fa-tags me-2"></i>{{ isElectronicsShop ? $t('Color Wise Price & Stock Matrix') : $t('Color & Size Wise Price & Stock Matrix') }}
                 </span>
                 <!-- Stock Instruction Tooltip Button for Edit Mode -->
                 <button
@@ -245,14 +245,14 @@
                   class="btn btn-xs btn-outline-info text-info border-info d-inline-flex align-items-center gap-1 ms-1 px-2 py-1 shadow-sm rounded-pill"
                   data-bs-toggle="tooltip"
                   data-bs-placement="top"
-                  title="স্টক সম্পর্কিত নির্দেশনা: পূর্বে সংরক্ষিত মজুদ Current Stock (বর্তমান) কলামে দেখা যাচ্ছে। নতুন করে কোনো স্টক ইনপুট দিতে চাইলে Add Qty (নতুন স্টক) ঘরে সংখ্যা লিখুন (ডিফল্ট মান ০ রাখা হয়েছে যাতে আগের স্টকে ভুলবশত কোনো পরিবর্তন না হয়)।"
+                  :title="$t('Stock Instruction: Previous stock is shown in Current Stock column. To add new stock, enter quantity in Add Qty field.')"
                   v-x-tooltip
                 >
-                  <i class="fas fa-info-circle"></i> <span class="small fw-semibold">স্টক নির্দেশিকা</span>
+                  <i class="fas fa-info-circle"></i> <span class="small fw-semibold">{{ $t('Stock Guide') }}</span>
                 </button>
               </div>
               <button type="button" class="btn btn-sm btn-success px-3 fw-bold" @click="addVariantRow">
-                <i class="fas fa-plus me-1"></i> Add Variant Row
+                <i class="fas fa-plus me-1"></i> {{ $t('Add Variant Row') }}
               </button>
             </div>
 
@@ -268,7 +268,7 @@
                     <th v-if="data.id" :width="isElectronicsShop ? '16%' : '14%'" class="text-primary">{{ $t('Current Stock') }}</th>
                     <!-- Add Qty with explanation tooltip -->
                     <th :width="isElectronicsShop ? '18%' : '14%'">
-                      <span>{{ data.id ? 'Add Qty (নতুন স্টক)' : 'Opening Qty (মজুদ)' }}</span>
+                      <span>{{ $t(data.id ? 'Add Qty' : 'Opening Qty') }}</span>
                       <button v-if="data.id" type="button" class="btn btn-xs btn-link p-0 text-info ms-1 align-baseline"
                         data-bs-toggle="tooltip" data-bs-placement="top"
                         title="স্টক সম্পর্কিত নির্দেশনা: পূর্বে সংরক্ষিত মজুদ Current Stock (বর্তমান) কলামে দেখা যাচ্ছে। নতুন করে কোনো স্টক ইনপুট দিতে চাইলে Add Qty (নতুন স্টক) ঘরে সংখ্যা লিখুন (ডিফল্ট মান ০ রাখা হয়েছে যাতে আগের স্টকে ভুলবশত কোনো পরিবর্তন না হয়)।"
@@ -283,13 +283,13 @@
                   <tr v-for="(v, index) in variants" :key="index">
                     <td>
                       <select class="form-select form-select-sm" v-model="v.color_id">
-                        <option :value="null">-- Select Color --</option>
+                        <option :value="null">{{ $t('-- Select Color --') }}</option>
                         <option v-for="c in colors" :key="c.id" :value="c.id">{{ c.title }}</option>
                       </select>
                     </td>
                     <td v-if="!isElectronicsShop">
                       <select class="form-select form-select-sm" v-model="v.size_id">
-                        <option :value="null">-- Select Size --</option>
+                        <option :value="null">{{ $t('-- Select Size --') }}</option>
                         <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.title }}</option>
                       </select>
                     </td>
@@ -310,7 +310,7 @@
                       <input type="number" class="form-control form-control-sm text-center font-monospace fw-bold" v-model.number="v.qty" placeholder="0" min="0" />
                     </td>
                     <td class="text-center">
-                      <button type="button" class="btn btn-sm btn-outline-danger" @click="removeVariantRow(index)" :disabled="variants.length === 1" title="Remove Row">
+                      <button type="button" class="btn btn-sm btn-outline-danger" @click="removeVariantRow(index)" :disabled="variants.length === 1" :title="$t('Remove Row')">
                         <i class="fas fa-trash-alt"></i>
                       </button>
                     </td>
@@ -329,7 +329,7 @@
       <div class="col-12 mt-3">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 bg-white border rounded shadow-sm">
           <router-link :to="{ name: model + '.index' }" class="btn btn-outline-secondary px-4 fw-semibold">
-            <i class="fas fa-arrow-left me-1"></i> Back to List
+            <i class="fas fa-arrow-left me-1"></i> {{ $t('Back to List') }}
           </router-link>
 
           <div class="d-flex align-items-center gap-2">
@@ -339,10 +339,10 @@
               :disabled="$root.submit"
             >
               <template v-if="$root.submit">
-                <i class="fa fa-spinner fa-spin"></i> Processing...
+                <i class="fa fa-spinner fa-spin"></i> {{ $t('Processing...') }}
               </template>
               <template v-else>
-                <i class="fas fa-check-circle"></i> {{ $route.params.id ? "Update Item" : "Save & Create Item" }}
+                <i class="fas fa-check-circle"></i> {{ $t($route.params.id ? "Update Item" : "Save & Create Item") }}
               </template>
             </button>
           </div>

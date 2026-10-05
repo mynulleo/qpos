@@ -12,26 +12,26 @@
               </div>
               <div>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <h4 class="fw-bold mb-0 text-white">Goods Receive Note #{{ data.grn_no || data.id || 'N/A' }}</h4>
+                  <h4 class="fw-bold mb-0 text-white">{{ $t('Goods Receive Note') }} #{{ data.grn_no || data.id || $t('N/A') }}</h4>
                   <span class="badge bg-light text-dark fw-bold">
                     <i :class="data.grn_type === 'direct' ? 'fas fa-bolt text-warning' : (data.grn_type === 'supplier' ? 'fas fa-truck-loading text-info' : 'fas fa-file-invoice-dollar text-primary')" class="me-1"></i>
-                    {{ data.grn_type === 'direct' ? 'Direct Purchase' : (data.grn_type === 'supplier' ? 'Supplier Based' : 'PO Based') }}
+                    {{ data.grn_type === 'direct' ? $t('Direct Purchase') : (data.grn_type === 'supplier' ? $t('Supplier Based') : $t('PO Based')) }}
                   </span>
                   <span class="badge" :class="data.is_closed ? 'bg-success text-white' : 'bg-warning text-dark'">
                     <i :class="data.is_closed ? 'fas fa-check-circle me-1' : 'fas fa-clock me-1'"></i>
-                    {{ data.is_closed ? 'Fully Paid / Settled' : 'Payment Due' }}
+                    {{ data.is_closed ? $t('Fully Paid / Settled') : $t('Payment Due') }}
                   </span>
                   <span class="badge bg-light bg-opacity-25 text-white" v-if="hasAnySerials">
-                    <i class="fas fa-barcode me-1"></i> Serialized Stock
+                    <i class="fas fa-barcode me-1"></i> {{ $t('Serialized Stock') }}
                   </span>
                 </div>
                 <div class="d-flex align-items-center gap-3 mt-2 text-white-50 small flex-wrap font-monospace">
-                  <span><i class="far fa-calendar-alt me-1"></i>Receive Date: <strong class="text-white">{{ data.grn_date || 'N/A' }}</strong></span>
-                  <span v-if="data.purchase"><i class="fas fa-file-invoice me-1"></i>PO: <strong class="text-white">{{ data.purchase.invoiceno }}</strong></span>
-                  <span v-else><i class="fas fa-file-invoice me-1"></i>PO: <strong class="text-white-50 fst-italic">Direct Receiving</strong></span>
-                  <span><i class="fas fa-warehouse me-1"></i>Warehouse: <strong class="text-white">{{ data.warehouse?.name || 'N/A' }}</strong></span>
-                  <span v-if="data.supplier"><i class="fas fa-user-tag me-1"></i>Supplier: <strong class="text-white">{{ data.supplier.org_name || data.supplier.name }}</strong></span>
-                  <span v-else-if="data.fund_account"><i class="fas fa-wallet me-1 text-warning"></i>Fund: <strong class="text-white">{{ data.fund_account.account_name }}</strong></span>
+                  <span><i class="far fa-calendar-alt me-1"></i>{{ $t('Receive Date') }}: <strong class="text-white">{{ data.grn_date || $t('N/A') }}</strong></span>
+                  <span v-if="data.purchase"><i class="fas fa-file-invoice me-1"></i>{{ $t('PO') }}: <strong class="text-white">{{ data.purchase.invoiceno }}</strong></span>
+                  <span v-else><i class="fas fa-file-invoice me-1"></i>{{ $t('PO') }}: <strong class="text-white-50 fst-italic">{{ $t('Direct Receiving') }}</strong></span>
+                  <span><i class="fas fa-warehouse me-1"></i>{{ $t('Warehouse') }}: <strong class="text-white">{{ data.warehouse?.name || $t('N/A') }}</strong></span>
+                  <span v-if="data.supplier"><i class="fas fa-user-tag me-1"></i>{{ $t('Supplier') }}: <strong class="text-white">{{ data.supplier.org_name || data.supplier.name }}</strong></span>
+                  <span v-else-if="data.fund_account"><i class="fas fa-wallet me-1 text-warning"></i>{{ $t('Fund') }}: <strong class="text-white">{{ data.fund_account.account_name }}</strong></span>
                 </div>
               </div>
             </div>
@@ -39,7 +39,7 @@
             <!-- Action Buttons (Right Side: Print GRN Note) -->
             <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
               <button type="button" class="btn btn-light btn-sm text-theme fw-bold px-3 shadow-sm" @click="printGrnVoucher">
-                <i class="fas fa-print me-1"></i> Print GRN Note
+                <i class="fas fa-print me-1"></i> {{ $t('Print GRN Note') }}
               </button>
             </div>
           </div>
@@ -53,14 +53,14 @@
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Total Received Quantity</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Total Received Quantity') }}</span>
                 <div class="stat-icon theme-bg-soft text-theme rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-boxes"></i>
                 </div>
               </div>
-              <h4 class="fw-bold mb-0 text-dark font-monospace text-nowrap">{{ data.total_qty || 0 }} Units</h4>
+              <h4 class="fw-bold mb-0 text-dark font-monospace text-nowrap">{{ data.total_qty || 0 }} {{ $t('Units') }}</h4>
               <small class="text-muted" style="font-size: 11px;">
-                Across {{ data.grn_details?.length || 0 }} product line(s)
+                {{ $t('Across') }} {{ data.grn_details?.length || 0 }} {{ $t('product line(s)') }}
               </small>
             </div>
           </div>
@@ -71,14 +71,14 @@
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Total Received Value</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Total Received Value') }}</span>
                 <div class="stat-icon bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-money-bill-wave"></i>
                 </div>
               </div>
               <h4 class="fw-bold mb-0 text-success font-monospace text-nowrap">৳ {{ formatNum(data.total_amount) }}</h4>
               <small class="text-muted" style="font-size: 11px;">
-                Inventory valuation addition
+                {{ $t('Inventory valuation addition') }}
               </small>
             </div>
           </div>
@@ -89,7 +89,7 @@
           <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-muted fw-bold small text-uppercase">Paid / Outstanding Due</span>
+                <span class="text-muted fw-bold small text-uppercase">{{ $t('Paid / Outstanding Due') }}</span>
                 <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                   <i class="fas fa-balance-scale"></i>
                 </div>
@@ -97,11 +97,11 @@
               <div class="d-flex align-items-center gap-2 flex-wrap text-nowrap">
                 <h4 class="fw-bold mb-0 text-primary font-monospace text-nowrap">৳ {{ formatNum(data.paid_amount) }}</h4>
                 <span class="badge bg-danger bg-opacity-10 text-danger fw-bold font-monospace text-nowrap" style="font-size: 11px; padding: 4px 8px;">
-                  Due: ৳ {{ formatNum(dueAmount) }}
+                  {{ $t('Due') }}: ৳ {{ formatNum(dueAmount) }}
                 </span>
               </div>
               <small class="text-muted d-block mt-1" style="font-size: 11px;">
-                Supplier payable settlement status
+                {{ $t('Supplier payable settlement status') }}
               </small>
             </div>
           </div>
@@ -118,8 +118,8 @@
                 <i class="fas fa-info-circle"></i>
               </div>
               <div>
-                <h6 class="fw-bold mb-0 text-dark">Receiving Metadata</h6>
-                <small class="text-muted" style="font-size: 11px;">Warehouse, supplier and challan details</small>
+                <h6 class="fw-bold mb-0 text-dark">{{ $t('Receiving Metadata') }}</h6>
+                <small class="text-muted" style="font-size: 11px;">{{ $t('Warehouse, supplier and challan details') }}</small>
               </div>
             </div>
             <div class="card-body p-0">
@@ -127,59 +127,59 @@
                 <table class="table table-hover align-middle mb-0 custom-spec-table">
                   <tbody>
                     <tr>
-                      <td class="spec-label"><i class="fas fa-tag me-2 text-muted"></i>GRN Mode</td>
+                      <td class="spec-label"><i class="fas fa-tag me-2 text-muted"></i>{{ $t('GRN Mode') }}</td>
                       <td class="spec-value">
                         <span class="badge" :class="data.grn_type === 'direct' ? 'bg-warning text-dark' : (data.grn_type === 'supplier' ? 'bg-info text-dark' : 'bg-primary text-white')">
-                          {{ data.grn_type === 'direct' ? 'Direct Purchase' : (data.grn_type === 'supplier' ? 'Supplier Based' : 'PO Based') }}
+                          {{ data.grn_type === 'direct' ? $t('Direct Purchase') : (data.grn_type === 'supplier' ? $t('Supplier Based') : $t('PO Based')) }}
                         </span>
                       </td>
                     </tr>
                     <tr>
-                      <td class="spec-label"><i class="fas fa-warehouse me-2 text-muted"></i>Destination Warehouse</td>
-                      <td class="spec-value fw-bold text-dark">{{ data.warehouse?.name || 'N/A' }}</td>
+                      <td class="spec-label"><i class="fas fa-warehouse me-2 text-muted"></i>{{ $t('Destination Warehouse') }}</td>
+                      <td class="spec-value fw-bold text-dark">{{ data.warehouse?.name || $t('N/A') }}</td>
                     </tr>
                     <tr>
-                      <td class="spec-label"><i class="fas fa-barcode me-2 text-muted"></i>Warehouse Code</td>
-                      <td class="spec-value font-monospace">{{ data.warehouse?.code || 'N/A' }}</td>
+                      <td class="spec-label"><i class="fas fa-barcode me-2 text-muted"></i>{{ $t('Warehouse Code') }}</td>
+                      <td class="spec-value font-monospace">{{ data.warehouse?.code || $t('N/A') }}</td>
                     </tr>
                     <tr v-if="data.supplier">
-                      <td class="spec-label"><i class="fas fa-building me-2 text-muted"></i>Supplier / Vendor</td>
-                      <td class="spec-value fw-bold text-dark">{{ data.supplier.org_name || data.supplier.name || 'N/A' }}</td>
+                      <td class="spec-label"><i class="fas fa-building me-2 text-muted"></i>{{ $t('Supplier / Vendor') }}</td>
+                      <td class="spec-value fw-bold text-dark">{{ data.supplier.org_name || data.supplier.name || $t('N/A') }}</td>
                     </tr>
                     <tr v-if="data.supplier?.mobile">
-                      <td class="spec-label"><i class="fas fa-phone me-2 text-muted"></i>Supplier Mobile</td>
+                      <td class="spec-label"><i class="fas fa-phone me-2 text-muted"></i>{{ $t('Supplier Mobile') }}</td>
                       <td class="spec-value font-monospace">{{ data.supplier.mobile }}</td>
                     </tr>
                     <tr v-if="data.fund_account">
-                      <td class="spec-label"><i class="fas fa-wallet me-2 text-warning"></i>Fund Account</td>
+                      <td class="spec-label"><i class="fas fa-wallet me-2 text-warning"></i>{{ $t('Fund Account') }}</td>
                       <td class="spec-value fw-bold text-dark">{{ data.fund_account.account_name }}</td>
                     </tr>
                     <tr v-if="data.purchase">
-                      <td class="spec-label"><i class="fas fa-file-invoice me-2 text-muted"></i>PO Invoice</td>
+                      <td class="spec-label"><i class="fas fa-file-invoice me-2 text-muted"></i>{{ $t('PO Invoice') }}</td>
                       <td class="spec-value font-monospace fw-bold text-dark">{{ data.purchase.invoiceno }}</td>
                     </tr>
                     <tr v-if="data.purchase?.purchase_date">
-                      <td class="spec-label"><i class="far fa-calendar-check me-2 text-muted"></i>PO Date</td>
+                      <td class="spec-label"><i class="far fa-calendar-check me-2 text-muted"></i>{{ $t('PO Date') }}</td>
                       <td class="spec-value font-monospace">{{ data.purchase.purchase_date }}</td>
                     </tr>
                     <tr>
-                      <td class="spec-label"><i class="fas fa-truck-loading me-2 text-muted"></i>Challan / Memo No</td>
-                      <td class="spec-value font-monospace fw-bold text-dark">{{ data.challan_no || 'N/A' }}</td>
+                      <td class="spec-label"><i class="fas fa-truck-loading me-2 text-muted"></i>{{ $t('Challan / Memo No') }}</td>
+                      <td class="spec-value font-monospace fw-bold text-dark">{{ data.challan_no || $t('N/A') }}</td>
                     </tr>
                     <tr>
-                      <td class="spec-label"><i class="far fa-calendar-alt me-2 text-muted"></i>Challan Date</td>
-                      <td class="spec-value font-monospace">{{ data.challan_date || 'N/A' }}</td>
+                      <td class="spec-label"><i class="far fa-calendar-alt me-2 text-muted"></i>{{ $t('Challan Date') }}</td>
+                      <td class="spec-value font-monospace">{{ data.challan_date || $t('N/A') }}</td>
                     </tr>
                     <tr>
-                      <td class="spec-label"><i class="fas fa-user-check me-2 text-muted"></i>Received By</td>
-                      <td class="spec-value">{{ data.received_by || 'Store Keeper' }}</td>
+                      <td class="spec-label"><i class="fas fa-user-check me-2 text-muted"></i>{{ $t('Received By') }}</td>
+                      <td class="spec-value">{{ data.received_by || $t('Store Keeper') }}</td>
                     </tr>
                     <tr v-if="data.discount > 0">
-                      <td class="spec-label"><i class="fas fa-percent me-2 text-muted"></i>Discount</td>
+                      <td class="spec-label"><i class="fas fa-percent me-2 text-muted"></i>{{ $t('Discount') }}</td>
                       <td class="spec-value font-monospace text-success fw-bold">৳ {{ formatNum(data.discount) }}</td>
                     </tr>
                     <tr>
-                      <td class="spec-label"><i class="fas fa-sticky-note me-2 text-muted"></i>Note</td>
+                      <td class="spec-label"><i class="fas fa-sticky-note me-2 text-muted"></i>{{ $t('Note') }}</td>
                       <td class="spec-value">{{ data.note || '-' }}</td>
                     </tr>
                   </tbody>
@@ -198,12 +198,12 @@
                   <i class="fas fa-boxes"></i>
                 </div>
                 <div>
-                  <h6 class="fw-bold mb-0 text-dark">Received Product Lines</h6>
-                  <small class="text-muted" style="font-size: 11px;">Quantities received into stock and verified</small>
+                  <h6 class="fw-bold mb-0 text-dark">{{ $t('Received Product Lines') }}</h6>
+                  <small class="text-muted" style="font-size: 11px;">{{ $t('Quantities received into stock and verified') }}</small>
                 </div>
               </div>
               <span class="badge theme-bg text-white font-monospace">
-                {{ data.grn_details?.length || 0 }} Items Received
+                {{ data.grn_details?.length || 0 }} {{ $t('Items Received') }}
               </span>
             </div>
             <div class="card-body p-0">
@@ -225,10 +225,10 @@
                     <tr v-for="(gdetail, index) in data.grn_details" :key="index">
                       <td class="text-center font-monospace text-muted">{{ index + 1 }}</td>
                       <td>
-                        <div class="fw-bold text-dark fs-6">{{ gdetail.item?.title || 'Item #' + gdetail.item_id }}</div>
+                        <div class="fw-bold text-dark fs-6">{{ gdetail.item?.title || $t('Item #') + gdetail.item_id }}</div>
                         <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
                           <span class="badge bg-light text-dark border px-2 py-0.5" style="font-size: 11px;">
-                            {{ gdetail.category?.title || gdetail.item?.category?.title || 'General' }}
+                            {{ gdetail.category?.title || gdetail.item?.category?.title || $t('General') }}
                           </span>
                           <small class="text-muted font-monospace" v-if="gdetail.item?.barcode" style="font-size: 11px;">
                             <i class="fas fa-barcode me-1"></i>{{ gdetail.item.barcode }}
@@ -246,7 +246,7 @@
                         {{ gdetail.ordered_qty }}
                       </td>
                       <td class="text-center font-monospace fw-bold text-primary">
-                        {{ gdetail.received_qty }} <small class="text-muted fw-normal">{{ gdetail.unit?.title || 'Pcs' }}</small>
+                        {{ gdetail.received_qty }} <small class="text-muted fw-normal">{{ gdetail.unit?.title || $t('Pcs') }}</small>
                       </td>
                       <td class="text-end font-monospace text-muted text-nowrap">
                         ৳ {{ formatNum(gdetail.unit_price) }}
@@ -259,10 +259,10 @@
                             type="button"
                             class="btn btn-xs btn-outline-theme d-inline-flex align-items-center gap-1 shadow-sm font-monospace"
                             @click="openSerialModal(gdetail)"
-                            title="Click to view all Serial Numbers"
+                            :title="$t('Click to view all Serial Numbers')"
                           >
                             <i class="fas fa-barcode"></i>
-                            <strong>{{ getSerialsList(gdetail.serial_no).length }}</strong> Serials
+                            <strong>{{ getSerialsList(gdetail.serial_no).length }}</strong> {{ $t('Serials') }}
                           </button>
                         </template>
                         <template v-else>
@@ -277,13 +277,13 @@
 
                     <tr v-if="!data.grn_details || data.grn_details.length === 0">
                       <td :colspan="hasAnySerials ? (hasAnyVariants ? 7 : 6) : (hasAnyVariants ? 6 : 5)" class="text-center py-4 text-muted">
-                        No goods receive items found.
+                        {{ $t('No goods receive items found.') }}
                       </td>
                     </tr>
                   </tbody>
                   <tfoot class="table-light fw-bold">
                     <tr>
-                      <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">Summary Totals:</td>
+                      <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">{{ $t('Summary Totals:') }}</td>
                       <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
                       <td v-if="!hasAnySerials"></td>
                       <td colspan="2" v-else></td>
@@ -308,20 +308,20 @@
           <h3 class="fw-bold mb-1 text-uppercase text-dark">{{ $root.site?.title || 'QPOS STORE' }}</h3>
           <p class="mb-0 text-muted small">{{ $root.site?.address || '' }}</p>
           <p class="mb-0 text-muted small">
-            <span>Phone: {{ $root.site?.mobile1 || '' }}</span>
-            <span v-if="$root.site?.contact_email" class="ms-2">| Email: {{ $root.site?.contact_email }}</span>
+            <span>{{ $t('Phone') }}: {{ $root.site?.mobile1 || '' }}</span>
+            <span v-if="$root.site?.contact_email" class="ms-2">| {{ $t('Email') }}: {{ $root.site?.contact_email }}</span>
           </p>
         </div>
         <div class="text-end">
           <div class="voucher-title-badge">
-            GOODS RECEIVE NOTE (GRN)
+            {{ $t('GOODS RECEIVE NOTE (GRN)') }}
           </div>
           <div class="fw-bold fs-6 font-monospace mt-1 text-dark">#{{ data.grn_no || data.id }}</div>
-          <div class="small text-muted font-monospace">Date: <strong>{{ data.grn_date || 'N/A' }}</strong></div>
+          <div class="small text-muted font-monospace">{{ $t('Date') }}: <strong>{{ data.grn_date || $t('N/A') }}</strong></div>
           <div class="small mt-1">
-            Status:
+            {{ $t('Status') }}:
             <span class="badge" :class="data.is_closed ? 'bg-success text-white' : 'bg-warning text-dark'">
-              {{ data.is_closed ? 'Fully Paid / Settled' : 'Payment Due' }}
+              {{ data.is_closed ? $t('Fully Paid / Settled') : $t('Payment Due') }}
             </span>
           </div>
         </div>
@@ -333,24 +333,24 @@
         <div class="col-6">
           <div class="p-2 border rounded bg-light h-100">
             <div class="fw-bold small text-uppercase text-secondary border-bottom pb-1 mb-2">
-              <i class="fas fa-warehouse me-1"></i> Destination & Receiver
+              <i class="fas fa-warehouse me-1"></i> {{ $t('Destination & Receiver') }}
             </div>
             <table class="table table-sm table-borderless mb-0 small-meta-table">
               <tbody>
                 <tr>
-                  <td class="text-muted" width="40%">Warehouse:</td>
-                  <td class="fw-bold text-dark">{{ data.warehouse?.name || 'N/A' }}</td>
+                  <td class="text-muted" width="40%">{{ $t('Warehouse') }}:</td>
+                  <td class="fw-bold text-dark">{{ data.warehouse?.name || $t('N/A') }}</td>
                 </tr>
                 <tr>
-                  <td class="text-muted">Code:</td>
+                  <td class="text-muted">{{ $t('Code') }}:</td>
                   <td class="font-monospace text-dark">{{ data.warehouse?.code || '-' }}</td>
                 </tr>
                 <tr>
-                  <td class="text-muted">Received By:</td>
-                  <td class="text-dark">{{ data.received_by || 'Store Keeper' }}</td>
+                  <td class="text-muted">{{ $t('Received By') }}:</td>
+                  <td class="text-dark">{{ data.received_by || $t('Store Keeper') }}</td>
                 </tr>
                 <tr v-if="data.note">
-                  <td class="text-muted">Note:</td>
+                  <td class="text-muted">{{ $t('Note') }}:</td>
                   <td class="text-dark">{{ data.note }}</td>
                 </tr>
               </tbody>
@@ -362,32 +362,32 @@
         <div class="col-6">
           <div class="p-2 border rounded bg-light h-100">
             <div class="fw-bold small text-uppercase text-secondary border-bottom pb-1 mb-2">
-              <i class="fas fa-truck me-1"></i> Supplier & Purchase Order
+              <i class="fas fa-truck me-1"></i> {{ $t('Supplier & Purchase Order') }}
             </div>
             <table class="table table-sm table-borderless mb-0 small-meta-table">
               <tbody>
                 <tr v-if="data.supplier">
-                  <td class="text-muted" width="40%">Supplier / Vendor:</td>
-                  <td class="fw-bold text-dark">{{ data.supplier.org_name || data.supplier.name || 'N/A' }}</td>
+                  <td class="text-muted" width="40%">{{ $t('Supplier / Vendor') }}:</td>
+                  <td class="fw-bold text-dark">{{ data.supplier.org_name || data.supplier.name || $t('N/A') }}</td>
                 </tr>
                 <tr v-else-if="data.fund_account">
-                  <td class="text-muted" width="40%">Payment Source:</td>
-                  <td class="fw-bold text-dark">{{ data.fund_account.account_name }} (Direct Purchase)</td>
+                  <td class="text-muted" width="40%">{{ $t('Payment Source') }}:</td>
+                  <td class="fw-bold text-dark">{{ data.fund_account.account_name }} ({{ $t('Direct Purchase') }})</td>
                 </tr>
                 <tr v-else>
-                  <td class="text-muted" width="40%">Supplier:</td>
-                  <td class="fw-bold text-dark">Direct Purchase / Cash</td>
+                  <td class="text-muted" width="40%">{{ $t('Supplier') }}:</td>
+                  <td class="fw-bold text-dark">{{ $t('Direct Purchase / Cash') }}</td>
                 </tr>
                 <tr v-if="data.supplier?.mobile">
-                  <td class="text-muted">Contact Mobile:</td>
+                  <td class="text-muted">{{ $t('Contact Mobile') }}:</td>
                   <td class="font-monospace text-dark">{{ data.supplier.mobile }}</td>
                 </tr>
                 <tr>
-                  <td class="text-muted">PO Invoice No:</td>
-                  <td class="font-monospace fw-bold text-dark">{{ data.purchase?.invoiceno || 'Direct GRN (No PO)' }} <span class="fw-normal" v-if="data.purchase?.purchase_date">({{ data.purchase.purchase_date }})</span></td>
+                  <td class="text-muted">{{ $t('PO Invoice No') }}:</td>
+                  <td class="font-monospace fw-bold text-dark">{{ data.purchase?.invoiceno || $t('Direct GRN (No PO)') }} <span class="fw-normal" v-if="data.purchase?.purchase_date">({{ data.purchase.purchase_date }})</span></td>
                 </tr>
                 <tr>
-                  <td class="text-muted">Challan / Memo:</td>
+                  <td class="text-muted">{{ $t('Challan / Memo') }}:</td>
                   <td class="font-monospace text-dark">{{ data.challan_no || '-' }} <span class="fw-normal" v-if="data.challan_date">({{ data.challan_date }})</span></td>
                 </tr>
               </tbody>
@@ -415,10 +415,10 @@
             <tr v-for="(gdetail, index) in data.grn_details" :key="index">
               <td class="text-center font-monospace">{{ index + 1 }}</td>
               <td>
-                <div class="fw-bold text-dark">{{ gdetail.item?.title || 'Item #' + gdetail.item_id }}</div>
+                <div class="fw-bold text-dark">{{ gdetail.item?.title || $t('Item #') + gdetail.item_id }}</div>
                 <div class="small text-muted mt-1">
-                  <span class="badge bg-light text-dark border me-1">{{ gdetail.category?.title || gdetail.item?.category?.title || 'General' }}</span>
-                  <span v-if="gdetail.item?.barcode" class="font-monospace">Barcode: {{ gdetail.item?.barcode }}</span>
+                  <span class="badge bg-light text-dark border me-1">{{ gdetail.category?.title || gdetail.item?.category?.title || $t('General') }}</span>
+                  <span v-if="gdetail.item?.barcode" class="font-monospace">{{ $t('Barcode') }}: {{ gdetail.item?.barcode }}</span>
                 </div>
               </td>
               <td v-if="hasAnyVariants">
@@ -427,7 +427,7 @@
                 <span v-if="!gdetail.color?.title && !gdetail.size?.title">-</span>
               </td>
               <td class="text-center font-monospace">{{ gdetail.ordered_qty }}</td>
-              <td class="text-center font-monospace fw-bold">{{ gdetail.received_qty }} {{ gdetail.unit?.title || 'Pcs' }}</td>
+              <td class="text-center font-monospace fw-bold">{{ gdetail.received_qty }} {{ gdetail.unit?.title || $t('Pcs') }}</td>
               <td class="text-end font-monospace text-nowrap">৳ {{ formatNum(gdetail.unit_price) }}</td>
               <td class="text-center small font-monospace" v-if="hasAnySerials">
                 {{ gdetail.serial_no || '-' }}
@@ -437,7 +437,7 @@
           </tbody>
           <tfoot class="table-light fw-bold">
             <tr>
-              <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">Summary Totals:</td>
+              <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">{{ $t('Summary Totals:') }}</td>
               <td class="text-center font-monospace fs-6">{{ data.total_qty }}</td>
               <td v-if="!hasAnySerials"></td>
               <td colspan="2" v-else></td>
@@ -453,15 +453,15 @@
           <table class="table table-sm table-bordered print-summary-table mb-0">
             <tbody>
               <tr>
-                <td class="text-muted" width="55%">Total Received Amount:</td>
+                <td class="text-muted" width="55%">{{ $t('Total Received Amount') }}:</td>
                 <td class="text-end font-monospace fw-bold text-nowrap">৳ {{ formatNum(data.total_amount) }}</td>
               </tr>
               <tr>
-                <td class="text-muted">Settled / Paid Amount:</td>
+                <td class="text-muted">{{ $t('Settled / Paid Amount') }}:</td>
                 <td class="text-end font-monospace text-success fw-bold text-nowrap">৳ {{ formatNum(data.paid_amount) }}</td>
               </tr>
               <tr class="table-light">
-                <td class="fw-bold">Outstanding Due:</td>
+                <td class="fw-bold">{{ $t('Outstanding Due') }}:</td>
                 <td class="text-end font-monospace text-danger fw-bold text-nowrap">৳ {{ formatNum(dueAmount) }}</td>
               </tr>
             </tbody>
@@ -473,16 +473,16 @@
       <div class="print-signatures-block mt-5 pt-3">
         <div class="row text-center">
           <div class="col-3">
-            <div class="sig-line">Prepared By</div>
+            <div class="sig-line">{{ $t('Prepared By') }}</div>
           </div>
           <div class="col-3">
-            <div class="sig-line">Store Keeper / Received By</div>
+            <div class="sig-line">{{ $t('Store Keeper / Received By') }}</div>
           </div>
           <div class="col-3">
-            <div class="sig-line">Quality / Verified By</div>
+            <div class="sig-line">{{ $t('Quality / Verified By') }}</div>
           </div>
           <div class="col-3">
-            <div class="sig-line">Authorized Approval</div>
+            <div class="sig-line">{{ $t('Authorized Approval') }}</div>
           </div>
         </div>
       </div>
@@ -496,8 +496,8 @@
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-barcode fs-5"></i>
               <div>
-                <h6 class="modal-title fw-bold mb-0 text-white">Received Serial Numbers & IMEI</h6>
-                <small class="text-white-50" style="font-size: 11px;">{{ activeSerialItem.item?.title || 'Product Serials' }}</small>
+                <h6 class="modal-title fw-bold mb-0 text-white">{{ $t('Received Serial Numbers & IMEI') }}</h6>
+                <small class="text-white-50" style="font-size: 11px;">{{ activeSerialItem.item?.title || $t('Product Serials') }}</small>
               </div>
             </div>
             <button type="button" class="btn-close btn-close-white" @click="activeSerialItem = null"></button>
@@ -505,10 +505,10 @@
           <div class="modal-body p-4">
             <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border">
               <span class="small fw-semibold text-dark">
-                Total Serials Received: <strong class="theme-text font-monospace fs-6">{{ modalSerialsList.length }}</strong>
+                {{ $t('Total Serials Received:') }} <strong class="theme-text font-monospace fs-6">{{ modalSerialsList.length }}</strong>
               </span>
               <button type="button" class="btn btn-xs btn-outline-secondary" @click="copyAllSerials">
-                <i class="fas fa-copy me-1"></i> Copy All
+                <i class="fas fa-copy me-1"></i> {{ $t('Copy All') }}
               </button>
             </div>
 
@@ -521,7 +521,7 @@
                       <span class="badge theme-bg text-white font-monospace" style="font-size: 10px;">#{{ sIdx + 1 }}</span>
                       <span class="font-monospace fw-bold text-dark text-truncate" style="font-size: 12px;">{{ sn }}</span>
                     </div>
-                    <button type="button" class="btn btn-xs btn-light border" @click="copySingleSerial(sn)" title="Copy Serial">
+                    <button type="button" class="btn btn-xs btn-light border" @click="copySingleSerial(sn)" :title="$t('Copy Serial')">
                       <i class="far fa-copy text-muted"></i>
                     </button>
                   </div>
@@ -530,7 +530,7 @@
             </div>
           </div>
           <div class="modal-footer py-2 px-4 bg-light border-top">
-            <button type="button" class="btn btn-secondary btn-sm px-4" @click="activeSerialItem = null">Close</button>
+            <button type="button" class="btn btn-secondary btn-sm px-4" @click="activeSerialItem = null">{{ $t('Close') }}</button>
           </div>
         </div>
       </div>
@@ -545,7 +545,7 @@ export default {
   name: "GrnView",
   data() {
     return {
-      page_title: "Goods Receive Note Details",
+      page_title: this.$t("Goods Receive Note Details"),
       model: model,
       data: {},
       activeSerialItem: null,

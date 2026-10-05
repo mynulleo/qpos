@@ -10,14 +10,14 @@
             </div>
             <div>
               <h6 class="fw-bold mb-0 text-dark">{{ $t('Purchase Order Information') }}</h6>
-              <span class="small text-muted">Enter invoice details, supplier and purchase date</span>
+              <span class="small text-muted">{{ $t("Enter invoice details, supplier and purchase date") }}</span>
             </div>
           </div>
           <div class="d-flex align-items-center gap-3">
             <div class="d-flex align-items-center gap-2">
-              <span class="small fw-semibold text-muted">Status:</span>
+              <span class="small fw-semibold text-muted">{{ $t("Status") }}:</span>
               <span class="badge" :class="data.status ? 'bg-success' : 'bg-secondary'">
-                {{ data.status ? 'Active' : 'Deactive' }}
+                {{ data.status ? $t('Active') : $t('Deactive') }}
               </span>
             </div>
           </div>
@@ -40,7 +40,7 @@
                     type="button"
                     class="btn btn-outline-secondary btn-sm"
                     @click="getGeneratedInvoiceNo(true)"
-                    title="Regenerate Invoice / Bill No"
+                    :title="$t('Regenerate Invoice / Bill No')"
                   >
                     <i class="fas fa-sync-alt"></i>
                   </button>

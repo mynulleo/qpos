@@ -3,7 +3,7 @@
     <template v-slot:search-field>
       <v-select-container title="Branch" field="search_data.branch_id" col="3">
         <v-select v-model="search_data.branch_id" label="title" :reduce="(obj) => obj.id"
-          :options="$root.global.branches" placeholder="--Select Branch--" :closeOnSelect="true"></v-select>
+          :options="$root.global.branches" :placeholder="$t('--Select Branch--')" :closeOnSelect="true"></v-select>
       </v-select-container>
     </template>
   </index-page>

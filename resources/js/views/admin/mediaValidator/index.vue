@@ -61,12 +61,16 @@ export default {
                 meta: [],
                 links: [],
             },
-
-            field_types: [
-                { name: "File", value: "file" },
-                { name: "Image", value: "image" },
-            ],
         };
+    },
+
+    computed: {
+        field_types() {
+            return [
+                { name: this.$t("File"), value: "file" },
+                { name: this.$t("Image"), value: "image" },
+            ];
+        },
     },
 
     provide() {

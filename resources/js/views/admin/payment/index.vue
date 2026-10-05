@@ -7,12 +7,12 @@
         <div class="card border-0 shadow-sm kpi_card h-100" @click="setQuickFilter('all')" role="button">
           <div class="card-body p-3 d-flex align-items-center justify-content-between">
             <div>
-              <div class="kpi_label text-muted small fw-bold text-uppercase">Total Transactions</div>
+              <div class="kpi_label text-muted small fw-bold text-uppercase">{{ $t("Total Transactions") }}</div>
               <div class="kpi_value text-dark fw-bold fs-4 font-monospace">
                 {{ table.meta ? (table.meta.total || 0) : table.datas.length }}
               </div>
               <small class="text-secondary font-monospace" style="font-size: 11px;">
-                <i class="fas fa-list me-1 text-primary"></i> All recorded vouchers
+                <i class="fas fa-list me-1 text-primary"></i> {{ $t("All recorded vouchers") }}
               </small>
             </div>
             <div class="kpi_icon_wrap bg-primary-soft text-primary">
@@ -27,12 +27,12 @@
         <div class="card border-0 shadow-sm kpi_card h-100" @click="setQuickFilter('Receive')" role="button">
           <div class="card-body p-3 d-flex align-items-center justify-content-between">
             <div>
-              <div class="kpi_label text-success small fw-bold text-uppercase">Total Collections</div>
+              <div class="kpi_label text-success small fw-bold text-uppercase">{{ $t("Total Collections") }}</div>
               <div class="kpi_value text-success fw-bold fs-4 font-monospace">
                 ৳ {{ this.$filter.money(summaryStats.total_receive) }}
               </div>
               <small class="text-muted font-monospace" style="font-size: 11px;">
-                <i class="fas fa-arrow-circle-down text-success me-1"></i> Receive payments
+                <i class="fas fa-arrow-circle-down text-success me-1"></i> {{ $t("Receive payments") }}
               </small>
             </div>
             <div class="kpi_icon_wrap bg-success-soft text-success">
@@ -47,12 +47,12 @@
         <div class="card border-0 shadow-sm kpi_card h-100" @click="setQuickFilter('Pay')" role="button">
           <div class="card-body p-3 d-flex align-items-center justify-content-between">
             <div>
-              <div class="kpi_label text-danger small fw-bold text-uppercase">Total Disbursements</div>
+              <div class="kpi_label text-danger small fw-bold text-uppercase">{{ $t("Total Disbursements") }}</div>
               <div class="kpi_value text-danger fw-bold fs-4 font-monospace">
                 ৳ {{ this.$filter.money(summaryStats.total_pay) }}
               </div>
               <small class="text-muted font-monospace" style="font-size: 11px;">
-                <i class="fas fa-arrow-circle-up text-danger me-1"></i> Supplier / Salary / Exps
+                <i class="fas fa-arrow-circle-up text-danger me-1"></i> {{ $t("Supplier / Salary / Exps") }}
               </small>
             </div>
             <div class="kpi_icon_wrap bg-danger-soft text-danger">
@@ -67,12 +67,12 @@
         <div class="card border-0 shadow-sm kpi_card kpi_card_net h-100">
           <div class="card-body p-3 d-flex align-items-center justify-content-between">
             <div>
-              <div class="kpi_label text-muted small fw-bold text-uppercase">Net Cash Balance</div>
+              <div class="kpi_label text-muted small fw-bold text-uppercase">{{ $t("Net Cash Balance") }}</div>
               <div class="kpi_value fw-bold fs-4 font-monospace" :class="summaryStats.net_amount >= 0 ? 'text-dark' : 'text-danger'">
                 ৳ {{ this.$filter.money(summaryStats.net_amount) }}
               </div>
               <small class="text-secondary font-monospace" style="font-size: 11px;">
-                <i class="fas fa-wallet text-primary me-1"></i> (Collections - Payments)
+                <i class="fas fa-wallet text-primary me-1"></i> ({{ $t("Collections - Payments") }})
               </small>
             </div>
             <div class="kpi_icon_wrap bg-dark text-white">
@@ -91,18 +91,18 @@
         <div class="col-12 mb-2">
           <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 bg-light rounded-3 border">
             <div class="d-flex flex-wrap align-items-center gap-1">
-              <span class="small fw-bold text-secondary me-2"><i class="fas fa-bolt text-warning me-1"></i> Quick Presets:</span>
-              <button type="button" class="btn btn-xs quick_pill" :class="!search_data.payment_type ? 'quick_pill_active' : ''" @click="setQuickFilter('all')">All</button>
-              <button type="button" class="btn btn-xs quick_pill" :class="search_data.payment_type === 'Receive' ? 'quick_pill_active' : ''" @click="setQuickFilter('Receive')">Receive</button>
-              <button type="button" class="btn btn-xs quick_pill" :class="search_data.payment_type === 'Pay' ? 'quick_pill_active' : ''" @click="setQuickFilter('Pay')">Pay</button>
+              <span class="small fw-bold text-secondary me-2"><i class="fas fa-bolt text-warning me-1"></i> {{ $t("Quick Presets:") }}</span>
+              <button type="button" class="btn btn-xs quick_pill" :class="!search_data.payment_type ? 'quick_pill_active' : ''" @click="setQuickFilter('all')">{{ $t("All") }}</button>
+              <button type="button" class="btn btn-xs quick_pill" :class="search_data.payment_type === 'Receive' ? 'quick_pill_active' : ''" @click="setQuickFilter('Receive')">{{ $t("Receive") }}</button>
+              <button type="button" class="btn btn-xs quick_pill" :class="search_data.payment_type === 'Pay' ? 'quick_pill_active' : ''" @click="setQuickFilter('Pay')">{{ $t("Pay") }}</button>
               <span class="text-muted mx-1">|</span>
-              <button type="button" class="btn btn-xs quick_pill" :class="date_preset === 'today' ? 'quick_pill_active' : ''" @click="setDatePreset('today')">Today</button>
-              <button type="button" class="btn btn-xs quick_pill" :class="date_preset === 'yesterday' ? 'quick_pill_active' : ''" @click="setDatePreset('yesterday')">Yesterday</button>
-              <button type="button" class="btn btn-xs quick_pill" :class="date_preset === 'last7' ? 'quick_pill_active' : ''" @click="setDatePreset('last7')">Last 7 Days</button>
-              <button type="button" class="btn btn-xs quick_pill" :class="date_preset === 'month' ? 'quick_pill_active' : ''" @click="setDatePreset('month')">This Month</button>
+              <button type="button" class="btn btn-xs quick_pill" :class="date_preset === 'today' ? 'quick_pill_active' : ''" @click="setDatePreset('today')">{{ $t("Today") }}</button>
+              <button type="button" class="btn btn-xs quick_pill" :class="date_preset === 'yesterday' ? 'quick_pill_active' : ''" @click="setDatePreset('yesterday')">{{ $t("Yesterday") }}</button>
+              <button type="button" class="btn btn-xs quick_pill" :class="date_preset === 'last7' ? 'quick_pill_active' : ''" @click="setDatePreset('last7')">{{ $t("Last 7 Days") }}</button>
+              <button type="button" class="btn btn-xs quick_pill" :class="date_preset === 'month' ? 'quick_pill_active' : ''" @click="setDatePreset('month')">{{ $t("This Month") }}</button>
             </div>
             <button type="button" class="btn btn-xs btn-outline-danger" @click="resetAllFilters" v-if="hasActiveFilters">
-              <i class="fas fa-times me-1"></i> Reset Filters
+              <i class="fas fa-times me-1"></i> {{ $t("Reset Filters") }}
             </button>
           </div>
         </div>
@@ -171,7 +171,7 @@
         <!-- Active Filter Badges Bar -->
         <div class="col-12 mt-2" v-if="hasActiveFilters">
           <div class="d-flex flex-wrap align-items-center gap-1">
-            <span class="small text-muted me-1">Applied:</span>
+            <span class="small text-muted me-1">{{ $t("Applied:") }}</span>
             <span class="badge bg-primary-soft text-primary filter_chip" v-if="search_data.payment_type">
               Type: {{ search_data.payment_type }} <i class="fas fa-times ms-1" @click="search_data.payment_type = ''"></i>
             </span>
@@ -269,7 +269,7 @@
           </div>
           <div v-else-if="item.office_expense">
             <span class="badge bg-danger-soft text-danger me-1">Office Expense</span>
-            <strong class="text-dark">Office Operations</strong>
+            <strong class="text-dark">{{ $t("Office Operations") }}</strong>
           </div>
           <span v-else-if="item.client_id" class="text-dark small fw-semibold">
             Client #{{ item.client_id }}

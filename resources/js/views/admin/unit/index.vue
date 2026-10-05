@@ -1,9 +1,9 @@
 <template>
   <index-page>
     <template v-slot:search-field>
-      <v-select-container title="Select Module" field="search_data.module" col="3">
+      <v-select-container title="Module" field="search_data.module" col="3">
         <v-select v-model="search_data.module" label="name" :reduce="(obj) => obj.value" :options="$root.global.modules"
-          placeholder="--Select Module--" :closeOnSelect="true"></v-select>
+          :placeholder="$t('--Select Module--')" :closeOnSelect="true"></v-select>
       </v-select-container>
     </template>
   </index-page>

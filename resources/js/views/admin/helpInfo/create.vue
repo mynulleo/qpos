@@ -29,9 +29,17 @@ export default {
             data: {
                 status: 'active',
             },
-            page_type: {},
-
         };
+    },
+
+    computed: {
+        page_type() {
+            return [
+                { name: this.$t('Index Page'), value: 'index' },
+                { name: this.$t('Create Page'), value: 'create' },
+                { name: this.$t('View Page'), value: 'view' }
+            ];
+        },
     },
 
     provide() {
@@ -69,19 +77,8 @@ export default {
                 }
             });
         },
-
-        getPageType() {
-            this.page_type = [
-                { name: 'Index Page', value: 'index' },
-                { name: 'Create Page', value: 'create' },
-                { name: 'View Page', value: 'view' }
-            ];
-        },
-
     },
     created() {
-        this.getPageType();
-
         if (this.$route.params.id) {
             this.page_title = this.headline(this.model) + ' Edit';
             this.get_data(`${this.model}/${this.$route.params.id}`);

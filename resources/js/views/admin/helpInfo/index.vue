@@ -70,6 +70,16 @@ export default {
         };
     },
 
+    computed: {
+        page_type() {
+            return [
+                { name: this.$t('Index Page'), value: 'index' },
+                { name: this.$t('Create Page'), value: 'create' },
+                { name: this.$t('View Page'), value: 'view' }
+            ];
+        },
+    },
+
     methods: {
         search() {
             this.$router.push({ name: this.model + '.index', query: { ...this.search_data } });
@@ -82,17 +92,9 @@ export default {
             this.search_data.value = "";
             this.search_data.status = "";
         },
-        getPageType() {
-            this.page_type = [
-                { name: 'Index Page', value: 'index' },
-                { name: 'Create Page', value: 'create' },
-                { name: 'View Page', value: 'view' }
-            ];
-        },
     },
 
     created() {
-        this.getPageType();
         this.getRouteName(this.model);
         this.page_title = `${this.headline(this.model)} List`;
         this.search();

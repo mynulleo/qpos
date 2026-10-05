@@ -8,16 +8,16 @@
         </div>
         <div class="card-body p-3">
           <div class="row g-3">
-            <Input v-model='data.adjustment_no' field='data.adjustment_no' col="3" title='Adjustment No (চালান নং)' placeholder='Auto Generated' :req='false' :readonly="true" />
+            <Input v-model='data.adjustment_no' field='data.adjustment_no' col="3" title='Adjustment No' placeholder='Auto Generated' :req='false' :readonly="true" />
             
-            <date-picker id='adj_date' v-model='data.adjustment_date' field='data.adjustment_date' title='Adjustment Date (তারিখ)'
+            <date-picker id='adj_date' v-model='data.adjustment_date' field='data.adjustment_date' title='Adjustment Date'
               placeholder='Select Date' col='3' :req='true'></date-picker>
 
-            <Select title='Adjustment Type (সমন্বয়ের ধরণ)' v-model='data.adjustment_type' field='data.adjustment_type'
+            <Select title='Adjustment Type' v-model='data.adjustment_type' field='data.adjustment_type'
               :options='adjustmentTypes' col="3" placeholder='--Select Type--'
               :closeOnSelect='true' :required='true' />
 
-            <Select title='Conducted By (দায়িত্বরত কর্মকর্তা/অডিটর)' v-model='data.conducted_by' field='data.conducted_by' label='full_name'
+            <Select title='Conducted By' v-model='data.conducted_by' field='data.conducted_by' label='full_name'
               :reduce='(obj) => obj.id' :options='$root.global.employees' col="3" placeholder='--Select Employee--'
               :closeOnSelect='true' :required='false' />
 
@@ -42,7 +42,7 @@
           <span class="fw-bold text-dark">
             <i class="fas fa-search-plus me-1 text-primary"></i>{{ $t('Product Search & Barcode Scanner') }}</span>
           <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
-            <i class="fas fa-magic me-1"></i>পণ্য সিলেক্ট বা স্ক্যান করা মাত্রই অটোমেটিক ভ্যারিয়েন্ট, ক্রয়মূল্য ও মজুদসহ তালিকায় যুক্ত হবে
+            <i class="fas fa-magic me-1"></i>{{ $t('Selecting or scanning products will automatically add them with variants, cost and stock to the list') }}
           </span>
         </div>
         <div class="card-body p-3">
@@ -50,7 +50,7 @@
             <!-- 2.1 Category Dropdown -->
             <div class="col-md-4">
               <label class="form-label fw-bold small text-dark d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-folder me-1 text-warning"></i> 1. Category Filter:</span>
+                <span><i class="fas fa-folder me-1 text-warning"></i> 1. {{ $t("Category Filter:") }}</span>
                 <button
                   type="button"
                   class="btn btn-xs btn-outline-primary py-0 px-2 small"
@@ -62,11 +62,11 @@
                 >
                   <i class="fas fa-spinner fa-spin me-1" v-if="isLoadingCategoryItems"></i>
                   <i class="fas fa-layer-group me-1" v-else></i>
-                  ক্যাটাগরির সব যোগ করুন
+                  {{ $t('Add All from Category') }}
                 </button>
               </label>
               <select class="form-select shadow-sm" v-model="selectedCategoryId" @change="onCategoryChange">
-                <option :value="null">-- All Categories (সকল ক্যাটাগরি) --</option>
+                <option :value="null">{{ $t("-- All Categories --") }}</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                   {{ cat.title }}
                 </option>
@@ -76,7 +76,7 @@
             <!-- 2.2 Barcode Fast Scanner Input -->
             <div class="col-md-4">
               <label class="form-label fw-bold small text-dark">
-                <i class="fas fa-barcode me-1 text-danger"></i> 2. Barcode Scanner (বারকোড স্ক্যান):
+                <i class="fas fa-barcode me-1 text-danger"></i> 2. {{ $t("Barcode Scanner:") }}
               </label>
               <div class="input-group shadow-sm">
                 <span class="input-group-text bg-white text-danger border-end-0">
@@ -88,7 +88,7 @@
                   class="form-control border-start-0"
                   v-model.trim="barcodeScanInput"
                   @keyup.enter="handleBarcodeScan"
-                  placeholder="Scan barcode & press Enter..."
+                  :placeholder="$t('Scan barcode & press Enter...')"
                   autocomplete="off"
                 />
               </div>
@@ -97,13 +97,13 @@
             <!-- 2.3 Product Select Dropdown (Auto-adds to table immediately on selection) -->
             <div class="col-md-4">
               <label class="form-label fw-bold small text-dark">
-                <i class="fas fa-box-open me-1 text-primary"></i> 3. Select Product (পণ্য নির্বাচন করুন):
+                <i class="fas fa-box-open me-1 text-primary"></i> 3. {{ $t("Select Product:") }}
               </label>
               <v-select
                 v-model="selectedItem"
                 :options="itemList"
                 label="title"
-                placeholder="Type title or barcode to search & add..."
+                :placeholder="$t('Type title or barcode to search & add...')"
                 @option:selected="onItemSelect"
                 @search="onSearchItems"
                 class="shadow-sm"
@@ -146,8 +146,8 @@
           </div>
 
           <div class="d-flex align-items-center gap-3 small font-monospace">
-            <span><i class="fas fa-arrow-up text-success me-1"></i>Stock In: <strong class="text-success">{{ totalQtyIn }}</strong></span>
-            <span><i class="fas fa-arrow-down text-danger me-1"></i>Stock Out: <strong class="text-danger">{{ totalQtyOut }}</strong></span>
+            <span><i class="fas fa-arrow-up text-success me-1"></i>{{ $t("Stock In") }}: <strong class="text-success">{{ $bnNum(totalQtyIn) }}</strong></span>
+            <span><i class="fas fa-arrow-down text-danger me-1"></i>{{ $t("Stock Out") }}: <strong class="text-danger">{{ $bnNum(totalQtyOut) }}</strong></span>
             <button
               type="button"
               class="btn btn-outline-danger btn-xs py-0 px-2 ms-2 text-white border-danger"
@@ -156,7 +156,7 @@
               @click="clearAllItems"
               title="Clear all items from table"
             >
-              <i class="fas fa-trash me-1"></i>তালিকা খালি করুন
+              <i class="fas fa-trash me-1"></i>{{ $t("Clear List") }}
             </button>
           </div>
         </div>
@@ -277,8 +277,8 @@
           <!-- Empty State -->
           <div v-else class="text-center py-5 text-muted bg-light">
             <i class="fas fa-clipboard-check fa-3x mb-3 text-secondary opacity-50"></i>
-            <h5>কোনো আইটেম যোগ করা হয়নি</h5>
-            <p class="small mb-0">উপরের সার্চ বক্স থেকে পণ্য সিলেক্ট করুন অথবা বারকোড স্ক্যান করুন; স্বয়ংক্রিয়ভাবে স্টক ও ক্রয়মূল্যসহ তালিকায় যোগ হবে।</p>
+            <h5>{{ $t("No Items Added Yet") }}</h5>
+            <p class="small mb-0">{{ $t("Select a product from the search box above or scan a barcode; it will automatically be added with stock and cost to the list.") }}</p>
           </div>
         </div>
 
@@ -300,7 +300,7 @@
             </div>
 
             <div class="col-md-5 text-end">
-              <span class="text-muted small me-2">Total Financial Impact (মোট আর্থিক প্রভাব):</span>
+              <span class="text-muted small me-2">{{ $t("Total Financial Impact:") }}</span>
               <strong class="fs-5 text-primary font-monospace">{{ $filter.formatBDT(totalAmount) }}</strong>
             </div>
           </div>
@@ -313,7 +313,7 @@
       <div class="col-12 mt-2">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 bg-white border rounded shadow-sm">
           <router-link :to="{ name: model + '.index' }" class="btn btn-outline-secondary px-4 fw-semibold">
-            <i class="fas fa-arrow-left me-1"></i> Back to List
+            <i class="fas fa-arrow-left me-1"></i> {{ $t("Back to List") }}
           </router-link>
 
           <button
@@ -322,10 +322,10 @@
             :disabled="$root.submit || data.details.length === 0"
           >
             <template v-if="$root.submit">
-              <i class="fa fa-spinner fa-spin"></i> Processing...
+              <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing...") }}
             </template>
             <template v-else>
-              <i class="fas fa-check-circle"></i> Save Stock Adjustment
+              <i class="fas fa-check-circle"></i> {{ $t("Save Stock Adjustment") }}
             </template>
           </button>
         </div>

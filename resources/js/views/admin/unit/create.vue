@@ -3,7 +3,7 @@
     <Select title='Module' v-model='data.module' field='data.module' label='name' :reduce='(obj) => obj.value'
       :options='$root.global.modules' placeholder='--Select One--' :closeOnSelect='true' col="3" :required='true' />
     <Input v-model='data.title' field='data.title' title='Title' :req='true' col="9" />
-    <Switch v-model='data.status' field='data.status' title='status' on-label='Active' off-label='Deactive' :req='true'>
+    <Switch v-model='data.status' field='data.status' title='Status' on-label='Active' off-label='Deactive' :req='true'>
     </Switch>
 
   </create-form>

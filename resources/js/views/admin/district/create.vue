@@ -4,7 +4,7 @@
 <Switch
                 v-model='data.status'
                 field='data.status'
-                title='status'
+                title='Status'
                 on-label='Active'
                 off-label='Deactive'
                 :req='true'

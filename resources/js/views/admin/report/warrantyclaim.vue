@@ -20,12 +20,12 @@
               <input
                 type="text"
                 class="form-control"
-                placeholder="Search Claim No, Serial, Invoice, Customer, Mobile, Product... (Enter)"
+                :placeholder="$t('Search Claim No, Serial, Invoice, Customer, Mobile, Product... (Enter)')"
                 v-model="search_data.keyword"
                 @keyup.enter="search"
               >
               <button type="button" class="btn btn-sm px-3 theme_search_btn" @click="search">
-                <i class="fas fa-search me-1"></i> Search
+                <i class="fas fa-search me-1"></i> {{ $t("Search") }}
               </button>
               <button type="button" class="btn btn-outline-secondary btn-sm" v-if="search_data.keyword" @click="search_data.keyword = ''; search()">
                 <i class="fas fa-times"></i>
@@ -40,7 +40,7 @@
               type="button"
               class="advance_filter_btn position-relative"
               @click="showAdvanced = !showAdvanced"
-              title="Advance Filter"
+              :title="$t('Advance Filter')"
             >
               <i class="fas fa-sliders-h"></i>
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;" v-if="activeFilterCount > 0">
@@ -55,7 +55,7 @@
               :data="exportData"
               :fields="exportFields"
               name="warranty_claims_audit_report.xls"
-              title="Export to Excel"
+              :title="$t('Export to Excel')"
             >
               <i class="fas fa-file-excel"></i>
             </download-excel>
@@ -65,9 +65,9 @@
               type="button"
               class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1"
               @click="triggerPrint"
-              title="Print Audit Report"
+              :title="$t('Print Audit Report')"
             >
-              <i class="fas fa-print"></i> Print
+              <i class="fas fa-print"></i> {{ $t("Print") }}
             </button>
 
             <!-- Help Info Button -->
@@ -75,9 +75,9 @@
               type="button"
               class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-sm"
               @click="openHelpModal"
-              title="Help Manual"
+              :title="$t('Help Manual')"
             >
-              <i class="fas fa-question-circle"></i> Help
+              <i class="fas fa-question-circle"></i> {{ $t("Help") }}
             </button>
           </div>
         </div>
@@ -87,9 +87,9 @@
           <div class="row g-2 align-items-end">
             <!-- Claim Status Filter -->
             <div class="col-md-3 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Claim Status</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Claim Status") }}</label>
               <select class="form-select form-select-sm" v-model="search_data.current_status" @change="search">
-                <option value="all">-- All Statuses --</option>
+                <option value="all">{{ $t("-- All Statuses --") }}</option>
                 <option value="received">{{ $t('Received') }}</option>
                 <option value="sent_to_vendor">{{ $t('Sent to Vendor') }}</option>
                 <option value="in_service">{{ $t('In Service') }}</option>
@@ -103,7 +103,7 @@
 
             <!-- Coverage Policy Filter -->
             <div class="col-md-3 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Coverage Type</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Coverage Type") }}</label>
               <select class="form-select form-select-sm" v-model="search_data.warranty_type" @change="search">
                 <option value="all">-- All Policies --</option>
                 <option value="warranty">{{ $t('Warranty') }}</option>
@@ -113,22 +113,21 @@
 
             <!-- From Date -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Claim Date From</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Claim Date From") }}</label>
               <input type="date" class="form-control form-control-sm" v-model="search_data.from_date" @change="search">
             </div>
 
             <!-- To Date -->
             <div class="col-md-2 col-sm-6">
-              <label class="form-label small fw-bold text-muted mb-1">Claim Date To</label>
+              <label class="form-label small fw-bold text-muted mb-1">{{ $t("Claim Date To") }}</label>
               <input type="date" class="form-control form-control-sm" v-model="search_data.to_date" @change="search">
             </div>
 
             <!-- Filter Buttons -->
             <div class="col-md-2 col-sm-12 d-flex gap-1 justify-content-end">
               <button type="button" class="btn btn-sm theme_search_btn w-100 fw-bold" @click="search">
-                <i class="fas fa-filter me-1"></i> Apply
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="resetSearch" title="Reset Filters">
+                <i class="fas fa-filter me-1"></i>{{ $t("Apply") }}</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="resetSearch" :title="$t('Reset Filters')">
                 <i class="fas fa-undo"></i>
               </button>
             </div>
@@ -144,7 +143,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold">Total Claims</div>
+              <div class="text-muted small fw-semibold">{{ $t("Total Claims") }}</div>
               <h4 class="mb-0 fw-bold theme-text font-monospace">{{ summary.total_claims || 0 }}</h4>
             </div>
             <div class="kpi-icon-box theme-bg-soft text-dark">
@@ -159,7 +158,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-danger">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Total technician and vendor service cost incurred by shop">{{ $t('Service Cost') }}</div>
+              <div class="text-muted small fw-semibold" :title="$t('Total technician and vendor service cost incurred by shop')">{{ $t('Service Cost') }}</div>
               <h4 class="mb-0 fw-bold text-danger font-monospace">Tk. {{ formatPrice(summary.total_service_cost) }}</h4>
             </div>
             <div class="kpi-icon-box bg-danger bg-opacity-10 text-danger">
@@ -174,7 +173,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-success">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Total charge collected from customers">{{ $t('Cust. Charge') }}</div>
+              <div class="text-muted small fw-semibold" :title="$t('Total charge collected from customers')">{{ $t('Cust. Charge') }}</div>
               <h4 class="mb-0 fw-bold text-success font-monospace">Tk. {{ formatPrice(summary.total_customer_charge) }}</h4>
             </div>
             <div class="kpi-icon-box bg-success bg-opacity-10 text-success">
@@ -189,7 +188,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4" :class="summary.net_balance >= 0 ? 'border-primary' : 'border-warning'">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Net profit or expense on servicing">Net Margin</div>
+              <div class="text-muted small fw-semibold" :title="$t('Net profit or expense on servicing')">Net Margin</div>
               <h4 class="mb-0 fw-bold font-monospace" :class="summary.net_balance >= 0 ? 'text-primary' : 'text-danger'">
                 {{ summary.net_balance >= 0 ? '+' : '' }}Tk. {{ formatPrice(summary.net_balance) }}
               </h4>
@@ -206,7 +205,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-info">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Under repair, vendor, or received">{{ $t('In Pipeline') }}</div>
+              <div class="text-muted small fw-semibold" :title="$t('Under repair, vendor, or received')">{{ $t('In Pipeline') }}</div>
               <h4 class="mb-0 fw-bold text-info font-monospace">{{ summary.pending_service || 0 }}</h4>
             </div>
             <div class="kpi-icon-box bg-info bg-opacity-10 text-info">
@@ -221,7 +220,7 @@
         <div class="card border-0 shadow-sm kpi-card bg-white p-2 border-start border-4 border-dark">
           <div class="d-flex align-items-center justify-content-between">
             <div>
-              <div class="text-muted small fw-semibold" title="Delivered back to customer">{{ $t('Delivered') }}</div>
+              <div class="text-muted small fw-semibold" :title="$t('Delivered back to customer')">{{ $t('Delivered') }}</div>
               <h4 class="mb-0 fw-bold text-dark font-monospace">{{ summary.delivered || 0 }}</h4>
             </div>
             <div class="kpi-icon-box bg-dark bg-opacity-10 text-dark">
@@ -318,7 +317,7 @@
           <h5 class="fw-bold mb-0 text-dark">
             <i class="fas fa-shield-alt me-1"></i>{{ $t('Warranty & Guarantee Claims Audit Report') }}</h5>
           <small class="text-muted">
-            Total Claims: <strong>{{ meta.total || (records ? records.length : 0) }}</strong> | Generated on: <strong>{{ currentDate }}</strong>
+            {{ $t("Total Claims:") }} <strong>{{ meta.total || (records ? records.length : 0) }}</strong> | Generated on: <strong>{{ currentDate }}</strong>
           </small>
         </div>
 
@@ -369,7 +368,7 @@
                   <router-link
                     :to="{ name: 'warrantyClaim.show', params: { id: claim.id } }"
                     class="fw-bold font-monospace theme-text text-decoration-none d-block d-print-none"
-                    title="Click to View Tracking Details"
+                    :title="$t('Click to View Tracking Details')"
                   >
                     <i class="fas fa-ticket-alt me-1 text-warning"></i>
                     <span>{{ claim.claim_no }}</span>
@@ -486,8 +485,8 @@
               <tr v-if="!loading && (!records || records.length === 0)">
                 <td colspan="7" class="text-center py-5 text-secondary">
                   <i class="fas fa-shield-alt fa-3x theme-text opacity-50 mb-3 d-block"></i>
-                  <h6 class="fw-bold text-dark">No Warranty Claims Found</h6>
-                  <p class="small text-muted mb-0">Try changing your search keywords or date range filters.</p>
+                  <h6 class="fw-bold text-dark">{{ $t("No Warranty Claims Found") }}</h6>
+                  <p class="small text-muted mb-0">{{ $t("Try changing your search keywords or date range filters.") }}</p>
                 </td>
               </tr>
 
@@ -495,17 +494,17 @@
               <tr v-if="loading">
                 <td colspan="7" class="text-center py-5">
                   <div class="spinner-border theme-text" role="status"></div>
-                  <div class="mt-2 small text-secondary fw-semibold">Auditing warranty claims data...</div>
+                  <div class="mt-2 small text-secondary fw-semibold">{{ $t("Auditing warranty claims data...") }}</div>
                 </td>
               </tr>
             </tbody>
             <!-- Financial Totals on Table Footer -->
             <tfoot class="table-light fw-bold" v-if="records && records.length > 0">
               <tr>
-                <td colspan="5" class="text-end text-uppercase font-monospace small">Total Servicing Costs / Charges:</td>
+                <td colspan="5" class="text-end text-uppercase font-monospace small">{{ $t("Total Servicing Costs / Charges:") }}</td>
                 <td class="text-end font-monospace">
-                  <div class="text-danger small">Cost: Tk. {{ formatPrice(summary.total_service_cost) }}</div>
-                  <div class="text-success small">Charge: Tk. {{ formatPrice(summary.total_customer_charge) }}</div>
+                  <div class="text-danger small">{{ $t("Cost:") }} Tk. {{ formatPrice(summary.total_service_cost) }}</div>
+                  <div class="text-success small">{{ $t("Charge:") }} Tk. {{ formatPrice(summary.total_customer_charge) }}</div>
                 </td>
                 <td class="text-center font-monospace">
                   <span class="badge" :class="summary.net_balance >= 0 ? 'bg-primary' : 'bg-danger'">
@@ -522,11 +521,11 @@
       <div class="mt-3 pt-2 border-top small text-muted d-none d-print-block">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <p class="mb-0">Generated by: <strong>{{ ($root.auth && $root.auth.name) ? $root.auth.name : 'Admin' }}</strong></p>
-            <p class="mb-0">This is a system generated warranty audit report from QPOS.</p>
+            <p class="mb-0">{{ $t("Generated by:") }} <strong>{{ ($root.auth && $root.auth.name) ? $root.auth.name : 'Admin' }}</strong></p>
+            <p class="mb-0">{{ $t("This is a system generated warranty audit report from QPOS.") }}</p>
           </div>
           <div class="text-end font-monospace">
-            <p class="mb-0">Page 1 of 1</p>
+            <p class="mb-0">{{ $t("Page 1 of 1") }}</p>
           </div>
         </div>
       </div>
@@ -539,7 +538,7 @@
           <!-- Summary count on bottom left -->
           <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 12px;">
             <div class="d-flex align-items-center gap-1">
-              <span class="text-muted fw-bold">Filtered Claims:</span>
+              <span class="text-muted fw-bold">{{ $t("Filtered Claims:") }}</span>
               <span class="badge theme-bg text-white font-monospace">{{ meta.total || 0 }}</span>
             </div>
             <div class="small text-secondary font-monospace d-none d-md-inline" v-if="meta.total > 0">

@@ -5,14 +5,14 @@
       <!-- Date Presets -->
       <div class="col-12 mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center">
-          <span class="text-muted small fw-bold me-1"><i class="fas fa-calendar-alt me-1"></i>Quick Date:</span>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'all' }" @click="applyDatePreset('all')">All Time</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'today' }" @click="applyDatePreset('today')">Today</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'yesterday' }" @click="applyDatePreset('yesterday')">Yesterday</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'last7' }" @click="applyDatePreset('last7')">Last 7 Days</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisMonth' }" @click="applyDatePreset('thisMonth')">This Month</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'lastMonth' }" @click="applyDatePreset('lastMonth')">Last Month</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisYear' }" @click="applyDatePreset('thisYear')">This Year</button>
+          <span class="text-muted small fw-bold me-1"><i class="fas fa-calendar-alt me-1 text-primary"></i>{{ $t("Quick Date:") }}</span>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'all' }" @click="applyDatePreset('all')">{{ $t("All Time") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'today' }" @click="applyDatePreset('today')">{{ $t("Today") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'yesterday' }" @click="applyDatePreset('yesterday')">{{ $t("Yesterday") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'last7' }" @click="applyDatePreset('last7')">{{ $t("Last 7 Days") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisMonth' }" @click="applyDatePreset('thisMonth')">{{ $t("This Month") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'lastMonth' }" @click="applyDatePreset('lastMonth')">{{ $t("Last Month") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisYear' }" @click="applyDatePreset('thisYear')">{{ $t("This Year") }}</button>
         </div>
       </div>
 
@@ -23,7 +23,7 @@
           label="name"
           :reduce="(obj) => obj.id"
           :options="clients"
-          placeholder="-- All Customers (সকল গ্রাহক) --"
+          :placeholder="$t('-- All Customers --')"
           :closeOnSelect="true">
           <template v-slot:option="option">
             <div class="d-flex justify-content-between align-items-center">
@@ -53,7 +53,7 @@
         <div class="form-group">
           <label class="form-label fw-bold small text-muted">{{ $t('Sale Channel') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.sale_type">
-            <option value="all">-- All Channels (সকল মাধ্যম) --</option>
+            <option value="all">{{ $t("-- All Channels --") }}</option>
             <option value="pos">{{ $t('POS Terminal') }}</option>
             <option value="general">{{ $t('General Invoice') }}</option>
           </select>

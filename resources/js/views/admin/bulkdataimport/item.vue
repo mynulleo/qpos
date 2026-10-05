@@ -8,8 +8,8 @@
             <i class="fas fa-file-import fs-5"></i>
           </div>
           <div>
-            <h5 class="mb-0 fw-bold theme-text">Bulk Item CSV / Excel Import</h5>
-            <small class="text-secondary">একসাথে একাধিক আইটেম/পণ্য দ্রুত আপলোড ও ইম্পোর্ট করুন</small>
+            <h5 class="mb-0 fw-bold theme-text">{{ $t('Bulk Item CSV / Excel Import') }}</h5>
+            <small class="text-secondary">{{ $t('Quickly upload and import multiple items/products at once') }}</small>
           </div>
         </div>
 
@@ -21,7 +21,7 @@
             @click="downloadSampleCsv"
           >
             <i class="fas fa-file-csv fs-6 text-success"></i>
-            <span>Download Sample CSV</span>
+            <span>{{ $t('Download Sample CSV') }}</span>
           </button>
 
           <!-- Back to Item List -->
@@ -30,7 +30,7 @@
             class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm"
           >
             <i class="fas fa-boxes"></i>
-            <span>Item List</span>
+            <span>{{ $t('Item List') }}</span>
           </router-link>
         </div>
       </div>
@@ -43,32 +43,32 @@
         <div class="card shadow-sm border-0 h-100 rounded-3">
           <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
             <i class="fas fa-info-circle text-primary fs-5"></i>
-            <h6 class="mb-0 fw-bold text-dark">ইম্পোর্ট নির্দেশিকা ও কলাম নিয়মাবলী (Import Instructions)</h6>
+            <h6 class="mb-0 fw-bold text-dark">{{ $t('Import Instructions & Column Guidelines') }}</h6>
           </div>
           <div class="card-body p-3 p-md-4">
             <!-- Step 1 -->
             <div class="instruction-step mb-3 p-3 rounded-2 bg-light border-start border-primary border-4">
               <div class="d-flex align-items-center justify-content-between mb-1">
                 <span class="fw-bold text-primary">
-                  <i class="fas fa-1 me-1"></i> ধাপ ১: স্যাম্পল ফাইল ডাউনলোড করুন
+                  <i class="fas fa-1 me-1"></i> {{ $t('Step 1: Download Sample File') }}
                 </span>
                 <button
                   type="button"
                   class="btn btn-xs btn-primary fw-bold"
                   @click="downloadSampleCsv"
                 >
-                  <i class="fas fa-download me-1"></i> Sample .CSV
+                  <i class="fas fa-download me-1"></i> {{ $t("Sample .CSV") }}
                 </button>
               </div>
               <p class="small text-secondary mb-0">
-                প্রথমে স্যাম্পল CSV ফাইলটি ডাউনলোড করে নিন। ফাইলের কলাম হেডার পরিবর্তন করবেন না, শুধুমাত্র রো অনুযায়ী ডাটা পূরণ করুন।
+                {{ $t('First download the sample CSV file. Do not alter column headers, fill in data rows only.') }}
               </p>
             </div>
 
             <!-- Step 2 -->
             <div class="instruction-step mb-3 p-3 rounded-2 bg-light border-start border-warning border-4">
               <span class="fw-bold text-dark d-block mb-2">
-                <i class="fas fa-2 me-1 text-warning"></i> ধাপ ২: কলাম নিয়মাবলী ও গ্রহণযোগ্য ভ্যালু (Field Specifications)
+                <i class="fas fa-2 me-1 text-warning"></i> {{ $t('Step 2: Column Specifications & Acceptable Values') }}
               </span>
               <div class="table-responsive rounded border">
                 <table class="table table-sm table-hover table-striped mb-0 text-start align-middle">
@@ -82,61 +82,61 @@
                   <tbody class="small font-monospace">
                     <tr>
                       <td class="fw-bold text-primary">title</td>
-                      <td><span class="badge bg-danger">Required</span></td>
+                      <td><span class="badge bg-danger">{{ $t("Required") }}</span></td>
                       <td class="text-dark font-sans-serif">পণ্যের নাম। উদাঃ <code>Dell Inspiron 15 Laptop</code></td>
                     </tr>
                     <tr>
                       <td class="fw-bold">category</td>
-                      <td><span class="badge bg-info text-dark">Optional</span></td>
+                      <td><span class="badge bg-info text-dark">{{ $t("Optional") }}</span></td>
                       <td class="text-dark font-sans-serif">
                         ক্যাটাগরির নাম বা আইডি। নাম না থাকলে স্বয়ংক্রিয়ভাবে নতুন ক্যাটাগরি তৈরি হবে। উদাঃ <code>Electronics</code>
                       </td>
                     </tr>
                     <tr>
                       <td class="fw-bold">barcode</td>
-                      <td><span class="badge bg-info text-dark">Optional</span></td>
+                      <td><span class="badge bg-info text-dark">{{ $t("Optional") }}</span></td>
                       <td class="text-dark font-sans-serif">
                         ইউনিক বারকোড। খালি রাখলে সিস্টেম থেকে অটো বারকোড তৈরি হবে।
                       </td>
                     </tr>
                     <tr>
                       <td class="fw-bold">unit</td>
-                      <td><span class="badge bg-info text-dark">Optional</span></td>
+                      <td><span class="badge bg-info text-dark">{{ $t("Optional") }}</span></td>
                       <td class="text-dark font-sans-serif">
                         এককের নাম বা আইডি। যেমনঃ <code>Pcs</code>, <code>Box</code>, <code>Kg</code> (ডিফল্ট Pcs)
                       </td>
                     </tr>
                     <tr>
                       <td class="fw-bold">opening_rate</td>
-                      <td><span class="badge bg-info text-dark">Optional</span></td>
+                      <td><span class="badge bg-info text-dark">{{ $t("Optional") }}</span></td>
                       <td class="text-dark font-sans-serif">
                         ক্রয়মূল্য / প্রাথমিক রেট (সংখ্যা)। উদাঃ <code>62000</code>
                       </td>
                     </tr>
                     <tr>
                       <td class="fw-bold">opening_qty</td>
-                      <td><span class="badge bg-info text-dark">Optional</span></td>
+                      <td><span class="badge bg-info text-dark">{{ $t("Optional") }}</span></td>
                       <td class="text-dark font-sans-serif">
                         প্রাথমিক স্টক পরিমাণ (সংখ্যা)। উদাঃ <code>10</code>
                       </td>
                     </tr>
                     <tr>
                       <td class="fw-bold">warranty_type</td>
-                      <td><span class="badge bg-info text-dark">Optional</span></td>
+                      <td><span class="badge bg-info text-dark">{{ $t("Optional") }}</span></td>
                       <td class="text-dark font-sans-serif">
                         <code>none</code>, <code>warranty</code> অথবা <code>guarantee</code>
                       </td>
                     </tr>
                     <tr>
                       <td class="fw-bold">warranty_period</td>
-                      <td><span class="badge bg-info text-dark">Optional</span></td>
+                      <td><span class="badge bg-info text-dark">{{ $t("Optional") }}</span></td>
                       <td class="text-dark font-sans-serif">
                         ওয়ারেন্টির মেয়াদ। উদাঃ <code>1 Year</code>, <code>6 Months</code>, <code>7 Days</code>
                       </td>
                     </tr>
                     <tr>
                       <td class="fw-bold">description</td>
-                      <td><span class="badge bg-info text-dark">Optional</span></td>
+                      <td><span class="badge bg-info text-dark">{{ $t("Optional") }}</span></td>
                       <td class="text-dark font-sans-serif">
                         পণ্যের সংক্ষিপ্ত বিবরণ বা স্পেসিফিকেশন।
                       </td>
@@ -149,10 +149,10 @@
             <!-- Step 3 -->
             <div class="instruction-step p-3 rounded-2 bg-light border-start border-success border-4">
               <span class="fw-bold text-success d-block mb-1">
-                <i class="fas fa-3 me-1"></i> ধাপ ৩: ফাইলটি সেভ ও আপলোড করুন
+                <i class="fas fa-3 me-1"></i> {{ $t('Step 3: Save & Upload the File') }}
               </span>
               <p class="small text-secondary mb-0">
-                ফাইলটি <code>.csv</code> বা <code>.xlsx</code> ফরম্যাটে সেভ করে ডানপাশের আপলোড ফর্ম দিয়ে সাবমিট করুন।
+                {{ $t('Save the file in .csv or .xlsx format and upload it using the form on the right.') }}
               </p>
             </div>
           </div>
@@ -164,7 +164,7 @@
         <div class="card shadow-sm border-0 h-100 rounded-3">
           <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
             <i class="fas fa-cloud-upload-alt text-success fs-5"></i>
-            <h6 class="mb-0 fw-bold text-dark">ফাইল আপলোড করুন (Upload CSV / Excel)</h6>
+            <h6 class="mb-0 fw-bold text-dark">{{ $t('Upload CSV / Excel File') }}</h6>
           </div>
           <div class="card-body p-3 p-md-4 d-flex flex-column justify-content-between">
             <form @submit.prevent="submitImport" enctype="multipart/form-data">
@@ -189,10 +189,10 @@
                   <div class="upload-icon-circle mx-auto mb-2 text-primary">
                     <i class="fas fa-file-upload fs-3"></i>
                   </div>
-                  <h6 class="fw-bold text-dark mb-1">ক্লিক করুন অথবা ফাইল ড্র্যাগ করে এখানে ছাড়ুন</h6>
-                  <p class="text-secondary small mb-2">সমর্থিত ফরম্যাট: <strong>.CSV</strong>, <strong>.XLSX</strong>, <strong>.XLS</strong></p>
+                  <h6 class="fw-bold text-dark mb-1">{{ $t('Click or drag and drop file here') }}</h6>
+                  <p class="text-secondary small mb-2">{{ $t('Supported Formats:') }} <strong>.CSV</strong>, <strong>.XLSX</strong>, <strong>.XLS</strong></p>
                   <span class="btn btn-sm btn-outline-primary px-3 rounded-pill fw-semibold">
-                    <i class="fas fa-folder-open me-1"></i> Browse File
+                    <i class="fas fa-folder-open me-1"></i> {{ $t('Browse File') }}
                   </span>
                 </div>
 
@@ -210,7 +210,7 @@
                       class="btn btn-xs btn-outline-danger px-2 rounded-pill"
                       @click.stop="removeFile"
                     >
-                      <i class="fas fa-times me-1"></i> Remove File
+                      <i class="fas fa-times me-1"></i> {{ $t('Remove File') }}
                     </button>
                   </div>
                 </div>
@@ -224,7 +224,7 @@
               >
                 <span v-if="isUploading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 <i v-else class="fas fa-check-circle"></i>
-                <span>{{ isUploading ? 'ইম্পোর্ট প্রসেস হচ্ছে...' : 'Start Import Items' }}</span>
+                <span>{{ isUploading ? $t('Importing in progress...') : $t('Start Import Items') }}</span>
               </button>
             </form>
 
@@ -233,8 +233,8 @@
               <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-file-csv fs-4 text-success"></i>
                 <div>
-                  <div class="fw-bold small text-dark">স্যাম্পল ফাইল দরকার?</div>
-                  <div class="text-muted" style="font-size: 11px;">হেডার ও ডামি ডাটা সহ ডাউনলোড করুন</div>
+                  <div class="fw-bold small text-dark">{{ $t('Need a sample file?') }}</div>
+                  <div class="text-muted" style="font-size: 11px;">{{ $t('Download with headers and dummy data') }}</div>
                 </div>
               </div>
               <button
@@ -261,14 +261,14 @@
           <div class="d-flex align-items-center gap-2">
             <i class="fas fa-check-circle fs-4 text-success"></i>
             <div>
-              <h6 class="mb-0 fw-bold text-success">ইম্পোর্ট সফলভাবে সম্পন্ন হয়েছে!</h6>
+              <h6 class="mb-0 fw-bold text-success">{{ $t('Import Completed Successfully!') }}</h6>
               <span class="small text-dark">
                 মোট <strong>{{ importResult.imported_count }}</strong> টি পণ্য সফলভাবে ডাটাবেজে সংরক্ষণ করা হয়েছে।
               </span>
             </div>
           </div>
           <router-link :to="{ name: 'item.index' }" class="btn btn-sm btn-success fw-bold px-3">
-            <i class="fas fa-list me-1"></i> View Item List
+            <i class="fas fa-list me-1"></i> {{ $t('View Item List') }}
           </router-link>
         </div>
 

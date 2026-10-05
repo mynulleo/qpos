@@ -4,8 +4,8 @@
       <fieldset>
         <span class="legend">{{ $t('Withdrawl Form') }}</span>
         <div class="row mt-3 g-3">
-          <date-picker id='date0' v-model='data.withdrwal_date' field='data.withdrwal_date' title='Withdrwal Date'
-            placeholder='Withdrwal Date' col='2' :req='true'></date-picker>
+          <date-picker id='date0' v-model='data.withdrwal_date' field='data.withdrwal_date' title='Withdrawal Date'
+            placeholder='Withdrawal Date' col='2' :req='true'></date-picker>
           <Select title='Account Id' v-model='data.account_id' field='data.account_id' label='name'
             :reduce='(obj) => obj.id' :options='fundaccounts' placeholder='--Select One--' :closeOnSelect='true' col="3"
             :required='false' />
@@ -26,7 +26,7 @@
             <!-- Instruction -->
             <div class="text-center text-muted py-3 mb-3">
               <i class="fas fa-info-circle me-1"></i>
-              Please select an account from the form to view account balance.
+              {{ $t("Please select an account from the form to view account balance.") }}
             </div>
             <!-- Account Name -->
             <div class="d-flex justify-content-between align-items-center mb-2">

@@ -3,7 +3,7 @@
     <template v-slot:search-field>
       <v-select-container title="Category" field="search_data.category_id" col="3">
         <v-select v-model="search_data.category_id" label="title" :reduce="(obj) => obj.id" :options="categories"
-          placeholder="--Select Category--" :closeOnSelect="true"></v-select>
+          :placeholder="$t('--Select Category--')" :closeOnSelect="true"></v-select>
       </v-select-container>
     </template>
   </index-page>

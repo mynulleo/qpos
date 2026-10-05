@@ -8,7 +8,7 @@
   export default {
     data() {
       return {
-        page_title: "Categroy View",
+        page_title: "Category View",
         model: model,
         data: {},
       };

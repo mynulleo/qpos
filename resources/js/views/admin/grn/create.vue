@@ -10,8 +10,8 @@
                 <i class="fas fa-boxes fs-5"></i>
               </div>
               <div>
-                <h5 class="fw-bold mb-0 text-dark">Goods Receive Note (GRN)</h5>
-                <span class="small text-muted">Select mode to receive stock and process inventory</span>
+                <h5 class="fw-bold mb-0 text-dark">{{ $t("Goods Receive Note (GRN)") }}</h5>
+                <span class="small text-muted">{{ $t("Select mode to receive stock and process inventory") }}</span>
               </div>
             </div>
 
@@ -24,8 +24,8 @@
                 @click="switchTab('po')"
               >
                 <i class="fas fa-file-invoice-dollar"></i>
-                <span>1. PO Based</span>
-                <span class="badge bg-white text-dark rounded-pill shadow-xs small ms-1" v-if="activeTab === 'po'">Active</span>
+                <span>{{ $t("1. PO Based") }}</span>
+                <span class="badge bg-white text-dark rounded-pill shadow-xs small ms-1" v-if="activeTab === 'po'">{{ $t("Active") }}</span>
               </button>
 
               <button
@@ -35,8 +35,8 @@
                 @click="switchTab('supplier')"
               >
                 <i class="fas fa-truck-loading"></i>
-                <span>2. Supplier Based</span>
-                <span class="badge bg-white text-dark rounded-pill shadow-xs small ms-1" v-if="activeTab === 'supplier'">Active</span>
+                <span>{{ $t("2. Supplier Based") }}</span>
+                <span class="badge bg-white text-dark rounded-pill shadow-xs small ms-1" v-if="activeTab === 'supplier'">{{ $t("Active") }}</span>
               </button>
 
               <button
@@ -46,8 +46,8 @@
                 @click="switchTab('direct')"
               >
                 <i class="fas fa-bolt text-warning"></i>
-                <span>3. Direct Purchase</span>
-                <span class="badge bg-warning text-dark rounded-pill shadow-xs small ms-1" v-if="activeTab === 'direct'">Instant Paid</span>
+                <span>{{ $t("3. Direct Purchase") }}</span>
+                <span class="badge bg-warning text-dark rounded-pill shadow-xs small ms-1" v-if="activeTab === 'direct'">{{ $t("Instant Paid") }}</span>
               </button>
             </div>
           </div>
@@ -76,12 +76,12 @@
             </div>
             <div>
               <h6 class="fw-bold mb-0 text-dark">{{ $t('Receiving Details') }}</h6>
-              <span class="small text-muted">Basic requisition, warehouse and challan information</span>
+              <span class="small text-muted">{{ $t("Basic requisition, warehouse and challan information") }}</span>
             </div>
           </div>
           <div>
             <span class="badge" :class="data.status ? 'bg-success' : 'bg-secondary'">
-              {{ data.status ? 'Active' : 'Deactive' }}
+              {{ data.status ? $t('Active') : $t('Deactive') }}
             </span>
           </div>
         </div>
@@ -95,7 +95,7 @@
                 v-model="data.grn_date"
                 field="data.grn_date"
                 title="GRN Date"
-                placeholder="GRN Date"
+                :placeholder="$t('GRN Date')"
                 col="12"
                 :req="true"
               ></date-picker>
@@ -111,7 +111,7 @@
                   label="invoiceno"
                   :reduce="(obj) => obj.id"
                   :options="pendingPurchases"
-                  placeholder="-- Search by PO No, Supplier, Date or Amount --"
+                  :placeholder="$t('-- Search by PO No, Supplier, Date or Amount --')"
                   :closeOnSelect="true"
                   :appendToBody="true"
                   :filterBy="filterPoOptions"
@@ -146,25 +146,25 @@
                             <i class="fas fa-file-invoice me-1"></i>{{ option.invoiceno }}
                           </span>
                           <span class="fw-bold text-dark fs-6">
-                            {{ option.supplier?.org_name || 'No Supplier' }}
+                            {{ option.supplier?.org_name || $t('No Supplier') }}
                           </span>
                         </div>
                         <span
                           class="badge rounded-pill px-2 py-1 font-monospace"
                           :class="option.receive_status === 'Partial' ? 'bg-warning text-dark' : 'bg-info text-white'"
                         >
-                          {{ option.receive_status || 'Pending' }}
+                          {{ option.receive_status ? $t(option.receive_status) : $t('Pending') }}
                         </span>
                       </div>
                       <div class="d-flex align-items-center justify-content-between text-muted small mt-1 pt-1 border-top border-light">
                         <div class="d-flex align-items-center gap-3">
                           <span>
                             <i class="far fa-calendar-alt me-1 text-primary"></i>
-                            PO Date: <strong class="text-secondary">{{ formatDate(option.purchase_date) }}</strong>
+                            {{ $t('PO Date') }}: <strong class="text-secondary">{{ formatDate(option.purchase_date) }}</strong>
                           </span>
                         </div>
                         <div class="text-end">
-                          <span>Total PO Value: </span>
+                          <span>{{ $t('Total PO Value') }}: </span>
                           <strong class="text-success font-monospace fs-6">
                             {{ formatCurrency(option.total_amount) }}
                           </strong>
@@ -186,7 +186,7 @@
                 :reduce="(obj) => obj.id"
                 :options="$root.global.suppliers"
                 col="12"
-                placeholder="-- Select Supplier --"
+                :placeholder="$t('-- Select Supplier --')"
                 :closeOnSelect="true"
                 :appendToBody="true"
                 :required="true"
@@ -203,7 +203,7 @@
                 :reduce="(obj) => obj.id"
                 :options="$root.global.warehouses"
                 col="12"
-                placeholder="-- Select Warehouse --"
+                :placeholder="$t('-- Select Warehouse --')"
                 :closeOnSelect="true"
                 :appendToBody="true"
                 :required="true"
@@ -224,12 +224,12 @@
                         class="badge rounded-pill px-2 py-1 font-monospace"
                         :class="selectedPurchase.receive_status === 'Partial' ? 'bg-warning text-dark' : 'bg-info text-white'"
                       >
-                        {{ selectedPurchase.receive_status || 'Pending' }}
+                        {{ selectedPurchase.receive_status ? $t(selectedPurchase.receive_status) : $t('Pending') }}
                       </span>
                     </div>
                     <div class="small text-muted mt-1">
                       <i class="fas fa-building me-1 text-secondary"></i>
-                      Supplier: <strong class="text-dark">{{ selectedSupplierName || selectedPurchase.supplier?.org_name || 'N/A' }}</strong>
+                      {{ $t('Supplier') }}: <strong class="text-dark">{{ selectedSupplierName || selectedPurchase.supplier?.org_name || $t('N/A') }}</strong>
                       <span v-if="selectedPurchase.supplier?.mobile" class="ms-2 text-secondary">
                         <i class="fas fa-phone-alt me-1"></i>{{ selectedPurchase.supplier.mobile }}
                       </span>
@@ -239,16 +239,16 @@
 
                 <div class="d-flex align-items-center gap-3 flex-wrap">
                   <div class="text-center px-3 py-1 bg-white rounded border">
-                    <span class="small text-muted d-block" style="font-size: 11px;">PO Order Date</span>
+                    <span class="small text-muted d-block" style="font-size: 11px;">{{ $t('PO Order Date') }}</span>
                     <strong class="text-dark font-monospace">{{ formatDate(selectedPurchase.purchase_date) }}</strong>
                   </div>
                   <div class="text-center px-3 py-1 bg-white rounded border">
-                    <span class="small text-muted d-block" style="font-size: 11px;">Total PO Amount</span>
+                    <span class="small text-muted d-block" style="font-size: 11px;">{{ $t('Total PO Amount') }}</span>
                     <strong class="text-success font-monospace fs-6">{{ formatCurrency(selectedPurchase.total_amount) }}</strong>
                   </div>
                   <div class="text-center px-3 py-1 bg-white rounded border">
-                    <span class="small text-muted d-block" style="font-size: 11px;">PO Line Items</span>
-                    <strong class="text-primary font-monospace">{{ data.grn_details ? data.grn_details.length : 0 }} Products</strong>
+                    <span class="small text-muted d-block" style="font-size: 11px;">{{ $t('PO Line Items') }}</span>
+                    <strong class="text-primary font-monospace">{{ data.grn_details ? data.grn_details.length : 0 }} {{ $t('Products') }}</strong>
                   </div>
                 </div>
               </div>
@@ -260,8 +260,8 @@
                 v-model="data.challan_no"
                 col="12"
                 field="data.challan_no"
-                :title="activeTab === 'direct' ? 'Receipt / Memo No' : 'Supplier Challan No'"
-                placeholder="e.g. CH-90812"
+                :title="activeTab === 'direct' ? $t('Receipt / Memo No') : $t('Supplier Challan No')"
+                :placeholder="$t('e.g. CH-90812')"
                 :req="false"
               />
             </div>
@@ -273,7 +273,7 @@
                 v-model="data.challan_date"
                 field="data.challan_date"
                 title="Challan / Memo Date"
-                placeholder="Challan Date"
+                :placeholder="$t('Challan Date')"
                 col="12"
                 :req="false"
               ></date-picker>
@@ -286,7 +286,7 @@
                 col="12"
                 field="data.received_by"
                 title="Received By"
-                placeholder="Staff / Store Keeper"
+                :placeholder="$t('Staff / Store Keeper')"
                 :req="false"
               />
             </div>
@@ -298,20 +298,20 @@
                 col="12"
                 field="data.note"
                 title="Remarks / Note"
-                placeholder="Any special remarks or delivery notes"
+                :placeholder="$t('Any special remarks or delivery notes')"
                 :req="false"
               />
             </div>
 
             <!-- Status Switch -->
             <div class="col-md-2 d-flex flex-column justify-content-center">
-              <label class="form-label small fw-semibold mb-2">GRN Status</label>
+              <label class="form-label small fw-semibold mb-2">{{ $t('GRN Status') }}</label>
               <Switch
                 v-model="data.status"
                 field="data.status"
                 title=""
-                on-label="Active"
-                off-label="Deactive"
+                :on-label="$t('Active')"
+                :off-label="$t('Deactive')"
                 :req="false"
                 col="12"
               />
@@ -329,11 +329,11 @@
             </div>
             <div>
               <h6 class="fw-bold mb-0 text-dark">{{ $t('PO Received Items') }}</h6>
-              <span class="small text-muted">Receive remaining quantities from selected purchase order</span>
+              <span class="small text-muted">{{ $t('Receive remaining quantities from selected purchase order') }}</span>
             </div>
           </div>
           <span class="badge theme-bg text-white rounded-pill px-3 py-1 font-monospace" v-if="data.grn_details?.length">
-            {{ data.grn_details.length }} Item(s)
+            {{ data.grn_details.length }} {{ $t('Item(s)') }}
           </span>
         </div>
 
@@ -359,7 +359,7 @@
                 <template v-if="data.grn_details && data.grn_details.length > 0">
                   <tr v-for="(pitem, index) in data.grn_details" :key="index" :class="{ 'table-light opacity-75': pitem.remaining_qty <= 0 }">
                     <td>
-                      <strong class="text-dark">{{ pitem.item ? pitem.item.title : (pitem.item_id ? 'Item #' + pitem.item_id : 'N/A') }}</strong>
+                      <strong class="text-dark">{{ pitem.item ? pitem.item.title : (pitem.item_id ? $t('Item #') + pitem.item_id : $t('N/A')) }}</strong>
                       <div class="small text-muted" v-if="pitem.category">{{ pitem.category.title }}</div>
                     </td>
                     <td class="text-center font-monospace">{{ pitem.color ? pitem.color.title : '-' }}</td>
@@ -382,7 +382,7 @@
                         @input="onPoQtyChange(pitem)"
                       />
                       <div v-if="pitem.received_qty > pitem.remaining_qty" class="text-danger small mt-1">
-                        Exceeds remaining!
+                        {{ $t('Exceeds remaining!') }}
                       </div>
                     </td>
                     <td class="text-center" v-if="isElectronicsShop">
@@ -391,9 +391,9 @@
                         class="btn btn-sm btn-outline-primary position-relative px-2 py-1 serial-btn w-100"
                         :class="{ 'active-serial': getSerialCount(pitem.serial_no) > 0 }"
                         @click="openSerialModal(index, pitem)"
-                        title="Scan / Add Serial Numbers"
+                        :title="$t('Scan / Add Serial Numbers')"
                       >
-                        <i class="fas fa-barcode me-1"></i> Serials
+                        <i class="fas fa-barcode me-1"></i> {{ $t('Serials') }}
                         <span class="badge bg-danger ms-1" v-if="getSerialCount(pitem.serial_no) > 0">{{ getSerialCount(pitem.serial_no) }}</span>
                       </button>
                     </td>
@@ -405,18 +405,18 @@
                   <tr>
                     <td colspan="10" class="text-center py-5 text-muted">
                       <i class="fas fa-cart-arrow-down fa-3x mb-2 d-block opacity-25"></i>
-                      <h6 class="fw-bold text-secondary">No Purchase Order Selected</h6>
-                      <p class="small text-muted mb-0">Please select a pending Purchase Order from the dropdown above to load items.</p>
+                      <h6 class="fw-bold text-secondary">{{ $t("No Purchase Order Selected") }}</h6>
+                      <p class="small text-muted mb-0">{{ $t("Please select a pending Purchase Order from the dropdown above to load items.") }}</p>
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-light" v-if="data.grn_details && data.grn_details.length > 0">
                 <tr class="fw-bold align-middle">
-                  <td :colspan="isElectronicsShop ? 6 : 7" class="text-end text-dark pe-3">Summary Totals:</td>
+                  <td :colspan="isElectronicsShop ? 6 : 7" class="text-end text-dark pe-3">{{ $t('Summary Totals:') }}</td>
                   <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
                   <td v-if="isElectronicsShop" class="text-center text-muted small">-</td>
-                  <td class="text-end text-dark">Total:</td>
+                  <td class="text-end text-dark">{{ $t('Total:') }}</td>
                   <td class="text-end font-monospace text-success fs-6 text-nowrap">{{ formatCurrency(data.total_amount) }}</td>
                 </tr>
               </tfoot>
@@ -434,12 +434,12 @@
             </div>
             <div>
               <h6 class="fw-bold mb-0 text-dark">
-                {{ activeTab === 'supplier' ? 'Supplier Received Products (পণ্য তালিকা)' : 'Direct Purchase Products (ক্রয়কৃত পণ্য তালিকা)' }}
+                {{ activeTab === 'supplier' ? $t('Supplier Received Products') : $t('Direct Purchase Products') }}
               </h6>
-              <span class="small text-muted">Manage products, variants, unit pricing, quantities and serial tracking</span>
+              <span class="small text-muted">{{ $t('Manage products, variants, unit pricing, quantities and serial tracking') }}</span>
             </div>
             <span class="badge theme-bg text-white rounded-pill px-2 py-1 ms-2 font-monospace">
-              {{ data.grn_details ? data.grn_details.length : 0 }} Items
+              {{ data.grn_details ? data.grn_details.length : 0 }} {{ $t('Items') }}
             </span>
           </div>
 
@@ -484,7 +484,7 @@
                         <span class="fw-bold text-dark fs-6">{{ getItemTitle(pitem) }}</span>
                       </div>
                       <small class="text-muted font-monospace" v-if="getItemBarcode(pitem)">
-                        <i class="fas fa-barcode me-1"></i>Barcode: {{ getItemBarcode(pitem) }}
+                        <i class="fas fa-barcode me-1"></i>{{ $t('Barcode') }}: {{ getItemBarcode(pitem) }}
                       </small>
                     </div>
                   </td>
@@ -499,7 +499,7 @@
                         <i class="fas fa-ruler me-1"></i>{{ getSizeTitle(pitem.size_id, pitem) }}
                       </span>
                       <span class="text-muted small" v-if="!getColorTitle(pitem.color_id, pitem) && (isElectronicsShop || !getSizeTitle(pitem.size_id, pitem))">
-                        Standard
+                        {{ $t('Standard') }}
                       </span>
                     </div>
                   </td>
@@ -533,9 +533,9 @@
                       class="btn btn-sm btn-outline-primary position-relative px-2 py-1 serial-btn"
                       :class="{ 'active-serial': getSerialCount(pitem.serial_no) > 0 }"
                       @click="openEditProductModal(index, pitem)"
-                      title="View / Edit Serial Numbers"
+                      :title="$t('View / Edit Serial Numbers')"
                     >
-                      <i class="fas fa-barcode me-1"></i> Serials
+                      <i class="fas fa-barcode me-1"></i> {{ $t('Serials') }}
                       <span class="badge bg-danger ms-1" v-if="getSerialCount(pitem.serial_no) > 0">{{ getSerialCount(pitem.serial_no) }}</span>
                     </button>
                   </td>
@@ -552,7 +552,7 @@
                         type="button"
                         class="btn btn-sm btn-outline-primary btn-action"
                         @click="openEditProductModal(index, pitem)"
-                        title="Edit Product"
+                        :title="$t('Edit Product')"
                       >
                         <i class="fas fa-edit"></i>
                       </button>
@@ -560,7 +560,7 @@
                         type="button"
                         class="btn btn-sm btn-outline-danger btn-action"
                         @click="removeDynamicItemRow(index)"
-                        title="Remove Product"
+                        :title="$t('Remove Product')"
                       >
                         <i class="fas fa-trash-alt"></i>
                       </button>
@@ -575,8 +575,8 @@
                       <div class="empty-icon theme-bg-soft text-theme rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
                         <i class="fas fa-cart-plus fa-2x"></i>
                       </div>
-                      <h6 class="fw-bold text-dark mb-1">No products added yet</h6>
-                      <p class="text-muted small mb-3">Click "+ Add Product Row" button to configure product specifications, pricing, quantities and serials.</p>
+                      <h6 class="fw-bold text-dark mb-1">{{ $t("No products added yet") }}</h6>
+                      <p class="text-muted small mb-3">{{ $t('Click "+ Add Product Row" button to configure product specifications, pricing, quantities and serials.') }}</p>
                       <button
                         type="button"
                         class="btn btn-primary btn-sm px-4 fw-bold shadow-sm"
@@ -589,7 +589,7 @@
               </tbody>
               <tfoot class="table-light" v-if="data.grn_details && data.grn_details.length > 0">
                 <tr class="fw-bold align-middle">
-                  <td :colspan="6" class="text-end text-dark pe-3">Summary Totals:</td>
+                  <td :colspan="6" class="text-end text-dark pe-3">{{ $t('Summary Totals:') }}</td>
                   <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
                   <td v-if="isElectronicsShop" class="text-center text-muted small">-</td>
                   <td class="text-end font-monospace text-success fs-6 text-nowrap pe-3">{{ formatCurrency(data.sub_total || data.total_amount) }}</td>
@@ -623,11 +623,11 @@
                 </div>
                 <div>
                   <h6 class="fw-bold mb-0 text-dark">{{ $t('Fund Account & Settlement') }}</h6>
-                  <span class="small text-muted">Select fund source to debit payment directly</span>
+                  <span class="small text-muted">{{ $t('Select fund source to debit payment directly') }}</span>
                 </div>
               </div>
               <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1">
-                <i class="fas fa-check-circle me-1"></i> Instant Cash Outflow
+                <i class="fas fa-check-circle me-1"></i> {{ $t('Instant Cash Outflow') }}
               </span>
             </div>
 
@@ -635,20 +635,20 @@
               <div class="row g-3">
                 <div class="col-md-7">
                   <label class="form-label small fw-bold text-dark">
-                    Debit / Paid From Fund Account <span class="text-danger">*</span>
+                    {{ $t('Debit / Paid From Fund Account') }} <span class="text-danger">*</span>
                   </label>
                   <v-select
                     v-model="data.fund_account_id"
                     label="name"
                     :reduce="(obj) => obj.id"
                     :options="fundaccounts"
-                    placeholder="-- Select Fund Account --"
+                    :placeholder="$t('-- Select Fund Account --')"
                     :closeOnSelect="true"
                     :appendToBody="true"
                     @update:modelValue="onFundAccountChange"
                   />
                   <small class="text-muted mt-1 d-block">
-                    Select Cash in Hand, Bank, or Mobile Banking fund account.
+                    {{ $t('Select Cash in Hand, Bank, or Mobile Banking fund account.') }}
                   </small>
                 </div>
 
@@ -656,15 +656,15 @@
                 <div class="col-md-5">
                   <div class="fund-balance-card p-3 rounded-3 border" :class="fundBalanceClass">
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                      <span class="small fw-bold text-uppercase opacity-75">Available Balance</span>
+                      <span class="small fw-bold text-uppercase opacity-75">{{ $t('Available Balance') }}</span>
                       <i class="fas fa-coins text-warning"></i>
                     </div>
                     <h4 class="fw-bold mb-0 font-monospace">{{ formatCurrency(fundBalance) }}</h4>
                     <div class="mt-1 small" v-if="fundBalanceWarning">
-                      <span class="badge bg-danger"><i class="fas fa-exclamation-triangle me-1"></i> Balance low</span>
+                      <span class="badge bg-danger"><i class="fas fa-exclamation-triangle me-1"></i> {{ $t('Balance low') }}</span>
                     </div>
                     <div class="mt-1 small" v-else-if="data.fund_account_id">
-                      <span class="badge bg-success bg-opacity-25 text-success fw-semibold"><i class="fas fa-check me-1"></i> Sufficient</span>
+                      <span class="badge bg-success bg-opacity-25 text-success fw-semibold"><i class="fas fa-check me-1"></i> {{ $t('Sufficient') }}</span>
                     </div>
                   </div>
                 </div>
@@ -676,9 +676,9 @@
                   <i class="fas fa-receipt"></i>
                 </div>
                 <div class="small">
-                  <strong class="text-dark d-block">Automated Accounting & Payment Integration:</strong>
+                  <strong class="text-dark d-block">{{ $t('Automated Accounting & Payment Integration:') }}</strong>
                   <span class="text-muted">
-                    Upon submission, this direct purchase will automatically create a <strong>Payment (Paid)</strong> record and generate a balanced <strong>Accounting Voucher</strong> debiting <em>Purchase Expense</em> and crediting the selected <em>Fund Account</em>.
+                    {{ $t('Upon submission, this direct purchase will automatically create a Paid Payment record and generate an Accounting Voucher debiting Purchase Expense and crediting the selected Fund Account.') }}
                   </span>
                 </div>
               </div>
@@ -695,22 +695,22 @@
               </div>
               <div>
                 <h6 class="fw-bold mb-0 text-dark">{{ $t('Financial Summary') }}</h6>
-                <span class="small text-muted">Direct purchase cost & instant payment calculation</span>
+                <span class="small text-muted">{{ $t('Direct purchase cost & instant payment calculation') }}</span>
               </div>
             </div>
 
             <div class="card-body p-4">
               <!-- Sub Total -->
               <div class="d-flex justify-content-between align-items-center py-2 border-bottom text-nowrap">
-                <span class="text-muted fw-semibold">Items Sub Total (পণ্যের মোট মূল্য):</span>
+                <span class="text-muted fw-semibold">{{ $t('Items Sub Total:') }}</span>
                 <span class="fw-bold font-monospace fs-6 text-dark">{{ formatCurrency(data.sub_total) }}</span>
               </div>
 
               <!-- Discount -->
               <div class="d-flex justify-content-between align-items-center py-2 border-bottom text-nowrap">
                 <div>
-                  <span class="text-muted fw-semibold d-block">Discount (ছাড় / ডিসকাউন্ট):</span>
-                  <small class="text-muted opacity-75">Cash discount received</small>
+                  <span class="text-muted fw-semibold d-block">{{ $t('Discount:') }}</span>
+                  <small class="text-muted opacity-75">{{ $t('Cash discount received') }}</small>
                 </div>
                 <div class="input-group input-group-sm" style="width: 150px;">
                   <span class="input-group-text bg-light text-muted px-2">৳</span>
@@ -730,7 +730,7 @@
               <div class="grand-total-box p-3 rounded-3 mt-3 d-flex justify-content-between align-items-center text-nowrap">
                 <div class="d-flex align-items-center gap-2">
                   <i class="fas fa-coins text-warning fs-5"></i>
-                  <span class="text-white fs-6 fw-bold">Total (সর্বমোট প্রদেয়):</span>
+                  <span class="text-white fs-6 fw-bold">{{ $t('Total:') }}</span>
                 </div>
                 <div class="text-end">
                   <h4 class="fw-bold mb-0 text-white font-monospace">{{ formatCurrency(data.total_amount) }}</h4>
@@ -750,9 +750,9 @@
                 <div class="stat-icon-sm bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                   <i class="fas fa-layer-group"></i>
                 </div>
-                <span class="fw-bold text-muted small text-uppercase">Total Items:</span>
+                <span class="fw-bold text-muted small text-uppercase">{{ $t('Total Items:') }}</span>
               </div>
-              <h5 class="fw-bold mb-0 text-dark font-monospace">{{ data.grn_details ? data.grn_details.length : 0 }} Items</h5>
+              <h5 class="fw-bold mb-0 text-dark font-monospace">{{ data.grn_details ? data.grn_details.length : 0 }} {{ $t('Items') }}</h5>
             </div>
           </div>
         </div>
@@ -763,9 +763,9 @@
                 <div class="stat-icon-sm bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                   <i class="fas fa-dolly"></i>
                 </div>
-                <span class="fw-bold text-muted small text-uppercase">Total Received Qty:</span>
+                <span class="fw-bold text-muted small text-uppercase">{{ $t('Total Received Qty:') }}</span>
               </div>
-              <h5 class="fw-bold mb-0 text-primary font-monospace">{{ data.total_qty }} Units</h5>
+              <h5 class="fw-bold mb-0 text-primary font-monospace">{{ data.total_qty }} {{ $t('Units') }}</h5>
             </div>
           </div>
         </div>
@@ -776,7 +776,7 @@
                 <div class="stat-icon-sm bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                   <i class="fas fa-coins"></i>
                 </div>
-                <span class="fw-bold text-muted small text-uppercase">Total:</span>
+                <span class="fw-bold text-muted small text-uppercase">{{ $t('Total:') }}</span>
               </div>
               <h5 class="fw-bold mb-0 text-success font-monospace">{{ formatCurrency(data.total_amount) }}</h5>
             </div>
@@ -790,7 +790,7 @@
       <div class="col-12 mt-2">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 bg-white border rounded shadow-sm">
           <router-link :to="{ name: model + '.index' }" class="btn btn-outline-secondary px-4 fw-semibold">
-            <i class="fas fa-arrow-left me-1"></i> Back to GRN List
+            <i class="fas fa-arrow-left me-1"></i> {{ $t('Back to GRN List') }}
           </router-link>
 
           <div class="d-flex align-items-center gap-2">
@@ -800,7 +800,7 @@
               :disabled="$root.submit"
             >
               <template v-if="$root.submit">
-                <i class="fa fa-spinner fa-spin"></i> Processing...
+                <i class="fa fa-spinner fa-spin"></i> {{ $t('Processing...') }}
               </template>
               <template v-else>
                 <i class="fas fa-check-circle"></i>
@@ -829,9 +829,9 @@
               </div>
               <div>
                 <h5 class="modal-title fw-bold fs-6 mb-0 text-white">
-                  {{ isEditingModal ? 'Edit Received Product (পণ্য সংশোধন)' : 'Add Received Product (পণ্য যোগ করুন)' }}
+                  {{ isEditingModal ? $t('Edit Received Product') : $t('Add Received Product') }}
                 </h5>
-                <span class="small text-white-50">Select product, set costs, variants, quantities and serial tracking</span>
+                <span class="small text-white-50">{{ $t('Select product, set costs, variants, quantities and serial tracking') }}</span>
               </div>
             </div>
             <button type="button" class="btn-close btn-close-white" @click="closeProductModal"></button>
@@ -849,7 +849,7 @@
                   label="title"
                   :reduce="(obj) => obj.id"
                   :options="categories"
-                  placeholder="-- Select Category --"
+                  :placeholder="$t('-- Select Category --')"
                   :closeOnSelect="true"
                   :appendToBody="true"
                   @update:modelValue="onModalCategoryChange"
@@ -866,7 +866,7 @@
                   label="title"
                   :reduce="(obj) => obj.id"
                   :options="modalForm.items"
-                  placeholder="-- Select Product --"
+                  :placeholder="$t('-- Select Product --')"
                   :closeOnSelect="true"
                   :appendToBody="true"
                   :disabled="!modalForm.category_id"
@@ -880,7 +880,7 @@
               <div :class="isElectronicsShop ? 'col-md-6' : 'col-md-4'">
                 <label class="form-label small fw-bold text-dark mb-1">{{ $t('Color') }}</label>
                 <select class="form-select form-select-sm" v-model="modalForm.color_id">
-                  <option :value="null">-- Standard / None --</option>
+                  <option :value="null">{{ $t('-- Standard / None --') }}</option>
                   <option v-for="c in colors" :key="c.id" :value="c.id">{{ c.title }}</option>
                 </select>
               </div>
@@ -889,7 +889,7 @@
               <div class="col-md-4" v-if="!isElectronicsShop">
                 <label class="form-label small fw-bold text-dark mb-1">{{ $t('Size') }}</label>
                 <select class="form-select form-select-sm" v-model="modalForm.size_id">
-                  <option :value="null">-- Standard / None --</option>
+                  <option :value="null">{{ $t('-- Standard / None --') }}</option>
                   <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.title }}</option>
                 </select>
               </div>
@@ -902,7 +902,7 @@
                   <input
                     type="text"
                     class="form-control form-control-sm bg-light fw-bold text-primary font-monospace"
-                    :value="modalForm.unit_title || 'Pcs (Default)'"
+                    :value="modalForm.unit_title || $t('Pcs (Default)')"
                     readonly
                   />
                 </div>
@@ -956,16 +956,16 @@
                     v-model.number="modalForm.received_qty"
                     @input="onModalPriceOrQtyChange"
                   />
-                  <span class="input-group-text bg-light text-muted">{{ modalForm.unit_title || 'Pcs' }}</span>
+                  <span class="input-group-text bg-light text-muted">{{ modalForm.unit_title || $t('Pcs') }}</span>
                 </div>
               </div>
 
               <!-- Line Total Amount Preview Banner -->
               <div class="col-12">
                 <div class="p-2 px-3 rounded bg-light border d-flex justify-content-between align-items-center">
-                  <span class="small fw-bold text-muted text-uppercase">Line Total Calculation (মোট):</span>
+                  <span class="small fw-bold text-muted text-uppercase">{{ $t('Line Total Calculation:') }}</span>
                   <span class="fw-bold font-monospace fs-6 text-theme">
-                    {{ modalForm.received_qty || 0 }} {{ modalForm.unit_title || 'Pcs' }} × ৳ {{ formatNum(modalForm.unit_price || 0) }} = 
+                    {{ modalForm.received_qty || 0 }} {{ modalForm.unit_title || $t('Pcs') }} × ৳ {{ formatNum(modalForm.unit_price || 0) }} = 
                     <span class="text-primary">{{ formatCurrency(modalForm.total_amount) }}</span>
                   </span>
                 </div>
@@ -988,13 +988,13 @@
                       <div>
                         <strong class="text-dark small d-block">{{ $t('Serial Numbers / IMEI Tracking') }}</strong>
                         <span class="text-muted" style="font-size: 11px;">
-                          {{ modalForm.showSerialsSection ? 'Click to collapse serial entry section' : 'Click to expand and scan/add device serial numbers' }}
+                          {{ modalForm.showSerialsSection ? $t('Click to collapse serial entry section') : $t('Click to expand and scan/add device serial numbers') }}
                         </span>
                       </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                       <span class="badge rounded-pill font-monospace" :class="modalForm.serialsList.length > 0 ? 'bg-primary text-white' : 'bg-secondary bg-opacity-25 text-dark'">
-                        {{ modalForm.serialsList.length }} Serials
+                        {{ modalForm.serialsList.length }} {{ $t('Serials') }}
                       </span>
                       <i class="fas fa-chevron-down text-muted transition-transform" :class="{ 'fa-rotate-180': modalForm.showSerialsSection }"></i>
                     </div>
@@ -1011,7 +1011,7 @@
                           :class="!modalForm.bulkMode ? 'btn-primary' : 'btn-outline-secondary'"
                           @click="modalForm.bulkMode = false"
                         >
-                          <i class="fas fa-barcode me-1"></i> Quick / Scan Mode
+                          <i class="fas fa-barcode me-1"></i> {{ $t('Quick / Scan Mode') }}
                         </button>
                         <button
                           type="button"
@@ -1019,7 +1019,7 @@
                           :class="modalForm.bulkMode ? 'btn-primary' : 'btn-outline-secondary'"
                           @click="modalForm.bulkMode = true"
                         >
-                          <i class="fas fa-paste me-1"></i> Bulk Paste Mode
+                          <i class="fas fa-paste me-1"></i> {{ $t('Bulk Paste Mode') }}
                         </button>
                       </div>
 
@@ -1029,18 +1029,18 @@
                           class="btn btn-xs btn-outline-secondary"
                           @click="copyAllModalSerials"
                           :disabled="modalForm.serialsList.length === 0"
-                          title="Copy all serials to clipboard"
+                          :title="$t('Copy all serials to clipboard')"
                         >
-                          <i class="fas fa-copy me-1"></i> Copy All
+                          <i class="fas fa-copy me-1"></i> {{ $t('Copy All') }}
                         </button>
                         <button
                           type="button"
                           class="btn btn-xs btn-outline-danger"
                           @click="clearAllModalSerials"
                           :disabled="modalForm.serialsList.length === 0"
-                          title="Clear serials list"
+                          :title="$t('Clear serials list')"
                         >
-                          <i class="fas fa-trash-alt me-1"></i> Clear
+                          <i class="fas fa-trash-alt me-1"></i> {{ $t('Clear') }}
                         </button>
                       </div>
                     </div>
@@ -1053,16 +1053,16 @@
                           ref="modalSerialInput"
                           type="text"
                           class="form-control font-monospace fw-bold"
-                          placeholder="Type or scan serial/IMEI and press Enter..."
+                          :placeholder="$t('Type or scan serial/IMEI and press Enter...')"
                           v-model="modalForm.tempSerial"
                           @keyup.enter.prevent="addModalSerial"
                         />
                         <button type="button" class="btn btn-primary fw-bold px-3" @click.prevent="addModalSerial">
-                          <i class="fas fa-plus me-1"></i> Add
+                          <i class="fas fa-plus me-1"></i> {{ $t('Add') }}
                         </button>
                       </div>
                       <small class="text-muted mt-1 d-block" style="font-size: 11px;">
-                        <i class="fas fa-info-circle me-1 text-primary"></i> Press <strong>Enter</strong> to instantly add serials one by one.
+                        <i class="fas fa-info-circle me-1 text-primary"></i> {{ $t('Press Enter to instantly add serials one by one.') }}
                       </small>
                     </div>
 
@@ -1072,11 +1072,11 @@
                         class="form-control form-control-sm font-monospace"
                         rows="3"
                         v-model="modalForm.bulkSerialText"
-                        placeholder="Paste multiple serials separated by line break, comma, or space (e.g. SN001&#10;SN002&#10;SN003)..."
+                        :placeholder="$t('Paste multiple serials separated by line break, comma, or space (e.g. SN001, SN002)...')"
                       ></textarea>
                       <div class="d-flex justify-content-end mt-2">
                         <button type="button" class="btn btn-xs btn-primary fw-bold px-3" @click.prevent="processModalBulkSerials">
-                          <i class="fas fa-plus-circle me-1"></i> Add Extracted Serials
+                          <i class="fas fa-plus-circle me-1"></i> {{ $t('Add Extracted Serials') }}
                         </button>
                       </div>
                     </div>
@@ -1091,24 +1091,24 @@
                         >
                           <span class="badge-num">#{{ sIdx + 1 }}</span>
                           <span class="fw-bold">{{ sn }}</span>
-                          <i class="fas fa-times delete-serial-btn ms-1" @click="removeModalSerial(sIdx)" title="Remove Serial"></i>
+                          <i class="fas fa-times delete-serial-btn ms-1" @click="removeModalSerial(sIdx)" :title="$t('Remove Serial')"></i>
                         </span>
                       </div>
                       <div v-else class="text-center py-3 text-muted">
                         <i class="fas fa-barcode fa-lg mb-1 text-secondary opacity-50 d-block"></i>
-                        <span class="small">No serial numbers entered yet.</span>
+                        <span class="small">{{ $t('No serial numbers entered yet.') }}</span>
                       </div>
                     </div>
 
                     <!-- Sync Qty Checkbox -->
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                       <span class="small fw-bold text-dark">
-                        Total Serials:
+                        {{ $t('Total Serials:') }}
                         <span class="text-primary font-monospace fs-6">{{ modalForm.serialsList.length }}</span>
                       </span>
                       <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="modalSyncQtyCheck" v-model="modalForm.syncQtyWithSerials" />
-                        <label class="form-check-label small fw-bold" for="modalSyncQtyCheck">Auto sync Received Qty to {{ modalForm.serialsList.length }}</label>
+                        <label class="form-check-label small fw-bold" for="modalSyncQtyCheck">{{ $t('Auto sync Received Qty to') }} {{ modalForm.serialsList.length }}</label>
                       </div>
                     </div>
                   </div>
@@ -1120,10 +1120,10 @@
           <!-- Modal Footer -->
           <div class="modal-footer py-2 px-4 bg-light border-top d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-secondary btn-sm px-3" @click="closeProductModal">
-              Cancel
+              {{ $t('Cancel') }}
             </button>
             <button type="button" class="btn btn-primary btn-sm px-4 fw-bold shadow-sm" @click="saveProductFromModal">
-              <i class="fas fa-check me-1"></i> {{ isEditingModal ? 'Update Product' : 'Add to Received List' }}
+              <i class="fas fa-check me-1"></i> {{ isEditingModal ? $t('Update Product') : $t('Add to Received List') }}
             </button>
           </div>
         </div>
@@ -1147,7 +1147,7 @@
               </div>
               <div>
                 <h5 class="modal-title fw-bold fs-6 mb-0 text-white">{{ $t('Manage Serial Numbers') }}</h5>
-                <span class="small text-white-50">Add or scan unique device serial numbers</span>
+                <span class="small text-white-50">{{ $t('Add or scan unique device serial numbers') }}</span>
               </div>
             </div>
             <button type="button" class="btn-close btn-close-white" @click="closeSerialModal"></button>
@@ -1158,12 +1158,12 @@
             <!-- Active Item Banner -->
             <div class="p-3 mb-3 rounded border bg-light d-flex justify-content-between align-items-center flex-wrap gap-2" v-if="activeRowItem">
               <div>
-                <span class="small text-muted d-block">Selected Item:</span>
+                <span class="small text-muted d-block">{{ $t('Selected Item:') }}</span>
                 <strong class="text-dark">{{ getSelectedProductTitle(activeRowItem) }}</strong>
               </div>
               <div class="d-flex align-items-center gap-2 font-monospace">
-                <span class="badge bg-secondary">Received Qty: {{ activeRowItem.received_qty || 0 }}</span>
-                <span class="badge theme-bg text-white">Serials: {{ modalSerials.length }}</span>
+                <span class="badge bg-secondary">{{ $t('Received Qty') }}: {{ activeRowItem.received_qty || 0 }}</span>
+                <span class="badge theme-bg text-white">{{ $t('Serials') }}: {{ modalSerials.length }}</span>
               </div>
             </div>
 
@@ -1176,7 +1176,7 @@
                   :class="!bulkEntryMode ? 'btn-primary' : 'btn-outline-secondary'"
                   @click="bulkEntryMode = false"
                 >
-                  <i class="fas fa-keyboard me-1"></i> Quick / Barcode Entry
+                  <i class="fas fa-keyboard me-1"></i> {{ $t('Quick / Barcode Entry') }}
                 </button>
                 <button
                   type="button"
@@ -1184,7 +1184,7 @@
                   :class="bulkEntryMode ? 'btn-primary' : 'btn-outline-secondary'"
                   @click="bulkEntryMode = true"
                 >
-                  <i class="fas fa-paste me-1"></i> Bulk Paste List
+                  <i class="fas fa-paste me-1"></i> {{ $t('Bulk Paste List') }}
                 </button>
               </div>
 
@@ -1194,18 +1194,18 @@
                   class="btn btn-xs btn-outline-secondary"
                   @click="copyAllModalSerialsStandalone"
                   :disabled="modalSerials.length === 0"
-                  title="Copy all serials to clipboard"
+                  :title="$t('Copy all serials to clipboard')"
                 >
-                  <i class="fas fa-copy me-1"></i> Copy All
+                  <i class="fas fa-copy me-1"></i> {{ $t('Copy All') }}
                 </button>
                 <button
                   type="button"
                   class="btn btn-xs btn-outline-danger"
                   @click="clearAllModalSerialsStandalone"
                   :disabled="modalSerials.length === 0"
-                  title="Clear list"
+                  :title="$t('Clear list')"
                 >
-                  <i class="fas fa-trash-alt me-1"></i> Clear
+                  <i class="fas fa-trash-alt me-1"></i> {{ $t('Clear') }}
                 </button>
               </div>
             </div>
@@ -1218,16 +1218,16 @@
                   ref="serialInput"
                   type="text"
                   class="form-control font-monospace fw-bold"
-                  placeholder="Type or scan serial number and press Enter..."
+                  :placeholder="$t('Type or scan serial number and press Enter...')"
                   v-model="tempSerial"
                   @keyup.enter.prevent="addSerialFromInput"
                 />
                 <button type="button" class="btn btn-primary fw-bold px-4" @click.prevent="addSerialFromInput">
-                  <i class="fas fa-plus me-1"></i> Add
+                  <i class="fas fa-plus me-1"></i> {{ $t('Add') }}
                 </button>
               </div>
               <small class="text-muted mt-1 d-block">
-                <i class="fas fa-info-circle me-1 text-primary"></i> Press <strong>Enter</strong> to instantly add serial numbers one by one.
+                <i class="fas fa-info-circle me-1 text-primary"></i> {{ $t('Press Enter to instantly add serial numbers one by one.') }}
               </small>
             </div>
 
@@ -1237,11 +1237,11 @@
                 class="form-control font-monospace"
                 rows="4"
                 v-model="bulkSerialText"
-                placeholder="Paste multiple serial numbers separated by line break, comma, or space (e.g. SN001&#10;SN002&#10;SN003)..."
+                :placeholder="$t('Paste multiple serial numbers separated by line break, comma, or space (e.g. SN001, SN002)...')"
               ></textarea>
               <div class="d-flex justify-content-end mt-2">
                 <button type="button" class="btn btn-sm btn-primary fw-bold px-3" @click.prevent="processBulkSerials">
-                  <i class="fas fa-plus-circle me-1"></i> Add Extracted Serials
+                  <i class="fas fa-plus-circle me-1"></i> {{ $t('Add Extracted Serials') }}
                 </button>
               </div>
             </div>
@@ -1256,23 +1256,23 @@
                 >
                   <span class="badge-num">#{{ sIdx + 1 }}</span>
                   <span class="fw-bold">{{ sn }}</span>
-                  <i class="fas fa-times delete-serial-btn ms-1" @click="removeSerial(sIdx)" title="Remove Serial"></i>
+                  <i class="fas fa-times delete-serial-btn ms-1" @click="removeSerial(sIdx)" :title="$t('Remove Serial')"></i>
                 </span>
               </div>
               <div v-else class="text-center py-4 text-muted">
                 <i class="fas fa-barcode fa-2x mb-2 text-secondary opacity-50 d-block"></i>
-                <p class="mb-0 small">No serial numbers entered yet.</p>
+                <p class="mb-0 small">{{ $t('No serial numbers entered yet.') }}</p>
               </div>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
               <span class="fw-bold text-dark">
-                Total Serials Entered:
+                {{ $t('Total Serials Entered:') }}
                 <span class="text-primary font-monospace fs-5">{{ modalSerials.length }}</span>
               </span>
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="syncQtyCheck" v-model="syncQtyWithSerials" />
-                <label class="form-check-label small fw-bold" for="syncQtyCheck">Auto sync Received Qty to {{ modalSerials.length }}</label>
+                <label class="form-check-label small fw-bold" for="syncQtyCheck">{{ $t('Auto sync Received Qty to') }} {{ modalSerials.length }}</label>
               </div>
             </div>
           </div>
@@ -1280,10 +1280,10 @@
           <!-- Modal Footer -->
           <div class="modal-footer py-2 px-4 bg-light border-top d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-secondary btn-sm px-3" @click="closeSerialModal">
-              Cancel
+              {{ $t('Cancel') }}
             </button>
             <button type="button" class="btn btn-primary btn-sm px-4 fw-bold shadow-sm" @click="saveSerialsFromModal">
-              <i class="fas fa-check me-1"></i> Save Serials
+              <i class="fas fa-check me-1"></i> {{ $t('Save Serials') }}
             </button>
           </div>
         </div>
@@ -1322,25 +1322,25 @@ export default {
     },
 
     getModeTitle() {
-      if (this.activeTab === 'po') return 'Mode 1: Purchase Order (PO) Based Receiving';
-      if (this.activeTab === 'supplier') return 'Mode 2: Supplier Direct Receiving (Manual Selection)';
-      return 'Mode 3: Direct Purchase (Instant Fund Payment & Accounts Voucher)';
+      if (this.activeTab === 'po') return this.$t('Mode 1: Purchase Order (PO) Based Receiving');
+      if (this.activeTab === 'supplier') return this.$t('Mode 2: Supplier Direct Receiving (Manual Selection)');
+      return this.$t('Mode 3: Direct Purchase (Instant Fund Payment & Accounts Voucher)');
     },
 
     getModeDescription() {
       if (this.activeTab === 'po') {
-        return 'Select an approved Purchase Order from the dropdown. The supplier and pending PO line items will automatically populate.';
+        return this.$t('Select an approved Purchase Order from the dropdown. The supplier and pending PO line items will automatically populate.');
       }
       if (this.activeTab === 'supplier') {
-        return 'Receive goods directly from a chosen supplier without a previous PO. Select supplier, choose category & products, and specify quantities.';
+        return this.$t('Receive goods directly from a chosen supplier without a previous PO. Select supplier, choose category & products, and specify quantities.');
       }
-      return 'Direct cash/bank purchase without PO or Supplier dropdowns. Inventory is stocked immediately, payments are debited from the chosen fund account, and accounting vouchers are generated automatically.';
+      return this.$t('Direct cash/bank purchase without PO or Supplier dropdowns. Inventory is stocked immediately, payments are debited from the chosen fund account, and accounting vouchers are generated automatically.');
     },
 
     getSubmitButtonText() {
-      if (this.$route.params.id) return 'Update GRN Record';
-      if (this.activeTab === 'direct') return 'Save & Complete Direct Purchase';
-      return 'Save & Receive Goods Note';
+      if (this.$route.params.id) return this.$t('Update GRN Record');
+      if (this.activeTab === 'direct') return this.$t('Save & Complete Direct Purchase');
+      return this.$t('Save & Receive Goods Note');
     },
 
     fundBalanceClass() {
@@ -1467,11 +1467,11 @@ export default {
         const found = this.categories.find((c) => c.id === catId);
         if (found) return found.title;
       }
-      return 'Category';
+      return this.$t('Category');
     },
 
     getItemTitle(item) {
-      if (!item) return 'Product';
+      if (!item) return this.$t('Product');
       if (item.item && item.item.title) return item.item.title;
       if (item.items && item.item_id) {
         const found = item.items.find((i) => i.id === item.item_id);
@@ -1481,7 +1481,7 @@ export default {
         const found = this.modalForm.items.find((i) => i.id === item.item_id);
         if (found) return found.title;
       }
-      return item.item_id ? `Product #${item.item_id}` : 'Product';
+      return item.item_id ? `${this.$t('Product')} #${item.item_id}` : this.$t('Product');
     },
 
     getItemBarcode(item) {
@@ -1519,7 +1519,7 @@ export default {
         const found = this.units.find((u) => u.id === unitId);
         if (found) return found.title;
       }
-      return 'Pcs';
+      return this.$t('Pcs');
     },
 
     filterPoOptions(option, label, search) {
@@ -1653,7 +1653,7 @@ export default {
           this.calculatePoTotals();
         })
         .catch((err) => {
-          this.$toast('Failed to load items for this purchase order.', 'error');
+          this.$toast(this.$t('Failed to load items for this purchase order.'), 'error');
         });
     },
 
@@ -1810,7 +1810,7 @@ export default {
         });
         if (res.data?.has_duplicates && res.data.duplicates.length > 0) {
           const dup = res.data.duplicates[0];
-          this.$toast(`⚠️ Warning: Serial "${sn}" already exists in ${dup.grn_no} (${dup.item_name})!`, 'error');
+          this.$toast(`⚠️ ${this.$t('Warning: Serial')} "${sn}" ${this.$t('already exists in')} ${dup.grn_no} (${dup.item_name})!`, 'error');
           return false;
         }
       } catch (err) {
@@ -1827,7 +1827,7 @@ export default {
         });
         if (res.data?.has_duplicates && res.data.duplicates.length > 0) {
           res.data.duplicates.forEach((dup) => {
-            this.$toast(`⚠️ Warning: Serial "${dup.serial_no}" already exists in ${dup.grn_no} (${dup.item_name})!`, 'error');
+            this.$toast(`⚠️ ${this.$t('Warning: Serial')} "${dup.serial_no}" ${this.$t('already exists in')} ${dup.grn_no} (${dup.item_name})!`, 'error');
           });
         }
       } catch (err) {
@@ -1841,7 +1841,7 @@ export default {
       if (!sn) return;
 
       if (this.modalForm.serialsList.includes(sn)) {
-        this.$toast(`Serial number "${sn}" already added in this list`, 'warning');
+        this.$toast(`${this.$t('Serial number')} "${sn}" ${this.$t('already added in this list')}`, 'warning');
         this.modalForm.tempSerial = '';
         return;
       }
@@ -1852,7 +1852,7 @@ export default {
           if (this.modalForm.rowIndex !== null && idx === this.modalForm.rowIndex) continue;
           const otherSerials = (this.data.grn_details[idx].serial_no || '').split(',').map((s) => s.trim());
           if (otherSerials.includes(sn)) {
-            this.$toast(`Serial "${sn}" is already entered in Row #${idx + 1}!`, 'error');
+            this.$toast(`${this.$t('Serial')} "${sn}" ${this.$t('is already entered in Row')} #${idx + 1}!`, 'error');
           }
         }
       }
@@ -1888,7 +1888,7 @@ export default {
       if (toAdd.length > 0) {
         await this.checkBulkSerialsDatabase(toAdd);
         this.modalForm.serialsList.push(...toAdd);
-        this.$toast(`${toAdd.length} serial numbers added to list`, 'success');
+        this.$toast(`${toAdd.length} ${this.$t('serial numbers added to list')}`, 'success');
 
         if (this.modalForm.syncQtyWithSerials) {
           this.modalForm.received_qty = this.modalForm.serialsList.length;
@@ -1916,21 +1916,21 @@ export default {
       if (this.modalForm.serialsList.length === 0) return;
       const text = this.modalForm.serialsList.join(', ');
       navigator.clipboard.writeText(text).then(() => {
-        this.$toast('Serials copied to clipboard', 'success');
+        this.$toast(this.$t('Serials copied to clipboard'), 'success');
       });
     },
 
     saveProductFromModal() {
       if (!this.modalForm.category_id) {
-        this.$toast('Please select Category (ক্যাটাগরি নির্বাচন করুন)', 'warning');
+        this.$toast(this.$t('Please select Category'), 'warning');
         return;
       }
       if (!this.modalForm.item_id) {
-        this.$toast('Please select Product / Item (পণ্য নির্বাচন করুন)', 'warning');
+        this.$toast(this.$t('Please select Product / Item'), 'warning');
         return;
       }
       if (!this.modalForm.received_qty || parseFloat(this.modalForm.received_qty) <= 0) {
-        this.$toast('Quantity must be greater than 0 (পরিমাণ অন্তত ১ হতে হবে)', 'warning');
+        this.$toast(this.$t('Quantity must be greater than 0'), 'warning');
         return;
       }
 
@@ -1967,10 +1967,10 @@ export default {
 
       if (this.modalForm.rowIndex !== null && this.modalForm.rowIndex >= 0) {
         this.data.grn_details.splice(this.modalForm.rowIndex, 1, newRow);
-        this.$toast('Product updated successfully (পণ্য সফলভাবে আপডেট হয়েছে)', 'success');
+        this.$toast(this.$t('Product updated successfully'), 'success');
       } else {
         this.data.grn_details.push(newRow);
-        this.$toast('Product added to receive list (পণ্য তালিকায় যুক্ত হয়েছে)', 'success');
+        this.$toast(this.$t('Product added to receive list'), 'success');
       }
 
       this.calculateDynamicTotals();
@@ -1981,7 +1981,7 @@ export default {
       if (this.data.grn_details) {
         this.data.grn_details.splice(index, 1);
         this.calculateDynamicTotals();
-        this.$toast('Product removed from list', 'info');
+        this.$toast(this.$t('Product removed from list'), 'info');
       }
     },
 
@@ -2052,7 +2052,7 @@ export default {
       const sn = this.tempSerial ? this.tempSerial.trim() : '';
       if (sn) {
         if (this.modalSerials.includes(sn)) {
-          this.$toast(`Serial number "${sn}" already added in list`, 'warning');
+          this.$toast(`${this.$t('Serial number')} "${sn}" ${this.$t('already added in this list')}`, 'warning');
           this.tempSerial = '';
           return;
         }
@@ -2063,7 +2063,7 @@ export default {
             if (this.activeRowIndex !== null && idx === this.activeRowIndex) continue;
             const otherSerials = (this.data.grn_details[idx].serial_no || '').split(',').map((s) => s.trim());
             if (otherSerials.includes(sn)) {
-              this.$toast(`Serial "${sn}" is already entered in Row #${idx + 1}!`, 'error');
+              this.$toast(`${this.$t('Serial')} "${sn}" ${this.$t('is already entered in Row')} #${idx + 1}!`, 'error');
             }
           }
         }
@@ -2095,7 +2095,7 @@ export default {
       if (toAdd.length > 0) {
         await this.checkBulkSerialsDatabase(toAdd);
         this.modalSerials.push(...toAdd);
-        this.$toast(`${toAdd.length} serial numbers added to list`, 'success');
+        this.$toast(`${toAdd.length} ${this.$t('serial numbers added to list')}`, 'success');
       }
 
       this.bulkSerialText = '';
@@ -2114,7 +2114,7 @@ export default {
       if (this.modalSerials.length === 0) return;
       const text = this.modalSerials.join(', ');
       navigator.clipboard.writeText(text).then(() => {
-        this.$toast('Serials copied to clipboard', 'success');
+        this.$toast(this.$t('Serials copied to clipboard'), 'success');
       });
     },
 
@@ -2135,7 +2135,7 @@ export default {
         }
       }
       this.closeSerialModal();
-      this.$toast('Serial numbers updated', 'success');
+      this.$toast(this.$t('Serial numbers updated'), 'success');
     },
 
     submit: function () {
@@ -2144,7 +2144,7 @@ export default {
 
         if (error > 0) {
           this.$toast(
-            'You need to fill ' + error + ' more empty mandatory fields',
+            this.$t('You need to fill ') + error + this.$t(' more empty mandatory fields'),
             'warning'
           );
           return false;
@@ -2153,7 +2153,7 @@ export default {
         // Tab-specific validation
         if (this.activeTab === 'po') {
           if (!this.data.purchase_id) {
-            this.$toast('Please select a Purchase Order.', 'warning');
+            this.$toast(this.$t('Please select a Purchase Order.'), 'warning');
             return false;
           }
 
@@ -2161,45 +2161,45 @@ export default {
             (item) => parseFloat(item.received_qty) > parseFloat(item.remaining_qty)
           );
           if (hasExceeded) {
-            this.$toast('Receive quantity cannot exceed remaining quantity for any item.', 'error');
+            this.$toast(this.$t('Receive quantity cannot exceed remaining quantity for any item.'), 'error');
             return false;
           }
         } else if (this.activeTab === 'supplier') {
           if (!this.data.supplier_id) {
-            this.$toast('Please select a Supplier.', 'warning');
+            this.$toast(this.$t('Please select a Supplier.'), 'warning');
             return false;
           }
 
           if (!this.data.grn_details || this.data.grn_details.length === 0) {
-            this.$toast('Please add at least one product row (পণ্য যোগ করুন)।', 'warning');
+            this.$toast(this.$t('Please add at least one product row.'), 'warning');
             return false;
           }
 
           const hasEmptyProduct = this.data.grn_details.some((item) => !item.item_id);
           if (hasEmptyProduct) {
-            this.$toast('Please select a product for all rows.', 'warning');
+            this.$toast(this.$t('Please select a product for all rows.'), 'warning');
             return false;
           }
         } else if (this.activeTab === 'direct') {
           if (!this.data.fund_account_id) {
-            this.$toast('Please select a Fund Account for payment settlement.', 'warning');
+            this.$toast(this.$t('Please select a Fund Account for payment settlement.'), 'warning');
             return false;
           }
 
           if (!this.data.grn_details || this.data.grn_details.length === 0) {
-            this.$toast('Please add at least one product row (পণ্য যোগ করুন)।', 'warning');
+            this.$toast(this.$t('Please add at least one product row.'), 'warning');
             return false;
           }
 
           const hasEmptyProduct = this.data.grn_details.some((item) => !item.item_id);
           if (hasEmptyProduct) {
-            this.$toast('Please select a product for all rows.', 'warning');
+            this.$toast(this.$t('Please select a product for all rows.'), 'warning');
             return false;
           }
         }
 
         if (this.data.total_qty <= 0) {
-          this.$toast('Please enter at least one item quantity to receive.', 'warning');
+          this.$toast(this.$t('Please enter at least one item quantity to receive.'), 'warning');
           return false;
         }
 
@@ -2259,10 +2259,10 @@ export default {
     this.getFundAccounts();
 
     if (this.$route.params.id) {
-      this.page_title = `Goods Receive (GRN) Edit`;
+      this.page_title = this.$t(`Goods Receive (GRN) Edit`);
       this.getGrnData();
     } else {
-      this.page_title = `Goods Receive (GRN) Create`;
+      this.page_title = this.$t(`Goods Receive (GRN) Create`);
       // If purchase_id is passed as query parameter
       if (this.$route.query.purchase_id) {
         this.activeTab = 'po';

@@ -6,7 +6,7 @@
 
         <v-select-container field="data.icon" title="Menu Icon" :req="true">
             <v-select v-model="data.icon" label="icon" :reduce="(obj) => obj.icon" :options="icons"
-                placeholder="--Select Any--" :closeOnSelect="true"
+                :placeholder="$t('--Select Any--')" :closeOnSelect="true"
                 :class="validation.hasError('data.icon') ? 'v-border' : ''">
                 <template #option="{ icon, icon_name }">
                     <em v-html="icon"></em> &nbsp; {{ icon_name }}
@@ -73,7 +73,7 @@ export default {
     computed: {
         permissions() {
             let arr = [
-                { id: this.$route.params.id ? null : "", name: "No Route" },
+                { id: this.$route.params.id ? null : "", name: this.$t("No Route") },
             ];
             
             if (

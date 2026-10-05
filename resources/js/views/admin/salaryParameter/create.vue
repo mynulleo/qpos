@@ -1,13 +1,13 @@
 <template>
   <create-form @onSubmit='submit'>
     <Input v-model='data.title' field='data.title' title='Title' :req='true' col="4" />
-    <SwitchBoolean v-model='data.is_basic' field='data.is_basic' title='is Basic' on-label='Yes' off-label='No'
+    <SwitchBoolean v-model='data.is_basic' field='data.is_basic' title='Is Basic' on-label='Yes' off-label='No'
       :req='true' col="2">
     </SwitchBoolean>
-    <Input v-model='data.percentage_of_basic' v-if="data.is_basic == 0" field='data.sorting' title='percentage of Basic'
+    <Input v-model='data.percentage_of_basic' v-if="data.is_basic == 0" field='data.percentage_of_basic' title='Percentage of Basic'
       :req='false' col="3" />
     <Input v-model='data.sorting' field='data.sorting' title='Sorting' col="1" :req='false' />
-    <Switch v-model='data.status' field='data.status' title='status' on-label='Active' off-label='Deactive' :req='true'>
+    <Switch v-model='data.status' field='data.status' title='Status' on-label='Active' off-label='Deactive' :req='true'>
     </Switch>
 
   </create-form>

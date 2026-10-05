@@ -10,7 +10,7 @@
                 <div class="card payment_section_card shadow-sm border-0">
                     <div class="d-flex align-items-center mb-1">
                         <div class="card_capsule_badge">
-                            <i class="far fa-id-card me-1"></i> Transaction Setup & Entity Selection
+                            <i class="far fa-id-card me-1"></i> {{ $t("Transaction Setup & Entity Selection") }}
                         </div>
                     </div>
                     <div class="row g-3 align-items-center mt-1">
@@ -27,20 +27,20 @@
                         <div class="col-md-3">
                             <div class="form-group mb-0">
                                 <label class="form-label d-flex justify-content-between align-items-center">
-                                    <span>{{ data.payment_type == 'Receive' ? 'Collection From:' : 'Payment To:' }}</span>
+                                    <span>{{ data.payment_type == 'Receive' ? $t('Collection From:') : $t('Payment To:') }}</span>
                                 </label>
                                 <select class="form-select custom_select_input" v-model="entity_type" @change="onEntityTypeChange">
                                     <template v-if="data.payment_type == 'Receive'">
-                                        <option value="client">Client</option>
-                                        <option value="supplier">Supplier / Scrap Buyer (Auction)</option>
-                                        <option value="auction">All Open Auctions</option>
-                                        <option value="employee">Employee (Loan / Adv.)</option>
+                                        <option value="client">{{ $t("Client") }}</option>
+                                        <option value="supplier">{{ $t("Supplier / Scrap Buyer (Auction)") }}</option>
+                                        <option value="auction">{{ $t("All Open Auctions") }}</option>
+                                        <option value="employee">{{ $t("Employee (Loan / Adv.)") }}</option>
                                     </template>
                                     <template v-else>
-                                        <option value="supplier">Supplier</option>
-                                        <option value="employee">Employee (Loan / Salary)</option>
-                                        <option value="agent">Agent (Commission)</option>
-                                        <option value="office_expense">Office Expense</option>
+                                        <option value="supplier">{{ $t("Supplier") }}</option>
+                                        <option value="employee">{{ $t("Employee (Loan / Salary)") }}</option>
+                                        <option value="agent">{{ $t("Agent (Commission)") }}</option>
+                                        <option value="office_expense">{{ $t("Office Expense") }}</option>
                                     </template>
                                 </select>
                             </div>
@@ -63,9 +63,9 @@
                             <!-- All Open Auctions -->
                             <div v-else-if="entity_type == 'auction'" class="col-md-3">
                                 <div class="form-group mb-0">
-                                    <label class="form-label">Open Auctions</label>
+                                    <label class="form-label">{{ $t("Open Auctions") }}</label>
                                     <button type="button" class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1" @click="loadOpenAuctions" style="height: 38px;">
-                                        <i class="fas fa-sync-alt"></i> Load All Open
+                                        <i class="fas fa-sync-alt"></i> {{ $t("Load All Open") }}
                                     </button>
                                 </div>
                             </div>
@@ -97,9 +97,9 @@
                             <!-- Office Expense -->
                             <div v-else-if="entity_type == 'office_expense'" class="col-md-3">
                                 <div class="form-group mb-0">
-                                    <label class="form-label">Office Expense</label>
+                                    <label class="form-label">{{ $t("Office Expense") }}</label>
                                     <div class="p-2 border rounded text-center small bg-light text-primary fw-semibold" style="height: 38px; line-height: 20px;">
-                                        <i class="fas fa-building me-1"></i> Auto Loaded
+                                        <i class="fas fa-building me-1"></i> {{ $t("Auto Loaded") }}
                                     </div>
                                 </div>
                             </div>
@@ -112,11 +112,11 @@
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <div class="card_capsule_badge">
                             <i class="fas fa-list-ul me-1"></i>
-                            {{ data.payment_type == 'Receive' ? 'Due Invoices & Receivable Bills' : 'Payable Invoices & Bills' }} ({{ invoices.length }})
+                            {{ data.payment_type == 'Receive' ? $t('Due Invoices & Receivable Bills') : $t('Payable Invoices & Bills') }} ({{ invoices.length }})
                         </div>
                         <div class="form-check m-0 d-flex align-items-center gap-1 small fw-semibold text-secondary" v-if="invoices && invoices.length > 0">
                             <input type="checkbox" class="form-check-input mt-0" id="select_all_btn" :checked="isAllSelected" @change="toggleSelectAll" />
-                            <label class="form-check-label cursor-pointer" for="select_all_btn" style="user-select: none;">Select All</label>
+                            <label class="form-check-label cursor-pointer" for="select_all_btn" style="user-select: none;">{{ $t("Select All") }}</label>
                         </div>
                     </div>
 
@@ -133,7 +133,7 @@
                                     <th class="text-end" style="min-width: 100px;">{{ $t('Paid') }}</th>
                                     <th class="text-end" style="min-width: 110px;">{{ $t('Due') }}</th>
                                     <th class="text-end" style="width: 115px; min-width: 115px;">{{ $t('Adjust') }}</th>
-                                    <th class="text-center" style="width: 70px; min-width: 70px;">Closed?</th>
+                                    <th class="text-center" style="width: 70px; min-width: 70px;">{{ $t("Closed?") }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -185,7 +185,7 @@
                                                     </svg>
                                                 </div>
                                                 <div class="text-start">
-                                                    <div class="fw-semibold text-secondary" style="font-size: 13.5px;">No outstanding bills found. Please select a party above.</div>
+                                                    <div class="fw-semibold text-secondary" style="font-size: 13.5px;">{{ $t("No outstanding bills found. Please select a party above.") }}</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -200,18 +200,18 @@
                 <div class="card payment_section_card shadow-sm border-0">
                     <div class="d-flex align-items-center mb-1">
                         <div class="card_capsule_badge">
-                            <i class="far fa-money-bill-alt me-1"></i> Fund Account & Transaction Amount
+                            <i class="far fa-money-bill-alt me-1"></i> {{ $t("Fund Account & Transaction Amount") }}
                         </div>
                     </div>
                     <div class="row g-3 align-items-start mt-1">
                         <!-- Fund Account -->
                         <div class="col-md-5">
-                            <Select :title="data.payment_type == 'Receive' ? 'Deposit / Credit Fund Account' : 'Debit / Paid From Fund Account'"
+                            <Select :title="data.payment_type == 'Receive' ? $t('Deposit / Credit Fund Account') : $t('Debit / Paid From Fund Account')"
                                 v-model='data.fund_account_id' field='data.fund_account_id' label='name'
                                 :reduce='(obj) => obj.id' :options='fundaccounts' placeholder='-- Select Fund Account --' :closeOnSelect='true'
                                 col="12" :required='true' />
                             <div class="current_fund_balance small text-muted mt-1 font-monospace">
-                                Current Fund Balance: <strong class="text-dark">৳ {{ this.$filter.money(fund) }}</strong>
+                                {{ $t('Current Fund Balance:') }} <strong class="text-dark">৳ {{ this.$filter.money(fund) }}</strong>
                             </div>
                         </div>
 
@@ -224,7 +224,7 @@
                         <!-- Received / Paid Amount -->
                         <div :class="data.payment_type == 'Receive' ? 'col-md-3' : 'col-md-4'">
                             <Input v-model='data.amount' field='data.amount'
-                                :title="data.payment_type == 'Receive' ? 'Received Amount (৳)' : 'Paid Amount (৳)'"
+                                :title="data.payment_type == 'Receive' ? $t('Received Amount (৳)') : $t('Paid Amount (৳)')"
                                 col="12" :req='true' />
                         </div>
 
@@ -232,7 +232,7 @@
                         <div :class="data.payment_type == 'Receive' ? 'col-md-2' : 'col-md-3'" class="pt-4">
                             <button type="button" class="btn auto_adjust_btn w-100 d-flex align-items-center justify-content-center gap-2" @click="reverseAdjustment" title="Auto distribute entered amount across due invoices">
                                 <i class="fas fa-sliders-h"></i>
-                                <span>Auto<br class="d-none d-sm-inline" /> Adjust</span>
+                                <span>{{ $t("Auto") }}<br class="d-none d-sm-inline" /> {{ $t("Adjust") }}</span>
                             </button>
                         </div>
                     </div>
@@ -242,7 +242,7 @@
                 <div class="card payment_section_card shadow-sm border-0">
                     <div class="d-flex align-items-center mb-2">
                         <div class="card_capsule_badge">
-                            <i class="fas fa-credit-card me-1"></i> Payment Method & Channel Details
+                            <i class="fas fa-credit-card me-1"></i> {{ $t("Payment Method & Channel Details") }}
                         </div>
                     </div>
                     <div class="row g-3 mt-1">
@@ -292,7 +292,7 @@
                         <div class="party_avatar_empty">
                             <i class="fas fa-user text-white"></i>
                         </div>
-                        <div class="fw-bold text-dark fs-6">No Party Selected</div>
+                        <div class="fw-bold text-dark fs-6">{{ $t("No Party Selected") }}</div>
                     </div>
 
                     <!-- Filled State -->
@@ -324,20 +324,20 @@
                 <div class="card payment_section_card shadow-sm border-0">
                     <div class="d-flex align-items-center mb-3">
                         <div class="card_capsule_badge">
-                            <i class="far fa-newspaper me-1"></i> Transaction Summary
+                            <i class="far fa-newspaper me-1"></i> {{ $t("Transaction Summary") }}
                         </div>
                     </div>
 
                     <!-- Total Due Box (Pink / Red) -->
                     <div class="summary_box_due mb-3 p-3 rounded-3 d-flex justify-content-between align-items-center">
-                        <div class="summary_label_due text-uppercase fw-bold">TOTAL DUE:</div>
+                        <div class="summary_label_due text-uppercase fw-bold">{{ $t("TOTAL DUE:") }}</div>
                         <div class="summary_value_due fw-bold font-monospace">৳ {{ this.$filter.money(totals.total_due) }}</div>
                     </div>
 
                     <!-- Net Collected Amount Box (Navy) -->
                     <div class="summary_box_net mb-3 p-3 rounded-3 text-center">
                         <div class="summary_label_net text-uppercase fw-bold mb-1">
-                            {{ data.payment_type == 'Receive' ? 'NET COLLECTED AMOUNT' : 'NET PAID AMOUNT' }}
+                            {{ data.payment_type == 'Receive' ? $t('NET COLLECTED AMOUNT') : $t('NET PAID AMOUNT') }}
                         </div>
                         <div class="summary_value_net fw-bold font-monospace">
                             ৳ {{ this.$filter.money(data.amount) }}

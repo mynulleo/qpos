@@ -5,14 +5,14 @@
       <!-- Date Presets -->
       <div class="col-12 mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center">
-          <span class="text-muted small fw-bold me-1"><i class="fas fa-calendar-alt me-1"></i>Quick Date:</span>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'all' }" @click="applyDatePreset('all')">All Time</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'today' }" @click="applyDatePreset('today')">Today</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'yesterday' }" @click="applyDatePreset('yesterday')">Yesterday</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'last7' }" @click="applyDatePreset('last7')">Last 7 Days</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisMonth' }" @click="applyDatePreset('thisMonth')">This Month</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'lastMonth' }" @click="applyDatePreset('lastMonth')">Last Month</button>
-          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisYear' }" @click="applyDatePreset('thisYear')">This Year</button>
+          <span class="text-muted small fw-bold me-1"><i class="fas fa-calendar-alt me-1 text-primary"></i>{{ $t("Quick Date:") }}</span>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'all' }" @click="applyDatePreset('all')">{{ $t("All Time") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'today' }" @click="applyDatePreset('today')">{{ $t("Today") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'yesterday' }" @click="applyDatePreset('yesterday')">{{ $t("Yesterday") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'last7' }" @click="applyDatePreset('last7')">{{ $t("Last 7 Days") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisMonth' }" @click="applyDatePreset('thisMonth')">{{ $t("This Month") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'lastMonth' }" @click="applyDatePreset('lastMonth')">{{ $t("Last Month") }}</button>
+          <button type="button" class="btn btn-xs btn-outline-primary" :class="{ 'active': activePreset === 'thisYear' }" @click="applyDatePreset('thisYear')">{{ $t("This Year") }}</button>
         </div>
       </div>
 
@@ -40,12 +40,12 @@
               class="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
               :data="exportData"
               :name="exportFileName">
-              <i class="fas fa-file-excel"></i> Export Excel
+              <i class="fas fa-file-excel"></i> {{ $t("Export Excel") }}
             </download-excel>
             <button class="p_btn btn btn-sm btn-dark d-inline-flex align-items-center gap-1"
               data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print Report"
               v-x-tooltip @click="print('printArea', model)">
-              <i class="fas fa-print"></i> Print Report
+              <i class="fas fa-print"></i> {{ $t("Print Report") }}
             </button>
           </div>
         </div>

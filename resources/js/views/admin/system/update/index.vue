@@ -5,20 +5,20 @@
             <div>
                 <h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
                     <i class="fas fa-sync-alt text-primary"></i>
-                    Software & Database Update
+                    {{ $t('Software & Database Update') }}
                 </h4>
                 <p class="text-muted mb-0 small">
-                    সফটওয়্যার কোড পরিবর্তনের পর নিজস্ব অর্গানাইজেশন ডাটাবেজ স্বয়ংক্রিয়ভাবে আপডেট ও সিনক্রোনাইজ করুন।
+                    {{ $t('Synchronize organization database after software updates') }}
                 </p>
             </div>
             <div class="d-flex gap-2">
                 <router-link :to="{ name: 'databasebackup.index' }" class="btn btn-outline-primary btn-sm px-3 d-flex align-items-center gap-2 shadow-sm">
                     <i class="fas fa-database"></i>
-                    <span>DB Backup & Restore</span>
+                    <span>{{ $t('DB Backup & Restore') }}</span>
                 </router-link>
                 <button type="button" class="btn btn-outline-secondary btn-sm px-3 d-flex align-items-center gap-2 shadow-sm" :disabled="loading || updating" @click="fetchStatus">
                     <i class="fas fa-redo" :class="{ 'fa-spin': loading }"></i>
-                    <span>Check Again</span>
+                    <span>{{ $t('Check Again') }}</span>
                 </button>
             </div>
         </div>
@@ -32,7 +32,7 @@
                             <i class="fas fa-database fa-lg"></i>
                         </div>
                         <div>
-                            <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 11px;">Organization DB</small>
+                            <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 11px;">{{ $t('Organization DB') }}</small>
                             <h6 class="fw-bold mb-0 text-dark font-monospace">{{ status.database_name || 'Loading...' }}</h6>
                         </div>
                     </div>
@@ -46,12 +46,12 @@
                             <i class="fas" :class="status.is_update_needed ? 'fa-exclamation-triangle fa-lg' : 'fa-check-circle fa-lg'"></i>
                         </div>
                         <div>
-                            <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 11px;">Update Status</small>
+                            <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 11px;">{{ $t('Update Status') }}</small>
                             <span v-if="status.is_update_needed" class="badge bg-warning text-dark px-2 py-1 fw-bold">
-                                {{ status.pending_count }} Updates Pending
+                                {{ status.pending_count }} {{ $t('Updates Pending') }}
                             </span>
                             <span v-else class="badge bg-success px-2 py-1 fw-bold">
-                                Up to Date
+                                {{ $t('Up to Date') }}
                             </span>
                         </div>
                     </div>
@@ -65,7 +65,7 @@
                             <i class="fas fa-layer-group fa-lg"></i>
                         </div>
                         <div>
-                            <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 11px;">Migrations Applied</small>
+                            <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 11px;">{{ $t('Migrations Applied') }}</small>
                             <h6 class="fw-bold mb-0 text-dark">{{ status.executed_migrations || 0 }} / {{ status.total_migrations || 0 }}</h6>
                         </div>
                     </div>
@@ -79,7 +79,7 @@
                             <i class="fab fa-laravel fa-lg"></i>
                         </div>
                         <div>
-                            <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 11px;">Environment</small>
+                            <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 11px;">{{ $t('Environment') }}</small>
                             <h6 class="fw-bold mb-0 text-dark" style="font-size: 13px;">Laravel {{ status.laravel_version }} (PHP {{ status.php_version }})</h6>
                         </div>
                     </div>
@@ -96,13 +96,13 @@
                     <div class="card-header bg-warning bg-opacity-10 border-warning border-opacity-25 py-3 px-4 d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-2">
                             <i class="fas fa-bell text-warning fa-lg"></i>
-                            <h6 class="fw-bold mb-0 text-dark">New Database Updates Available</h6>
+                            <h6 class="fw-bold mb-0 text-dark">{{ $t('New Database Updates Available') }}</h6>
                         </div>
-                        <span class="badge bg-warning text-dark fw-bold px-3 py-1">Action Required</span>
+                        <span class="badge bg-warning text-dark fw-bold px-3 py-1">{{ $t('Action Required') }}</span>
                     </div>
                     <div class="card-body p-4">
                         <p class="text-secondary mb-3">
-                            কোডে নতুন ডাটাবেজ মাইগ্রেশন বা টেবিল পরিবর্তন পাওয়া গেছে যা আপনার অর্গানাইজেশনের ডাটাবেজে এখনও অ্যাপ্লাই করা হয়নি। নিচের বাটনে ক্লিক করে সাথে সাথে আপডেট করে নিন:
+                            {{ $t('New database migrations found. Please click update now:') }}
                         </p>
 
                         <!-- Action Buttons Grid -->
@@ -110,20 +110,14 @@
                             <div class="col-md-7 col-12">
                                 <button type="button" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow d-flex align-items-center justify-content-center gap-2 update-btn" :disabled="updating" @click="runUpdate">
                                     <i class="fas" :class="updating ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
-                                    <span>{{ updating ? 'Processing... Please wait' : 'Update Database Now (ডাটাবেজ আপডেট)' }}</span>
+                                    <span>{{ updating ? $t('Processing... Please wait') : $t('Update Database Now') }}</span>
                                 </button>
                             </div>
                             <div class="col-md-5 col-12">
-                                <button type="button" class="btn btn-outline-dark btn-lg w-100 fw-bold py-3 shadow-sm d-flex align-items-center justify-content-center gap-2" :disabled="updating" @click="syncMigrationsOnly" title="ম্যানুয়াল DB আপলোডের ক্ষেত্রে কোনো টেবিল চেঞ্জ না করে শুধু migrations টেবিলে রেকর্ড সিঙ্ক করবে">
+                                <button type="button" class="btn btn-outline-dark btn-lg w-100 fw-bold py-3 shadow-sm d-flex align-items-center justify-content-center gap-2" :disabled="updating" @click="syncMigrationsOnly">
                                     <i class="fas" :class="updating ? 'fa-spinner fa-spin' : 'fa-database'"></i>
-                                    <span style="font-size: 13.5px;">Sync Migrations Table Only</span>
+                                    <span style="font-size: 13.5px;">{{ $t('Sync Migrations Table Only') }}</span>
                                 </button>
-                            </div>
-                            <div class="col-12 mt-1">
-                                <small class="text-muted fst-italic d-block">
-                                    <i class="fas fa-info-circle text-primary me-1"></i>
-                                    <strong>টিপস:</strong> আপনি যদি phpMyAdmin-এ ম্যানুয়ালি লেটেস্ট DB ডাম্প আপলোড করে থাকেন, তবে <strong>"Sync Migrations Table Only"</strong> বাটনে ক্লিক করলেই পেন্ডিং আপডেটগুলো মাইগ্রেশন টেবিলে রেকর্ড হয়ে বাটন চলে যাবে।
-                                </small>
                             </div>
                         </div>
 
@@ -131,7 +125,7 @@
                         <div class="pending-items-box">
                             <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
                                 <i class="fas fa-list-check text-primary"></i>
-                                Pending Migrations & Alterations ({{ status.pending_count }})
+                                {{ $t('Pending Migrations & Alterations') }} ({{ status.pending_count }})
                             </h6>
                             <div class="list-group list-group-flush border rounded-3 overflow-auto" style="max-height: 280px;">
                                 <div v-for="(item, idx) in status.pending_migrations" :key="`mig_${idx}`" class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
@@ -166,22 +160,22 @@
                         <div class="verified-icon-box mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success">
                             <i class="fas fa-check-double fa-3x"></i>
                         </div>
-                        <h4 class="fw-bold text-dark mb-2">Database is Completely Up to Date!</h4>
+                        <h4 class="fw-bold text-dark mb-2">{{ $t('Database is Completely Up to Date!') }}</h4>
                         <p class="text-muted mx-auto mb-4" style="max-width: 480px;">
-                            আপনার অর্গানাইজেশনের ডাটাবেজ লেটেস্ট সফটওয়্যার কোড ও স্কিমার সাথে শতভাগ সিনক্রোনাইজড রয়েছে। কোনো পেন্ডিং আপডেট নেই।
+                            {{ $t('Organization database is fully synchronized with latest code') }}
                         </p>
                         <div class="d-flex flex-wrap justify-content-center gap-3">
                             <button type="button" class="btn btn-outline-primary px-4 py-2 fw-semibold rounded-pill d-flex align-items-center gap-2 shadow-sm" :disabled="loading" @click="fetchStatus">
                                 <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
-                                Check Again
+                                {{ $t('Check Again') }}
                             </button>
                             <button type="button" class="btn btn-light px-4 py-2 fw-semibold rounded-pill d-flex align-items-center gap-2 border" :disabled="updating" @click="runUpdate">
                                 <i class="fas fa-arrows-rotate"></i>
-                                Force Re-sync (Run Migrations)
+                                {{ $t('Force Re-sync (Run Migrations)') }}
                             </button>
                             <button type="button" class="btn btn-outline-secondary px-4 py-2 fw-semibold rounded-pill d-flex align-items-center gap-2 border" :disabled="updating" @click="syncMigrationsOnly">
                                 <i class="fas fa-database"></i>
-                                Sync Migrations Table Only
+                                {{ $t('Sync Migrations Table Only') }}
                             </button>
                         </div>
                     </div>

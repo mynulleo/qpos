@@ -1,7 +1,7 @@
 <template>
     <create-form @onSubmit="submit">
         <Fieldset>
-            <template v-slot:name>Primary Info</template>
+            <template v-slot:name>{{ $t('Primary Info') }}</template>
             <template v-slot:content>
                 <Input v-model="data.name" field="data.name" title="Name" :req="true" />
 
@@ -15,11 +15,11 @@
             </template>
         </Fieldset>
         <Fieldset>
-            <template v-slot:name>Permission Setting</template>
+            <template v-slot:name>{{ $t('Permission Setting') }}</template>
             <template v-slot:content>
                 <p class="p-3 d-flex">
                     <input type="checkbox" value="1" v-model="checkAll" class="me-2" style="width: 20px;" />
-                    <strong>All</strong>
+                    <strong>{{ $t('All') }}</strong>
                 </p>
                 <table v-if="extraData.permissions" border="1" class="table border table-hover">
                     <tr v-for="(perm, index) in extraData.permissions" :key="index">

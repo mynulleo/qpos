@@ -6,7 +6,7 @@
     <Input v-model='data.house_rent' field='data.house_rent' col="3" title='House Rent' :req='false' />
     <Input v-model='data.medical' field='data.medical' col="3" title='Medical' :req='false' />
     <Input v-model='data.other' field='data.other' col="3" title='Other' :req='false' />
-    <Switch v-model='data.status' field='data.status' title='status' on-label='Active' off-label='Deactive' :req='true'>
+    <Switch v-model='data.status' field='data.status' title='Status' on-label='Active' off-label='Deactive' :req='true'>
     </Switch>
 
   </create-form>

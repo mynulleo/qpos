@@ -4,7 +4,7 @@
       <div class="col-md-6">
         <div class="card border-0 shadow-sm">
           <div class="card-header bg-primary text-white py-2">
-            <h6 class="mb-0 fw-bold"><i class="fas fa-warehouse me-2"></i>Warehouse Information</h6>
+            <h6 class="mb-0 fw-bold"><i class="fas fa-warehouse me-2"></i>{{ $t('Warehouse Information') }}</h6>
           </div>
           <div class="card-body p-0">
             <table class="table table-striped mb-0">
@@ -15,21 +15,21 @@
                 </tr>
                 <tr>
                   <th>{{ $t('Warehouse Code') }}</th>
-                  <td><span class="badge bg-secondary font-monospace">{{ data.code || 'N/A' }}</span></td>
+                  <td><span class="badge bg-secondary font-monospace">{{ data.code || $t('N/A') }}</span></td>
                 </tr>
                 <tr>
                   <th>{{ $t('Branch') }}</th>
-                  <td>{{ data.branch ? data.branch.title : 'All Branches' }}</td>
+                  <td>{{ data.branch ? data.branch.title : $t('All Branches') }}</td>
                 </tr>
                 <tr>
                   <th>{{ $t('Capacity') }}</th>
-                  <td>{{ data.capacity || 'Not Specified' }}</td>
+                  <td>{{ data.capacity || $t('Not Specified') }}</td>
                 </tr>
                 <tr>
                   <th>{{ $t('Status') }}</th>
                   <td>
                     <span :class="data.status === 'active' ? 'badge bg-success' : 'badge bg-danger'">
-                      {{ data.status }}
+                      {{ data.status ? $t(data.status) : '' }}
                     </span>
                   </td>
                 </tr>
@@ -42,30 +42,30 @@
       <div class="col-md-6">
         <div class="card border-0 shadow-sm">
           <div class="card-header bg-dark text-white py-2">
-            <h6 class="mb-0 fw-bold"><i class="fas fa-address-book me-2"></i>Contact & Address Details</h6>
+            <h6 class="mb-0 fw-bold"><i class="fas fa-address-book me-2"></i>{{ $t('Contact & Address Details') }}</h6>
           </div>
           <div class="card-body p-0">
             <table class="table table-striped mb-0">
               <tbody>
                 <tr>
                   <th width="40%">{{ $t('Contact Person') }}</th>
-                  <td><strong>{{ data.contact_person || 'N/A' }}</strong></td>
+                  <td><strong>{{ data.contact_person || $t('N/A') }}</strong></td>
                 </tr>
                 <tr>
                   <th>{{ $t('Contact Person Mobile') }}</th>
-                  <td>{{ data.contact_person_phone || 'N/A' }}</td>
+                  <td>{{ data.contact_person_phone || $t('N/A') }}</td>
                 </tr>
                 <tr>
                   <th>{{ $t('Warehouse Phone') }}</th>
-                  <td>{{ data.phone || 'N/A' }}</td>
+                  <td>{{ data.phone || $t('N/A') }}</td>
                 </tr>
                 <tr>
                   <th>{{ $t('Email') }}</th>
-                  <td>{{ data.email || 'N/A' }}</td>
+                  <td>{{ data.email || $t('N/A') }}</td>
                 </tr>
                 <tr>
                   <th>{{ $t('Physical Address') }}</th>
-                  <td>{{ data.address || 'N/A' }}</td>
+                  <td>{{ data.address || $t('N/A') }}</td>
                 </tr>
               </tbody>
             </table>

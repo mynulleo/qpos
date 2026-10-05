@@ -9,8 +9,8 @@
                             <i class="fas fa-building"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">Store & Brand Identity</h6>
-                            <small class="text-muted" style="font-size: 11px;">Primary naming and contact information</small>
+                            <h6 class="fw-bold mb-0 text-dark">{{ $t('Store & Brand Identity') }}</h6>
+                            <small class="text-muted" style="font-size: 11px;">{{ $t('Primary naming and contact information') }}</small>
                         </div>
                     </div>
                     <div class="card-body p-3">
@@ -58,8 +58,8 @@
                             <i class="fas fa-sliders-h"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">System & POS Configuration</h6>
-                            <small class="text-muted" style="font-size: 11px;">Currency, system environment and business workflow mode</small>
+                            <h6 class="fw-bold mb-0 text-dark">{{ $t('System & POS Configuration') }}</h6>
+                            <small class="text-muted" style="font-size: 11px;">{{ $t('Currency, system environment and business workflow mode') }}</small>
                         </div>
                     </div>
                     <div class="card-body p-3">
@@ -79,7 +79,7 @@
                             <!-- Shop Type Selector -->
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-dark mb-2">
-                                    <i class="fas fa-store text-theme me-1"></i> Shop Type / Business Category (দোকানের ধরন):
+                                    <i class="fas fa-store text-theme me-1"></i> {{ $t('Business Shop Type') }}:
                                 </label>
                                 <div class="row g-3">
                                     <!-- Departmental Store / Grocery -->
@@ -147,7 +147,7 @@
                             <!-- Sale Nature Selector -->
                             <div class="col-12 border-top pt-3">
                                 <label class="form-label fw-bold small text-dark mb-2">
-                                    <i class="fas fa-tags text-theme me-1"></i> Sale Nature (বিক্রয়ের ধরণ / প্রকৃতি):
+                                    <i class="fas fa-tags text-theme me-1"></i> {{ $t('Sale Nature (Retail / Wholesale)') }}:
                                 </label>
                                 <div class="row g-2">
                                     <!-- Retail -->
@@ -159,7 +159,7 @@
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="natureRetail" value="retail" v-model="data.sale_nature">
                                                 <label class="form-check-label cursor-pointer text-dark w-100" for="natureRetail">
                                                     <div class="fw-bold small text-primary"><i class="fas fa-shopping-bag me-1"></i>{{ $t('Retail') }}</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Direct consumer sales</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('Direct consumer sales') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -174,7 +174,7 @@
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="natureWholesale" value="wholesale" v-model="data.sale_nature">
                                                 <label class="form-check-label cursor-pointer text-dark w-100" for="natureWholesale">
                                                     <div class="fw-bold small text-success"><i class="fas fa-warehouse me-1"></i>{{ $t('Whole Sale') }}</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Bulk dealer & agent sales</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('Bulk dealer & agent sales') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -189,7 +189,7 @@
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="natureBoth" value="both" v-model="data.sale_nature">
                                                 <label class="form-check-label cursor-pointer text-dark w-100" for="natureBoth">
                                                     <div class="fw-bold small text-dark"><i class="fas fa-layer-group text-warning me-1"></i>{{ $t('Both') }}</div>
-                                                    <div class="text-muted" style="font-size: 11px;">Retail & wholesale together</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $t('Retail & wholesale together') }}</div>
                                                 </label>
                                             </div>
                                         </div>
@@ -202,7 +202,7 @@
                                 <div class="row g-2 align-items-center">
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
-                                            <i class="fas fa-percent text-theme"></i> Default VAT Rate (%) (ডিফল্ট ভ্যাট শতকরা হার):
+                                            <i class="fas fa-percent text-theme"></i> {{ $t('Default POS VAT Rate') }} (%):
                                         </label>
                                         <div class="input-group">
                                             <input type="number" step="0.01" min="0" max="100" class="form-control fw-bold font-monospace"
@@ -211,13 +211,13 @@
                                         </div>
                                         <small class="text-muted d-block mt-1" style="font-size: 11px;">
                                             <i class="fas fa-info-circle text-primary me-1"></i>
-                                            Set <strong>0</strong> for no default VAT. When &gt; 0, POS calculates this % on invoice total automatically.
+                                            {{ $t('Set 0 for no default VAT. When > 0, POS calculates this % on invoice total automatically.') }}
                                         </small>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="p-2 px-3 rounded border" :class="Number(data.default_vat) > 0 ? 'bg-primary bg-opacity-10 border-primary' : 'bg-light'">
                                             <div class="small fw-bold text-dark d-flex align-items-center justify-content-between mb-1">
-                                                <span><i class="fas fa-calculator me-1 text-primary"></i> POS Calculation Preview:</span>
+                                                <span><i class="fas fa-calculator me-1 text-primary"></i> {{ $t('POS Calculation Preview') }}:</span>
                                                 <span class="badge" :class="Number(data.default_vat) > 0 ? 'bg-primary' : 'bg-secondary'">
                                                     {{ Number(data.default_vat) > 0 ? data.default_vat + '% Active' : '0% (No VAT)' }}
                                                 </span>
@@ -226,7 +226,7 @@
                                                 On <strong>Tk. 1,000</strong> sale &rarr; VAT = <strong>Tk. {{ ((1000 * Number(data.default_vat)) / 100).toFixed(2) }}</strong> (Net: Tk. {{ (1000 + (1000 * Number(data.default_vat)) / 100).toFixed(2) }})
                                             </div>
                                             <div class="text-muted" style="font-size: 11.5px;" v-else>
-                                                VAT calculation will be <strong>Tk. 0.00</strong> on POS sales by default. Cashier can toggle switch anytime.
+                                                {{ $t('VAT calculation will be Tk. 0.00 on POS sales by default. Cashier can toggle switch anytime.') }}
                                             </div>
                                         </div>
                                     </div>
@@ -239,7 +239,7 @@
                                     <!-- 1. Invoice Prefix -->
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
-                                            <i class="fas fa-receipt text-theme"></i> Invoice Prefix (ইনভয়েস প্রিফিক্স):
+                                            <i class="fas fa-receipt text-theme"></i> {{ $t('Invoice Prefix') }}:
                                         </label>
                                         <div class="input-group">
                                             <input type="text" class="form-control font-monospace fw-bold text-uppercase"
@@ -250,19 +250,19 @@
                                         </div>
                                         <small class="text-muted d-block mt-1" style="font-size: 11px;">
                                             <i class="fas fa-info-circle text-primary me-1"></i>
-                                            ইনভয়েস নম্বরের শুরুতে এই প্রিফিক্সটি ডাইনামিক ভাবে বসবে (যেমনঃ <strong>{{ (data.invoice_prefix || 'POS') }}-20261001-0001</strong>)।
+                                            {{ $t('This prefix is dynamically prepended to invoice numbers (e.g. POS-20261001-0001).') }}
                                         </small>
                                     </div>
 
                                     <!-- 2. POS Terminal Terms & Condition Toggle Switch -->
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
-                                            <i class="fas fa-file-contract text-theme"></i> Sale Terminal Terms & Conditions (টার্মিনালে শর্তাবলী প্রদর্শন):
+                                            <i class="fas fa-file-contract text-theme"></i> {{ $t('POS Terms & Conditions') }}:
                                         </label>
                                         <div class="p-2 px-3 border rounded bg-light d-flex align-items-center justify-content-between h-auto">
                                             <div>
-                                                <span class="small fw-bold text-dark d-block">Show in Sale Terminal / POS</span>
-                                                <small class="text-muted" style="font-size: 10.5px;">টার্মিনালে শর্তাবলী এডিট ও প্রিন্ট সুবিধা</small>
+                                                <span class="small fw-bold text-dark d-block">{{ $t('Show in Sale Terminal / POS') }}</span>
+                                                <small class="text-muted" style="font-size: 10.5px;">{{ $t('Option to edit and print terms in sale terminal') }}</small>
                                             </div>
                                             <div class="form-check form-switch m-0 p-0">
                                                 <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch"
@@ -272,7 +272,7 @@
                                         </div>
                                         <small class="text-muted d-block mt-1" style="font-size: 11px;">
                                             <i class="fas fa-info-circle text-primary me-1"></i>
-                                            সক্রিয় থাকলে পিওএস টার্মিনালে চেকআউটের সময় প্রতিটি শর্তের জন্য চেকবক্স ও ইনপুট বক্স শো করবে।
+                                            {{ $t('When enabled, terms checkboxes and inputs appear during checkout in POS terminal.') }}
                                         </small>
                                     </div>
                                 </div>
@@ -295,7 +295,7 @@
                                     <h6 class="fw-bold mb-0 text-dark">{{ $t('Organization Memberships & Associations') }}</h6>
                                     <span class="badge bg-primary font-monospace" v-if="data.shop_type === 'electronics'">Electronics Feature</span>
                                 </div>
-                                <small class="text-muted" style="font-size: 11px;">Add trade bodies and associations (e.g. BCS, BASIS, ECAB) with logos to display on invoice bills</small>
+                                <small class="text-muted" style="font-size: 11px;">{{ $t('Add trade bodies and associations (e.g. BCS, BASIS, ECAB) with logos to display on invoice bills') }}</small>
                             </div>
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1 shadow-sm px-3" @click="openMembershipModal('create')">
@@ -319,16 +319,16 @@
                                                     @change="toggleMembershipInvoice(idx)"
                                                     style="transform: scale(0.9);">
                                                 <label class="form-check-label small cursor-pointer" :for="`invShow_${idx}`" :class="m.show_in_invoice ? 'text-success fw-bold' : 'text-muted'">
-                                                    {{ m.show_in_invoice ? 'Show in Invoice' : 'Hidden in Invoice' }}
+                                                    {{ m.show_in_invoice ? $t('Show in Invoice') : $t('Hidden in Invoice') }}
                                                 </label>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="d-flex flex-column gap-1">
-                                        <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" @click="openMembershipModal('edit', idx)" title="Edit">
+                                        <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" @click="openMembershipModal('edit', idx)" :title="$t('Edit')">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" @click="deleteMembership(idx)" title="Delete">
+                                        <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" @click="deleteMembership(idx)" :title="$t('Delete')">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
@@ -337,9 +337,9 @@
                         </div>
                         <div v-else class="text-center py-4 bg-light rounded border border-dashed">
                             <i class="fas fa-award fs-2 text-muted opacity-25 mb-2"></i>
-                            <p class="text-muted small mb-2">No organization memberships added yet (e.g. Bangladesh Computer Samity, BASIS, ECAB).</p>
+                            <p class="text-muted small mb-2">{{ $t('No organization memberships added yet (e.g. Bangladesh Computer Samity, BASIS, ECAB).') }}</p>
                             <button type="button" class="btn btn-sm btn-primary px-3 shadow-sm" @click="openMembershipModal('create')">
-                                <i class="fas fa-plus me-1"></i> Add Organization Membership
+                                <i class="fas fa-plus me-1"></i> {{ $t('Add Organization Membership') }}
                             </button>
                         </div>
                     </div>
@@ -355,13 +355,13 @@
                                 <i class="fas fa-print"></i>
                             </div>
                             <div>
-                                <h6 class="fw-bold mb-0 text-dark">{{ $t('Printer & Paper Size Setup') }}</h6>
-                                <small class="text-muted" style="font-size: 11px;">Configure whether sales and warranty claims print on Thermal POS rolls or Normal (A4/A5) sheets</small>
+                                <h6 class="fw-bold mb-0 text-dark">{{ $t('Printer, Paper & Barcode Setup') }}</h6>
+                                <small class="text-muted" style="font-size: 11px;">{{ $t('Configure whether sales and warranty claims print on Thermal POS rolls or Normal (A4/A5) sheets') }}</small>
                             </div>
                         </div>
                         <span class="badge font-monospace" :class="data.printer_type === 'thermal' ? 'bg-success' : 'bg-primary'">
                             <i class="fas fa-check-circle me-1"></i>
-                            {{ data.printer_type === 'thermal' ? 'Thermal Receipt (' + (data.thermal_paper_size || '80mm') + ')' : 'Normal Printer (' + (data.normal_paper_size || 'A4') + ')' }}
+                            {{ data.printer_type === 'thermal' ? $t('Thermal Receipt') + ' (' + (data.thermal_paper_size || '80mm') + ')' : $t('Normal Printer') + ' (' + (data.normal_paper_size || 'A4') + ')' }}
                         </span>
                     </div>
                     <div class="card-body p-3">
@@ -369,7 +369,7 @@
                             <!-- 1. Select Printer Type -->
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-dark mb-2">
-                                    <i class="fas fa-cog text-theme me-1"></i> Printer Type (প্রিন্টারের ধরণ):
+                                    <i class="fas fa-cog text-theme me-1"></i> {{ $t('Printer Type') }}:
                                 </label>
                                 <div class="row g-2">
                                     <!-- Thermal Printer -->
@@ -381,7 +381,7 @@
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="printerThermal" value="thermal" v-model="data.printer_type">
                                                 <label class="form-check-label cursor-pointer text-dark w-100" for="printerThermal">
                                                     <div class="fw-bold small text-success">
-                                                        <i class="fas fa-receipt me-1"></i> Thermal Printer
+                                                        <i class="fas fa-receipt me-1"></i> {{ $t('Thermal Printer') }}
                                                     </div>
                                                     <div class="text-muted" style="font-size: 11px;">{{ $t('POS Receipt Roll') }}</div>
                                                 </label>
@@ -398,7 +398,7 @@
                                                 <input class="form-check-input ms-1 mt-1" type="radio" id="printerNormal" value="normal" v-model="data.printer_type">
                                                 <label class="form-check-label cursor-pointer text-dark w-100" for="printerNormal">
                                                     <div class="fw-bold small text-primary">
-                                                        <i class="fas fa-print me-1"></i> Normal Printer
+                                                        <i class="fas fa-print me-1"></i> {{ $t('Normal Printer') }}
                                                     </div>
                                                     <div class="text-muted" style="font-size: 11px;">{{ $t('Laser / Inkjet') }}</div>
                                                 </label>
@@ -413,7 +413,7 @@
                                 <!-- When Thermal is Selected -->
                                 <div v-if="data.printer_type === 'thermal'">
                                     <label class="form-label fw-bold small text-dark mb-2">
-                                        <i class="fas fa-scroll text-success me-1"></i> Thermal Paper Width (রোল সাইজ):
+                                        <i class="fas fa-scroll text-success me-1"></i> {{ $t('Thermal Paper Width') }}:
                                     </label>
                                     <div class="row g-2">
                                         <!-- 80mm -->
@@ -455,7 +455,7 @@
                                 <!-- When Normal Printer is Selected -->
                                 <div v-else>
                                     <label class="form-label fw-bold small text-dark mb-2">
-                                        <i class="fas fa-file-alt text-primary me-1"></i> Invoice Paper Size (কাগজের সাইজ):
+                                        <i class="fas fa-file-alt text-primary me-1"></i> {{ $t('Invoice Paper Size') }}:
                                     </label>
                                     <div class="row g-2">
                                         <!-- A4 -->
@@ -498,7 +498,7 @@
                             <!-- 3. Default Barcode Label Size Preset -->
                             <div class="col-12 border-top pt-3 mt-3">
                                 <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
-                                    <i class="fas fa-barcode text-theme"></i> Default Barcode Label Size Preset (ডিফল্ট বারকোড লেবেল সাইজ):
+                                    <i class="fas fa-barcode text-theme"></i> {{ $t('Default Barcode Label Size Preset') }}:
                                 </label>
                                 <Select
                                     title="Default Label Preset"
@@ -512,7 +512,7 @@
                                     :closeOnSelect="true"
                                 />
                                 <small class="text-muted d-block mt-1" style="font-size: 11px;">
-                                    <i class="fas fa-info-circle text-primary me-1"></i> This preset will be selected automatically as the default size on the <strong>Barcode Label Printing</strong> page.
+                                    <i class="fas fa-info-circle text-primary me-1"></i> {{ $t('This preset will be selected automatically as the default size on the Barcode Label Printing page.') }}
                                 </small>
                             </div>
 
@@ -522,18 +522,18 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <i class="fas fa-info-circle text-primary fs-5"></i>
                                         <div>
-                                            <strong>Active Print Workflow:</strong>
-                                            POS Sales & Warranty Claims will automatically print in
+                                            <strong>{{ $t('Active Print Workflow') }}:</strong>
+                                            {{ $t('POS Sales & Warranty Claims will automatically print in') }}
                                             <strong class="text-primary font-monospace" v-if="data.printer_type === 'thermal'">
-                                                Thermal Receipt ({{ data.thermal_paper_size || '80mm' }})
+                                                {{ $t('Thermal Receipt') }} ({{ data.thermal_paper_size || '80mm' }})
                                             </strong>
                                             <strong class="text-primary font-monospace" v-else>
-                                                Normal Invoice ({{ data.normal_paper_size || 'A4' }})
+                                                {{ $t('Normal Invoice') }} ({{ data.normal_paper_size || 'A4' }})
                                             </strong>
-                                            format after submission.
+                                            {{ $t('format after submission.') }}
                                         </div>
                                     </div>
-                                    <span class="badge bg-secondary font-monospace">Auto Applied to POS & Warranty</span>
+                                    <span class="badge bg-secondary font-monospace">{{ $t('Auto Applied to POS & Warranty') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -550,8 +550,8 @@
                                 <i class="fas fa-gift"></i>
                             </div>
                             <div>
-                                <h6 class="fw-bold mb-0 text-dark">Customer Loyalty & Reward Points Program</h6>
-                                <small class="text-muted" style="font-size: 11px;">Points accumulation on purchase and discount conversions</small>
+                                <h6 class="fw-bold mb-0 text-dark">{{ $t('Customer Loyalty & Reward Points Program') }}</h6>
+                                <small class="text-muted" style="font-size: 11px;">{{ $t('Points accumulation on purchase and discount conversions') }}</small>
                             </div>
                         </div>
                         <div class="form-check form-switch m-0 p-0 d-flex align-items-center gap-2">
@@ -559,35 +559,35 @@
                                 v-model="data.coupon_enabled" :true-value="1" :false-value="0"
                                 style="cursor: pointer; transform: scale(1.2);">
                             <label class="form-check-label fw-bold text-dark cursor-pointer small" for="couponSwitchEdit">
-                                {{ data.coupon_enabled ? 'Enabled' : 'Disabled' }}
+                                {{ data.coupon_enabled ? $t('Enabled') : $t('Disabled') }}
                             </label>
                         </div>
                     </div>
                     <div class="card-body p-3" v-if="data.coupon_enabled">
                         <div class="row g-3 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label fw-bold small text-dark">Earning Rate (১ টাকা ক্রয়ে পয়েন্ট):</label>
+                                <label class="form-label fw-bold small text-dark">{{ $t('Earning Rate') }}:</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light fw-bold small">1 Tk =</span>
                                     <input type="number" step="0.01" min="0" class="form-control fw-bold font-monospace" v-model.number="data.point_earn_rate" placeholder="1.00">
-                                    <span class="input-group-text bg-light small">Points</span>
+                                    <span class="input-group-text bg-light small">{{ $t('Points') }}</span>
                                 </div>
-                                <small class="text-muted" style="font-size: 11px;">1 Tk purchase earns 1 Point</small>
+                                <small class="text-muted" style="font-size: 11px;">{{ $t('1 Tk purchase earns 1 Point') }}</small>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-bold small text-dark">Redeem Rate (পয়েন্ট থেকে টাকা কনভার্সন):</label>
+                                <label class="form-label fw-bold small text-dark">{{ $t('Redeem Rate') }}:</label>
                                 <div class="input-group">
                                     <input type="number" step="0.01" min="0.01" class="form-control fw-bold font-monospace" v-model.number="data.point_redeem_rate" placeholder="10.00">
-                                    <span class="input-group-text bg-light fw-bold small">Points = 1 Tk</span>
+                                    <span class="input-group-text bg-light fw-bold small">{{ $t('Points = 1 Tk') }}</span>
                                 </div>
-                                <small class="text-muted" style="font-size: 11px;">10 Points = 1 Tk discount</small>
+                                <small class="text-muted" style="font-size: 11px;">{{ $t('10 Points = 1 Tk discount') }}</small>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-bold small text-dark">Minimum Points to Redeem:</label>
+                                <label class="form-label fw-bold small text-dark">{{ $t('Minimum Points to Redeem') }}:</label>
                                 <input type="number" min="0" class="form-control fw-bold font-monospace" v-model.number="data.min_points_to_redeem" placeholder="10">
-                                <small class="text-muted" style="font-size: 11px;">Minimum balance needed for discount</small>
+                                <small class="text-muted" style="font-size: 11px;">{{ $t('Minimum balance needed for discount') }}</small>
                             </div>
 
                             <!-- Live preview banner -->
@@ -595,7 +595,7 @@
                                 <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center gap-2 border-0 shadow-sm" style="font-size: 12px;">
                                     <i class="fas fa-calculator text-primary fs-5"></i>
                                     <div>
-                                        <strong>Live Calculation:</strong> A customer purchasing <strong>Tk. 1,000</strong> worth of products will receive <strong>{{ Number(1000 * (data.point_earn_rate || 1)).toLocaleString() }} loyalty points</strong>.
+                                        <strong>{{ $t('Live Calculation') }}:</strong> A customer purchasing <strong>Tk. 1,000</strong> worth of products will receive <strong>{{ Number(1000 * (data.point_earn_rate || 1)).toLocaleString() }} loyalty points</strong>.
                                         Redeeming <strong>{{ Number(1000 * (data.point_earn_rate || 1)).toLocaleString() }} points</strong> will grant <strong>Tk. {{ (Number(1000 * (data.point_earn_rate || 1)) / (data.point_redeem_rate || 10)).toFixed(2) }}</strong> invoice discount.
                                     </div>
                                 </div>
@@ -613,8 +613,8 @@
                             <i class="fas fa-images"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">Brand Media & Logos</h6>
-                            <small class="text-muted" style="font-size: 11px;">Upload store logo, small sidebar logo, and browser favicon</small>
+                            <h6 class="fw-bold mb-0 text-dark">{{ $t('Brand Media & Logos') }}</h6>
+                            <small class="text-muted" style="font-size: 11px;">{{ $t('Upload store logo, small sidebar logo, and browser favicon') }}</small>
                         </div>
                     </div>
                     <div class="card-body p-3">
@@ -676,8 +676,8 @@
                             <i class="fas fa-file-invoice-dollar"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">Banking, Invoicing & Tax Details</h6>
-                            <small class="text-muted" style="font-size: 11px;">Invoice footer banking credentials and tax numbers</small>
+                            <h6 class="fw-bold mb-0 text-dark">{{ $t('Banking, Invoicing & Tax Details') }}</h6>
+                            <small class="text-muted" style="font-size: 11px;">{{ $t('Invoice footer banking credentials and tax numbers') }}</small>
                         </div>
                     </div>
                     <div class="card-body p-3">
@@ -714,7 +714,7 @@
                         <div class="modal-header bg-light py-3 border-bottom">
                             <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
                                 <i class="fas fa-award text-primary"></i>
-                                {{ membershipModalMode === 'create' ? 'Add Organization Membership' : 'Edit Organization Membership' }}
+                                {{ membershipModalMode === 'create' ? $t('Add Organization Membership') : $t('Edit Organization Membership') }}
                             </h6>
                             <button type="button" class="btn-close" @click="closeMembershipModal"></button>
                         </div>
@@ -725,7 +725,7 @@
                                 </label>
                                 <input type="text" class="form-control" v-model.trim="membershipForm.org_name"
                                     placeholder="e.g. Bangladesh Computer Samity (BCS), BASIS, ECAB" />
-                                <small class="text-muted" style="font-size: 11px;">Enter the official name of the trade association or board</small>
+                                <small class="text-muted" style="font-size: 11px;">{{ $t('Enter the official name of the trade association or board') }}</small>
                             </div>
 
                             <!-- Logo Upload -->
@@ -742,13 +742,13 @@
                                         <i v-else class="fas fa-image fs-3 text-muted opacity-50"></i>
                                         <button v-if="modalLogoPreview" type="button" class="btn btn-danger btn-xs position-absolute top-0 end-0 p-0 rounded-circle d-flex align-items-center justify-content-center shadow-xs"
                                             style="width: 20px; height: 20px; transform: translate(30%, -30%); font-size: 10px;"
-                                            @click="removeMembershipLogo" title="Remove Logo">
+                                            @click="removeMembershipLogo" :title="$t('Remove Logo')">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
                                     <div class="flex-grow-1">
                                         <input ref="membershipFileInput" type="file" class="form-control form-control-sm" accept="image/*" @change="onMembershipLogoChange" />
-                                        <small class="text-muted d-block mt-1" style="font-size: 10.5px;">Recommended size: Square PNG or JPG with transparent background</small>
+                                        <small class="text-muted d-block mt-1" style="font-size: 10.5px;">{{ $t('Recommended size: Square PNG or JPG with transparent background') }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -757,7 +757,7 @@
                             <div class="p-3 border rounded bg-light d-flex align-items-center justify-content-between">
                                 <div>
                                     <span class="small fw-bold text-dark d-block">{{ $t('Show in Invoice') }}</span>
-                                    <small class="text-muted" style="font-size: 11px;">ইনভয়েস বিলের নিচে অর্গানাইজেশনের লোগো এবং নাম শো করবে</small>
+                                    <small class="text-muted" style="font-size: 11px;">{{ $t('Show organization logo and name at bottom of invoice bill') }}</small>
                                 </div>
                                 <div class="form-check form-switch m-0 p-0">
                                     <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch"
@@ -767,9 +767,9 @@
                             </div>
                         </div>
                         <div class="modal-footer bg-light py-2 px-3 border-top d-flex justify-content-between">
-                            <button type="button" class="btn btn-sm btn-secondary" @click="closeMembershipModal">Cancel</button>
+                            <button type="button" class="btn btn-sm btn-secondary" @click="closeMembershipModal">{{ $t('Cancel') }}</button>
                             <button type="button" class="btn btn-sm btn-primary px-4 fw-bold" :disabled="!membershipForm.org_name" @click="saveMembershipModal">
-                                <i class="fas fa-check me-1"></i> Save Membership
+                                <i class="fas fa-check me-1"></i> {{ $t('Save Membership') }}
                             </button>
                         </div>
                     </div>
