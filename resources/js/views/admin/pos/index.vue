@@ -10,13 +10,12 @@
         <div class="d-flex align-items-center gap-2">
           <button
             type="button"
-            class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2 py-1 rounded-pill fw-bold border"
-            :class="$locale === 'bn' ? 'btn-primary text-white border-primary' : 'btn-outline-light bg-light text-dark'"
+            class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2.5 py-1 rounded-pill fw-bold border btn-outline-light bg-white text-dark"
             @click="toggleLanguage"
-            :title="$locale === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'"
+            :title="$t('Select Language')"
           >
-            <i class="fas fa-language fa-lg"></i>
-            <span class="fw-bold">{{ $locale === 'bn' ? 'বাংলা' : 'EN' }}</span>
+            <i class="fas fa-language fa-lg text-primary"></i>
+            <span class="fw-bold">{{ $locale === 'bn' ? '🇧🇩 বাংলা' : ($locale === 'hi' ? '🇮🇳 हिन्दी' : ($locale === 'fr' ? '🇫🇷 FR' : ($locale === 'es' ? '🇪🇸 ES' : '🇺🇸 EN'))) }}</span>
           </button>
           <button type="button" class="btn btn-sm btn-outline-info text-white d-flex align-items-center gap-1 font-monospace" @click="openHelpModal">
             <i class="fas fa-question-circle"></i> {{ $t('Help') }}
@@ -1261,15 +1260,25 @@ export default {
   },
   computed: {
     localizedCurrentDate() {
+      const now = new Date();
       if (this.$locale === 'bn') {
-        const now = new Date();
         const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
         const d = this.$bnNum(now.getDate());
         const m = months[now.getMonth()];
         const y = this.$bnNum(now.getFullYear());
         return `${d} ${m}, ${y}`;
+      } else if (this.$locale === 'hi') {
+        const months = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+        const d = now.getDate();
+        const m = months[now.getMonth()];
+        const y = now.getFullYear();
+        return `${d} ${m}, ${y}`;
+      } else if (this.$locale === 'fr') {
+        return now.toLocaleDateString('fr-FR');
+      } else if (this.$locale === 'es') {
+        return now.toLocaleDateString('es-ES');
       }
-      return new Date().toLocaleDateString('en-GB');
+      return now.toLocaleDateString('en-GB');
     },
     showPosTermsConfig() {
       return !!(this.$root.site?.show_pos_terms == 1 || this.$root.site?.show_pos_terms === true || this.$root.site?.show_pos_terms === '1');

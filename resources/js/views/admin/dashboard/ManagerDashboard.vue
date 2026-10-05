@@ -465,6 +465,16 @@ export default {
                 const month = bnMonths[now.getMonth()];
                 const year = this.$bnNum(now.getFullYear());
                 return `${day} ${month} ${year}`;
+            } else if (this.$locale === 'hi') {
+                const hiMonths = ["जनवरी", "फरवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"];
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = hiMonths[now.getMonth()];
+                const year = now.getFullYear();
+                return `${day} ${month} ${year}`;
+            } else if (this.$locale === 'fr') {
+                return now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+            } else if (this.$locale === 'es') {
+                return now.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
             }
             return now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         },
@@ -484,7 +494,7 @@ export default {
             return this.data?.dashboard?.recentInvoices || [];
         },
         barChartDataMonth() {
-            return this.data?.dashboard?.barData?.month_name || (this.$locale === 'bn' ? 'চলতি মাস' : 'This Month');
+            return this.data?.dashboard?.barData?.month_name || this.$t('This Month');
         },
         totalMonthSales() {
             return this.data?.dashboard?.barData?.total_sales || this.stats.month_sales || 0;

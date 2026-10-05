@@ -46,22 +46,54 @@
                             </span>
                         </router-link>
 
-                        <!-- 🌐 Reactive Language Toggle Button -->
-                        <div class="lang_switch_box position-relative">
+                        <!-- 🌐 Reactive Language Dropdown -->
+                        <div class="lang_dropdown_box position-relative" ref="langDropdownRef">
                             <button
                                 type="button"
-                                class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2 py-1 rounded-pill fw-bold border"
-                                :class="$locale === 'bn' ? 'btn-primary text-white border-primary' : 'btn-outline-dark bg-white text-dark'"
-                                @click="toggleLanguage"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="bottom"
-                                :data-bs-title="$locale === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'"
-                                v-x-tooltip
-                                style="font-size: 12px; cursor: pointer; transition: all 0.2s ease-in-out;"
+                                class="btn btn-sm d-flex align-items-center gap-2 shadow-sm px-2.5 py-1.5 rounded-pill border lang-select-btn"
+                                :class="langDropdownOpen ? 'btn-primary text-white border-primary shadow' : 'btn-outline-dark bg-white text-dark'"
+                                @click.stop="toggleLangDropdown"
+                                style="font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); min-height: 33px;"
                             >
-                                <i class="fas fa-language fa-lg"></i>
-                                <span class="fw-bold">{{ $locale === 'bn' ? 'বাংলা' : 'EN' }}</span>
+                                <span style="font-size: 16px; line-height: 1;">{{ currentLanguageObj.flag }}</span>
+                                <span class="d-none d-md-inline">{{ currentLanguageObj.nativeName }}</span>
+                                <span class="d-inline d-md-none">{{ currentLanguageObj.short }}</span>
+                                <i class="fas fa-chevron-down ms-1" :style="{ fontSize: '10px', transition: 'transform 0.25s ease', transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }"></i>
                             </button>
+
+                            <div
+                                v-if="langDropdownOpen"
+                                class="lang_menu_panel position-absolute end-0 mt-2 py-1 shadow-lg bg-white rounded-3 border"
+                                style="z-index: 1050; min-width: 215px; animation: langFadeIn 0.2s ease-out; box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;"
+                                @click.stop
+                            >
+                                <div class="px-3 py-2 border-bottom d-flex align-items-center justify-content-between bg-light rounded-top">
+                                    <span class="text-uppercase text-muted fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                        <i class="fas fa-globe me-1 text-primary"></i>{{ $t('Select Language') }}
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill text-white" style="font-size: 10px;">5</span>
+                                </div>
+                                <ul class="list-unstyled mb-0 py-1">
+                                    <li v-for="lang in availableLanguages" :key="lang.code">
+                                        <a
+                                            href="javascript:void(0)"
+                                            class="dropdown-item px-3 py-2 d-flex align-items-center justify-content-between text-decoration-none lang-option-item"
+                                            :class="{ 'active-lang bg-primary bg-opacity-10 text-primary fw-bold': $locale === lang.code }"
+                                            @click="selectLanguage(lang.code)"
+                                            style="transition: all 0.15s ease;"
+                                        >
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span style="font-size: 18px; line-height: 1;">{{ lang.flag }}</span>
+                                                <div class="d-flex flex-column text-start">
+                                                    <span class="lh-sm" style="font-size: 13px; font-weight: 600;">{{ lang.nativeName }}</span>
+                                                    <small class="text-muted" style="font-size: 11px;">{{ lang.name }}</small>
+                                                </div>
+                                            </div>
+                                            <i v-if="$locale === lang.code" class="fas fa-check-circle text-primary ms-2" style="font-size: 14px;"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                         <div class="user_box position-relative">
                             <button type="button"
@@ -137,6 +169,18 @@ import { mapState } from "vuex";
 export default {
     computed: {
         ...mapState("setting", ["colors"]),
+        availableLanguages() {
+            return this.$availableLocales || [
+                { code: "en", name: "English", nativeName: "English", flag: "🇺🇸", short: "EN" },
+                { code: "bn", name: "Bengali", nativeName: "বাংলা", flag: "🇧🇩", short: "বাংলা" },
+                { code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳", short: "हिन्दी" },
+                { code: "fr", name: "French", nativeName: "Français", flag: "🇫🇷", short: "FR" },
+                { code: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸", short: "ES" },
+            ];
+        },
+        currentLanguageObj() {
+            return this.availableLanguages.find(l => l.code === this.$locale) || this.availableLanguages[0];
+        },
     },
     data() {
         return {
@@ -145,6 +189,7 @@ export default {
             notification: false,
             currentDateTime: "",
             dateTimeTimer: null,
+            langDropdownOpen: false,
         };
     },
     watch: {
@@ -153,6 +198,30 @@ export default {
         },
     },
     methods: {
+        toggleLangDropdown() {
+            this.langDropdownOpen = !this.langDropdownOpen;
+        },
+
+        selectLanguage(langCode) {
+            this.langDropdownOpen = false;
+            if (typeof this.$setLocale === 'function') {
+                this.$setLocale(langCode);
+            }
+            try {
+                if (typeof this.callApi === 'function') {
+                    this.callApi("post", "set-locale", { locale: langCode }, false);
+                } else if (window.axios) {
+                    window.axios.post("set-locale", { locale: langCode }).catch(() => {});
+                }
+            } catch (e) {}
+        },
+
+        handleOutsideClick(event) {
+            if (this.$refs.langDropdownRef && !this.$refs.langDropdownRef.contains(event.target)) {
+                this.langDropdownOpen = false;
+            }
+        },
+
         updateDateTime() {
             const now = new Date();
             if (this.$locale === "bn") {
@@ -173,6 +242,47 @@ export default {
                 const bnHours = this.$bnNum(hours);
 
                 this.currentDateTime = `${dayName}, ${day} ${month} ${year}, ${bnHours}:${minutes}:${seconds} ${ampm}`;
+            } else if (this.$locale === "hi") {
+                const hiDays = ["रविवार", "सोमवार", "मंगलवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार"];
+                const hiMonths = ["जनवरी", "फरवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"];
+
+                const dayName = hiDays[now.getDay()];
+                const day = now.getDate();
+                const month = hiMonths[now.getMonth()];
+                const year = now.getFullYear();
+
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, "0");
+                const seconds = String(now.getSeconds()).padStart(2, "0");
+                const ampm = hours >= 12 ? "PM" : "AM";
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+
+                this.currentDateTime = `${dayName}, ${day} ${month} ${year}, ${hours}:${minutes}:${seconds} ${ampm}`;
+            } else if (this.$locale === "fr") {
+                const options = {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: false,
+                };
+                this.currentDateTime = now.toLocaleDateString("fr-FR", options);
+            } else if (this.$locale === "es") {
+                const options = {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true,
+                };
+                this.currentDateTime = now.toLocaleDateString("es-ES", options);
             } else {
                 const options = {
                     weekday: "short",
@@ -197,13 +307,10 @@ export default {
         },
 
         toggleLanguage() {
-            const nextLocale = this.$locale === 'bn' ? 'en' : 'bn';
-            if (typeof this.$setLocale === 'function') {
-                this.$setLocale(nextLocale);
-            }
-            try {
-                this.callApi("post", "set-locale", { locale: nextLocale }, false);
-            } catch (e) {}
+            const locales = ['en', 'bn', 'hi', 'fr', 'es'];
+            const currentIndex = locales.indexOf(this.$locale);
+            const nextLocale = locales[(currentIndex + 1) % locales.length];
+            this.selectLanguage(nextLocale);
         },
 
         loggedInfo() {
@@ -232,6 +339,9 @@ export default {
         this.dateTimeTimer = setInterval(() => {
             this.updateDateTime();
         }, 1000);
+
+        document.addEventListener("click", this.handleOutsideClick);
+
         // collapsed sidebar js
         $(".control-bar i").click(function () {
             $("body").toggleClass("collapsed-menu");
@@ -292,6 +402,7 @@ export default {
             clearInterval(this.dateTimeTimer);
             this.dateTimeTimer = null;
         }
+        document.removeEventListener("click", this.handleOutsideClick);
     },
 };
 </script>
@@ -313,5 +424,38 @@ export default {
     100% {
         box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
     }
+}
+
+@keyframes langFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.lang-select-btn:hover {
+    border-color: #0d6efd !important;
+    background-color: #f8fafc !important;
+}
+
+.lang-option-item {
+    border-radius: 6px;
+    margin: 2px 6px;
+    color: #334155;
+}
+
+.lang-option-item:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    transform: translateX(2px);
+}
+
+.lang-option-item.active-lang {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    color: #0d6efd !important;
 }
 </style>

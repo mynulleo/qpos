@@ -1,6 +1,9 @@
 import { reactive } from "vue";
 import en from "../lang/en";
 import bn from "../lang/bn";
+import hi from "../lang/hi";
+import fr from "../lang/fr";
+import es from "../lang/es";
 
 const savedLocale = localStorage.getItem("qpos_locale") || "en";
 
@@ -12,16 +15,27 @@ function flattenDict(mod) {
     return Object.assign({}, mod);
 }
 
+export const availableLocales = [
+    { code: "en", name: "English", nativeName: "English", flag: "🇺🇸", short: "EN" },
+    { code: "bn", name: "Bengali", nativeName: "বাংলা", flag: "🇧🇩", short: "বাংলা" },
+    { code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳", short: "हिन्दी" },
+    { code: "fr", name: "French", nativeName: "Français", flag: "🇫🇷", short: "FR" },
+    { code: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸", short: "ES" },
+];
+
 export const i18nState = reactive({
     locale: savedLocale,
     messages: {
         en: flattenDict(en),
         bn: flattenDict(bn),
+        hi: flattenDict(hi),
+        fr: flattenDict(fr),
+        es: flattenDict(es),
     },
 });
 
 export function setLocale(locale, syncServer = true) {
-    if (!["en", "bn"].includes(locale)) locale = "en";
+    if (!["en", "bn", "hi", "fr", "es"].includes(locale)) locale = "en";
     i18nState.locale = locale;
     localStorage.setItem("qpos_locale", locale);
 
@@ -124,6 +138,8 @@ export default {
         app.config.globalProperties.$toggleLocale = toggleLocale;
         app.config.globalProperties.$toggleLanguage = toggleLocale;
         app.config.globalProperties.$bnNum = toBengaliNumber;
+        app.config.globalProperties.$availableLocales = availableLocales;
+        app.config.globalProperties.$locales = availableLocales;
 
         Object.defineProperty(app.config.globalProperties, "$locale", {
             get() {

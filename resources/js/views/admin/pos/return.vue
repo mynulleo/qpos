@@ -10,13 +10,12 @@
         <div class="d-flex align-items-center gap-2">
           <button
             type="button"
-            class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2 py-1 rounded-pill fw-bold border"
-            :class="$locale === 'bn' ? 'btn-primary text-white border-primary' : 'btn-outline-dark bg-white text-dark'"
+            class="btn btn-sm d-flex align-items-center gap-1 shadow-sm px-2.5 py-1 rounded-pill fw-bold border btn-outline-dark bg-white text-dark"
             @click="toggleLanguage"
-            :title="$locale === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'"
+            :title="$t('Select Language')"
           >
-            <i class="fas fa-language fa-lg"></i>
-            <span class="fw-bold">{{ $locale === 'bn' ? 'বাংলা' : 'EN' }}</span>
+            <i class="fas fa-language fa-lg text-primary"></i>
+            <span class="fw-bold">{{ $locale === 'bn' ? '🇧🇩 বাংলা' : ($locale === 'hi' ? '🇮🇳 हिन्दी' : ($locale === 'fr' ? '🇫🇷 FR' : ($locale === 'es' ? '🇪🇸 ES' : '🇺🇸 EN'))) }}</span>
           </button>
           <router-link to="/invoice" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 font-monospace">
             <i class="fas fa-file-invoice"></i> {{ $t('Invoices') }}
