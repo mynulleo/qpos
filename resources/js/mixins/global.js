@@ -82,7 +82,9 @@ export default {
             if (typeof this.$toggleLanguage === "function") {
                 return this.$toggleLanguage();
             }
-            const nextLocale = this.$locale === "bn" ? "en" : "bn";
+            const locales = ["en", "bn", "hi", "fr", "es"];
+            const currentIndex = locales.indexOf(this.$locale);
+            const nextLocale = locales[(currentIndex + 1) % locales.length];
             if (typeof this.$setLocale === "function") {
                 this.$setLocale(nextLocale);
             }

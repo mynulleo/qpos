@@ -108,9 +108,16 @@ export default {
             model,
             data: {},
             print_area: "invoice_print",
-            selectedLayout: this.$route.query.layout || localStorage.getItem('qpos_invoice_layout') || 'layout1',
+            selectedLayout: this.$route.query.layout || this.$root.site?.invoice_layout || localStorage.getItem('qpos_invoice_layout') || 'layout1',
             showHeaderInfo: this.$route.query.header !== undefined ? this.$route.query.header === '1' : (localStorage.getItem('qpos_invoice_show_header') !== 'false'),
         };
+    },
+    watch: {
+        '$root.site.invoice_layout'(newLayout) {
+            if (!this.$route.query.layout && newLayout) {
+                this.selectedLayout = newLayout;
+            }
+        },
     },
     computed: {
         printerType() {

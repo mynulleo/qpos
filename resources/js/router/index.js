@@ -909,6 +909,31 @@ const routes = [
                 name: "item.edit",
                 component: () => import("./../views/admin/item/create"),
             },
+            // ------------------Discount PORTION------------------
+            {
+                path: "/discount",
+                name: "discount.index",
+                meta: {
+                    title: "Discount",
+                    nav: true,
+                },
+                component: () => import("./../views/admin/discount/index"),
+            },
+            {
+                path: "/discount/create",
+                name: "discount.create",
+                component: () => import("./../views/admin/discount/create"),
+            },
+            {
+                path: "/discount/:id",
+                name: "discount.show",
+                component: () => import("./../views/admin/discount/view"),
+            },
+            {
+                path: "/discount/:id/edit",
+                name: "discount.edit",
+                component: () => import("./../views/admin/discount/create"),
+            },
             // ------------------POS PORTION------------------
             {
                 path: "/pos",

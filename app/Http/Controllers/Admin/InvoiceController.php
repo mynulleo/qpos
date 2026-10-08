@@ -512,6 +512,7 @@ class InvoiceController extends BaseController
         $invoice = Invoice::with(
             [
                 'client',
+                'creator',
                 'invoice_details' => function($q) {
                     $q->with([
                         'item' => function($iq) {

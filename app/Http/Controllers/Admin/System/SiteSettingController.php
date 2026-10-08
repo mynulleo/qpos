@@ -38,6 +38,11 @@ class SiteSettingController extends BaseController
                         $table->string('normal_paper_size', 50)->default('A4')->nullable();
                     });
                 }
+                if (!Schema::hasColumn('site_settings', 'invoice_layout')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->string('invoice_layout', 50)->default('layout1')->nullable();
+                    });
+                }
                 if (!Schema::hasColumn('site_settings', 'thermal_paper_size')) {
                     Schema::table('site_settings', function (Blueprint $table) {
                         $table->string('thermal_paper_size', 50)->default('80mm')->nullable();
@@ -349,6 +354,7 @@ class SiteSettingController extends BaseController
             'short_title' => 'required|string|min:0|max:191',
             'printer_type' => ['nullable', 'string'],
             'normal_paper_size' => ['nullable', 'string'],
+            'invoice_layout' => ['nullable', 'string'],
             'thermal_paper_size' => ['nullable', 'string'],
             'label_preset' => ['nullable', 'string'],
             'default_vat' => ['nullable', 'numeric', 'min:0', 'max:100'],

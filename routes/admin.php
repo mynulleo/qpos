@@ -125,7 +125,9 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('pos/search-items', [App\Http\Controllers\Admin\PosController::class, 'searchItems']);
     Route::get('pos/item-serials/{item_id}', [App\Http\Controllers\Admin\PosController::class, 'getItemSerials']);
     Route::get('pos/search-customer', [App\Http\Controllers\Admin\PosController::class, 'searchCustomer']);
+    Route::get('pos/search-customers', [App\Http\Controllers\Admin\PosController::class, 'searchCustomers']);
     Route::get('pos/validate-serial', [App\Http\Controllers\Admin\PosController::class, 'validateSerial']);
+    Route::get('pos/active-discounts', [App\Http\Controllers\Admin\DiscountController::class, 'getActiveDiscounts']);
     Route::post('pos/quick-customer', [App\Http\Controllers\Admin\PosController::class, 'quickCustomer']);
     Route::post('pos/checkout', [App\Http\Controllers\Admin\PosController::class, 'checkout']);
     Route::get('pos/search-invoices-return', [App\Http\Controllers\Admin\PosController::class, 'searchInvoicesForReturn']);
@@ -244,11 +246,19 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::post('quotation/{id}/change-status', [App\Http\Controllers\Admin\QuotationController::class, 'changeStatus'])->name('quotation.changeStatus');
         Route::resource('quotation', App\Http\Controllers\Admin\QuotationController::class);
 
+        // Discount Module Routes
+        Route::post('discount/{id}/toggle-status', [App\Http\Controllers\Admin\DiscountController::class, 'toggleStatus'])->name('discount.toggleStatus');
+        Route::resource('discount', App\Http\Controllers\Admin\DiscountController::class);
+
         // Terms & Conditions Module Routes
         Route::get('termsCondition/by-module/{module}', [App\Http\Controllers\Admin\TermsConditionController::class, 'byModule'])->name('termsCondition.byModule');
         Route::post('termsCondition/{id}/toggle-status', [App\Http\Controllers\Admin\TermsConditionController::class, 'toggleStatus'])->name('termsCondition.toggleStatus');
         Route::post('termsCondition/{id}/toggle-default', [App\Http\Controllers\Admin\TermsConditionController::class, 'toggleDefault'])->name('termsCondition.toggleDefault');
         Route::resource('termsCondition', App\Http\Controllers\Admin\TermsConditionController::class);
+
+        // Discount Module Routes
+        Route::post('discount/{id}/toggle-status', [App\Http\Controllers\Admin\DiscountController::class, 'toggleStatus'])->name('discount.toggleStatus');
+        Route::resource('discount', App\Http\Controllers\Admin\DiscountController::class);
 
         // Organization Memberships (Electronics Shop Type & Invoicing)
         Route::post('organizationMembership/{id}/toggle-show-in-invoice', [App\Http\Controllers\Admin\OrganizationMembershipController::class, 'toggleInvoiceShow'])->name('organizationMembership.toggleInvoiceShow');

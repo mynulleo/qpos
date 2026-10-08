@@ -1,11 +1,6 @@
 <template>
     <div class="layout-modern invoice-box bg-white p-3 p-md-4 shadow-sm rounded">
         <!-- ⭐️ LAYOUT 2: Modern Executive (আধুনিক ও এক্সিকিউটিভ) -->
-        
-        <!-- Top Executive Accent Bar -->
-        <div class="top-accent-bar mb-2" :style="{ visibility: showHeaderInfo ? 'visible' : 'hidden' }">
-            <div style="height: 3px; background: #000000; border-radius: 2px;"></div>
-        </div>
 
         <!-- 🏢 1. Organization Header Section (Store Info & Memberships ONLY) -->
         <!-- When header is OFF (showHeaderInfo is false), it maintains minHeight & visibility:hidden for pre-printed pad printing -->
@@ -16,9 +11,9 @@
                  borderBottom: showHeaderInfo ? '1.5px solid #000000 !important' : '1.5px solid transparent !important' 
              }">
             <div class="row align-items-center g-2">
-                <!-- Left: Company Logo & Organization Contact Details -->
+                <!-- Left: Company Logo & Organization Contact Details (Vertically Middle Aligned) -->
                 <div class="col-7">
-                    <div class="d-flex align-items-start gap-3">
+                    <div class="d-flex align-items-center gap-3">
                         <img v-if="storeLogo" :src="storeLogo" alt="Store Logo" class="img-fluid flex-shrink-0" style="max-height: 58px; max-width: 135px; object-fit: contain;" />
                         <div class="store-info">
                             <h2 class="fw-bold mb-1 text-black" style="font-size: 18px; font-weight: 900; letter-spacing: -0.3px; line-height: 1.15; color: #000000 !important; text-transform: uppercase;">
@@ -36,11 +31,11 @@
                     </div>
                 </div>
 
-                <!-- Right: Organization Memberships ONLY -->
+                <!-- Right: Organization Memberships ONLY (Member of: centered horizontally above logos) -->
                 <div class="col-5 text-end">
-                    <div v-if="orgMemberships && orgMemberships.length > 0" class="d-flex flex-column align-items-end gap-1">
-                        <span class="text-uppercase fw-bold text-black" style="font-size: 9.5px; letter-spacing: 0.5px; color: #000000 !important;">Member of:</span>
-                        <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                    <div v-if="orgMemberships && orgMemberships.length > 0" class="d-inline-flex flex-column align-items-center gap-1">
+                        <span class="text-uppercase fw-bold text-black text-center" style="font-size: 9.5px; letter-spacing: 0.5px; color: #000000 !important;">Member of:</span>
+                        <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
                             <template v-for="(m, mIdx) in orgMemberships" :key="mIdx">
                                 <img v-if="m.logo || m.logo_url" 
                                      :src="m.logo_url || m.logo" 
@@ -55,40 +50,34 @@
             </div>
         </div>
 
-        <!-- 🧾 2. Invoice Details Section (Placed BELOW the Header - Clean, Borderless Header Meta) -->
+        <!-- 🧾 2. Invoice Details Section (INVOICE Centered, Large & Bold) -->
         <div class="invoice-info-section mb-3">
-            <!-- Modern Executive INVOICE Header & Invoice No (No Box Border, Invoice No under INVOICE) -->
-            <div class="d-flex flex-wrap align-items-end justify-content-between pb-1 mb-2">
-                <div>
-                    <div class="text-uppercase fw-bold text-black" style="font-size: 20px; font-weight: 900; letter-spacing: 2px; color: #000000 !important; line-height: 1.1;">
-                        INVOICE
-                    </div>
-                    <div class="text-black fw-bold mt-1" style="font-size: 12px; color: #000000 !important;">
-                        <strong>Invoice No:</strong> <span class="font-monospace text-black" style="font-size: 12.5px; color: #000000 !important;">#{{ data.invoice_no }}</span>
-                    </div>
+            <!-- Modern Executive INVOICE Header (Horizontally Centered, Large & Bold) -->
+            <div class="text-center my-2">
+                <h2 class="text-uppercase text-black fw-bold mb-1" style="font-size: 26px; font-weight: 900; letter-spacing: 4px; color: #000000 !important; line-height: 1.1;">
+                    INVOICE
+                </h2>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between pb-1 mb-2">
+                <div class="text-black fw-bold" style="font-size: 12px; color: #000000 !important;">
+                    <strong>Invoice No:</strong> <span class="font-monospace text-black" style="font-size: 12.5px; color: #000000 !important;">#{{ data.invoice_no }}</span>
                 </div>
                 <div class="text-end text-black">
                     <div style="font-size: 11px; color: #000000 !important;">
-                        <strong>Invoice Date:</strong> <span class="font-monospace text-nowrap fw-bold" style="color: #000000 !important;">{{ data.invoice_date }}</span>
-                    </div>
-                    <div v-if="Number(data.amount) <= Number(data.paid_amount) || data.payment_status === 'Paid'" class="mt-1">
-                        <span class="text-success fw-bold font-monospace" style="font-size: 10.5px; border: 1.5px solid #16a34a; padding: 1px 6px; border-radius: 3px; background: #f0fdf4;">
-                            PAID
-                        </span>
+                        <strong>Invoice Date:</strong> <span class="font-monospace text-nowrap fw-bold" style="color: #000000 !important;">{{ formatInvoiceDateTime(data) }}</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Customer & Billing Details 2-Card Grid -->
+            <!-- Customer & Seller Details 2-Card Grid -->
             <div class="row g-2">
                 <!-- Left Card: Customer Details -->
                 <div class="col-7">
-                    <div class="p-2 bg-light rounded border border-dark h-100" style="font-size: 10.5px; line-height: 1.4; color: #000000 !important; border-left: 3.5px solid #000000 !important;">
-                        <div class="d-flex align-items-center justify-content-between border-bottom border-dark pb-1 mb-1">
+                    <div class="p-2 bg-white rounded border border-dark h-100" style="font-size: 10.5px; line-height: 1.4; color: #000000 !important; border-left: 3.5px solid #000000 !important;">
+                        <div class="border-bottom border-dark pb-1 mb-1">
                             <span class="text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 0.5px; color: #000000 !important;">
-                                <i class="fas fa-user me-1 text-black print-icon"></i>{{ $t('Invoice To') }}</span>
-                            <span class="badge bg-white text-black border border-dark font-monospace" style="font-size: 9px; color: #000000 !important;">
-                                {{ data.client?.clientid ? 'ID: ' + data.client.clientid : 'Customer' }}
+                                <i class="fas fa-user me-1 text-black print-icon"></i>{{ $t('Invoice To') }}
                             </span>
                         </div>
                         <div class="fw-bold text-black" style="font-size: 12px; color: #000000 !important;">
@@ -106,53 +95,56 @@
                     </div>
                 </div>
 
-                <!-- Right Card: Sales & Billing Meta -->
+                <!-- Right Card: Seller Information -->
                 <div class="col-5">
-                    <div class="p-2 bg-light rounded border border-dark h-100 d-flex flex-column justify-content-between" style="font-size: 10.5px; line-height: 1.4; color: #000000 !important; border-left: 3.5px solid #000000 !important;">
+                    <div class="p-2 bg-white rounded border border-dark h-100 d-flex flex-column justify-content-between" style="font-size: 10.5px; line-height: 1.4; color: #000000 !important; border-left: 3.5px solid #000000 !important;">
                         <div>
                             <div class="border-bottom border-dark pb-1 mb-1 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 0.5px; color: #000000 !important;">
-                                <i class="fas fa-info-circle me-1 text-black print-icon"></i>Billing Details
+                                <i class="fas fa-user-tie me-1 text-black print-icon"></i>Seller Information
                             </div>
-                            <div class="d-flex justify-content-between text-black" style="color: #000000 !important;">
-                                <span>Sold By:</span>
-                                <strong style="color: #000000 !important;">{{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}</strong>
+                            <div class="text-black" style="color: #000000 !important;">
+                                <strong>Sold By:</strong> {{ getSellerName(data) }}
                             </div>
-                            <div class="d-flex justify-content-between text-black" style="color: #000000 !important;" v-if="data.vehicle_info">
-                                <span>Vehicle / Info:</span>
-                                <strong style="color: #000000 !important;">{{ data.vehicle_info }}</strong>
+                            <div class="text-black" style="color: #000000 !important;" v-if="getSellerId(data)">
+                                <strong>Seller ID:</strong> {{ getSellerId(data) }}
                             </div>
-                            <div class="d-flex justify-content-between text-black" style="color: #000000 !important;" v-if="data.payment_method">
-                                <span>Payment:</span>
-                                <strong style="color: #000000 !important;">{{ data.payment_method }}</strong>
+                            <div class="text-black" style="color: #000000 !important;" v-if="getSellerMobile(data)">
+                                <strong>Mobile:</strong> {{ getSellerMobile(data) }}
                             </div>
-                        </div>
-                        <div class="font-monospace text-black fw-medium pt-1 mt-1 border-top border-dark d-flex justify-content-between" style="font-size: 9px; color: #000000 !important;">
-                            <span>System: QPOS</span>
-                            <span>Ref: #{{ data.id }}</span>
+                            <div class="text-black" style="color: #000000 !important;" v-if="data.vehicle_info">
+                                <strong>Vehicle / Info:</strong> {{ data.vehicle_info }}
+                            </div>
+                            <div class="text-black" style="color: #000000 !important;" v-if="data.payment_method">
+                                <strong>Payment:</strong> {{ data.payment_method }}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 📦 3. Items Table (No '৳' Symbol in Body Cells) -->
+        <!-- 📦 3. Items Table (Clean Table Header Without Black Background, Bold & Larger Header Text) -->
         <div class="table-responsive mb-3">
             <table class="table table-bordered border-dark align-middle mb-0" style="font-size: 11px; width: 100%;">
-                <thead style="background-color: #000000 !important; color: #ffffff !important;">
-                    <tr>
-                        <th width="4%" class="text-center text-white" style="background-color: #000000 !important; color: #ffffff !important; padding: 5px 4px;">{{ $t('#') }}</th>
-                        <th width="48%" class="text-white" style="background-color: #000000 !important; color: #ffffff !important; padding: 5px 6px;">{{ $t('Item Description & Specifications') }}</th>
-                        <th width="10%" class="text-center text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 5px 4px; white-space: nowrap !important;">{{ $t('Qty') }}</th>
-                        <th width="19%" class="text-end text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 5px 6px; white-space: nowrap !important;">{{ $t('Unit Rate') }}</th>
-                        <th width="19%" class="text-end text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 5px 6px; white-space: nowrap !important;">{{ $t('Total') }}</th>
+                <thead style="background-color: transparent !important; color: #000000 !important; border-bottom: 2.5px solid #000000 !important;">
+                    <tr style="background-color: transparent !important;">
+                        <th width="4%" class="text-center text-black fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 8px 4px; font-size: 14px; font-weight: 900; letter-spacing: 0.3px;">{{ $t('#') }}</th>
+                        <th width="48%" class="text-black fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 8px 6px; font-size: 14px; font-weight: 900; letter-spacing: 0.3px;">{{ $t('Item Description & Specifications') }}</th>
+                        <th width="10%" class="text-center text-black text-nowrap fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 8px 4px; font-size: 14px; font-weight: 900; letter-spacing: 0.3px; white-space: nowrap !important;">{{ $t('Qty') }}</th>
+                        <th width="19%" class="text-end text-black text-nowrap fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 8px 6px; font-size: 14px; font-weight: 900; letter-spacing: 0.3px; white-space: nowrap !important;">{{ $t('Unit Price') }}</th>
+                        <th width="19%" class="text-end text-black text-nowrap fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 8px 6px; font-size: 14px; font-weight: 900; letter-spacing: 0.3px; white-space: nowrap !important;">{{ $t('Total Price') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(invd, index) in getItemList(data)" :key="index" style="color: #000000 !important;">
                         <td class="text-center text-black fw-bold" style="padding: 5px 4px; color: #000000 !important;">{{ index + 1 }}</td>
-                        <td style="padding: 5px 6px; color: #000000 !important;">
+                        <td style="padding: 5px 6px; color: #000000 !important; word-break: break-word;">
                             <div class="fw-bold text-black" style="font-size: 11.5px; line-height: 1.25; color: #000000 !important;">{{ getItemTitle(invd) }}</div>
-                            <!-- ⭐️ Specifications -->
+                            <!-- ⭐️ Barcode right below Item Title -->
+                            <div v-if="getItemBarcode(invd)" class="text-black font-monospace mt-1" style="font-size: 9.5px; line-height: 1.3; color: #000000 !important;">
+                                <strong style="color: #000000 !important;">Barcode:</strong> {{ getItemBarcode(invd) }}
+                            </div>
+                            <!-- ⭐️ Specifications (Brand, Model, Color, Size, Warranty) -->
                             <div class="d-flex flex-wrap gap-1 mt-1" v-if="getItemSpecs(invd).length > 0">
                                 <span v-for="(spec, sIdx) in getItemSpecs(invd)" :key="sIdx" 
                                       class="badge bg-white text-black border border-dark font-monospace" 
@@ -160,11 +152,12 @@
                                     <strong>{{ spec.label }}:</strong> {{ spec.value }}
                                 </span>
                             </div>
-                            <div v-if="getItemBarcode(invd)" class="text-black font-monospace mt-1" style="font-size: 9px; color: #000000 !important;">
-                                Barcode: {{ getItemBarcode(invd) }}
+                            <!-- ⭐️ All Serial Numbers (S/N) starting directly next to S/N: -->
+                            <div v-if="getItemSerials(invd).length > 0" class="text-black mt-1" style="font-size: 11px; line-height: 1.35; color: #000000 !important; word-break: break-word;">
+                                <span class="font-monospace text-black fw-bold" style="font-size: 11px; color: #000000 !important;"><strong style="font-weight: 800; color: #000000 !important;">S/N: </strong>{{ getItemSerials(invd).join(', ') }}</span>
                             </div>
                         </td>
-                        <td class="text-center font-monospace fw-bold text-nowrap text-black" style="padding: 5px 4px; white-space: nowrap !important; font-size: 11.5px; color: #000000 !important;">{{ invd.qty }}</td>
+                        <td class="text-center font-monospace fw-bold text-nowrap text-black" style="padding: 5px 4px; white-space: nowrap !important; font-size: 12px; color: #000000 !important;">{{ formatQty(invd.qty) }}</td>
                         <!-- Pure numbers without ৳ symbol in table body -->
                         <td class="text-end font-monospace text-nowrap text-black fw-semibold" style="padding: 5px 6px; white-space: nowrap !important; font-size: 11px; color: #000000 !important;">{{ formatPrice(invd.amount) }}</td>
                         <td class="text-end font-monospace fw-bold text-black text-nowrap" style="padding: 5px 6px; white-space: nowrap !important; font-size: 11.5px; color: #000000 !important;">{{ formatPrice(invd.total_amount || (invd.qty * invd.amount)) }}</td>
@@ -174,18 +167,18 @@
         </div>
 
         <!-- 💰 4. Financial Summary & Bank Details (In Words & Bank on Left, Calculations on Right) -->
-        <div class="row g-2 mb-2">
-            <!-- Left Side: In Words (No Border) & Bank Details (Above Terms) -->
-            <div class="col-6">
+        <div class="row g-2 mb-2 align-items-stretch">
+            <!-- Left Side: In Words at Top & Bank Details at Bottom (aligned with Previous Due / Calculation bottom) -->
+            <div class="col-6 d-flex flex-column justify-content-between">
                 <!-- In Words Section (Clean, No Box Border) -->
-                <div class="py-1 mb-2" style="font-size: 10.5px; line-height: 1.35; color: #000000 !important;">
-                    <strong class="text-black" style="color: #000000 !important;">In Words: </strong>
+                <div class="py-1 mb-2" style="font-size: 11px; line-height: 1.4; color: #000000 !important;">
+                    <strong class="text-black" style="color: #000000 !important; font-weight: 800;">In Words: </strong>
                     <span class="text-black fw-semibold" style="color: #000000 !important;">{{ numberToWords(data.amount) }}</span>
                 </div>
                 
-                <!-- 🏦 Bank Payment Details (Placed Above Terms & Conditions) -->
-                <div v-if="currentSite?.bank_name" class="p-2 bg-light rounded border border-dark" style="font-size: 10px; color: #000000 !important; border-left: 3.5px solid #000000 !important;">
-                    <strong class="text-black d-block mb-1" style="font-size: 10px; color: #000000 !important;">
+                <!-- 🏦 Bank Payment Details (Placed at bottom, aligned with Previous Due / Totals) -->
+                <div v-if="currentSite?.bank_name" class="p-2 bg-white rounded border border-dark mt-auto" style="font-size: 10px; color: #000000 !important; border-left: 3.5px solid #000000 !important;">
+                    <strong class="text-black d-block mb-1" style="font-size: 10px; font-weight: 800; color: #000000 !important;">
                         <i class="fas fa-university me-1 text-black print-icon"></i>Bank Payment Details:
                     </strong>
                     <div class="fw-bold text-black font-monospace" style="font-size: 10px; color: #000000 !important;">
@@ -197,49 +190,49 @@
                 </div>
             </div>
 
-            <!-- Right Side: Financial Calculation Table (Clean Without Backgrounds) -->
+            <!-- Right Side: Financial Calculation Table (Pure White Backgrounds, No Blue) -->
             <div class="col-6">
-                <table class="table table-sm table-bordered border-dark mb-0" style="font-size: 10.5px; width: 100% !important; border-collapse: collapse !important; background: transparent !important;">
+                <table class="table table-sm table-bordered border-dark mb-0 table-calc" style="font-size: 10.5px; width: 100% !important; border-collapse: collapse !important; background: #ffffff !important; background-color: #ffffff !important;">
                     <tbody>
-                        <tr style="background: transparent !important;">
-                            <th class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">{{ $t('Subtotal:') }}</th>
-                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">৳ {{ formatPrice(data.original_amount) }}</td>
+                        <tr style="background: #ffffff !important; background-color: #ffffff !important;">
+                            <td class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">{{ $t('Subtotal:') }}</td>
+                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">৳ {{ formatPrice(data.original_amount) }}</td>
                         </tr>
-                        <tr v-if="data.discount > 0" style="background: transparent !important;">
-                            <th class="text-black text-nowrap fw-bold" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">{{ $t('Discount:') }}</th>
-                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">- ৳ {{ formatPrice(data.discount) }}</td>
+                        <tr v-if="data.discount > 0" style="background: #ffffff !important; background-color: #ffffff !important;">
+                            <td class="text-danger text-nowrap fw-bold" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #dc2626 !important; background: #ffffff !important; background-color: #ffffff !important;">{{ $t('Discount:') }}</td>
+                            <td class="text-end font-monospace text-danger fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #dc2626 !important; background: #ffffff !important; background-color: #ffffff !important;">- ৳ {{ formatPrice(data.discount) }}</td>
                         </tr>
-                        <tr v-if="data.vat > 0" style="background: transparent !important;">
-                            <th class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">{{ $t('VAT / Tax:') }}</th>
-                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">+ ৳ {{ formatPrice(data.vat) }}</td>
+                        <tr v-if="data.vat > 0" style="background: #ffffff !important; background-color: #ffffff !important;">
+                            <td class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">{{ $t('VAT / Tax:') }}</td>
+                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">৳ {{ formatPrice(data.vat) }}</td>
                         </tr>
-                        <!-- NET TOTAL PAYABLE Row: Clean Transparent Background with Distinct Top & Bottom Border -->
-                        <tr style="background: transparent !important; border-top: 2px solid #000000 !important; border-bottom: 2px solid #000000 !important;">
-                            <th class="fw-bold text-black text-nowrap" style="background: transparent !important; color: #000000 !important; padding: 6px 6px; width: 52%; font-size: 11.5px; font-weight: 900; white-space: nowrap !important;">{{ $t('NET TOTAL PAYABLE:') }}</th>
-                            <td class="text-end font-monospace fw-bold text-black text-nowrap" style="background: transparent !important; color: #000000 !important; padding: 6px 6px; width: 48%; font-size: 12px; font-weight: 900; white-space: nowrap !important;">৳ {{ formatPrice(data.amount) }}</td>
+                        <!-- NET TOTAL PAYABLE Row: Distinctly larger font size than VAT / Tax, bold with Top & Bottom Border -->
+                        <tr style="background: #ffffff !important; background-color: #ffffff !important; border-top: 2px solid #000000 !important; border-bottom: 2px solid #000000 !important;">
+                            <td class="fw-bold text-black text-nowrap" style="background: #ffffff !important; background-color: #ffffff !important; color: #000000 !important; padding: 6px 6px; width: 52%; font-size: 13.5px; font-weight: 900; white-space: nowrap !important;">{{ $t('Net Total Payable:') }}</td>
+                            <td class="text-end font-monospace fw-bold text-black text-nowrap" style="background: #ffffff !important; background-color: #ffffff !important; color: #000000 !important; padding: 6px 6px; width: 48%; font-size: 14px; font-weight: 900; white-space: nowrap !important;">৳ {{ formatPrice(data.amount) }}</td>
                         </tr>
-                        <tr style="background: transparent !important;">
-                            <th class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">{{ $t('Paid Amount:') }}</th>
-                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">৳ {{ formatPrice(data.paid_amount) }}</td>
+                        <tr style="background: #ffffff !important; background-color: #ffffff !important;">
+                            <td class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">{{ $t('Paid Amount:') }}</td>
+                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">৳ {{ formatPrice(data.paid_amount) }}</td>
                         </tr>
-                        <tr v-if="data.due_amount > 0" style="background: transparent !important;">
-                            <th class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">{{ $t('Balance Due:') }}</th>
-                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">৳ {{ formatPrice(data.due_amount) }}</td>
+                        <tr v-if="data.due_amount > 0" style="background: #ffffff !important; background-color: #ffffff !important;">
+                            <td class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">{{ $t('Balance Due:') }}</td>
+                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">৳ {{ formatPrice(data.due_amount) }}</td>
                         </tr>
-                        <tr v-if="data.previous_due > 0" style="background: transparent !important;">
-                            <th class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">{{ $t('Previous Due:') }}</th>
-                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: transparent !important;">৳ {{ formatPrice(data.previous_due) }}</td>
+                        <tr v-if="data.previous_due > 0" style="background: #ffffff !important; background-color: #ffffff !important;">
+                            <td class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">{{ $t('Previous Due:') }}</td>
+                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">৳ {{ formatPrice(data.previous_due) }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- 📜 5. Terms & Conditions (Full Width Under Total Amount Table) -->
-        <div class="row g-2 mb-3">
+        <!-- 📜 5. Terms & Conditions (Full Width with margin-top gap above separator line) -->
+        <div class="row g-2 mt-3 mb-3">
             <div class="col-12">
-                <div class="pt-2" style="border-top: 1px solid #cbd5e1 !important; font-size: 10.5px; color: #000000 !important; line-height: 1.45;">
-                    <strong class="text-black d-block mb-1" style="font-size: 11px; color: #000000 !important;">Terms & Conditions:</strong>
+                <div class="pt-2" style="border-top: 1px solid #000000 !important; font-size: 10px; color: #000000 !important; line-height: 1.45;">
+                    <strong class="text-black d-block mb-1" style="font-size: 10.5px; font-weight: 800; color: #000000 !important;">Terms & Conditions:</strong>
                     <div v-if="data.terms_conditions && data.terms_conditions.length > 0" class="text-black" style="color: #000000 !important;">
                         <div v-for="(tc, tcIdx) in data.terms_conditions" :key="tcIdx" class="mb-1" style="line-height: 1.45;">
                             {{ tcIdx + 1 }}. {{ tc }}
@@ -371,13 +364,7 @@ export default {
                 specs.push({ label: 'Size', value: size.trim() });
             }
 
-            // 5. Serial No
-            const serial = item.serial_no || item.serial || item.item_serial;
-            if (serial && typeof serial === 'string' && serial.trim() !== '') {
-                specs.push({ label: 'Serial No', value: serial.trim() });
-            }
-
-            // 6. Warranty / Guarantee
+            // 5. Warranty / Guarantee
             const warranty = this.getItemWarranty(item);
             if (warranty && typeof warranty === 'string' && warranty.trim() !== '') {
                 const isGuarantee = warranty.toLowerCase().startsWith('guarantee');
@@ -389,6 +376,77 @@ export default {
             }
 
             return specs;
+        },
+        getItemSerials(item) {
+            if (!item) return [];
+            let list = [];
+            const extractSerialStr = (s) => {
+                if (!s) return '';
+                if (typeof s === 'string') return s.trim();
+                if (typeof s === 'object') return (s.serial_no || s.serial_number || s.serial || s.number || '').toString().trim();
+                return String(s).trim();
+            };
+            if (Array.isArray(item.serials) && item.serials.length > 0) {
+                list = item.serials.map(extractSerialStr).filter(Boolean);
+            } else if (Array.isArray(item.serial_numbers) && item.serial_numbers.length > 0) {
+                list = item.serial_numbers.map(extractSerialStr).filter(Boolean);
+            } else {
+                const raw = item.serial_no || item.serial || item.item_serial || '';
+                if (typeof raw === 'string' && raw.trim() !== '') {
+                    list = raw.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+                } else if (Array.isArray(raw)) {
+                    list = raw.map(extractSerialStr).filter(Boolean);
+                }
+            }
+            return list;
+        },
+        getSellerName(inv) {
+            if (!inv) return 'Cashier';
+            return inv.creator?.name || inv.creator?.full_name || this.$root.user?.name || 'Cashier';
+        },
+        getSellerId(inv) {
+            if (!inv) return '';
+            return inv.creator?.employee_id || inv.creator?.id || inv.created_by || this.$root.user?.employee_id || this.$root.user?.id || '';
+        },
+        getSellerMobile(inv) {
+            if (!inv) return '';
+            return inv.creator?.mobile || inv.creator?.phone || this.$root.user?.mobile || '';
+        },
+        formatInvoiceDateTime(inv) {
+            if (!inv) return '';
+            const dateStr = inv.invoice_date || '';
+            if (inv.created_at) {
+                try {
+                    const d = new Date(inv.created_at);
+                    if (!isNaN(d.getTime())) {
+                        let hours = d.getHours();
+                        const minutes = String(d.getMinutes()).padStart(2, '0');
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        hours = hours % 12;
+                        hours = hours ? String(hours).padStart(2, '0') : '12';
+                        const timeStr = `${hours}:${minutes} ${ampm}`;
+                        
+                        if (dateStr) {
+                            return `${dateStr} ${timeStr}`;
+                        }
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const month = months[d.getMonth()];
+                        const year = d.getFullYear();
+                        return `${day} ${month}, ${year} ${timeStr}`;
+                    }
+                } catch (e) {}
+            }
+            return dateStr;
+        },
+        formatQty(val) {
+            if (val === null || val === undefined || val === '') return '0';
+            const num = Number(val);
+            if (isNaN(num)) return val;
+            if (Number.isInteger(num)) {
+                return num.toString();
+            }
+            return parseFloat(num.toFixed(3)).toString();
         },
         formatPrice(val) {
             const f = parseFloat(val);
@@ -455,6 +513,23 @@ export default {
     white-space: nowrap !important;
 }
 
+.invoice-box table,
+.invoice-box table > :not(caption) > * > *,
+.invoice-box table th,
+.invoice-box table td,
+.invoice-box table tr {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+}
+
+.invoice-box table thead th {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+
 .invoice-box {
     display: flex;
     flex-direction: column;
@@ -462,6 +537,7 @@ export default {
     max-width: 100%;
     box-sizing: border-box;
     color: #000000 !important;
+    background-color: #ffffff !important;
 }
 
 .signature-section {

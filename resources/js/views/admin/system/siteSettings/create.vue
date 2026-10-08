@@ -495,6 +495,73 @@
                                 </div>
                             </div>
 
+                            <!-- 2.5 Invoice Layout Selection (Visible ONLY when Normal Printer is selected) -->
+                            <div class="col-12 border-top pt-3 mt-3" v-if="data.printer_type === 'normal'">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <label class="form-label fw-bold small text-dark mb-0">
+                                        <i class="fas fa-layer-group text-primary me-1"></i> {{ $t('Invoice Layout (Normal Printer)') }}:
+                                    </label>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary font-monospace border border-primary border-opacity-25">
+                                        <i class="fas fa-file-invoice me-1"></i> {{ getInvoiceLayoutLabel(data.invoice_layout) }}
+                                    </span>
+                                </div>
+                                <div class="row g-2">
+                                    <!-- Layout 1: Classic -->
+                                    <div class="col-md-4">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': (data.invoice_layout || 'layout1') === 'layout1' }"
+                                            @click="data.invoice_layout = 'layout1'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="layoutClassic" value="layout1" v-model="data.invoice_layout">
+                                                <label class="form-check-label cursor-pointer text-dark w-100" for="layoutClassic">
+                                                    <div class="fw-bold small text-primary d-flex align-items-center justify-content-between">
+                                                        <span><i class="fas fa-file-alt me-1"></i> Layout 1 (Classic)</span>
+                                                        <span class="badge bg-primary text-white" style="font-size: 9px;" v-if="(data.invoice_layout || 'layout1') === 'layout1'">Active</span>
+                                                    </div>
+                                                    <div class="text-muted mt-1" style="font-size: 11px;">{{ $t('Classic corporate style invoice with clear table structure and standard formal headers') }}</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Layout 2: Modern -->
+                                    <div class="col-md-4">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': data.invoice_layout === 'layout2' }"
+                                            @click="data.invoice_layout = 'layout2'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="layoutModern" value="layout2" v-model="data.invoice_layout">
+                                                <label class="form-check-label cursor-pointer text-dark w-100" for="layoutModern">
+                                                    <div class="fw-bold small text-info d-flex align-items-center justify-content-between">
+                                                        <span><i class="fas fa-file-invoice me-1"></i> Layout 2 (Modern)</span>
+                                                        <span class="badge bg-info text-dark" style="font-size: 9px;" v-if="data.invoice_layout === 'layout2'">Active</span>
+                                                    </div>
+                                                    <div class="text-muted mt-1" style="font-size: 11px;">{{ $t('Modern minimal style invoice with clean typography, highlighted totals and badge accents') }}</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Layout 3: Compact -->
+                                    <div class="col-md-4">
+                                        <div class="shop-type-option p-3 rounded border cursor-pointer h-100"
+                                            :class="{ 'active-shop-type': data.invoice_layout === 'layout3' }"
+                                            @click="data.invoice_layout = 'layout3'">
+                                            <div class="form-check m-0 p-0 d-flex align-items-start gap-2">
+                                                <input class="form-check-input ms-1 mt-1" type="radio" id="layoutCompact" value="layout3" v-model="data.invoice_layout">
+                                                <label class="form-check-label cursor-pointer text-dark w-100" for="layoutCompact">
+                                                    <div class="fw-bold small text-warning d-flex align-items-center justify-content-between">
+                                                        <span><i class="fas fa-file-lines me-1"></i> Layout 3 (Compact)</span>
+                                                        <span class="badge bg-warning text-dark" style="font-size: 9px;" v-if="data.invoice_layout === 'layout3'">Active</span>
+                                                    </div>
+                                                    <div class="text-muted mt-1" style="font-size: 11px;">{{ $t('Compact executive layout designed for high-density line items and sleek summary boxes') }}</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- 3. Default Barcode Label Size Preset -->
                             <div class="col-12 border-top pt-3 mt-3">
                                 <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
@@ -528,7 +595,7 @@
                                                 {{ $t('Thermal Receipt') }} ({{ data.thermal_paper_size || '80mm' }})
                                             </strong>
                                             <strong class="text-primary font-monospace" v-else>
-                                                {{ $t('Normal Invoice') }} ({{ data.normal_paper_size || 'A4' }})
+                                                {{ $t('Normal Invoice') }} ({{ data.normal_paper_size || 'A4' }} - {{ getInvoiceLayoutLabel(data.invoice_layout) }})
                                             </strong>
                                             {{ $t('format after submission.') }}
                                         </div>
@@ -814,6 +881,7 @@ export default {
                 show_pos_terms: 0,
                 printer_type: "thermal",
                 normal_paper_size: "A4",
+                invoice_layout: "layout1",
                 thermal_paper_size: "80mm",
                 label_preset: "4x2",
                 address: "",
@@ -968,6 +1036,12 @@ export default {
             this.$toast("Membership saved successfully", "success");
         },
 
+        getInvoiceLayoutLabel(layout) {
+            if (layout === "layout2") return "Layout 2 (Modern)";
+            if (layout === "layout3") return "Layout 3 (Compact)";
+            return "Layout 1 (Classic)";
+        },
+
         deleteMembership(idx) {
             if (confirm("Are you sure you want to remove this organization membership?")) {
                 this.memberships.splice(idx, 1);
@@ -1032,6 +1106,7 @@ export default {
                     formData.set("memberships", JSON.stringify(this.memberships || []));
                     formData.set("printer_type", this.data.printer_type || "thermal");
                     formData.set("normal_paper_size", this.data.normal_paper_size || "A4");
+                    formData.set("invoice_layout", this.data.invoice_layout || "layout1");
                     formData.set("thermal_paper_size", this.data.thermal_paper_size || "80mm");
                     formData.set("label_preset", this.data.label_preset || "4x2");
                     formData.set("default_currency_id", this.data.default_currency_id || 1);
@@ -1069,6 +1144,7 @@ export default {
                     if (this.data.show_pos_terms === undefined || this.data.show_pos_terms === null) this.data.show_pos_terms = 0;
                     if (!this.data.printer_type) this.data.printer_type = "thermal";
                     if (!this.data.normal_paper_size) this.data.normal_paper_size = "A4";
+                    if (!this.data.invoice_layout) this.data.invoice_layout = "layout1";
                     if (!this.data.thermal_paper_size) this.data.thermal_paper_size = "80mm";
                     if (!this.data.label_preset) this.data.label_preset = "4x2";
 

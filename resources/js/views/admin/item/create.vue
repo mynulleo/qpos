@@ -139,13 +139,16 @@
                 <Input v-if="isElectronicsShop" v-model='data.model_no' field='data.model_no' title='Model' col="4" placeholder="e.g. Inspiron 15, Pro 14..." :req='false' />
 
                 <!-- 8. Purchase Price -->
-                <Input v-model='data.purchase_price' col="4" field='data.purchase_price' title='Purchase Price' type="number" step="0.01" :req='false' />
+                <Input v-model='data.purchase_price' col="4" field='data.purchase_price' :title="$t('Purchase Price')" type="number" step="0.01" :req='false' />
 
-                <!-- 9. Selling Price -->
-                <Input v-model='data.selling_price' col="4" field='data.selling_price' title='Selling Price' type="number" step="0.01" :req='false' />
+                <!-- 9. Retail Price (When Sale Nature is Retail or Both) -->
+                <Input v-if="showRetailPrice" v-model='data.retail_price' col="4" field='data.retail_price' :title="$t('Retail Price')" type="number" step="0.01" :req='false' />
+
+                <!-- 10. Wholesale Price (When Sale Nature is Wholesale or Both) -->
+                <Input v-if="showWholesalePrice" v-model='data.wholesale_price' col="4" field='data.wholesale_price' :title="$t('Wholesale Price')" type="number" step="0.01" :req='false' />
                 
-                <!-- 10. Description -->
-                <Textarea v-model='data.description' field='data.description' :required='false' title="Description" col="12" />
+                <!-- 11. Description -->
+                <Textarea v-model='data.description' field='data.description' :required='false' :title="$t('Description')" col="12" />
               </div>
             </div>
           </div>
@@ -260,14 +263,15 @@
               <table class="table table-bordered table-striped mb-0 align-middle">
                 <thead class="table-light text-center">
                   <tr>
-                    <th :width="isElectronicsShop ? '24%' : '18%'">{{ $t('Color') }}</th>
-                    <th width="16%" v-if="!isElectronicsShop">{{ $t('Size') }}</th>
-                    <th :width="isElectronicsShop ? '18%' : '14%'">{{ $t('Purchase Price') }}</th>
-                    <th :width="isElectronicsShop ? '18%' : '14%'">{{ $t('Selling Price') }}</th>
+                    <th :width="isElectronicsShop ? '22%' : '16%'">{{ $t('Color') }}</th>
+                    <th width="14%" v-if="!isElectronicsShop">{{ $t('Size') }}</th>
+                    <th width="14%">{{ $t('Purchase Price') }}</th>
+                    <th width="14%" v-if="showRetailPrice">{{ $t('Retail Price') }}</th>
+                    <th width="14%" v-if="showWholesalePrice">{{ $t('Wholesale Price') }}</th>
                     <!-- Current Stock in Edit Mode -->
-                    <th v-if="data.id" :width="isElectronicsShop ? '16%' : '14%'" class="text-primary">{{ $t('Current Stock') }}</th>
+                    <th v-if="data.id" width="12%" class="text-primary">{{ $t('Current Stock') }}</th>
                     <!-- Add Qty with explanation tooltip -->
-                    <th :width="isElectronicsShop ? '18%' : '14%'">
+                    <th width="12%">
                       <span>{{ $t(data.id ? 'Add Qty' : 'Opening Qty') }}</span>
                       <button v-if="data.id" type="button" class="btn btn-xs btn-link p-0 text-info ms-1 align-baseline"
                         data-bs-toggle="tooltip" data-bs-placement="top"
@@ -296,8 +300,11 @@
                     <td>
                       <input type="number" step="0.01" class="form-control form-control-sm text-end" v-model.number="v.purchase_price" placeholder="0.00" />
                     </td>
-                    <td>
-                      <input type="number" step="0.01" class="form-control form-control-sm text-end" v-model.number="v.selling_price" placeholder="0.00" />
+                    <td v-if="showRetailPrice">
+                      <input type="number" step="0.01" class="form-control form-control-sm text-end" v-model.number="v.retail_price" placeholder="0.00" />
+                    </td>
+                    <td v-if="showWholesalePrice">
+                      <input type="number" step="0.01" class="form-control form-control-sm text-end" v-model.number="v.wholesale_price" placeholder="0.00" />
                     </td>
                     <!-- Current Stock in Edit Mode -->
                     <td v-if="data.id" class="text-center">
@@ -365,6 +372,14 @@ export default {
       const shopType = this.site?.shop_type || this.$root.site?.shop_type;
       return shopType === 'electronics';
     },
+    showRetailPrice() {
+      const saleNature = (this.site?.sale_nature || this.$root.site?.sale_nature || 'both').toLowerCase();
+      return saleNature === 'retail' || saleNature === 'both';
+    },
+    showWholesalePrice() {
+      const saleNature = (this.site?.sale_nature || this.$root.site?.sale_nature || 'both').toLowerCase();
+      return saleNature === 'wholesale' || saleNature === 'both';
+    },
   },
   data() {
     return {
@@ -380,6 +395,8 @@ export default {
         unit_id: null,
         purchase_price: '',
         selling_price: '',
+        retail_price: '',
+        wholesale_price: '',
         status: 'active',
         warranty_type: 'none',
         warranty_period: '',
@@ -395,7 +412,7 @@ export default {
       sizes: [],
       is_price_modification: false,
       variants: [
-        { color_id: null, size_id: null, purchase_price: 0, selling_price: 0, current_stock: 0, qty: 0 }
+        { color_id: null, size_id: null, purchase_price: 0, selling_price: 0, retail_price: 0, wholesale_price: 0, current_stock: 0, qty: 0 }
       ],
     };
   },
@@ -420,6 +437,17 @@ export default {
         this.variants[0].purchase_price = newVal ? Number(newVal) : 0;
       }
     },
+    'data.retail_price'(newVal) {
+      if (this.variants.length === 1 && (!this.variants[0].retail_price || this.variants[0].retail_price == 0)) {
+        this.variants[0].retail_price = newVal ? Number(newVal) : 0;
+        this.variants[0].selling_price = newVal ? Number(newVal) : 0;
+      }
+    },
+    'data.wholesale_price'(newVal) {
+      if (this.variants.length === 1 && (!this.variants[0].wholesale_price || this.variants[0].wholesale_price == 0)) {
+        this.variants[0].wholesale_price = newVal ? Number(newVal) : 0;
+      }
+    },
     'data.selling_price'(newVal) {
       if (this.variants.length === 1 && (!this.variants[0].selling_price || this.variants[0].selling_price == 0)) {
         this.variants[0].selling_price = newVal ? Number(newVal) : 0;
@@ -442,12 +470,15 @@ export default {
     },
     addVariantRow() {
       const defPurchase = this.data.purchase_price ? Number(this.data.purchase_price) : 0;
-      const defSelling = this.data.selling_price ? Number(this.data.selling_price) : 0;
+      const defRetail = this.data.retail_price ? Number(this.data.retail_price) : (this.data.selling_price ? Number(this.data.selling_price) : 0);
+      const defWholesale = this.data.wholesale_price ? Number(this.data.wholesale_price) : 0;
       this.variants.push({
         color_id: null,
         size_id: null,
         purchase_price: defPurchase,
-        selling_price: defSelling,
+        selling_price: defRetail || defWholesale,
+        retail_price: defRetail,
+        wholesale_price: defWholesale,
         current_stock: 0,
         qty: 0
       });
@@ -480,7 +511,9 @@ export default {
           formData.append('model_no', this.data.model_no || '');
           formData.append('unit_id', this.data.unit_id || '');
           formData.append('purchase_price', this.data.purchase_price || 0);
-          formData.append('selling_price', this.data.selling_price || 0);
+          formData.append('retail_price', this.data.retail_price || 0);
+          formData.append('wholesale_price', this.data.wholesale_price || 0);
+          formData.append('selling_price', this.data.retail_price || this.data.selling_price || 0);
           formData.append('status', this.data.status || 'active');
           formData.append('barcode', this.data.barcode || '');
           formData.append('warranty_type', this.data.warranty_type || 'none');
@@ -488,7 +521,8 @@ export default {
           formData.append('is_price_modification', this.is_price_modification ? '1' : '0');
           const cleanedVariants = this.variants.map(v => ({
             ...v,
-            size_id: this.isElectronicsShop ? null : v.size_id
+            size_id: this.isElectronicsShop ? null : v.size_id,
+            selling_price: v.retail_price || v.selling_price || v.wholesale_price || 0
           }));
           formData.append('variants', JSON.stringify(cleanedVariants));
           formData.append('image_base64', this.data.original_image ?? '');
@@ -569,12 +603,20 @@ export default {
         if (this.data.brand_id) {
           this.getSeries(this.data.brand_id);
         }
+        if (this.data.retail_price === undefined || this.data.retail_price === null) {
+          this.data.retail_price = this.data.selling_price || '';
+        }
+        if (this.data.wholesale_price === undefined || this.data.wholesale_price === null) {
+          this.data.wholesale_price = this.data.whole_sale_price || '';
+        }
         if (this.data.variants_breakdown && this.data.variants_breakdown.length > 0) {
           this.variants = this.data.variants_breakdown.map(p => ({
             color_id: p.color_id,
             size_id: p.size_id,
             purchase_price: p.purchase_price,
-            selling_price: p.selling_price,
+            selling_price: p.selling_price || p.retail_price,
+            retail_price: p.retail_price !== undefined && p.retail_price !== null ? p.retail_price : (p.selling_price || 0),
+            wholesale_price: p.wholesale_price !== undefined && p.wholesale_price !== null ? p.wholesale_price : (p.whole_sale_price || 0),
             current_stock: p.current_stock || 0,
             qty: 0,
           }));
@@ -583,13 +625,21 @@ export default {
             color_id: p.color_id,
             size_id: p.size_id,
             purchase_price: p.purchase_price,
-            selling_price: p.selling_price,
+            selling_price: p.selling_price || p.retail_price,
+            retail_price: p.retail_price !== undefined && p.retail_price !== null ? p.retail_price : (p.selling_price || 0),
+            wholesale_price: p.wholesale_price !== undefined && p.wholesale_price !== null ? p.wholesale_price : (p.whole_sale_price || 0),
             current_stock: p.current_stock || 0,
             qty: 0,
           }));
         }
         if (!this.data.purchase_price && this.variants[0]) {
           this.data.purchase_price = this.variants[0].purchase_price;
+        }
+        if (!this.data.retail_price && this.variants[0]) {
+          this.data.retail_price = this.variants[0].retail_price;
+        }
+        if (!this.data.wholesale_price && this.variants[0]) {
+          this.data.wholesale_price = this.variants[0].wholesale_price;
         }
         if (!this.data.selling_price && this.variants[0]) {
           this.data.selling_price = this.variants[0].selling_price;

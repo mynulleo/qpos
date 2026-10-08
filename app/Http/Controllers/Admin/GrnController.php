@@ -286,6 +286,8 @@ class GrnController extends BaseController
                 'received_qty'            => $remainingQty, // default to receive rest
                 'unit_price'              => (float) $detail->price,
                 'selling_price'           => (float) ($detail->selling_price ?? 0),
+                'retail_price'            => (float) ($detail->retail_price ?? $detail->selling_price ?? ($detail->item->retail_price ?? 0)),
+                'wholesale_price'         => (float) ($detail->wholesale_price ?? ($detail->item->wholesale_price ?? $detail->selling_price ?? 0)),
                 'total_amount'            => (float) ($remainingQty * $detail->price),
                 'serial_no'               => '',
                 'note'                    => '',
@@ -434,7 +436,9 @@ class GrnController extends BaseController
                     }
 
                     $unitPrice = floatval($item['unit_price'] ?? 0);
-                    $sellingPrice = floatval($item['selling_price'] ?? 0);
+                    $retailPrice = isset($item['retail_price']) && $item['retail_price'] !== '' ? floatval($item['retail_price']) : floatval($item['selling_price'] ?? 0);
+                    $wholesalePrice = isset($item['wholesale_price']) && $item['wholesale_price'] !== '' ? floatval($item['wholesale_price']) : floatval($item['selling_price'] ?? $retailPrice);
+                    $sellingPrice = floatval($item['selling_price'] ?? ($retailPrice ?: $wholesalePrice));
                     $lineTotal = $receivedQty * $unitPrice;
                     $colorId = !empty($item['color_id']) ? $item['color_id'] : null;
                     $sizeId = !empty($item['size_id']) ? $item['size_id'] : null;
@@ -453,6 +457,8 @@ class GrnController extends BaseController
                         'previously_received_qty' => floatval($item['previously_received_qty'] ?? 0),
                         'received_qty'            => $receivedQty,
                         'unit_price'              => $unitPrice,
+                        'retail_price'            => $retailPrice,
+                        'wholesale_price'         => $wholesalePrice,
                         'selling_price'           => $sellingPrice,
                         'total_amount'            => $lineTotal,
                         'serial_no'               => $serialNo,
@@ -476,7 +482,7 @@ class GrnController extends BaseController
                     ]);
 
                     // 3. Update/Create Item Price if variant/price info is given
-                    if ($colorId || $sizeId || $unitPrice > 0 || $sellingPrice > 0) {
+                    if ($colorId || $sizeId || $unitPrice > 0 || $sellingPrice > 0 || $retailPrice > 0 || $wholesalePrice > 0) {
                         ItemPrice::updateOrCreate(
                             [
                                 'item_id'  => $item['item_id'],
@@ -484,9 +490,12 @@ class GrnController extends BaseController
                                 'size_id'  => $sizeId,
                             ],
                             [
-                                'purchase_price' => $unitPrice,
-                                'selling_price'  => $sellingPrice,
-                                'status'         => 'active',
+                                'purchase_price'   => $unitPrice,
+                                'selling_price'    => $sellingPrice,
+                                'retail_price'     => $retailPrice,
+                                'wholesale_price'  => $wholesalePrice,
+                                'whole_sale_price' => $wholesalePrice,
+                                'status'           => 'active',
                             ]
                         );
                     }
@@ -735,7 +744,9 @@ class GrnController extends BaseController
                     }
 
                     $unitPrice = floatval($item['unit_price'] ?? 0);
-                    $sellingPrice = floatval($item['selling_price'] ?? 0);
+                    $retailPrice = isset($item['retail_price']) && $item['retail_price'] !== '' ? floatval($item['retail_price']) : floatval($item['selling_price'] ?? 0);
+                    $wholesalePrice = isset($item['wholesale_price']) && $item['wholesale_price'] !== '' ? floatval($item['wholesale_price']) : floatval($item['selling_price'] ?? $retailPrice);
+                    $sellingPrice = floatval($item['selling_price'] ?? ($retailPrice ?: $wholesalePrice));
                     $lineTotal = $receivedQty * $unitPrice;
                     $colorId = !empty($item['color_id']) ? $item['color_id'] : null;
                     $sizeId = !empty($item['size_id']) ? $item['size_id'] : null;
@@ -753,12 +764,32 @@ class GrnController extends BaseController
                         'previously_received_qty' => floatval($item['previously_received_qty'] ?? 0),
                         'received_qty'            => $receivedQty,
                         'unit_price'              => $unitPrice,
+                        'retail_price'            => $retailPrice,
+                        'wholesale_price'         => $wholesalePrice,
                         'selling_price'           => $sellingPrice,
                         'total_amount'            => $lineTotal,
                         'serial_no'               => $serialNo,
                         'note'                    => $item['note'] ?? null,
                         'status'                  => 'active',
                     ]);
+
+                    if ($colorId || $sizeId || $unitPrice > 0 || $sellingPrice > 0 || $retailPrice > 0 || $wholesalePrice > 0) {
+                        ItemPrice::updateOrCreate(
+                            [
+                                'item_id'  => $item['item_id'],
+                                'color_id' => $colorId,
+                                'size_id'  => $sizeId,
+                            ],
+                            [
+                                'purchase_price'   => $unitPrice,
+                                'selling_price'    => $sellingPrice,
+                                'retail_price'     => $retailPrice,
+                                'wholesale_price'  => $wholesalePrice,
+                                'whole_sale_price' => $wholesalePrice,
+                                'status'           => 'active',
+                            ]
+                        );
+                    }
 
                     StockTransaction::create([
                         'item_id'          => $item['item_id'],

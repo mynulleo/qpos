@@ -461,8 +461,9 @@
                   <th style="width: 28%;" class="text-start ps-3">{{ $t('Product / Item') }}</th>
                   <th style="width: 14%;">{{ $t('Variant') }}</th>
                   <th style="width: 8%;">{{ $t('Unit') }}</th>
-                  <th style="width: 12%;" class="text-end">{{ $t('Cost Price') }}</th>
-                  <th style="width: 12%;" class="text-end">{{ $t('Selling Price') }}</th>
+                  <th style="width: 11%;" class="text-end">{{ $t('Cost Price') }}</th>
+                  <th style="width: 11%;" class="text-end" v-if="showRetailPrice">{{ $t('Retail Price') }}</th>
+                  <th style="width: 11%;" class="text-end" v-if="showWholesalePrice">{{ $t('Wholesale Price') }}</th>
                   <th style="width: 8%;">{{ $t('Qty') }}</th>
                   <th style="width: 10%;" v-if="isElectronicsShop">{{ $t('Serials') }}</th>
                   <th style="width: 12%;" class="text-end pe-3">{{ $t('Total Amount') }}</th>
@@ -516,9 +517,14 @@
                     ৳ {{ formatNum(pitem.unit_price) }}
                   </td>
 
-                  <!-- Selling Price -->
-                  <td class="text-end font-monospace text-success fw-semibold">
-                    ৳ {{ formatNum(pitem.selling_price) }}
+                  <!-- Retail Price -->
+                  <td class="text-end font-monospace text-success fw-semibold" v-if="showRetailPrice">
+                    ৳ {{ formatNum(pitem.retail_price !== undefined && pitem.retail_price !== null ? pitem.retail_price : pitem.selling_price) }}
+                  </td>
+
+                  <!-- Wholesale Price -->
+                  <td class="text-end font-monospace text-info fw-semibold" v-if="showWholesalePrice">
+                    ৳ {{ formatNum(pitem.wholesale_price !== undefined && pitem.wholesale_price !== null ? pitem.wholesale_price : (pitem.whole_sale_price || 0)) }}
                   </td>
 
                   <!-- Quantity -->
@@ -909,7 +915,7 @@
               </div>
 
               <!-- Purchase Price (ক্রয় মূল্য) -->
-              <div class="col-md-4">
+              <div :class="showRetailPrice && showWholesalePrice ? 'col-md-3' : 'col-md-4'">
                 <label class="form-label small fw-bold text-dark mb-1">{{ $t('Purchase Cost') }}<span class="text-danger">*</span>
                 </label>
                 <div class="input-group input-group-sm">
@@ -926,9 +932,9 @@
                 </div>
               </div>
 
-              <!-- Selling Price (বিক্রয় মূল্য) -->
-              <div class="col-md-4">
-                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Selling Price') }}</label>
+              <!-- Retail Price (খুচরা বিক্রয় মূল্য) -->
+              <div :class="showRetailPrice && showWholesalePrice ? 'col-md-3' : 'col-md-4'" v-if="showRetailPrice">
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Retail Price') }}</label>
                 <div class="input-group input-group-sm">
                   <span class="input-group-text bg-light text-muted">৳</span>
                   <input
@@ -937,13 +943,29 @@
                     min="0"
                     class="form-control form-control-sm text-end font-monospace text-success fw-bold"
                     placeholder="0.00"
-                    v-model.number="modalForm.selling_price"
+                    v-model.number="modalForm.retail_price"
+                  />
+                </div>
+              </div>
+
+              <!-- Wholesale Price (পাইকারি বিক্রয় মূল্য) -->
+              <div :class="showRetailPrice && showWholesalePrice ? 'col-md-3' : 'col-md-4'" v-if="showWholesalePrice">
+                <label class="form-label small fw-bold text-dark mb-1">{{ $t('Wholesale Price') }}</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light text-muted">৳</span>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    class="form-control form-control-sm text-end font-monospace text-info fw-bold"
+                    placeholder="0.00"
+                    v-model.number="modalForm.wholesale_price"
                   />
                 </div>
               </div>
 
               <!-- Quantity (পরিমাণ) -->
-              <div class="col-md-4">
+              <div :class="showRetailPrice && showWholesalePrice ? 'col-md-3' : 'col-md-4'">
                 <label class="form-label small fw-bold text-dark mb-1">{{ $t('Received Qty') }}<span class="text-danger">*</span>
                 </label>
                 <div class="input-group input-group-sm">
@@ -1300,6 +1322,16 @@ export default {
     isElectronicsShop() {
       const shopType = (this.$root.site?.shop_type || this.$root.site_setting?.shop_type || '').toLowerCase();
       return shopType === 'electronics';
+    },
+
+    showRetailPrice() {
+      const saleNature = (this.$root.site?.sale_nature || this.$root.site_setting?.sale_nature || 'both').toLowerCase();
+      return saleNature === 'retail' || saleNature === 'both';
+    },
+
+    showWholesalePrice() {
+      const saleNature = (this.$root.site?.sale_nature || this.$root.site_setting?.sale_nature || 'both').toLowerCase();
+      return saleNature === 'wholesale' || saleNature === 'both';
     },
 
     activeRowItem() {
@@ -1698,6 +1730,8 @@ export default {
         unit_title: '',
         unit_price: 0,
         selling_price: 0,
+        retail_price: 0,
+        wholesale_price: 0,
         received_qty: 1,
         total_amount: 0,
         serial_no: '',
@@ -1714,7 +1748,9 @@ export default {
     openEditProductModal(index, pitem) {
       this.isEditingModal = true;
       const unitPrice = parseFloat(pitem.unit_price) || 0;
-      const sellingPrice = parseFloat(pitem.selling_price) || 0;
+      const retailPrice = parseFloat(pitem.retail_price !== undefined && pitem.retail_price !== null ? pitem.retail_price : pitem.selling_price) || 0;
+      const wholesalePrice = parseFloat(pitem.wholesale_price !== undefined && pitem.wholesale_price !== null ? pitem.wholesale_price : (pitem.whole_sale_price || 0)) || 0;
+      const sellingPrice = parseFloat(pitem.selling_price) || retailPrice || wholesalePrice || 0;
       const qty = parseFloat(pitem.received_qty) || 1;
       const totalAmount = parseFloat(pitem.total_amount) || Number((unitPrice * qty).toFixed(2));
       const serials = pitem.serial_no ? pitem.serial_no.split(',').map((s) => s.trim()).filter((s) => s.length > 0) : [];
@@ -1731,6 +1767,8 @@ export default {
         unit_title: this.getUnitTitle(pitem.unit_id, pitem),
         unit_price: unitPrice,
         selling_price: sellingPrice,
+        retail_price: retailPrice,
+        wholesale_price: wholesalePrice,
         received_qty: qty,
         total_amount: totalAmount,
         serial_no: pitem.serial_no || '',
@@ -1791,6 +1829,9 @@ export default {
         if (selectedObj.opening_rate && (!this.modalForm.unit_price || this.modalForm.unit_price == 0)) {
           this.modalForm.unit_price = parseFloat(selectedObj.opening_rate) || 0;
         }
+        this.modalForm.retail_price = parseFloat(selectedObj.retail_price || selectedObj.selling_price || selectedObj.sale_price || 0) || 0;
+        this.modalForm.wholesale_price = parseFloat(selectedObj.wholesale_price || selectedObj.whole_sale_price || 0) || 0;
+        this.modalForm.selling_price = this.modalForm.retail_price || this.modalForm.wholesale_price || 0;
         this.onModalPriceOrQtyChange();
       }
     },
@@ -1936,7 +1977,9 @@ export default {
 
       const selectedItem = this.modalForm.items.find((i) => i.id === this.modalForm.item_id);
       const unitPrice = parseFloat(this.modalForm.unit_price) || 0;
-      const sellingPrice = parseFloat(this.modalForm.selling_price) || 0;
+      const retailPrice = parseFloat(this.modalForm.retail_price) || parseFloat(this.modalForm.selling_price) || 0;
+      const wholesalePrice = parseFloat(this.modalForm.wholesale_price) || 0;
+      const sellingPrice = retailPrice || wholesalePrice || parseFloat(this.modalForm.selling_price) || 0;
       const qty = parseFloat(this.modalForm.received_qty) || 1;
       const totalAmount = Number((unitPrice * qty).toFixed(2));
       const serialStr = this.modalForm.serialsList.join(', ');
@@ -1953,6 +1996,8 @@ export default {
         unit_title: this.modalForm.unit_title || (selectedItem?.unit?.title || 'Pcs'),
         unit_price: unitPrice,
         selling_price: sellingPrice,
+        retail_price: retailPrice,
+        wholesale_price: wholesalePrice,
         received_qty: qty,
         ordered_qty: qty,
         previously_received_qty: 0,
