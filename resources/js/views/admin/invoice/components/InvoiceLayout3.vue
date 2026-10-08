@@ -30,8 +30,10 @@
             </div>
         </div>
 
-        <div class="text-center fw-bold text-black mb-1" style="font-size: 12px; letter-spacing: 2px; color: #000000 !important;">
-            --- INVOICE ---
+        <div class="text-center my-2">
+            <h2 class="text-uppercase text-black fw-bold mb-0" style="font-size: 22px; font-weight: 900; letter-spacing: 4px; color: #000000 !important; line-height: 1.1;">
+                INVOICE
+            </h2>
         </div>
 
         <!-- 4-Quadrant Info Table (Status removed, Sold By added) -->
@@ -41,7 +43,8 @@
                     <td width="33%" class="text-black" style="padding: 3px 6px; color: #000000 !important;"><strong>Invoice No:</strong> <span class="font-monospace fw-bold" style="color: #000000 !important;">#{{ data.invoice_no }}</span></td>
                     <td width="33%" class="text-black" style="padding: 3px 6px; color: #000000 !important;"><strong>Date:</strong> <span class="text-nowrap" style="white-space: nowrap !important; color: #000000 !important;">{{ data.invoice_date }}</span></td>
                     <td width="34%" class="text-black" style="padding: 3px 6px; color: #000000 !important;">
-                        <strong>Sold By:</strong> <span class="fw-semibold" style="color: #000000 !important;">{{ data.creator ? data.creator.name : ($root.user?.name || 'Cashier') }}</span>
+                        <strong>Sold By:</strong> <span class="fw-semibold" style="color: #000000 !important;">{{ getSellerName(data) }}</span>
+                        <span v-if="getSellerId(data)" class="ms-1">(ID: {{ getSellerId(data) }})</span>
                     </td>
                 </tr>
                 <tr style="color: #000000 !important;">
@@ -58,20 +61,24 @@
 
         <!-- Items Table -->
         <table class="table table-sm table-bordered border-dark align-middle mb-2" style="font-size: 10.5px; width: 100%;">
-            <thead class="border-dark" style="background-color: #000000 !important; color: #ffffff !important;">
-                <tr>
-                    <th width="4%" class="text-center text-white" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 4px;">{{ $t('SL') }}</th>
-                    <th width="48%" class="text-white" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px;">{{ $t('Item Description & Specifications') }}</th>
-                    <th width="10%" class="text-center text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 4px; white-space: nowrap !important;">{{ $t('Qty') }}</th>
-                    <th width="19%" class="text-end text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px; white-space: nowrap !important;">{{ $t('Rate') }}</th>
-                    <th width="19%" class="text-end text-white text-nowrap" style="background-color: #000000 !important; color: #ffffff !important; padding: 3px 6px; white-space: nowrap !important;">{{ $t('Amount') }}</th>
+            <thead class="border-dark" style="background-color: transparent !important; color: #000000 !important; border-bottom: 2px solid #000000 !important;">
+                <tr style="background-color: transparent !important;">
+                    <th width="4%" class="text-center text-black fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 6px 4px; font-size: 13px; font-weight: 900; letter-spacing: 0.2px;">{{ $t('SL') }}</th>
+                    <th width="48%" class="text-black fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 6px 6px; font-size: 13px; font-weight: 900; letter-spacing: 0.2px;">{{ $t('Item Description & Specifications') }}</th>
+                    <th width="10%" class="text-center text-black text-nowrap fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 6px 4px; font-size: 13px; font-weight: 900; letter-spacing: 0.2px; white-space: nowrap !important;">{{ $t('Qty') }}</th>
+                    <th width="19%" class="text-end text-black text-nowrap fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 6px 6px; font-size: 13px; font-weight: 900; letter-spacing: 0.2px; white-space: nowrap !important;">{{ $t('Unit Price') }}</th>
+                    <th width="19%" class="text-end text-black text-nowrap fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 6px 6px; font-size: 13px; font-weight: 900; letter-spacing: 0.2px; white-space: nowrap !important;">{{ $t('Total Price') }}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(invd, index) in getItemList(data)" :key="index" style="color: #000000 !important;">
-                    <td class="text-center text-black fw-bold" style="padding: 3px 4px; color: #000000 !important;">{{ index + 1 }}</td>
-                    <td style="padding: 3px 6px; color: #000000 !important;">
+                    <td class="text-center text-black fw-bold" style="padding: 4px 4px; color: #000000 !important;">{{ index + 1 }}</td>
+                    <td style="padding: 4px 6px; color: #000000 !important; word-break: break-word;">
                         <div class="fw-bold text-black" style="font-size: 11px; line-height: 1.25; color: #000000 !important;">{{ getItemTitle(invd) }}</div>
+                        <!-- ⭐️ Barcode right below Item Title -->
+                        <div v-if="getItemBarcode(invd)" class="text-black font-monospace mt-1" style="font-size: 9px; line-height: 1.3; color: #000000 !important;">
+                            <strong style="color: #000000 !important;">Barcode:</strong> {{ getItemBarcode(invd) }}
+                        </div>
                         <!-- ⭐️ Specifications -->
                         <div class="d-flex flex-wrap gap-1 mt-1" v-if="getItemSpecs(invd).length > 0">
                             <span v-for="(spec, sIdx) in getItemSpecs(invd)" :key="sIdx" 
@@ -79,61 +86,71 @@
                                 <strong>{{ spec.label }}:</strong> {{ spec.value }}
                             </span>
                         </div>
-                        <div v-if="getItemBarcode(invd)" class="text-black font-monospace mt-1" style="font-size: 9px; color: #000000 !important;">Barcode: {{ getItemBarcode(invd) }}</div>
+                        <!-- ⭐️ All Serial Numbers (S/N) starting directly next to S/N: -->
+                        <div v-if="getItemSerials(invd).length > 0" class="text-black mt-1" style="font-size: 10.5px; line-height: 1.35; color: #000000 !important; word-break: break-word;">
+                            <span class="font-monospace text-black fw-bold" style="font-size: 10.5px; color: #000000 !important;"><strong style="font-weight: 800; color: #000000 !important;">S/N: </strong>{{ getItemSerials(invd).join(', ') }}</span>
+                        </div>
                     </td>
-                    <td class="text-center font-monospace fw-bold text-nowrap text-black" style="padding: 3px 4px; white-space: nowrap !important; font-size: 11px; color: #000000 !important;">{{ invd.qty }}</td>
-                    <td class="text-end font-monospace text-nowrap text-black fw-semibold" style="padding: 3px 6px; white-space: nowrap !important; font-size: 10.5px; color: #000000 !important;">৳ {{ formatPrice(invd.amount) }}</td>
-                    <td class="text-end font-monospace fw-bold text-black text-nowrap" style="padding: 3px 6px; white-space: nowrap !important; font-size: 11px; color: #000000 !important;">৳ {{ formatPrice(invd.total_amount || (invd.qty * invd.amount)) }}</td>
+                    <td class="text-center font-monospace fw-bold text-nowrap text-black" style="padding: 4px 4px; white-space: nowrap !important; font-size: 11px; color: #000000 !important;">{{ formatQty(invd.qty) }}</td>
+                    <td class="text-end font-monospace text-nowrap text-black fw-semibold" style="padding: 4px 6px; white-space: nowrap !important; font-size: 10.5px; color: #000000 !important;">৳ {{ formatPrice(invd.amount) }}</td>
+                    <td class="text-end font-monospace fw-bold text-black text-nowrap" style="padding: 4px 6px; white-space: nowrap !important; font-size: 11px; color: #000000 !important;">৳ {{ formatPrice(invd.total_amount || (invd.qty * invd.amount)) }}</td>
                 </tr>
             </tbody>
         </table>
 
         <!-- Financial Summary Row (In Words & Bank on Left, Calculations on Right) -->
-        <div class="row g-2 mb-2">
-            <!-- Left Side: In Words (No Border) & Bank Details -->
-            <div class="col-6">
+        <div class="row g-2 mb-2 align-items-stretch">
+            <!-- Left Side: In Words at Top & Bank Details at Bottom -->
+            <div class="col-6 d-flex flex-column justify-content-between">
                 <!-- In Words (Clean, Outside Box Borders) -->
-                <div class="py-1 mb-1" style="font-size: 10px; line-height: 1.35; color: #000000 !important;">
-                    <strong style="color: #000000 !important;">In Words:</strong> 
+                <div class="py-1 mb-1" style="font-size: 10.5px; line-height: 1.35; color: #000000 !important;">
+                    <strong style="color: #000000 !important; font-weight: 800;">In Words:</strong> 
                     <span style="color: #000000 !important;">{{ numberToWords(data.amount) }}</span>
                 </div>
                 
-                <!-- Bank Details directly below In Words -->
-                <div v-if="currentSite.bank_name" class="py-1" style="font-size: 9.5px; color: #000000 !important; line-height: 1.35;">
-                    <strong style="color: #000000 !important;"><i class="fas fa-university me-1 text-black"></i>Bank Details:</strong> 
-                    <div class="font-monospace fw-bold" style="color: #000000 !important;">
-                        {{ currentSite.bank_name }} <span v-if="currentSite.branch_name">({{ currentSite.branch_name }})</span> | A/C: {{ currentSite.account_number }}
+                <!-- Bank Details directly below In Words / at bottom -->
+                <div v-if="currentSite?.bank_name" class="p-2 bg-white rounded border border-dark mt-auto" style="font-size: 9.5px; color: #000000 !important; line-height: 1.35; border-left: 3px solid #000000 !important;">
+                    <strong style="color: #000000 !important; font-weight: 800;"><i class="fas fa-university me-1 text-black"></i>Bank Details:</strong> 
+                    <div class="font-monospace fw-bold text-black" style="font-size: 9.5px; color: #000000 !important;">
+                        Bank: {{ currentSite.bank_name }} <span v-if="currentSite.branch_name">({{ currentSite.branch_name }})</span>
+                    </div>
+                    <div class="font-monospace fw-bold text-black" style="font-size: 9.5px; color: #000000 !important;">
+                        A/C No: {{ currentSite.account_number }}
                     </div>
                 </div>
             </div>
 
             <!-- Right Side: Financial Calculation Table -->
             <div class="col-6">
-                <table class="table table-sm table-bordered border-dark mb-0" style="font-size: 10px; width: 100% !important; color: #000000 !important;">
+                <table class="table table-sm table-bordered border-dark mb-0" style="font-size: 10px; width: 100% !important; color: #000000 !important; background: transparent !important;">
                     <tbody>
-                        <tr>
-                            <td class="text-nowrap text-black fw-bold" style="padding: 2px 4px; width: 52%; white-space: nowrap !important; color: #000000 !important;">Subtotal:</td>
-                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 2px 4px; width: 48%; white-space: nowrap !important; color: #000000 !important;">৳ {{ formatPrice(data.original_amount) }}</td>
+                        <tr style="background: transparent !important;">
+                            <td class="text-nowrap text-black fw-bold" style="padding: 3px 5px; width: 52%; white-space: nowrap !important; color: #000000 !important;">{{ $t('Subtotal:') }}</td>
+                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 3px 5px; width: 48%; white-space: nowrap !important; color: #000000 !important;">৳ {{ formatPrice(data.original_amount) }}</td>
                         </tr>
-                        <tr v-if="data.discount > 0">
-                            <td class="text-danger text-nowrap fw-bold" style="padding: 2px 4px; width: 52%; white-space: nowrap !important;">Discount:</td>
-                            <td class="text-end font-monospace text-danger fw-bold text-nowrap" style="padding: 2px 4px; width: 48%; white-space: nowrap !important;">- ৳ {{ formatPrice(data.discount) }}</td>
+                        <tr v-if="data.discount > 0" style="background: transparent !important;">
+                            <td class="text-danger text-nowrap fw-bold" style="padding: 3px 5px; width: 52%; white-space: nowrap !important;">{{ $t('Discount:') }}</td>
+                            <td class="text-end font-monospace text-danger fw-bold text-nowrap" style="padding: 3px 5px; width: 48%; white-space: nowrap !important;">- ৳ {{ formatPrice(data.discount) }}</td>
                         </tr>
-                        <tr v-if="data.vat > 0">
-                            <td class="text-nowrap text-black fw-bold" style="padding: 2px 4px; width: 52%; white-space: nowrap !important; color: #000000 !important;">VAT / Tax:</td>
-                            <td class="text-end font-monospace text-nowrap text-black fw-bold" style="padding: 2px 4px; width: 48%; white-space: nowrap !important;">+ ৳ {{ formatPrice(data.vat) }}</td>
+                        <tr v-if="data.vat > 0" style="background: transparent !important;">
+                            <td class="text-nowrap text-black fw-bold" style="padding: 3px 5px; width: 52%; white-space: nowrap !important; color: #000000 !important;">{{ $t('VAT / Tax:') }}</td>
+                            <td class="text-end font-monospace text-nowrap text-black fw-bold" style="padding: 3px 5px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.vat) }}</td>
                         </tr>
-                        <tr style="background-color: #000000 !important; color: #ffffff !important; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;">
-                            <td style="font-weight: 900; color: #ffffff !important; padding: 4px 4px; width: 52%; white-space: nowrap !important; background-color: #000000 !important;" class="text-nowrap">NET TOTAL PAYABLE:</td>
-                            <td class="text-end font-monospace text-nowrap" style="font-weight: 900; color: #ffffff !important; padding: 4px 4px; width: 48%; white-space: nowrap !important; background-color: #000000 !important;">৳ {{ formatPrice(data.amount) }}</td>
+                        <tr style="background: transparent !important; border-top: 2px solid #000000 !important; border-bottom: 2px solid #000000 !important;">
+                            <td style="font-weight: 900; color: #000000 !important; padding: 5px 5px; width: 52%; font-size: 12.5px; white-space: nowrap !important; background: transparent !important;" class="text-nowrap">{{ $t('Net Total Payable:') }}</td>
+                            <td class="text-end font-monospace text-nowrap" style="font-weight: 900; color: #000000 !important; padding: 5px 5px; width: 48%; font-size: 13px; white-space: nowrap !important; background: transparent !important;">৳ {{ formatPrice(data.amount) }}</td>
                         </tr>
-                        <tr>
-                            <td class="text-black fw-bold text-nowrap" style="padding: 2px 4px; width: 52%; white-space: nowrap !important; color: #000000 !important;">Paid Amount:</td>
-                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 2px 4px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.paid_amount) }}</td>
+                        <tr style="background: transparent !important;">
+                            <td class="text-black fw-bold text-nowrap" style="padding: 3px 5px; width: 52%; white-space: nowrap !important; color: #000000 !important;">{{ $t('Paid Amount:') }}</td>
+                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 3px 5px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.paid_amount) }}</td>
                         </tr>
-                        <tr v-if="data.due_amount > 0">
-                            <td class="text-danger fw-bold text-nowrap" style="padding: 2px 4px; width: 52%; white-space: nowrap !important;">Balance Due:</td>
-                            <td class="text-end font-monospace text-danger fw-bold text-nowrap" style="padding: 2px 4px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.due_amount) }}</td>
+                        <tr v-if="data.due_amount > 0" style="background: transparent !important;">
+                            <td class="text-danger fw-bold text-nowrap" style="padding: 3px 5px; width: 52%; white-space: nowrap !important;">{{ $t('Balance Due:') }}</td>
+                            <td class="text-end font-monospace text-danger fw-bold text-nowrap" style="padding: 3px 5px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.due_amount) }}</td>
+                        </tr>
+                        <tr v-if="data.previous_due > 0" style="background: transparent !important;">
+                            <td class="text-black fw-bold text-nowrap" style="padding: 3px 5px; width: 52%; white-space: nowrap !important; color: #000000 !important;">{{ $t('Previous Due:') }}</td>
+                            <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 3px 5px; width: 48%; white-space: nowrap !important;">৳ {{ formatPrice(data.previous_due) }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -141,18 +158,18 @@
         </div>
 
         <!-- 📜 Terms & Conditions (Full Width with Light Separator Line & Vertical List) -->
-        <div class="row g-2 mb-3">
+        <div class="row g-2 mt-3 mb-3">
             <div class="col-12">
-                <div class="pt-2" style="border-top: 1px solid #cbd5e1 !important; font-size: 9.5px; color: #000000 !important; line-height: 1.4;">
-                    <strong class="text-black d-block mb-1" style="font-size: 10px; color: #000000 !important;">Terms & Conditions:</strong>
+                <div class="pt-2" style="border-top: 1px solid #94a3b8 !important; font-size: 10px; color: #000000 !important; line-height: 1.45;">
+                    <strong class="text-black d-block mb-1" style="font-size: 10px; font-weight: 800; color: #000000 !important;">Terms & Conditions:</strong>
                     <div v-if="data.terms_conditions && data.terms_conditions.length > 0" class="text-black" style="color: #000000 !important;">
-                        <div v-for="(tc, tcIdx) in data.terms_conditions" :key="tcIdx" class="mb-1">
+                        <div v-for="(tc, tcIdx) in data.terms_conditions" :key="tcIdx" class="mb-1" style="line-height: 1.45;">
                             {{ tcIdx + 1 }}. {{ tc }}
                         </div>
                     </div>
                     <div v-else class="text-black" style="color: #000000 !important;">
-                        <div class="mb-1">1. Goods once sold are subject to standard return policy.</div>
-                        <div class="mb-1">2. Commercial claims require presenting this original invoice.</div>
+                        <div class="mb-1" style="line-height: 1.45;">1. Goods once sold are subject to standard return policy.</div>
+                        <div class="mb-1" style="line-height: 1.45;">2. Commercial claims require presenting this original invoice.</div>
                     </div>
                 </div>
             </div>
@@ -272,11 +289,6 @@ export default {
                 specs.push({ label: 'Size', value: size.trim() });
             }
 
-            const serial = item.serial_no || item.serial || item.item_serial;
-            if (serial && typeof serial === 'string' && serial.trim() !== '') {
-                specs.push({ label: 'Serial No', value: serial.trim() });
-            }
-
             const warranty = this.getItemWarranty(item);
             if (warranty && typeof warranty === 'string' && warranty.trim() !== '') {
                 const isGuarantee = warranty.toLowerCase().startsWith('guarantee');
@@ -288,6 +300,79 @@ export default {
             }
 
             return specs;
+        },
+        getItemSerials(item) {
+            if (!item) return [];
+            let list = [];
+            const extractSerialStr = (s) => {
+                if (!s) return '';
+                if (typeof s === 'string') return s.trim();
+                if (typeof s === 'object') return (s.serial_no || s.serial_number || s.serial || s.number || '').toString().trim();
+                return String(s).trim();
+            };
+            if (Array.isArray(item.serials) && item.serials.length > 0) {
+                list = item.serials.map(extractSerialStr).filter(Boolean);
+            } else if (Array.isArray(item.serial_numbers) && item.serial_numbers.length > 0) {
+                list = item.serial_numbers.map(extractSerialStr).filter(Boolean);
+            } else {
+                const raw = item.serial_no || item.serial || item.item_serial || '';
+                if (typeof raw === 'string' && raw.trim() !== '') {
+                    list = raw.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+                } else if (Array.isArray(raw)) {
+                    list = raw.map(extractSerialStr).filter(Boolean);
+                }
+            }
+            return list;
+        },
+        getSellerName(inv) {
+            if (!inv) return 'Cashier';
+            return inv.creator?.name || inv.creator?.full_name || this.$root.user?.name || 'Cashier';
+        },
+        getSellerId(inv) {
+            if (!inv) return '';
+            return inv.creator?.employee_id || inv.creator?.id || inv.created_by || this.$root.user?.employee_id || this.$root.user?.id || '';
+        },
+        getSellerMobile(inv) {
+            if (!inv) return '';
+            return inv.creator?.mobile || inv.creator?.phone || this.$root.user?.mobile || '';
+        },
+        formatInvoiceDateTime(inv) {
+            if (!inv) return '';
+            const dateStr = inv.invoice_date || '';
+            if (inv.created_at) {
+                try {
+                    const d = new Date(inv.created_at);
+                    if (!isNaN(d.getTime())) {
+                        let hours = d.getHours();
+                        const minutes = String(d.getMinutes()).padStart(2, '0');
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        hours = hours % 12;
+                        hours = hours ? String(hours).padStart(2, '0') : '12';
+                        const timeStr = `${hours}:${minutes} ${ampm}`;
+                        
+                        if (dateStr) {
+                            return `${dateStr} ${timeStr}`;
+                        }
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const month = months[d.getMonth()];
+                        const year = d.getFullYear();
+                        return `${day} ${month}, ${year} ${timeStr}`;
+                    }
+                } catch (e) {
+                    return dateStr;
+                }
+            }
+            return dateStr;
+        },
+        formatQty(val) {
+            if (val === null || val === undefined || val === '') return '0';
+            const num = Number(val);
+            if (isNaN(num)) return val;
+            if (Number.isInteger(num)) {
+                return num.toString();
+            }
+            return parseFloat(num.toFixed(3)).toString();
         },
         formatPrice(val) {
             const f = parseFloat(val);
@@ -342,6 +427,23 @@ export default {
 <style scoped>
 .text-nowrap {
     white-space: nowrap !important;
+}
+
+.invoice-box table,
+.invoice-box table > :not(caption) > * > *,
+.invoice-box table th,
+.invoice-box table td,
+.invoice-box table tr {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+}
+
+.invoice-box table thead th {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
 }
 
 .invoice-box {

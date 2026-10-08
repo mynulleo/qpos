@@ -16,6 +16,11 @@
                         :closeOnSelect='true' :required='false' />
                     <Textarea v-model='data.address' field='data.address' title='Address' col="6" :req='false' />
                     <Textarea v-model='data.note' field='data.note' col="6" title='Remarks' :req='false' />
+                    
+                    <Select title='Customer Type' v-model='data.customer_type' field='data.customer_type' label='title'
+                        :reduce='(obj) => obj.value' col="3" :options='customerTypes' placeholder='--Select Type--'
+                        :closeOnSelect='true' :required='true' />
+
                     <Input v-model='data.previous_due' field='data.previous_due' title='Previous Due' col="3"
                         :req='false' />
 
@@ -67,6 +72,7 @@ export default {
             page_title: '',
             data: {
                 type: 'New',
+                customer_type: 'retail',
                 reg_date: this.$filter.today(),
                 previous_due: 0,
                 account_name: '',
@@ -78,6 +84,10 @@ export default {
                 total_amount: 0,
                 total_include_amount: 0
             },
+            customerTypes: [
+                { title: 'Retail', value: 'retail' },
+                { title: 'Wholesale', value: 'wholesale' },
+            ],
             packages: [],
             banks: [],
             areas: [],

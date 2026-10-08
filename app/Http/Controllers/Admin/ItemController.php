@@ -123,6 +123,15 @@ class ItemController extends BaseController
                 } else if (!empty($request->file("image"))) {
                     $data["image"] = $this->upload($request->image, "item");
                 }
+                if (!empty($data['retail_price']) && empty($data['selling_price'])) {
+                    $data['selling_price'] = $data['retail_price'];
+                } elseif (!empty($data['selling_price']) && empty($data['retail_price'])) {
+                    $data['retail_price'] = $data['selling_price'];
+                }
+                if (empty($data['wholesale_price']) && !empty($data['retail_price'])) {
+                    $data['wholesale_price'] = $data['retail_price'];
+                }
+
                 $res = Item::create($data);
 
                 // Handle variants matrix if provided
@@ -136,10 +145,12 @@ class ItemController extends BaseController
                         $colorId = !empty($variant['color_id']) ? $variant['color_id'] : null;
                         $sizeId = !empty($variant['size_id']) ? $variant['size_id'] : null;
                         $purchasePrice = isset($variant['purchase_price']) ? floatval($variant['purchase_price']) : 0;
-                        $sellingPrice = isset($variant['selling_price']) ? floatval($variant['selling_price']) : 0;
+                        $retailPrice = isset($variant['retail_price']) && $variant['retail_price'] !== '' ? floatval($variant['retail_price']) : (isset($variant['selling_price']) ? floatval($variant['selling_price']) : 0);
+                        $wholesalePrice = isset($variant['wholesale_price']) && $variant['wholesale_price'] !== '' ? floatval($variant['wholesale_price']) : (isset($variant['whole_sale_price']) ? floatval($variant['whole_sale_price']) : $retailPrice);
+                        $sellingPrice = isset($variant['selling_price']) ? floatval($variant['selling_price']) : ($retailPrice ?: $wholesalePrice);
                         $qty = isset($variant['qty']) ? intval($variant['qty']) : 0;
 
-                        if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0) {
+                        if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0 || $retailPrice > 0 || $wholesalePrice > 0) {
                             \App\Models\ItemPrice::updateOrCreate(
                                 [
                                     'item_id' => $res->id,
@@ -147,9 +158,12 @@ class ItemController extends BaseController
                                     'size_id' => $sizeId,
                                 ],
                                 [
-                                    'purchase_price' => $purchasePrice,
-                                    'selling_price' => $sellingPrice,
-                                    'status' => 'active',
+                                    'purchase_price'   => $purchasePrice,
+                                    'selling_price'    => $sellingPrice,
+                                    'retail_price'     => $retailPrice,
+                                    'wholesale_price'  => $wholesalePrice,
+                                    'whole_sale_price' => $wholesalePrice,
+                                    'status'           => 'active',
                                 ]
                             );
 
@@ -666,6 +680,15 @@ class ItemController extends BaseController
                 } else {
                     unset($data['image']);
                 }
+                if (!empty($data['retail_price']) && empty($data['selling_price'])) {
+                    $data['selling_price'] = $data['retail_price'];
+                } elseif (!empty($data['selling_price']) && empty($data['retail_price'])) {
+                    $data['retail_price'] = $data['selling_price'];
+                }
+                if (empty($data['wholesale_price']) && !empty($data['retail_price'])) {
+                    $data['wholesale_price'] = $data['retail_price'];
+                }
+
                 $item->fill($data)->save();
 
                 // Process Variants (Prices & Stock Additions)
@@ -679,10 +702,12 @@ class ItemController extends BaseController
                         $colorId = !empty($variant['color_id']) ? $variant['color_id'] : null;
                         $sizeId = !empty($variant['size_id']) ? $variant['size_id'] : null;
                         $purchasePrice = isset($variant['purchase_price']) ? floatval($variant['purchase_price']) : 0;
-                        $sellingPrice = isset($variant['selling_price']) ? floatval($variant['selling_price']) : 0;
+                        $retailPrice = isset($variant['retail_price']) && $variant['retail_price'] !== '' ? floatval($variant['retail_price']) : (isset($variant['selling_price']) ? floatval($variant['selling_price']) : 0);
+                        $wholesalePrice = isset($variant['wholesale_price']) && $variant['wholesale_price'] !== '' ? floatval($variant['wholesale_price']) : (isset($variant['whole_sale_price']) ? floatval($variant['whole_sale_price']) : $retailPrice);
+                        $sellingPrice = isset($variant['selling_price']) ? floatval($variant['selling_price']) : ($retailPrice ?: $wholesalePrice);
                         $qty = isset($variant['qty']) ? floatval($variant['qty']) : 0;
 
-                        if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0) {
+                        if ($colorId || $sizeId || $purchasePrice > 0 || $sellingPrice > 0 || $retailPrice > 0 || $wholesalePrice > 0) {
                             \App\Models\ItemPrice::updateOrCreate(
                                 [
                                     'item_id' => $item->id,
@@ -690,9 +715,12 @@ class ItemController extends BaseController
                                     'size_id' => $sizeId,
                                 ],
                                 [
-                                    'purchase_price' => $purchasePrice,
-                                    'selling_price' => $sellingPrice,
-                                    'status' => 'active',
+                                    'purchase_price'   => $purchasePrice,
+                                    'selling_price'    => $sellingPrice,
+                                    'retail_price'     => $retailPrice,
+                                    'wholesale_price'  => $wholesalePrice,
+                                    'whole_sale_price' => $wholesalePrice,
+                                    'status'           => 'active',
                                 ]
                             );
 

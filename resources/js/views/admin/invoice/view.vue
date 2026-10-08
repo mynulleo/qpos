@@ -589,9 +589,16 @@ export default {
     return {
       data: {},
       loading: true,
-      selectedLayout: localStorage.getItem('qpos_invoice_layout') || 'layout1',
+      selectedLayout: this.$root.site?.invoice_layout || localStorage.getItem('qpos_invoice_layout') || 'layout1',
       showHeaderInfo: localStorage.getItem('qpos_invoice_show_header') !== 'false',
     };
+  },
+  watch: {
+    '$root.site.invoice_layout'(newLayout) {
+      if (newLayout) {
+        this.selectedLayout = newLayout;
+      }
+    },
   },
   computed: {
     printerType() {

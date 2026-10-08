@@ -37,29 +37,71 @@
     <div class="card border-0 shadow-sm mb-2">
       <div class="card-body p-2 px-3">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <!-- Client Mobile Search Input (Compact, rgb(17 44 70) Theme Color) -->
-          <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 240px; max-width: 320px;">
+          <!-- Client Search Input with Live Autocomplete -->
+          <div class="d-flex align-items-center gap-2 flex-grow-1 position-relative" style="min-width: 240px; max-width: 340px;">
             <span class="fw-bold small text-nowrap" style="color: rgb(17 44 70);"><i class="fas fa-user theme-icon me-1"></i>{{ $t('Client') }} (F4):</span>
-            <div class="input-group input-group-sm client-search-group">
+            <div class="input-group input-group-sm client-search-group w-100">
               <input
-                ref="clientMobileInput"
+                ref="clientSearchInput"
                 type="text"
                 class="form-control form-control-sm font-monospace fw-bold client-input"
-                :placeholder="$t('Mobile: 017xxxxxxxx')"
-                v-model="client.mobile"
-                @keyup.enter="searchCustomer"
-                @blur="searchCustomer"
+                :placeholder="$t('Mobile / Name / ID...')"
+                v-model="customerSearchTerm"
+                @input="onCustomerSearchInput"
+                @keydown.down.prevent="navigateCustomerResults(1)"
+                @keydown.up.prevent="navigateCustomerResults(-1)"
+                @keydown.enter.prevent="handleCustomerSearchEnter"
+                @keydown.esc="customerSearchResults = []"
               >
-              <button type="button" class="btn client-search-btn" @click="searchCustomer" :title="$t('Search Client')">
+              <button type="button" class="btn client-search-btn" @click="handleCustomerSearchEnter" :title="$t('Search Client')">
                 <i class="fas fa-search"></i>
               </button>
             </div>
+
+            <!-- Customer Search Results Dropdown -->
+            <div v-if="customerSearchResults.length > 0" class="position-absolute w-100 bg-white border rounded shadow-lg customer-search-dropdown" style="top: 100%; left: 0; max-height: 280px; overflow-y: auto; z-index: 10000; margin-top: 2px;">
+              <div
+                v-for="(cust, cIdx) in customerSearchResults"
+                :key="'cust_opt_' + (cust.id || cIdx) + '_' + cIdx"
+                class="p-2 border-bottom cursor-pointer d-flex align-items-center justify-content-between transition-all"
+                :class="{ 'bg-primary text-white': selectedCustomerIndex === cIdx, 'hover-bg-light text-dark': selectedCustomerIndex !== cIdx }"
+                @click="selectCustomer(cust)"
+                @mouseenter="selectedCustomerIndex = cIdx"
+              >
+                <div>
+                  <div class="fw-bold fs-6" :class="selectedCustomerIndex === cIdx ? 'text-white' : 'text-dark'">{{ cust.name }}</div>
+                  <small :class="selectedCustomerIndex === cIdx ? 'text-white-50' : 'text-muted'" class="font-monospace">
+                    <i class="fas fa-phone-alt me-1"></i>{{ cust.mobile }}
+                  </small>
+                </div>
+                <div class="text-end">
+                  <span class="badge" :class="cust.customer_type === 'wholesale' ? (selectedCustomerIndex === cIdx ? 'bg-white text-primary' : 'bg-primary') : (selectedCustomerIndex === cIdx ? 'bg-white text-dark' : 'bg-secondary')">
+                    {{ cust.customer_type === 'wholesale' ? $t('Wholesale') : $t('Retail') }}
+                  </span>
+                  <div v-if="cust.current_due > 0" class="small font-monospace" :class="selectedCustomerIndex === cIdx ? 'text-white-50' : 'text-danger'">
+                    Due: ৳{{ $bnNum(formatPrice(cust.current_due)) }}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Selected Customer Info Pill -->
+          <!-- Selected Customer Info Pill with Interactive Price Type Switch -->
           <div v-if="client.id" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-between bg-light p-1 px-3 rounded border">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
               <span class="fw-bold text-dark fs-6">{{ client.name }}</span>
+              <!-- Interactive Customer Type / Price Switch Button -->
+              <button
+                type="button"
+                class="btn btn-xs rounded-pill px-2.5 py-0.5 fw-bold d-flex align-items-center gap-1 shadow-sm border"
+                :class="client.customer_type === 'wholesale' ? 'btn-primary text-white' : 'btn-outline-secondary bg-white text-dark'"
+                @click="toggleCustomerPriceType"
+                :title="$t('Click to toggle price nature between Retail & Wholesale for this sale')"
+              >
+                <i class="fas" :class="client.customer_type === 'wholesale' ? 'fa-boxes text-warning' : 'fa-user-tag text-primary'"></i>
+                <span>{{ client.customer_type === 'wholesale' ? $t('Wholesale Customer (পাইকারি)') : $t('Retail Customer (খুচরা)') }}</span>
+                <i class="fas fa-sync-alt ms-1 text-muted" style="font-size: 9px;"></i>
+              </button>
               <small class="text-muted font-monospace"><i class="fas fa-phone-alt theme-icon me-1"></i>{{ client.mobile }}</small>
               <small class="text-muted" v-if="client.address && client.address !== 'N/A'">({{ client.address }})</small>
             </div>
@@ -80,14 +122,13 @@
           <div v-else-if="showNewClientForm" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 bg-warning bg-opacity-10 p-1 px-2 rounded border border-warning">
             <span class="small fw-bold text-dark text-nowrap"><i class="fas fa-user-plus me-1 text-warning"></i>{{ $t('New') }}:</span>
             <input
+              ref="newClientMobileInput"
               type="text"
-              class="form-control form-control-sm font-monospace fw-bold client-input bg-light"
+              class="form-control form-control-sm font-monospace fw-bold client-input"
               :placeholder="$t('Mobile') + ' *'"
               v-model="newClient.mobile"
               maxlength="11"
-              readonly
-              style="max-width: 125px; cursor: not-allowed;"
-              :title="$t('Mobile number cannot be changed')"
+              style="max-width: 125px;"
             >
             <input
               ref="newClientNameInput"
@@ -98,13 +139,22 @@
               @keyup.enter="createQuickCustomer"
               style="max-width: 150px;"
             >
+            <select
+              class="form-select form-select-sm client-input"
+              v-model="newClient.customer_type"
+              style="max-width: 130px;"
+              :title="$t('Customer Type')"
+            >
+              <option value="retail">{{ $t('Retail') }}</option>
+              <option value="wholesale">{{ $t('Wholesale') }}</option>
+            </select>
             <input
               type="text"
               class="form-control form-control-sm client-input flex-grow-1"
               :placeholder="$t('Address / Location (optional)')"
               v-model="newClient.address"
               @keyup.enter="createQuickCustomer"
-              style="min-width: 180px; max-width: 300px;"
+              style="min-width: 160px; max-width: 260px;"
             >
             <button type="button" class="btn client-save-btn text-nowrap" @click="createQuickCustomer" :title="$t('Save Client (Press Enter / Ctrl+Enter)')">
               <i class="fas fa-save me-1"></i>{{ $t('Save') }} <small class="text-white-50 ms-1">[Enter]</small>
@@ -162,7 +212,7 @@
               <div v-if="searchResults.length > 0" class="position-absolute w-100 bg-white border rounded shadow-lg mt-1 search-dropdown" style="max-height: 320px; overflow-y: auto; z-index: 9999;">
                 <div
                   v-for="(item, idx) in searchResults"
-                  :key="item.id"
+                  :key="'search_opt_' + (item.id || idx) + '_' + idx"
                   :id="'search-item-' + idx"
                   class="p-2 border-bottom cursor-pointer d-flex align-items-center justify-content-between transition-all"
                   :class="{ 'active-search-row': selectedSearchIndex === idx, 'hover-bg-light': selectedSearchIndex !== idx }"
@@ -177,6 +227,14 @@
                     </span>
                   </div>
                   <div class="d-flex align-items-center gap-2">
+                    <div class="text-end me-2">
+                      <div class="fw-bold font-monospace fs-6" :class="selectedSearchIndex === idx ? 'text-white' : 'text-success'">
+                        {{ $t('Tk.') }} {{ $bnNum(formatPrice(getItemPrice(item))) }}
+                      </div>
+                      <span class="badge" :class="selectedSearchIndex === idx ? 'bg-white text-dark' : (effectivePriceNature === 'wholesale' ? 'bg-primary' : 'bg-secondary')" style="font-size: 10px;">
+                        {{ effectivePriceNature === 'wholesale' ? $t('Wholesale') : $t('Retail') }}
+                      </span>
+                    </div>
                     <span class="small font-monospace" :class="selectedSearchIndex === idx ? 'text-white-50' : 'text-muted'" style="font-size: 11px;">[{{ $t('Enter to Select') }}]</span>
                     <button type="button" class="btn btn-xs" :class="selectedSearchIndex === idx ? 'btn-light fw-bold text-dark' : 'btn-primary'">
                       {{ $t('Select Item') }}
@@ -201,8 +259,8 @@
                   <th style="width: 5%;" class="text-center">{{ $t('Act') }}</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr v-for="(cItem, idx) in cart" :key="idx">
+              <tbody v-if="cart.length > 0">
+                <tr v-for="(cItem, idx) in cart" :key="'cart_row_' + (cItem.item_id || 0) + '_' + (cItem.color_id || 0) + '_' + (cItem.size_id || 0) + '_' + idx">
                   <td>
                     <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" :title="cItem.title">{{ cItem.title }}</div>
                     <small class="text-muted font-monospace" style="font-size: 11px;">{{ cItem.barcode }}</small>
@@ -213,13 +271,45 @@
                     <span v-if="!cItem.color_title && !cItem.size_title" class="text-muted small">{{ $t('Standard') }}</span>
                   </td>
                   <td v-if="isElectronicsShop">
-                    <input type="text" class="form-control form-control-sm font-monospace p-1" style="max-width: 110px; font-size: 11px;" v-model="cItem.serial_no" :placeholder="$t('Optional')">
+                    <input 
+                      type="text" 
+                      class="form-control form-control-sm font-monospace p-1" 
+                      style="max-width: 130px; font-size: 11px;" 
+                      v-model="cItem.serial_no" 
+                      @input="onCartItemSerialChange(cItem)"
+                      :placeholder="$t('Serial (comma separated)')"
+                    >
+                    <div class="text-primary font-monospace mt-0.5" v-show="getSerialsCount(cItem.serial_no) > 0" style="font-size: 10px;">
+                      <i class="fas fa-hashtag me-0.5"></i>{{ getSerialsCount(cItem.serial_no) }} {{ $t('Serials') }}
+                    </div>
                   </td>
                   <td class="text-center">
-                    <input type="number" min="1" class="form-control form-control-sm text-center fw-bold p-1 mx-auto" style="max-width: 60px; font-size: 13px;" v-model.number="cItem.qty">
+                    <input 
+                      type="number" 
+                      min="1" 
+                      class="form-control form-control-sm text-center fw-bold p-1 mx-auto" 
+                      style="max-width: 60px; font-size: 13px;" 
+                      v-model.number="cItem.qty"
+                      @input="onCartItemQtyChange(cItem)"
+                    >
                   </td>
                   <td class="text-end font-monospace">
-                    <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace p-1 ms-auto" style="max-width: 80px; font-size: 13px;" v-model.number="cItem.rate">
+                    <div v-show="cItem.discount_amount > 0" class="mb-1">
+                      <small class="text-muted text-decoration-line-through d-block" style="font-size: 11px;">
+                        {{ $t('Tk.') }} {{ $bnNum(formatPrice(cItem.base_rate)) }}
+                      </small>
+                      <span class="badge bg-danger bg-opacity-10 text-danger border border-danger p-0 px-1 font-monospace" style="font-size: 10px;" :title="cItem.discount_title">
+                        <i class="fas fa-tag me-1"></i>-{{ $t('Tk.') }} {{ $bnNum(formatPrice(cItem.discount_amount)) }}
+                        <span v-if="cItem.discount_display">({{ cItem.discount_display }})</span>
+                      </span>
+                    </div>
+                    <!-- Rate input with wholesale/retail indicator badge underneath -->
+                    <div class="d-flex flex-column align-items-end">
+                      <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace p-1" style="max-width: 80px; font-size: 13px;" v-model.number="cItem.rate">
+                      <span class="badge mt-0.5" :class="effectivePriceNature === 'wholesale' ? 'bg-primary bg-opacity-10 text-primary border border-primary' : 'bg-secondary bg-opacity-10 text-secondary border border-secondary'" style="font-size: 9px;" :title="effectivePriceNature === 'wholesale' ? 'Wholesale Price applied' : 'Retail Price applied'">
+                        {{ effectivePriceNature === 'wholesale' ? $t('Wholesale') : $t('Retail') }}
+                      </span>
+                    </div>
                   </td>
                   <td class="text-end font-monospace fw-bold fs-6" style="color: rgb(17 44 70);">
                     {{ $bnNum(formatPrice(cItem.qty * cItem.rate)) }}
@@ -230,8 +320,10 @@
                     </button>
                   </td>
                 </tr>
-                <tr v-if="cart.length === 0">
-                  <td colspan="7" class="text-center py-4 text-muted">
+              </tbody>
+              <tbody v-else>
+                <tr>
+                  <td :colspan="isElectronicsShop ? 7 : 6" class="text-center py-4 text-muted">
                     <i class="fas fa-shopping-basket fa-2x mb-2 text-secondary opacity-50"></i>
                     <p class="mb-0 small">{{ $t('Cart is empty. Search items above or scan barcode (F2) to add products.') }}</p>
                   </td>
@@ -561,45 +653,86 @@
               <div class="col-12">
                 <div class="p-2 border rounded d-flex align-items-center justify-content-between" :class="modalSelection.available_stock > 0 ? 'bg-white' : 'bg-danger bg-opacity-10 border-danger'">
                   <span class="small font-monospace">{{ $t('Available Stock:') }} <strong :class="modalSelection.available_stock > 0 ? 'text-success fw-bold' : 'text-danger fw-bold'">{{ $bnNum(modalSelection.available_stock) }} {{ modalSelection.available_stock <= 0 ? '(' + $t('Out of Stock') + ')' : '' }}</strong></span>
-                  <span class="small font-monospace">{{ $t('Selling Price:') }} <strong class="text-success">{{ $t('Tk.') }} {{ $bnNum(formatPrice(modalSelection.rate)) }}</strong></span>
+                  <div class="text-end">
+                    <div v-if="modalSelection.discount_amount > 0">
+                      <small class="text-muted text-decoration-line-through me-1">{{ $t('Tk.') }} {{ $bnNum(formatPrice(modalSelection.base_rate)) }}</small>
+                      <span class="badge bg-danger bg-opacity-10 text-danger border border-danger font-monospace px-1 py-0 me-1" style="font-size: 10px;">-{{ $t('Tk.') }} {{ $bnNum(formatPrice(modalSelection.discount_amount)) }}</span>
+                    </div>
+                    <span class="small font-monospace">
+                      <span class="badge me-1" :class="effectivePriceNature === 'wholesale' ? 'bg-primary' : 'bg-secondary'" style="font-size: 10px;">
+                        {{ effectivePriceNature === 'wholesale' ? $t('Wholesale Price:') : $t('Retail Price:') }}
+                      </span>
+                      <strong class="text-success">{{ $t('Tk.') }} {{ $bnNum(formatPrice(modalSelection.rate)) }}</strong>
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <!-- Serial No (For items with purchase serials or serialized items) -->
               <div class="col-12" v-if="activeItem && (activeItem.has_purchase_serials || activeItem.is_serialized || isElectronicsShop)">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label class="form-label fw-bold small text-muted mb-0">{{ $t('Serial No') }}</label>
+                  <label class="form-label fw-bold small text-muted mb-0">
+                    {{ $t('Serial No / IMEI') }}
+                    <span class="badge bg-primary text-white ms-1 font-monospace" v-if="serialTags.length > 0">
+                      {{ $bnNum(serialTags.length) }} {{ $t('selected') }} (Qty: {{ $bnNum(modalSelection.qty) }})
+                    </span>
+                  </label>
                   <span class="badge bg-info text-dark" v-if="modalAvailableSerials && modalAvailableSerials.length > 0">
                     {{ $bnNum(modalAvailableSerials.length) }} {{ $t('available in stock') }}
                   </span>
                 </div>
+
+                <!-- Selected Serial Tags Badges -->
+                <div class="d-flex flex-wrap gap-1 mb-1.5 p-1 bg-light border rounded align-items-center" v-if="serialTags.length > 0" style="max-height: 80px; overflow-y: auto;">
+                  <span v-for="(stag, stIdx) in serialTags" :key="'stag_' + stIdx + '_' + stag" class="badge bg-primary text-white font-monospace d-inline-flex align-items-center gap-1 py-1 px-2" style="font-size: 11px;">
+                    <span>{{ stag }}</span>
+                    <i class="fas fa-times cursor-pointer ms-1 text-white-50 hover-text-white" @click.stop="removeSerialTag(stIdx)" :title="$t('Remove')"></i>
+                  </span>
+                  <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 ms-auto font-monospace" style="font-size: 10px;" @click="clearAllSerialTags" :title="$t('Clear All')">
+                    <i class="fas fa-trash-alt me-1"></i>{{ $t('Clear') }}
+                  </button>
+                </div>
+
                 <div class="input-group input-group-sm">
                   <input
                     ref="modalSerialInput"
                     type="text"
                     list="availableSerialsDatalist"
                     class="form-control form-control-sm font-monospace"
-                    :placeholder="$t('Enter or select Serial No')"
-                    v-model="modalSelection.serial_no"
-                    @keydown.enter.prevent="focusNextModalInput('qty')"
+                    :placeholder="$t('Type or scan serial (Comma / Enter to add multiple)')"
+                    v-model="modalSerialTyped"
+                    @keydown="onModalSerialKeydown"
+                    @blur="handleModalSerialEnter"
                   >
+                  <button type="button" class="btn btn-outline-primary" @click="handleModalSerialEnter" :title="$t('Add Serial')">
+                    <i class="fas fa-plus"></i>
+                  </button>
                   <datalist id="availableSerialsDatalist">
-                    <option v-for="sn in modalAvailableSerials" :key="sn" :value="sn">{{ sn }}</option>
+                    <option v-for="(sn, snIdx) in modalAvailableSerials" :key="'avail_sn_opt_' + snIdx" :value="sn">{{ sn }}</option>
                   </datalist>
                 </div>
-                <!-- Quick select badges for available serials -->
-                <div class="mt-1 d-flex flex-wrap gap-1" v-if="modalAvailableSerials && modalAvailableSerials.length > 0" style="max-height: 80px; overflow-y: auto;">
-                  <button
-                    type="button"
-                    v-for="sn in modalAvailableSerials"
-                    :key="sn"
-                    class="btn btn-xs py-0 px-1 font-monospace"
-                    :class="modalSelection.serial_no === sn ? 'btn-primary' : 'btn-outline-secondary'"
-                    style="font-size: 11px;"
-                    @click="modalSelection.serial_no = sn"
-                  >
-                    {{ sn }}
-                  </button>
+
+                <!-- Quick select badges for available stock serials -->
+                <div class="mt-1" v-if="modalAvailableSerials && modalAvailableSerials.length > 0">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <small class="text-muted fw-bold" style="font-size: 10.5px;">{{ $t('Click stock serial to select/deselect:') }}</small>
+                    <button type="button" class="btn btn-xs btn-link p-0 text-primary fw-bold text-decoration-none" style="font-size: 10.5px;" @click="selectAllAvailableSerials">
+                      {{ $t('Select All Available') }}
+                    </button>
+                  </div>
+                  <div class="d-flex flex-wrap gap-1 p-1 bg-white border rounded" style="max-height: 90px; overflow-y: auto;">
+                    <button
+                      type="button"
+                      v-for="(sn, snIdx) in modalAvailableSerials"
+                      :key="'avail_sn_btn_' + snIdx + '_' + sn"
+                      class="btn btn-xs py-0.5 px-1.5 font-monospace transition-all"
+                      :class="serialTags.includes(sn) ? 'btn-primary shadow-sm fw-bold' : 'btn-outline-secondary'"
+                      style="font-size: 11px;"
+                      @click="toggleSerialTag(sn)"
+                    >
+                      <i class="fas fa-check me-1" v-if="serialTags.includes(sn)"></i>{{ sn }}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -874,310 +1007,32 @@
         </div>
       </div>
 
-      <!-- 3. 🖨️ Normal Printer A5 Layout (Compact Half-Page Invoice) -->
-      <div v-else-if="effectivePrintFormat === 'normal-a5'" class="normal-a5-invoice" style="width: 100%; max-width: 140mm; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; line-height: 1.3; color: #111; margin: 0 auto; padding: 5px;">
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #112C47; padding-bottom: 8px; margin-bottom: 8px;">
-          <div>
-            <h2 style="font-size: 17px; font-weight: bold; margin: 0; color: #112C47;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
-            <div style="font-size: 10px; color: #444;">{{ $root.site?.address || '' }}</div>
-            <div style="font-size: 10px; color: #444;">Phone: {{ $root.site?.mobile1 || '' }} | Email: {{ $root.site?.contact_email || '' }}</div>
-            <div style="font-size: 9.5px; color: #555;" v-if="$root.site?.vat_no">VAT/BIN: {{ $root.site?.vat_no }}</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="display: inline-block; background: #112C47; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 3px; letter-spacing: 0.5px;">
-              SALES INVOICE
-            </div>
-            <div style="font-size: 10.5px; font-weight: bold; margin-top: 4px; font-family: monospace;">#{{ completedInvoice.invoice_no }}</div>
-            <div style="font-size: 9.5px; color: #555;">Date: {{ completedInvoice.invoice_date }}</div>
-          </div>
-        </div>
-
-        <!-- Bill To / Customer Details -->
-        <div style="display: flex; justify-content: space-between; background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; font-size: 10px;">
-          <div>
-            <strong>Bill To:</strong>
-            <div style="font-weight: 600; font-size: 11px;">{{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
-            <div v-if="completedInvoice.client?.mobile">Mobile: {{ completedInvoice.client.mobile }}</div>
-            <div v-if="completedInvoice.client?.address">Address: {{ completedInvoice.client.address }}</div>
-          </div>
-          <div style="text-align: right;">
-            <div><strong>Payment Method:</strong> {{ completedInvoice.payment_method || 'Cash' }}</div>
-            <div v-if="completedInvoice.trxid"><strong>TrxID:</strong> {{ completedInvoice.trxid }}</div>
-            <div><strong>Status:</strong> <span style="font-weight: bold;" :style="{ color: completedInvoice.amount <= completedInvoice.paid_amount ? '#166534' : '#dc2626' }">{{ completedInvoice.amount <= completedInvoice.paid_amount ? 'PAID' : (completedInvoice.paid_amount > 0 ? 'PARTIAL DUE' : 'DUE / BOKEYA') }}</span></div>
-          </div>
-        </div>
-
-        <!-- Items Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
-          <thead>
-            <tr style="background: #112C47; color: #fff;">
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: center; width: 25px;">{{ $t('#') }}</th>
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: left;">{{ $t('Item Description & Details') }}</th>
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: center; width: 35px;">{{ $t('Qty') }}</th>
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: right; width: 55px;">{{ $t('Rate') }}</th>
-              <th style="border: 1px solid #112C47; padding: 4px 6px; text-align: right; width: 65px;">{{ $t('Total') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(d, idx) in completedInvoice.details" :key="d.id">
-              <td style="border: 1px solid #cbd5e1; padding: 4px; text-align: center;">{{ idx + 1 }}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 4px 6px;">
-                <div style="font-weight: 600;">{{ d.item ? d.item.title : 'Item' }}</div>
-                <div style="font-size: 9px; color: #475569;" v-if="d.color || d.size">
-                  Variant: {{ d.color ? d.color.title : '' }} {{ d.size ? '/' + d.size.title : '' }}
-                </div>
-                <div style="font-size: 9px; color: #0284c7; font-family: monospace;" v-if="d.serial_no">
-                  S/N: {{ d.serial_no }}
-                </div>
-                <div style="font-size: 9px; color: #16a34a; font-weight: 600;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
-                  {{ d.item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}: {{ d.item.warranty_period }}
-                </div>
-              </td>
-              <td style="border: 1px solid #cbd5e1; padding: 4px; text-align: center; font-weight: bold;">{{ d.qty }}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: right; font-family: monospace;">{{ formatPrice(d.amount) }}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: right; font-weight: bold; font-family: monospace;">{{ formatPrice(d.total_amount) }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Summary & Totals -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; font-size: 10px;">
-          <!-- Left Notes & Loyalty Points & Terms -->
-          <div style="width: 52%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;">
-            <div v-if="completedInvoice.coupon_enabled" style="margin-bottom: 4px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
-              <strong style="color: #d97706;">Loyalty Points:</strong>
-              Earned: <strong>+{{ completedInvoice.points_earned }}</strong> | Balance: <strong>{{ formatPrice(completedInvoice.points_balance) }} Pts</strong>
-            </div>
-
-            <!-- Dynamic Terms & Conditions in A5 -->
-            <div v-if="completedInvoice.terms_conditions && completedInvoice.terms_conditions.length > 0" style="margin-bottom: 4px;">
-              <div style="font-weight: bold; color: #334155; font-size: 9.5px; margin-bottom: 2px;">Terms & Conditions:</div>
-              <div style="font-size: 8.5px; color: #64748b; line-height: 1.25;">
-                <div v-for="(tc, tcIdx) in completedInvoice.terms_conditions" :key="tcIdx">
-                  {{ tcIdx + 1 }}. {{ tc }}
-                </div>
-              </div>
-            </div>
-            <div v-else style="font-size: 8.5px; color: #64748b; line-height: 1.2;">
-              <div>* Goods once sold cannot be returned without original cash memo within 7 days.</div>
-              <div>* Physical and liquid damage will void any item warranty.</div>
-            </div>
-
-            <!-- Organization Membership Badges in A5 -->
-            <div v-if="siteMembershipsForInvoice && siteMembershipsForInvoice.length > 0" style="margin-top: 6px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
-              <div style="font-size: 8px; font-weight: bold; color: #475569; margin-bottom: 2px;">Affiliated Memberships:</div>
-              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <div v-for="(m, mIdx) in siteMembershipsForInvoice" :key="mIdx" style="display: inline-flex; align-items: center; gap: 4px; font-size: 8px; color: #334155;">
-                  <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo" style="max-height: 16px; max-width: 24px; object-fit: contain;" />
-                  <span>{{ m.org_name }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Calculation Box -->
-          <div style="width: 44%;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-              <tbody>
-                <tr>
-                  <td style="padding: 2px 4px;">Subtotal:</td>
-                  <td style="padding: 2px 4px; text-align: right; font-family: monospace;">৳ {{ formatPrice(completedInvoice.original_amount) }}</td>
-                </tr>
-                <tr v-if="completedInvoice.discount > 0">
-                  <td style="padding: 2px 4px; color: #dc2626;">Discount:</td>
-                  <td style="padding: 2px 4px; text-align: right; color: #dc2626; font-family: monospace;">- ৳ {{ formatPrice(completedInvoice.discount) }}</td>
-                </tr>
-                <tr v-if="completedInvoice.vat > 0">
-                  <td style="padding: 2px 4px;">VAT / Tax:</td>
-                  <td style="padding: 2px 4px; text-align: right; font-family: monospace;">+ ৳ {{ formatPrice(completedInvoice.vat) }}</td>
-                </tr>
-                <tr style="border-top: 1px solid #112C47; font-weight: bold; background: #f1f5f9; font-size: 11px;">
-                  <td style="padding: 4px;">Net Payable:</td>
-                  <td style="padding: 4px; text-align: right; color: #112C47; font-family: monospace;">৳ {{ formatPrice(completedInvoice.amount) }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 2px 4px;">Paid Amount:</td>
-                  <td style="padding: 2px 4px; text-align: right; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(completedInvoice.paid_amount) }}</td>
-                </tr>
-                <tr v-if="(completedInvoice.amount - completedInvoice.paid_amount) > 0">
-                  <td style="padding: 2px 4px; color: #dc2626; font-weight: bold;">Due Amount:</td>
-                  <td style="padding: 2px 4px; text-align: right; color: #dc2626; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(completedInvoice.amount - completedInvoice.paid_amount) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div style="display: flex; justify-content: space-between; margin-top: 25px; padding-top: 5px; font-size: 9px; color: #333;">
-          <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Customer's Signature</div>
-          <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Authorized Signature & Seal</div>
-        </div>
-      </div>
-
-      <!-- 4. 🖨️ Normal Printer A4 Layout (Full Professional A4 Corporate Invoice) -->
-      <div v-else class="normal-a4-invoice" style="width: 100%; max-width: 190mm; font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; line-height: 1.4; color: #111; margin: 0 auto; padding: 10px;">
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #112C47; padding-bottom: 12px; margin-bottom: 12px;">
-          <div>
-            <h1 style="font-size: 22px; font-weight: bold; margin: 0 0 4px 0; color: #112C47; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h1>
-            <div style="font-size: 11px; color: #475569; max-width: 380px;">{{ $root.site?.address || '' }}</div>
-            <div style="font-size: 11px; color: #475569; margin-top: 2px;">
-              <span><strong>Mobile:</strong> {{ $root.site?.mobile1 || '' }} <span v-if="$root.site?.mobile2">/ {{ $root.site?.mobile2 }}</span></span>
-              <span v-if="$root.site?.contact_email" style="margin-left: 8px;"><strong>Email:</strong> {{ $root.site?.contact_email }}</span>
-            </div>
-            <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;" v-if="$root.site?.vat_no || $root.site?.hs_code">
-              <span v-if="$root.site?.vat_no"><strong>VAT / BIN:</strong> {{ $root.site?.vat_no }}</span>
-              <span v-if="$root.site?.hs_code" style="margin-left: 8px;"><strong>HS Code:</strong> {{ $root.site?.hs_code }}</span>
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <div style="display: inline-block; background: #112C47; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 14px; border-radius: 4px; letter-spacing: 1px;">
-              RETAIL SALES INVOICE
-            </div>
-            <div style="font-size: 14px; font-weight: bold; margin-top: 6px; font-family: monospace; color: #112C47;">#{{ completedInvoice.invoice_no }}</div>
-            <div style="font-size: 11px; color: #64748b;"><strong>Invoice Date:</strong> {{ completedInvoice.invoice_date }}</div>
-            <div style="font-size: 11px; color: #64748b;"><strong>Payment Mode:</strong> {{ completedInvoice.payment_method || 'Cash' }}</div>
-          </div>
-        </div>
-
-        <!-- Customer & Bill To Box -->
-        <div style="display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px;">
-          <div>
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Bill To:</div>
-            <div style="font-size: 13px; font-weight: bold; color: #0f172a;">{{ completedInvoice.client ? completedInvoice.client.name : 'Walk-in Customer' }}</div>
-            <div style="font-size: 11px; color: #475569;" v-if="completedInvoice.client?.mobile"><strong>Mobile:</strong> {{ completedInvoice.client.mobile }}</div>
-            <div style="font-size: 11px; color: #475569;" v-if="completedInvoice.client?.address"><strong>Address:</strong> {{ completedInvoice.client.address }}</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 3px;">Transaction Status:</div>
-            <span style="display: inline-block; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px;" :style="{ background: completedInvoice.amount <= completedInvoice.paid_amount ? '#dcfce7' : '#fee2e2', color: completedInvoice.amount <= completedInvoice.paid_amount ? '#166534' : '#dc2626', border: completedInvoice.amount <= completedInvoice.paid_amount ? '1px solid #bbf7d0' : '1px solid #fecaca' }">
-              {{ completedInvoice.amount <= completedInvoice.paid_amount ? 'PAID IN FULL' : (completedInvoice.paid_amount > 0 ? 'PARTIALLY PAID' : 'DUE / UNPAID') }}
-            </span>
-            <div style="font-size: 11px; color: #475569; margin-top: 4px;" v-if="completedInvoice.trxid"><strong>TrxID:</strong> {{ completedInvoice.trxid }}</div>
-          </div>
-        </div>
-
-        <!-- Line Items Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px;">
-          <thead>
-            <tr style="background: #112C47; color: #fff;">
-              <th style="border: 1px solid #112C47; padding: 6px 8px; text-align: center; width: 30px;">{{ $t('#') }}</th>
-              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: left;">{{ $t('Item Description & Specifications') }}</th>
-              <th style="border: 1px solid #112C47; padding: 6px 8px; text-align: center; width: 50px;">{{ $t('Qty') }}</th>
-              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: right; width: 85px;">{{ $t('Unit Price') }}</th>
-              <th style="border: 1px solid #112C47; padding: 6px 10px; text-align: right; width: 95px;">{{ $t('Total Amount') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(d, idx) in completedInvoice.details" :key="d.id">
-              <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #64748b;">{{ idx + 1 }}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 6px 10px;">
-                <div style="font-weight: 600; font-size: 12px; color: #0f172a;">{{ d.item ? d.item.title : 'Item' }}</div>
-                <div style="font-size: 10.5px; color: #475569;" v-if="d.color || d.size">
-                  <span v-if="d.color">Color: <strong>{{ d.color.title }}</strong></span>
-                  <span v-if="d.size" style="margin-left: 8px;">Size: <strong>{{ d.size.title }}</strong></span>
-                </div>
-                <div style="font-size: 10px; color: #0284c7; font-family: monospace; margin-top: 1px;" v-if="d.serial_no">
-                  Serial Number: <strong>{{ d.serial_no }}</strong>
-                </div>
-                <div style="font-size: 10.5px; color: #16a34a; font-weight: 600; margin-top: 1px;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
-                  <i class="fas fa-shield-alt"></i> Coverage: {{ d.item.warranty_type === 'guarantee' ? 'Replacement Guarantee' : 'Official Warranty' }} ({{ d.item.warranty_period }})
-                </div>
-              </td>
-              <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-weight: bold; font-size: 12px;">{{ d.qty }}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 6px 10px; text-align: right; font-family: monospace;">{{ formatPrice(d.amount) }}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 6px 10px; text-align: right; font-weight: bold; font-family: monospace; font-size: 12px;">{{ formatPrice(d.total_amount) }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Summary & Banking / Terms Section -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-          <!-- Left: Terms & Customer Points -->
-          <div style="width: 54%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; font-size: 10.5px;">
-            <div v-if="completedInvoice.coupon_enabled" style="margin-bottom: 8px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;">
-              <strong style="color: #d97706;"><i class="fas fa-gift me-1"></i> Customer Loyalty Rewards:</strong>
-              <div style="margin-top: 2px;">
-                <span>Points Earned: <strong class="text-success">+{{ completedInvoice.points_earned }} Pts</strong></span>
-                <span v-if="completedInvoice.points_redeemed > 0" style="margin-left: 10px;">Redeemed: <strong class="text-danger">-{{ completedInvoice.points_redeemed }} Pts</strong></span>
-                <span style="margin-left: 10px;">Available Balance: <strong>{{ formatPrice(completedInvoice.points_balance) }} Pts</strong></span>
-              </div>
-            </div>
-
-            <!-- Dynamic Terms & Conditions in A4 -->
-            <div style="font-weight: bold; color: #334155; margin-bottom: 3px;">Terms & Conditions:</div>
-            <div style="color: #64748b; font-size: 9.5px; line-height: 1.35;" v-if="completedInvoice.terms_conditions && completedInvoice.terms_conditions.length > 0">
-              <div v-for="(tc, tcIdx) in completedInvoice.terms_conditions" :key="tcIdx">
-                {{ tcIdx + 1 }}. {{ tc }}
-              </div>
-            </div>
-            <div style="color: #64748b; font-size: 9.5px; line-height: 1.35;" v-else>
-              <div>1. Please preserve this invoice for any warranty claims and exchange within 7 days.</div>
-              <div>2. Warranty does not cover physical damage, burn, liquid ingress, or broken warranty seals.</div>
-              <div>3. Disputed items will be inspected according to company service policy.</div>
-            </div>
-
-            <!-- Organization Membership Badges in A4 -->
-            <div v-if="siteMembershipsForInvoice && siteMembershipsForInvoice.length > 0" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
-              <div style="font-size: 9.5px; font-weight: bold; color: #334155; margin-bottom: 4px;">Affiliated Memberships & Associations:</div>
-              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <div v-for="(m, mIdx) in siteMembershipsForInvoice" :key="mIdx" style="display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 9.5px; font-weight: 500;">
-                  <img v-if="m.logo || m.logo_url" :src="m.logo_url || m.logo" style="max-height: 20px; max-width: 30px; object-fit: contain;" />
-                  <span>{{ m.org_name }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="$root.site?.bank_name" style="margin-top: 8px; font-size: 9.5px; color: #475569; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
-              <strong>Bank Info:</strong> {{ $root.site?.bank_name }} | A/C: {{ $root.site?.account_number }} | Branch: {{ $root.site?.branch_name }}
-            </div>
-          </div>
-
-          <!-- Right: Totals Table -->
-          <div style="width: 42%;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
-              <tbody>
-                <tr>
-                  <td style="padding: 4px 6px; color: #475569;">Gross Subtotal:</td>
-                  <td style="padding: 4px 6px; text-align: right; font-family: monospace;">৳ {{ formatPrice(completedInvoice.original_amount) }}</td>
-                </tr>
-                <tr v-if="completedInvoice.discount > 0">
-                  <td style="padding: 4px 6px; color: #dc2626;">Special Discount:</td>
-                  <td style="padding: 4px 6px; text-align: right; color: #dc2626; font-family: monospace;">- ৳ {{ formatPrice(completedInvoice.discount) }}</td>
-                </tr>
-                <tr v-if="completedInvoice.vat > 0">
-                  <td style="padding: 4px 6px; color: #475569;">VAT / Tax:</td>
-                  <td style="padding: 4px 6px; text-align: right; font-family: monospace;">+ ৳ {{ formatPrice(completedInvoice.vat) }}</td>
-                </tr>
-                <tr style="border-top: 2px solid #112C47; font-weight: bold; background: #f1f5f9; font-size: 13px;">
-                  <td style="padding: 6px 8px; color: #112C47;">TOTAL PAYABLE:</td>
-                  <td style="padding: 6px 8px; text-align: right; color: #112C47; font-family: monospace;">৳ {{ formatPrice(completedInvoice.amount) }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 6px; color: #166534; font-weight: bold;">Paid Amount:</td>
-                  <td style="padding: 4px 6px; text-align: right; color: #166534; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(completedInvoice.paid_amount) }}</td>
-                </tr>
-                <tr v-if="(completedInvoice.paid_amount - completedInvoice.amount) > 0">
-                  <td style="padding: 4px 6px; color: #475569;">Change Return:</td>
-                  <td style="padding: 4px 6px; text-align: right; font-family: monospace;">৳ {{ formatPrice(completedInvoice.paid_amount - completedInvoice.amount) }}</td>
-                </tr>
-                <tr v-if="(completedInvoice.amount - completedInvoice.paid_amount) > 0">
-                  <td style="padding: 4px 6px; color: #dc2626; font-weight: bold;">Balance Due:</td>
-                  <td style="padding: 4px 6px; text-align: right; color: #dc2626; font-weight: bold; font-family: monospace;">৳ {{ formatPrice(completedInvoice.amount - completedInvoice.paid_amount) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Formal Signature Blocks -->
-        <div style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 8px; font-size: 10.5px; color: #334155;">
-          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Customer's Acceptance</div>
-          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Prepared By (Cashier)</div>
-          <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Authorized Signature & Seal</div>
-        </div>
+      <!-- 3. 🖨️ Normal Printer Invoice (Dynamic Layouts: Layout 1 Classic, Layout 2 Modern, Layout 3 Compact) -->
+      <div v-else key="pos-print-normal" class="normal-invoice-container" :class="effectivePrintFormat === 'normal-a5' ? 'normal-a5-wrapper' : 'normal-a4-wrapper'" style="max-width: 900px; margin: 0 auto;">
+        <invoice-layout-1 
+          v-if="selectedInvoiceLayout === 'layout1'"
+          :data="completedInvoice"
+          :site-setting="siteSetting"
+          :show-header-info="true"
+        />
+        <invoice-layout-2 
+          v-else-if="selectedInvoiceLayout === 'layout2'"
+          :data="completedInvoice"
+          :site-setting="siteSetting"
+          :show-header-info="true"
+        />
+        <invoice-layout-3 
+          v-else-if="selectedInvoiceLayout === 'layout3'"
+          :data="completedInvoice"
+          :site-setting="siteSetting"
+          :show-header-info="true"
+        />
+        <invoice-layout-1 
+          v-else
+          :data="completedInvoice"
+          :site-setting="siteSetting"
+          :show-header-info="true"
+        />
       </div>
     </div>
 
@@ -1204,16 +1059,28 @@
 
 <script>
 import axios from "axios";
+import InvoiceLayout1 from '../invoice/components/InvoiceLayout1.vue';
+import InvoiceLayout2 from '../invoice/components/InvoiceLayout2.vue';
+import InvoiceLayout3 from '../invoice/components/InvoiceLayout3.vue';
 
 export default {
+  components: {
+    InvoiceLayout1,
+    InvoiceLayout2,
+    InvoiceLayout3,
+  },
   data() {
     return {
       showHelpModal: false,
       posHelpContent: '',
       currentDate: new Date().toLocaleDateString('en-GB'),
-      client: { id: null, name: '', mobile: '', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 },
+      client: { id: null, name: '', mobile: '', customer_type: 'retail', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 },
+      customerSearchTerm: '',
+      customerSearchResults: [],
+      selectedCustomerIndex: -1,
       showNewClientForm: false,
-      newClient: { name: '', mobile: '', address: '' },
+      newClient: { name: '', mobile: '', customer_type: 'retail', address: '' },
+      activeDiscounts: [],
 
       searchTerm: '',
       searchResults: [],
@@ -1224,11 +1091,17 @@ export default {
       showItemModal: false,
       activeItem: null,
       modalAvailableSerials: [],
+      serialTags: [],
+      modalSerialTyped: '',
       modalSelection: {
         color_id: null,
         size_id: null,
         serial_no: '',
         qty: 1,
+        base_rate: 0,
+        discount_amount: 0,
+        discount_title: '',
+        discount_display: '',
         rate: 0,
         available_stock: 0
       },
@@ -1384,6 +1257,18 @@ export default {
         return size === '60mm' ? 'thermal-60mm' : 'thermal-80mm';
       }
     },
+    siteSetting() {
+      return this.$root?.site || {};
+    },
+    selectedInvoiceLayout() {
+      const l = (this.$root.site?.invoice_layout || 'layout1').toString().toLowerCase();
+      if (l === 'layout2' || l === '2' || l === 'modern') return 'layout2';
+      if (l === 'layout3' || l === '3' || l === 'compact') return 'layout3';
+      return 'layout1';
+    },
+    effectivePriceNature() {
+      return this.getEffectivePriceNature();
+    },
   },
   watch: {
     cartSubtotal() {
@@ -1497,17 +1382,25 @@ export default {
       const printContents = document.getElementById('posInvoicePrintArea');
       if (!printContents) return;
 
+      let stylesHtml = "";
+      for (const node of [
+        ...document.querySelectorAll('link[rel="stylesheet"], style'),
+      ]) {
+        stylesHtml += node.outerHTML;
+      }
+
       const WinPrint = window.open('', '', 'left=0,top=0,width=850,height=900,toolbar=0,scrollbars=1,status=0');
       WinPrint.document.write(`<!DOCTYPE html>
       <html>
       <head>
         <title>Sales Invoice - ${invoiceNo}</title>
         <meta charset="utf-8">
+        ${stylesHtml}
         <style>
-          * { box-sizing: border-box; }
+          * { box-sizing: border-box !important; }
           ${pageStyles}
           @media print {
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           }
         </style>
       </head>
@@ -1523,34 +1416,252 @@ export default {
         WinPrint.print();
       }, 350);
     },
-    searchCustomer() {
-      if (!this.client.mobile || this.client.mobile.trim() === '') return;
-      const cleanMobile = this.client.mobile.trim();
-      if (!/^\d{11}$/.test(cleanMobile)) {
-        this.$toast('Please enter a valid 11-digit mobile number', 'warning');
+    loadActiveDiscounts() {
+      axios.get('pos/active-discounts')
+        .then(res => {
+          this.activeDiscounts = res.data || [];
+          this.recalculateCartPrices();
+        })
+        .catch(err => {
+          console.error('Failed to load active discounts:', err);
+        });
+    },
+    getEffectivePriceNature(customerType = null) {
+      const saleNature = (this.$root.site?.sale_nature || 'both').toLowerCase();
+      if (saleNature === 'retail') return 'retail';
+      if (saleNature === 'wholesale') return 'wholesale';
+      
+      const cType = (customerType || this.client?.customer_type || 'retail').toLowerCase();
+      return cType === 'wholesale' ? 'wholesale' : 'retail';
+    },
+    resolveItemPrice(item, colorId = null, sizeId = null, customerType = null) {
+      if (!item) return { basePrice: 0, priceNature: 'retail' };
+      const priceNature = this.getEffectivePriceNature(customerType);
+      const itemPrices = item.item_prices || item.itemPrices || [];
+      
+      let matchedPriceRow = null;
+      if (itemPrices.length > 0) {
+        matchedPriceRow = itemPrices.find(p => (p.color_id || null) == (colorId || null) && (p.size_id || null) == (sizeId || null));
+        if (!matchedPriceRow && (colorId === null && sizeId === null)) {
+          matchedPriceRow = itemPrices.find(p => p.color_id === null && p.size_id === null) || itemPrices[0];
+        }
+      }
+
+      let basePrice = 0;
+      if (matchedPriceRow) {
+        if (priceNature === 'wholesale') {
+          if (floatval(matchedPriceRow.wholesale_price) > 0) {
+            basePrice = floatval(matchedPriceRow.wholesale_price);
+          } else if (floatval(matchedPriceRow.whole_sale_price) > 0) {
+            basePrice = floatval(matchedPriceRow.whole_sale_price);
+          } else if (floatval(matchedPriceRow.retail_price) > 0) {
+            basePrice = floatval(matchedPriceRow.retail_price);
+          } else if (floatval(matchedPriceRow.selling_price) > 0) {
+            basePrice = floatval(matchedPriceRow.selling_price);
+          }
+        } else { // retail
+          if (floatval(matchedPriceRow.retail_price) > 0) {
+            basePrice = floatval(matchedPriceRow.retail_price);
+          } else if (floatval(matchedPriceRow.selling_price) > 0) {
+            basePrice = floatval(matchedPriceRow.selling_price);
+          } else if (floatval(matchedPriceRow.wholesale_price) > 0) {
+            basePrice = floatval(matchedPriceRow.wholesale_price);
+          } else if (floatval(matchedPriceRow.whole_sale_price) > 0) {
+            basePrice = floatval(matchedPriceRow.whole_sale_price);
+          }
+        }
+      }
+
+      if (basePrice <= 0) {
+        if (priceNature === 'wholesale') {
+          if (floatval(item.wholesale_price) > 0) {
+            basePrice = floatval(item.wholesale_price);
+          } else if (floatval(item.whole_sale_price) > 0) {
+            basePrice = floatval(item.whole_sale_price);
+          } else if (floatval(item.retail_price) > 0) {
+            basePrice = floatval(item.retail_price);
+          } else if (floatval(item.sale_price || item.selling_price || item.opening_rate || 0) > 0) {
+            basePrice = floatval(item.sale_price || item.selling_price || item.opening_rate || 0);
+          }
+        } else { // retail
+          if (floatval(item.retail_price) > 0) {
+            basePrice = floatval(item.retail_price);
+          } else if (floatval(item.sale_price || item.selling_price || item.opening_rate || 0) > 0) {
+            basePrice = floatval(item.sale_price || item.selling_price || item.opening_rate || 0);
+          } else if (floatval(item.wholesale_price) > 0) {
+            basePrice = floatval(item.wholesale_price);
+          } else if (floatval(item.whole_sale_price) > 0) {
+            basePrice = floatval(item.whole_sale_price);
+          }
+        }
+      }
+
+      return { basePrice, priceNature };
+    },
+    calculateItemDiscount(item, basePrice, priceNature = null) {
+      if (!item || floatval(basePrice) <= 0 || !this.activeDiscounts || this.activeDiscounts.length === 0) {
+        return { discountAmount: 0, finalRate: floatval(basePrice), discountObj: null, discountTitle: '', discountDisplay: '' };
+      }
+
+      const nature = priceNature || this.getEffectivePriceNature();
+      const today = new Date().toISOString().split('T')[0];
+
+      // Filter discounts applicable on date & nature
+      const validDiscounts = this.activeDiscounts.filter(d => {
+        if (d.status != 1 && d.status !== true) return false;
+        if (d.valid_from && d.valid_from > today) return false;
+        if (d.valid_to && d.valid_to < today) return false;
+        if (d.applicable_on && d.applicable_on !== 'both' && d.applicable_on !== nature) return false;
+        return true;
+      });
+
+      // 1. Priority: Item-wise discount
+      let matchedDiscount = validDiscounts.find(d => d.scope === 'item' && d.item_id == item.id);
+
+      // 2. Fallback: Category-wise discount
+      if (!matchedDiscount && item.category_id) {
+        matchedDiscount = validDiscounts.find(d => d.scope === 'category' && d.category_id == item.category_id);
+      }
+
+      if (!matchedDiscount) {
+        return { discountAmount: 0, finalRate: floatval(basePrice), discountObj: null, discountTitle: '', discountDisplay: '' };
+      }
+
+      const discVal = floatval(matchedDiscount.discount_value);
+      let discountAmount = 0;
+      let discountDisplay = '';
+
+      if (matchedDiscount.discount_type === 'percentage') {
+        discountAmount = (floatval(basePrice) * discVal) / 100;
+        discountDisplay = `${discVal}%`;
+      } else { // fixed
+        discountAmount = Math.min(floatval(basePrice), discVal);
+        discountDisplay = `৳${discVal}`;
+      }
+
+      discountAmount = Number(discountAmount.toFixed(2));
+      const finalRate = Math.max(0, Number((floatval(basePrice) - discountAmount).toFixed(2)));
+
+      return {
+        discountAmount,
+        finalRate,
+        discountObj: matchedDiscount,
+        discountTitle: matchedDiscount.title,
+        discountDisplay
+      };
+    },
+    getItemPrice(item) {
+      if (!item) return 0;
+      const { basePrice, priceNature } = this.resolveItemPrice(item);
+      const { finalRate } = this.calculateItemDiscount(item, basePrice, priceNature);
+      return finalRate;
+    },
+    recalculateCartPrices() {
+      if (!this.cart || this.cart.length === 0) return;
+
+      this.cart.forEach(cItem => {
+        const itemObj = cItem.item_object || { id: cItem.item_id, category_id: cItem.category_id, retail_price: cItem.retail_price, wholesale_price: cItem.wholesale_price, item_prices: cItem.item_prices };
+        const { basePrice, priceNature } = this.resolveItemPrice(itemObj, cItem.color_id, cItem.size_id);
+        const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(itemObj, basePrice, priceNature);
+
+        cItem.base_rate = basePrice;
+        cItem.discount_amount = discountAmount;
+        cItem.discount_title = discountTitle || '';
+        cItem.discount_display = discountDisplay || '';
+        cItem.rate = finalRate;
+      });
+
+      if (this.is_vat_applicable && floatval(this.vat_percent) > 0) {
+        this.calculateVatAmount();
+      }
+    },
+    onCustomerSearchInput() {
+      const term = (this.customerSearchTerm || '').trim();
+      if (!term || term.length < 1) {
+        this.customerSearchResults = [];
+        this.selectedCustomerIndex = -1;
         return;
       }
-      axios.get(`pos/search-customer`, { params: { mobile: cleanMobile } })
+      axios.get('pos/search-customers', { params: { term: term } })
+        .then(res => {
+          this.customerSearchResults = res.data || [];
+          this.selectedCustomerIndex = this.customerSearchResults.length > 0 ? 0 : -1;
+        })
+        .catch(err => {
+          console.error('Customer search error:', err);
+        });
+    },
+    navigateCustomerResults(step) {
+      if (!this.customerSearchResults || this.customerSearchResults.length === 0) return;
+      let newIndex = this.selectedCustomerIndex + step;
+      if (newIndex < 0) {
+        newIndex = this.customerSearchResults.length - 1;
+      } else if (newIndex >= this.customerSearchResults.length) {
+        newIndex = 0;
+      }
+      this.selectedCustomerIndex = newIndex;
+    },
+    handleCustomerSearchEnter() {
+      if (this.customerSearchResults && this.customerSearchResults.length > 0 && this.selectedCustomerIndex >= 0) {
+        this.selectCustomer(this.customerSearchResults[this.selectedCustomerIndex]);
+        return;
+      }
+      this.searchCustomer();
+    },
+    selectCustomer(cust) {
+      if (!cust) return;
+      this.client = cust;
+      this.customerSearchTerm = '';
+      this.customerSearchResults = [];
+      this.selectedCustomerIndex = -1;
+      this.showNewClientForm = false;
+      this.recalculateCartPrices();
+      this.$toast(`${this.$t('Customer selected:')} ${cust.name} (${cust.customer_type === 'wholesale' ? this.$t('Wholesale') : this.$t('Retail')})`, 'success');
+    },
+    toggleCustomerPriceType() {
+      if (!this.client) return;
+      const currentType = (this.client.customer_type || 'retail').toLowerCase();
+      const newType = currentType === 'wholesale' ? 'retail' : 'wholesale';
+      this.client.customer_type = newType;
+      this.recalculateCartPrices();
+      this.$toast(newType === 'wholesale' ? this.$t('Switched to Wholesale Price rate (পাইকারি দর)') : this.$t('Switched to Retail Price rate (খুচরা দর)'), 'info');
+    },
+    searchCustomer() {
+      const term = (this.customerSearchTerm || this.client.mobile || '').trim();
+      if (!term) return;
+      axios.get(`pos/search-customer`, { params: { mobile: term, term: term } })
         .then(res => {
           if (res.data && res.data.id) {
             this.client = res.data;
+            this.customerSearchTerm = '';
+            this.customerSearchResults = [];
+            this.selectedCustomerIndex = -1;
             this.showNewClientForm = false;
-            this.$toast(`Client found: ${res.data.name}`, 'success');
+            this.recalculateCartPrices();
+            this.$toast(`Client found: ${res.data.name} (${res.data.customer_type === 'wholesale' ? 'Wholesale' : 'Retail'})`, 'success');
           } else {
+            this.customerSearchResults = [];
             this.showNewClientForm = true;
-            this.newClient.mobile = cleanMobile;
-            this.newClient.name = '';
+            this.newClient.mobile = /^\d+$/.test(term) ? term : '';
+            this.newClient.name = !/^\d+$/.test(term) ? term : '';
+            this.newClient.customer_type = 'retail';
             this.newClient.address = '';
             this.$toast('Client not found. Register a new client.', 'info');
             this.$nextTick(() => {
-              this.$refs.newClientNameInput?.focus();
+              if (this.newClient.mobile) {
+                this.$refs.newClientNameInput?.focus();
+              } else {
+                this.$refs.newClientMobileInput?.focus();
+              }
             });
           }
         })
         .catch(err => {
+          this.customerSearchResults = [];
           this.showNewClientForm = true;
-          this.newClient.mobile = cleanMobile;
-          this.newClient.name = '';
+          this.newClient.mobile = /^\d+$/.test(term) ? term : '';
+          this.newClient.name = !/^\d+$/.test(term) ? term : '';
+          this.newClient.customer_type = 'retail';
           this.newClient.address = '';
           this.$toast('Client lookup failed. Fill details to register.', 'info');
           this.$nextTick(() => {
@@ -1559,11 +1670,15 @@ export default {
         });
     },
     resetClient() {
-      this.client = { id: null, name: '', mobile: '', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 };
+      this.client = { id: null, name: '', mobile: '', customer_type: 'retail', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 };
+      this.customerSearchTerm = '';
+      this.customerSearchResults = [];
+      this.selectedCustomerIndex = -1;
       this.showNewClientForm = false;
-      this.newClient = { name: '', mobile: '', address: '' };
+      this.newClient = { name: '', mobile: '', customer_type: 'retail', address: '' };
+      this.recalculateCartPrices();
       this.$nextTick(() => {
-        this.$refs.clientMobileInput?.focus();
+        this.$refs.clientSearchInput?.focus();
       });
     },
     createQuickCustomer() {
@@ -1584,11 +1699,13 @@ export default {
       axios.post('pos/quick-customer', {
         mobile: mobile,
         name: this.newClient.name.trim(),
+        customer_type: this.newClient.customer_type || 'retail',
         address: this.newClient.address ? this.newClient.address.trim() : ''
       }).then(res => {
         if (res.data) {
           this.client = res.data;
           this.showNewClientForm = false;
+          this.recalculateCartPrices();
           this.$toast(`Client "${res.data.name}" registered successfully`, 'success');
         }
       }).catch(err => {
@@ -1626,14 +1743,6 @@ export default {
           el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
       });
-    },
-    getItemPrice(item) {
-      if (!item) return 0;
-      const itemPrices = item.item_prices || item.itemPrices || [];
-      if (itemPrices.length > 0 && floatval(itemPrices[0].selling_price) > 0) {
-        return floatval(itemPrices[0].selling_price);
-      }
-      return floatval(item.sale_price || item.selling_price || item.opening_rate || 0);
     },
     getItemStock(item) {
       if (!item) return 0;
@@ -1684,6 +1793,29 @@ export default {
     },
     processSelectedItem(item, scannedSerial = '') {
       if (!item) return;
+
+      if (scannedSerial) {
+        const cleanSerial = scannedSerial.trim();
+        const existingCartItem = this.cart.find(c => c.item_id === item.id);
+        if (existingCartItem) {
+          const currentSerials = (existingCartItem.serial_no || '').split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+          if (currentSerials.map(s => s.toLowerCase()).includes(cleanSerial.toLowerCase())) {
+            this.$toast(`সিরিয়াল নম্বর "${cleanSerial}" ইতিপূর্বে কার্টে যোগ করা হয়েছে!`, 'warning');
+            return;
+          }
+          currentSerials.push(cleanSerial);
+          existingCartItem.serial_no = currentSerials.join(', ');
+          existingCartItem.qty = currentSerials.length;
+          this.$toast(`"${item.title}" এ সিরিয়াল (${cleanSerial}) যোগ করা হয়েছে (Qty: ${existingCartItem.qty})`, 'success');
+          this.searchTerm = '';
+          this.searchResults = [];
+          this.$nextTick(() => {
+            this.$refs.itemSearchInput?.focus();
+          });
+          return;
+        }
+      }
+
       if (this.isSimpleProduct(item) && !scannedSerial) {
         this.addSimpleItemToCart(item);
       } else {
@@ -1696,7 +1828,6 @@ export default {
       this.selectedSearchIndex = -1;
       this.showDuplicateBarcodeModal = false;
 
-      const rate = this.getItemPrice(item);
       const availableStock = this.getItemStock(item);
 
       if (availableStock <= 0) {
@@ -1724,6 +1855,9 @@ export default {
         }
       }
 
+      const { basePrice, priceNature } = this.resolveItemPrice(item, colorId, sizeId);
+      const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(item, basePrice, priceNature);
+
       const existingCartIndex = this.cart.findIndex(c =>
         c.item_id === item.id &&
         (c.color_id || null) == (colorId || null) &&
@@ -1741,6 +1875,8 @@ export default {
       } else {
         this.cart.push({
           item_id: item.id,
+          item_object: item,
+          category_id: item.category_id,
           title: item.title,
           barcode: item.barcode,
           color_id: colorId,
@@ -1749,7 +1885,11 @@ export default {
           size_title: sizeTitle,
           serial_no: '',
           qty: 1,
-          rate: rate,
+          base_rate: basePrice,
+          discount_amount: discountAmount,
+          discount_title: discountTitle || '',
+          discount_display: discountDisplay || '',
+          rate: finalRate,
           available_stock: availableStock,
         });
       }
@@ -1850,16 +1990,101 @@ export default {
       this.searchResults = [];
       this.selectedSearchIndex = -1;
     },
+    getSerialsCount(serialStr) {
+      if (!serialStr || typeof serialStr !== 'string') return 0;
+      return serialStr.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean).length;
+    },
+    onCartItemSerialChange(cItem) {
+      if (!cItem) return;
+      const count = this.getSerialsCount(cItem.serial_no);
+      if (count > 0) {
+        cItem.qty = count;
+      }
+    },
+    onCartItemQtyChange(cItem) {
+      if (!cItem) return;
+      const count = this.getSerialsCount(cItem.serial_no);
+      if (count > 0 && cItem.qty < count) {
+        cItem.qty = count;
+      }
+    },
+    toggleSerialTag(sn) {
+      if (!sn) return;
+      const clean = sn.trim();
+      if (!clean) return;
+      const idx = this.serialTags.findIndex(s => s.toLowerCase() === clean.toLowerCase());
+      if (idx > -1) {
+        this.serialTags.splice(idx, 1);
+      } else {
+        this.serialTags.push(clean);
+      }
+      this.syncSerialTagsToModal();
+    },
+    addSerialTag(sn) {
+      if (!sn) return;
+      const clean = sn.trim();
+      if (!clean) return;
+      const exists = this.serialTags.some(s => s.toLowerCase() === clean.toLowerCase());
+      if (!exists) {
+        this.serialTags.push(clean);
+        this.syncSerialTagsToModal();
+      }
+    },
+    removeSerialTag(index) {
+      this.serialTags.splice(index, 1);
+      this.syncSerialTagsToModal();
+    },
+    clearAllSerialTags() {
+      this.serialTags = [];
+      this.syncSerialTagsToModal();
+    },
+    selectAllAvailableSerials() {
+      if (!this.modalAvailableSerials || this.modalAvailableSerials.length === 0) return;
+      const set = new Set(this.serialTags);
+      this.modalAvailableSerials.forEach(sn => {
+        if (sn && sn.trim()) set.add(sn.trim());
+      });
+      this.serialTags = Array.from(set);
+      this.syncSerialTagsToModal();
+    },
+    onModalSerialKeydown(e) {
+      if (e.key === ',' || e.key === 'Enter') {
+        e.preventDefault();
+        this.handleModalSerialEnter();
+      }
+    },
+    handleModalSerialEnter() {
+      if (!this.modalSerialTyped || this.modalSerialTyped.trim() === '') return;
+      const pieces = this.modalSerialTyped.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+      pieces.forEach(p => {
+        this.addSerialTag(p);
+      });
+      this.modalSerialTyped = '';
+    },
+    syncSerialTagsToModal() {
+      this.modalSelection.serial_no = this.serialTags.join(', ');
+      if (this.serialTags.length > 0) {
+        this.modalSelection.qty = this.serialTags.length;
+      } else if (!this.modalSelection.qty || this.modalSelection.qty < 1) {
+        this.modalSelection.qty = 1;
+      }
+    },
     openItemModal(item, scannedSerial = '') {
       this.activeItem = item;
       this.searchResults = [];
       this.selectedSearchIndex = -1;
       this.searchTerm = '';
       this.modalAvailableSerials = item.available_serials || [];
+      this.modalSerialTyped = '';
+      this.serialTags = [];
+
+      if (scannedSerial && scannedSerial.trim() !== '') {
+        const split = scannedSerial.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+        this.serialTags = Array.from(new Set(split));
+      }
 
       let defaultColorId = null;
       let defaultSizeId = null;
-      let defaultRate = floatval(item.opening_rate || item.sale_price || 0);
       let defaultStock = 0;
 
       const stockSummaries = item.stock_summaries || item.stockSummaries || [];
@@ -1879,22 +2104,22 @@ export default {
         defaultSizeId = itemPrices[0].size_id || null;
       }
 
-      // ⭐️ 2. Find selling price for this variant
-      if (itemPrices.length > 0) {
-        const priceMatch = itemPrices.find(p => (p.color_id || null) == (defaultColorId || null) && (p.size_id || null) == (defaultSizeId || null));
-        if (priceMatch && floatval(priceMatch.selling_price) > 0) {
-          defaultRate = floatval(priceMatch.selling_price);
-        } else if (itemPrices[0] && floatval(itemPrices[0].selling_price) > 0) {
-          defaultRate = floatval(itemPrices[0].selling_price);
-        }
-      }
+      const { basePrice, priceNature } = this.resolveItemPrice(item, defaultColorId, defaultSizeId);
+      const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(item, basePrice, priceNature);
+
+      const initialQty = this.serialTags.length > 0 ? this.serialTags.length : 1;
+      const initialSerialNo = this.serialTags.join(', ');
 
       this.modalSelection = {
         color_id: defaultColorId,
         size_id: defaultSizeId,
-        serial_no: scannedSerial || '',
-        qty: 1,
-        rate: defaultRate,
+        serial_no: initialSerialNo,
+        qty: initialQty,
+        base_rate: basePrice,
+        discount_amount: discountAmount,
+        discount_title: discountTitle || '',
+        discount_display: discountDisplay || '',
+        rate: finalRate,
         available_stock: defaultStock
       };
 
@@ -1907,6 +2132,8 @@ export default {
           this.$refs.modalColorSelect.focus();
         } else if (this.availableSizes && this.availableSizes.length > 0 && this.$refs.modalSizeSelect) {
           this.$refs.modalSizeSelect.focus();
+        } else if (this.activeItem && (this.activeItem.has_purchase_serials || this.activeItem.is_serialized || this.isElectronicsShop) && this.$refs.modalSerialInput) {
+          this.$refs.modalSerialInput.focus();
         } else if (this.$refs.modalQtyInput) {
           this.$refs.modalQtyInput.focus();
           this.$refs.modalQtyInput.select();
@@ -1916,6 +2143,8 @@ export default {
     closeItemModal() {
       this.showItemModal = false;
       this.activeItem = null;
+      this.serialTags = [];
+      this.modalSerialTyped = '';
       this.$nextTick(() => {
         this.$refs.itemSearchInput?.focus();
       });
@@ -1938,16 +2167,17 @@ export default {
     onVariantChange() {
       if (!this.activeItem) return;
 
-      const itemPrices = this.activeItem.item_prices || this.activeItem.itemPrices || [];
       const stockSummaries = this.activeItem.stock_summaries || this.activeItem.stockSummaries || [];
 
-      // Price lookup
-      if (itemPrices.length > 0) {
-        const match = itemPrices.find(p => (p.color_id || null) == (this.modalSelection.color_id || null) && (p.size_id || null) == (this.modalSelection.size_id || null));
-        if (match && floatval(match.selling_price) > 0) {
-          this.modalSelection.rate = floatval(match.selling_price);
-        }
-      }
+      // Price and discount lookup
+      const { basePrice, priceNature } = this.resolveItemPrice(this.activeItem, this.modalSelection.color_id, this.modalSelection.size_id);
+      const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(this.activeItem, basePrice, priceNature);
+
+      this.modalSelection.base_rate = basePrice;
+      this.modalSelection.discount_amount = discountAmount;
+      this.modalSelection.discount_title = discountTitle || '';
+      this.modalSelection.discount_display = discountDisplay || '';
+      this.modalSelection.rate = finalRate;
 
       // Stock lookup
       let stock = 0;
@@ -1980,7 +2210,18 @@ export default {
     async addToCartFromModal() {
       if (!this.activeItem) return;
 
-      // 1. Stock Check: Available stock must be > 0
+      // 1. Process any pending typed serials in input
+      if (this.modalSerialTyped && this.modalSerialTyped.trim() !== '') {
+        this.handleModalSerialEnter();
+      }
+
+      // Sync serials
+      if (this.serialTags.length > 0) {
+        this.modalSelection.serial_no = this.serialTags.join(', ');
+        this.modalSelection.qty = this.serialTags.length;
+      }
+
+      // Stock Check: Available stock must be > 0
       if (this.modalSelection.available_stock <= 0) {
         this.$toast('স্টক খালি! স্টক ছাড়া পণ্য কার্টে যোগ করা সম্ভব নয়।', 'warning');
         return;
@@ -2016,35 +2257,56 @@ export default {
       const colorObj = (this.allColors || []).find(c => c && c.id == this.modalSelection.color_id);
       const sizeObj = (this.allSizes || []).find(s => s && s.id == this.modalSelection.size_id);
 
-      // Check if identical item+color+size is already in cart, increment quantity
+      // Check if identical item+color+size is already in cart, increment quantity or merge serials
       const existingCartIndex = this.cart.findIndex(c => 
         c.item_id === this.activeItem.id && 
-        c.color_id == this.modalSelection.color_id && 
-        c.size_id == this.modalSelection.size_id &&
-        (!this.modalSelection.serial_no || c.serial_no === this.modalSelection.serial_no)
+        (c.color_id || null) == (this.modalSelection.color_id || null) && 
+        (c.size_id || null) == (this.modalSelection.size_id || null)
       );
 
-      if (existingCartIndex > -1 && !this.modalSelection.serial_no) {
-        const currentQty = floatval(this.cart[existingCartIndex].qty);
-        const addQty = floatval(this.modalSelection.qty) || 1;
-        const newQty = currentQty + addQty;
-        if (newQty > this.modalSelection.available_stock) {
-          this.$toast(`পর্যাপ্ত স্টক নেই! সর্বোচ্চ প্রাপ্য স্টক: ${this.modalSelection.available_stock}`, 'warning');
-          return;
+      if (existingCartIndex > -1) {
+        const existing = this.cart[existingCartIndex];
+        if (this.modalSelection.serial_no) {
+          const existingSerials = (existing.serial_no || '').split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+          const newSerials = (this.modalSelection.serial_no || '').split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+          const combinedSerials = Array.from(new Set([...existingSerials, ...newSerials]));
+          
+          if (combinedSerials.length > this.modalSelection.available_stock) {
+            this.$toast(`পর্যাপ্ত স্টক নেই! সর্বোচ্চ প্রাপ্য স্টক: ${this.modalSelection.available_stock}`, 'warning');
+            return;
+          }
+          existing.serial_no = combinedSerials.join(', ');
+          existing.qty = combinedSerials.length;
+        } else {
+          const currentQty = floatval(existing.qty);
+          const addQty = floatval(this.modalSelection.qty) || 1;
+          const newQty = currentQty + addQty;
+          if (newQty > this.modalSelection.available_stock) {
+            this.$toast(`পর্যাপ্ত স্টক নেই! সর্বোচ্চ প্রাপ্য স্টক: ${this.modalSelection.available_stock}`, 'warning');
+            return;
+          }
+          existing.qty = newQty;
         }
-        this.cart[existingCartIndex].qty = newQty;
       } else {
+        const finalQty = this.serialTags.length > 0 ? this.serialTags.length : (this.modalSelection.qty || 1);
         this.cart.push({
           item_id: this.activeItem.id,
+          item_object: this.activeItem,
+          category_id: this.activeItem.category_id,
           title: this.activeItem.title,
           barcode: this.activeItem.barcode,
           color_id: this.modalSelection.color_id,
           color_title: colorObj ? colorObj.title : null,
           size_id: this.modalSelection.size_id,
           size_title: sizeObj ? sizeObj.title : null,
-          serial_no: this.modalSelection.serial_no,
-          qty: this.modalSelection.qty || 1,
+          serial_no: this.modalSelection.serial_no || '',
+          qty: finalQty,
+          base_rate: this.modalSelection.base_rate || 0,
+          discount_amount: this.modalSelection.discount_amount || 0,
+          discount_title: this.modalSelection.discount_title || '',
+          discount_display: this.modalSelection.discount_display || '',
           rate: this.modalSelection.rate || 0,
+          available_stock: this.modalSelection.available_stock,
         });
       }
 
@@ -2137,7 +2399,7 @@ export default {
       });
     },
     resetPOS() {
-      this.client = { id: null, name: '', mobile: '', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 };
+      this.client = { id: null, name: '', mobile: '', customer_type: 'retail', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 };
       this.showNewClientForm = false;
       this.cart = [];
       this.discount = 0;
@@ -2153,6 +2415,7 @@ export default {
       this.duplicateBarcodeItems = [];
       this.duplicateBarcodeScanned = '';
       this.selectedDuplicateIndex = 0;
+      this.loadActiveDiscounts();
 
       // Reset terms conditions to defaults
       if (this.rawDefaultTerms && this.rawDefaultTerms.length > 0) {
@@ -2234,8 +2497,9 @@ export default {
         this.$refs.itemSearchInput?.select();
       } else if (e.key === 'F4' || (e.ctrlKey && e.key === 'm')) {
         e.preventDefault();
-        this.$refs.clientMobileInput?.focus();
-        this.$refs.clientMobileInput?.select();
+        const inp = this.$refs.clientSearchInput || this.$refs.clientMobileInput;
+        inp?.focus();
+        inp?.select();
       } else if (e.key === 'F7' || e.key === 'F9' || (e.altKey && (e.key === 'f' || e.key === 'F')) || (e.altKey && (e.key === 'p' || e.key === 'P'))) {
         e.preventDefault();
         this.setFullPay();
@@ -2284,6 +2548,7 @@ export default {
     window.addEventListener('keydown', this.handleKeydown);
     this.initVatFromSettings();
     this.loadInvoiceTerms();
+    this.loadActiveDiscounts();
   },
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleKeydown);

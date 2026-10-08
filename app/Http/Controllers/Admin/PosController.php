@@ -41,37 +41,76 @@ class PosController extends BaseController
 
     public function searchCustomer(Request $request)
     {
-        $mobile = trim($request->input('mobile'));
-        if (empty($mobile)) {
+        $term = trim($request->input('mobile') ?? $request->input('term') ?? $request->input('query') ?? '');
+        if (empty($term)) {
             return response()->json(null);
         }
 
-        $client = Client::where('mobile', $mobile)->first();
+        $client = Client::where('mobile', $term)
+            ->orWhere('name', $term)
+            ->orWhere('clientid', $term)
+            ->first();
+
+        if (!$client && strlen($term) >= 2) {
+            $client = Client::where('mobile', 'like', "%{$term}%")
+                ->orWhere('name', 'like', "%{$term}%")
+                ->orWhere('clientid', 'like', "%{$term}%")
+                ->first();
+        }
+
         if ($client) {
-            // Calculate current balance/due
-            $totalInvoiced = Invoice::where('client_id', $client->id)->where('status', 'active')->sum('amount');
-            $totalPaid = Payment::where('client_id', $client->id)->where('status', 'active')->sum('amount');
-            $currentDue = floatval($client->previous_due ?? 0) + ($totalInvoiced - $totalPaid);
-            $client->current_due = max(0, $currentDue);
-
-            // Coupon / Loyalty Points
-            $siteSetting = SiteSetting::first();
-            $couponEnabled = boolval($siteSetting->coupon_enabled ?? 0);
-            $client->coupon_enabled = $couponEnabled;
-            $client->points_balance = floatval($client->points_balance ?? 0);
-            $pointRedeemRate = floatval($siteSetting->point_redeem_rate ?? 10);
-            $pointEarnRate = floatval($siteSetting->point_earn_rate ?? 1);
-            $minPointsToRedeem = intval($siteSetting->min_points_to_redeem ?? 10);
-
-            $client->point_redeem_rate = $pointRedeemRate;
-            $client->point_earn_rate = $pointEarnRate;
-            $client->min_points_to_redeem = $minPointsToRedeem;
-            $client->points_value_in_tk = ($couponEnabled && $pointRedeemRate > 0)
-                ? round($client->points_balance / $pointRedeemRate, 2)
-                : 0.00;
+            $this->attachClientExtras($client);
         }
 
         return response()->json($client);
+    }
+
+    public function searchCustomers(Request $request)
+    {
+        $term = trim($request->input('term') ?? $request->input('query') ?? '');
+        if (empty($term)) {
+            return response()->json([]);
+        }
+
+        $clients = Client::where('status', 'active')
+            ->where(function ($q) use ($term) {
+                $q->where('mobile', 'like', "%{$term}%")
+                  ->orWhere('name', 'like', "%{$term}%")
+                  ->orWhere('clientid', 'like', "%{$term}%");
+            })
+            ->limit(10)
+            ->get();
+
+        foreach ($clients as $client) {
+            $this->attachClientExtras($client);
+        }
+
+        return response()->json($clients);
+    }
+
+    private function attachClientExtras($client)
+    {
+        // Calculate current balance/due
+        $totalInvoiced = Invoice::where('client_id', $client->id)->where('status', 'active')->sum('amount');
+        $totalPaid = Payment::where('client_id', $client->id)->where('status', 'active')->sum('amount');
+        $currentDue = floatval($client->previous_due ?? 0) + ($totalInvoiced - $totalPaid);
+        $client->current_due = max(0, $currentDue);
+
+        // Coupon / Loyalty Points
+        $siteSetting = SiteSetting::first();
+        $couponEnabled = boolval($siteSetting->coupon_enabled ?? 0);
+        $client->coupon_enabled = $couponEnabled;
+        $client->points_balance = floatval($client->points_balance ?? 0);
+        $pointRedeemRate = floatval($siteSetting->point_redeem_rate ?? 10);
+        $pointEarnRate = floatval($siteSetting->point_earn_rate ?? 1);
+        $minPointsToRedeem = intval($siteSetting->min_points_to_redeem ?? 10);
+
+        $client->point_redeem_rate = $pointRedeemRate;
+        $client->point_earn_rate = $pointEarnRate;
+        $client->min_points_to_redeem = $minPointsToRedeem;
+        $client->points_value_in_tk = ($couponEnabled && $pointRedeemRate > 0)
+            ? round($client->points_balance / $pointRedeemRate, 2)
+            : 0.00;
     }
 
     public function quickCustomer(Request $request)
@@ -89,12 +128,13 @@ class PosController extends BaseController
             $clientid = $lastClient ? intval($lastClient->clientid) + 1 : 1001;
 
             $client = Client::create([
-                'clientid' => $clientid,
-                'reg_date' => date('Y-m-d'),
-                'name' => $request->name,
-                'mobile' => $mobile,
-                'address' => $request->address ?? 'N/A',
-                'status' => 'active',
+                'clientid'      => $clientid,
+                'reg_date'      => date('Y-m-d'),
+                'name'          => $request->name,
+                'mobile'        => $mobile,
+                'customer_type' => $request->customer_type ?: 'retail',
+                'address'       => $request->address ?? 'N/A',
+                'status'        => 'active',
             ]);
         }
 
@@ -330,49 +370,61 @@ class PosController extends BaseController
     public function validateSerial(Request $request)
     {
         $itemId = $request->input('item_id');
-        $serialNo = trim($request->input('serial_no'));
+        $rawSerial = trim($request->input('serial_no'));
 
-        if (empty($itemId) || empty($serialNo)) {
+        if (empty($itemId) || empty($rawSerial)) {
             return response()->json(['valid' => true]);
         }
 
-        // 1. Check if serial number exists in Purchase records (purchase_details) OR GRN records (grn_details)
-        $incomingExists = false;
+        $serialsToCheck = preg_split('/[\r\n,;]+/', $rawSerial, -1, PREG_SPLIT_NO_EMPTY);
+        if (empty($serialsToCheck)) {
+            return response()->json(['valid' => true]);
+        }
 
+        // Check for internal duplicates in input
+        $normalizedSerials = [];
+        foreach ($serialsToCheck as $st) {
+            $cleaned = trim($st);
+            if (empty($cleaned)) continue;
+            $lower = strtolower($cleaned);
+            if (in_array($lower, $normalizedSerials)) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => "সিরিয়াল নম্বর '{$cleaned}' একাধিকবার সিলেক্ট করা হয়েছে!"
+                ]);
+            }
+            $normalizedSerials[] = $lower;
+        }
+
+        // Fetch all incoming serials for this item
+        $incomingSerials = [];
         $purchaseDetails = PurchaseDetail::where('item_id', $itemId)
             ->whereNotNull('serial_no')
             ->where('serial_no', '!=', '')
             ->get(['serial_no']);
 
         foreach ($purchaseDetails as $pd) {
-            $serials = preg_split('/[\r\n,]+/', $pd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
-            foreach ($serials as $s) {
-                if (strcasecmp(trim($s), $serialNo) === 0) {
-                    $incomingExists = true;
-                    break 2;
-                }
+            $pSerials = preg_split('/[\r\n,;]+/', $pd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($pSerials as $s) {
+                $incomingSerials[] = strtolower(trim($s));
             }
         }
 
-        if (!$incomingExists && Schema::hasTable('grn_details')) {
+        if (Schema::hasTable('grn_details')) {
             $grnDetails = GrnDetail::where('item_id', $itemId)
                 ->whereNotNull('serial_no')
                 ->where('serial_no', '!=', '')
                 ->get(['serial_no']);
 
             foreach ($grnDetails as $gd) {
-                $serials = preg_split('/[\r\n,]+/', $gd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
-                foreach ($serials as $s) {
-                    if (strcasecmp(trim($s), $serialNo) === 0) {
-                        $incomingExists = true;
-                        break 2;
-                    }
+                $gSerials = preg_split('/[\r\n,;]+/', $gd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($gSerials as $s) {
+                    $incomingSerials[] = strtolower(trim($s));
                 }
             }
         }
 
-        // If not in purchase or GRN, check if it was returned via sales return
-        if (!$incomingExists && Schema::hasTable('sales_return_details')) {
+        if (Schema::hasTable('sales_return_details')) {
             $returnDetails = SalesReturnDetail::where('item_id', $itemId)
                 ->whereNotNull('serial_no')
                 ->where('serial_no', '!=', '')
@@ -380,24 +432,15 @@ class PosController extends BaseController
                 ->get(['serial_no']);
 
             foreach ($returnDetails as $rd) {
-                $serials = preg_split('/[\r\n,]+/', $rd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
-                foreach ($serials as $s) {
-                    if (strcasecmp(trim($s), $serialNo) === 0) {
-                        $incomingExists = true;
-                        break 2;
-                    }
+                $rSerials = preg_split('/[\r\n,;]+/', $rd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($rSerials as $s) {
+                    $incomingSerials[] = strtolower(trim($s));
                 }
             }
         }
 
-        if (!$incomingExists) {
-            return response()->json([
-                'valid' => false,
-                'message' => "সিরিয়াল নম্বর '{$serialNo}' ক্রয় (Purchase) বা GRN রেকর্ডে পাওয়া যায়নি!"
-            ]);
-        }
-
-        // 2. Check if serial number is wasted
+        // Fetch all wasted serials
+        $wastedSerials = [];
         if (Schema::hasTable('wastage_details')) {
             $wastedDetails = WastageDetail::where('item_id', $itemId)
                 ->whereNotNull('serial_no')
@@ -406,19 +449,15 @@ class PosController extends BaseController
                 ->get(['serial_no']);
 
             foreach ($wastedDetails as $wd) {
-                $serials = preg_split('/[\r\n,]+/', $wd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
-                foreach ($serials as $s) {
-                    if (strcasecmp(trim($s), $serialNo) === 0) {
-                        return response()->json([
-                            'valid' => false,
-                            'message' => "সিরিয়াল নম্বর '{$serialNo}' নষ্ট/ওয়েস্টেজ (Wastage) হিসেবে এন্ট্রি করা হয়েছে!"
-                        ]);
-                    }
+                $wSerials = preg_split('/[\r\n,;]+/', $wd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($wSerials as $s) {
+                    $wastedSerials[] = strtolower(trim($s));
                 }
             }
         }
 
-        // 3. Check if serial number has already been sold in Invoice Details (invoice_details)
+        // Fetch all sold serials
+        $soldCounts = [];
         $soldDetails = InvoiceDetails::where('item_id', $itemId)
             ->whereNotNull('serial_no')
             ->where('serial_no', '!=', '')
@@ -426,18 +465,16 @@ class PosController extends BaseController
             ->whereNull('deleted_at')
             ->get(['serial_no']);
 
-        $soldCount = 0;
         foreach ($soldDetails as $id) {
-            $serials = preg_split('/[\r\n,]+/', $id->serial_no, -1, PREG_SPLIT_NO_EMPTY);
-            foreach ($serials as $s) {
-                if (strcasecmp(trim($s), $serialNo) === 0) {
-                    $soldCount++;
-                }
+            $sSerials = preg_split('/[\r\n,;]+/', $id->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($sSerials as $s) {
+                $k = strtolower(trim($s));
+                $soldCounts[$k] = ($soldCounts[$k] ?? 0) + 1;
             }
         }
 
-        $returnCount = 0;
-        if ($soldCount > 0 && Schema::hasTable('sales_return_details')) {
+        // Subtract returns from sold counts
+        if (Schema::hasTable('sales_return_details')) {
             $returnDetails = SalesReturnDetail::where('item_id', $itemId)
                 ->whereNotNull('serial_no')
                 ->where('serial_no', '!=', '')
@@ -447,20 +484,45 @@ class PosController extends BaseController
                 ->get(['serial_no']);
 
             foreach ($returnDetails as $rd) {
-                $serials = preg_split('/[\r\n,]+/', $rd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
-                foreach ($serials as $s) {
-                    if (strcasecmp(trim($s), $serialNo) === 0) {
-                        $returnCount++;
+                $retSerials = preg_split('/[\r\n,;]+/', $rd->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($retSerials as $s) {
+                    $k = strtolower(trim($s));
+                    if (isset($soldCounts[$k])) {
+                        $soldCounts[$k] = max(0, $soldCounts[$k] - 1);
                     }
                 }
             }
         }
 
-        if (($soldCount - $returnCount) > 0) {
-            return response()->json([
-                'valid' => false,
-                'message' => "সিরিয়াল নম্বর '{$serialNo}' ইতিপূর্বে বিক্রয় (Sold) হয়ে গেছে!"
-            ]);
+        // Validate each serial
+        foreach ($serialsToCheck as $serial) {
+            $cleanSerial = trim($serial);
+            if (empty($cleanSerial)) continue;
+            $lowerSerial = strtolower($cleanSerial);
+
+            // 1. Purchase/GRN existence check (if item has any purchase serials in history)
+            if (!empty($incomingSerials) && !in_array($lowerSerial, $incomingSerials)) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => "সিরিয়াল নম্বর '{$cleanSerial}' ক্রয় (Purchase) বা GRN রেকর্ডে পাওয়া যায়নি!"
+                ]);
+            }
+
+            // 2. Wastage check
+            if (in_array($lowerSerial, $wastedSerials)) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => "সিরিয়াল নম্বর '{$cleanSerial}' নষ্ট/ওয়েস্টেজ (Wastage) হিসেবে এন্ট্রি করা হয়েছে!"
+                ]);
+            }
+
+            // 3. Already sold check
+            if (!empty($soldCounts[$lowerSerial]) && $soldCounts[$lowerSerial] > 0) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => "সিরিয়াল নম্বর '{$cleanSerial}' ইতিপূর্বে বিক্রয় (Sold) হয়ে গেছে!"
+                ]);
+            }
         }
 
         return response()->json(['valid' => true]);
@@ -481,14 +543,16 @@ class PosController extends BaseController
             if (empty($clientId) && !empty($request->input('client_mobile'))) {
                 $mobile = trim($request->input('client_mobile'));
                 $clientName = trim($request->input('client_name')) ?: 'Walk-in Customer';
+                $customerType = $request->input('customer_type', $request->input('client_customer_type', 'retail'));
                 $client = Client::firstOrCreate(
                     ['mobile' => $mobile],
                     [
-                        'clientid' => rand(10000, 99999),
-                        'reg_date' => date('Y-m-d'),
-                        'name' => $clientName,
-                        'address' => $request->input('client_address') ?? 'N/A',
-                        'status' => 'active'
+                        'clientid'      => rand(10000, 99999),
+                        'reg_date'      => date('Y-m-d'),
+                        'name'          => $clientName,
+                        'customer_type' => $customerType,
+                        'address'       => $request->input('client_address') ?? 'N/A',
+                        'status'        => 'active'
                     ]
                 );
                 $clientId = $client->id;
@@ -499,11 +563,12 @@ class PosController extends BaseController
                 $walkin = Client::firstOrCreate(
                     ['mobile' => '00000000000'],
                     [
-                        'clientid' => 1000,
-                        'reg_date' => date('Y-m-d'),
-                        'name' => 'Walk-in Customer',
-                        'address' => 'N/A',
-                        'status' => 'active'
+                        'clientid'      => 1000,
+                        'reg_date'      => date('Y-m-d'),
+                        'name'          => 'Walk-in Customer',
+                        'customer_type' => 'retail',
+                        'address'       => 'N/A',
+                        'status'        => 'active'
                     ]
                 );
                 $clientId = $walkin->id;
@@ -730,7 +795,13 @@ class PosController extends BaseController
             $fullInvoice = Invoice::with([
                 'client',
                 'details' => function($q) {
-                    $q->with('item:id,title,barcode', 'color:id,title', 'size:id,title');
+                    $q->with([
+                        'item' => function($iq) {
+                            $iq->with(['brand', 'series']);
+                        },
+                        'color:id,title',
+                        'size:id,title'
+                    ]);
                 }
             ])->find($invoice->id);
 

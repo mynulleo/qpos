@@ -36,7 +36,7 @@
 
                                     <!-- Printer Badge -->
                                     <span class="badge bg-light bg-opacity-25 text-white" v-if="data?.printer_type === 'normal'">
-                                        <i class="fas fa-print me-1"></i> {{ $t('Normal Printer') }} ({{ data?.normal_paper_size || 'A4' }})
+                                        <i class="fas fa-print me-1"></i> {{ $t('Normal Printer') }} ({{ data?.normal_paper_size || 'A4' }} - {{ getInvoiceLayoutName(data?.invoice_layout) }})
                                     </span>
                                     <span class="badge bg-light bg-opacity-25 text-white" v-else>
                                         <i class="fas fa-receipt me-1"></i> {{ $t('Thermal Roll') }} ({{ data?.thermal_paper_size || '80mm' }})
@@ -297,6 +297,15 @@
                                         <td class="spec-label"><i class="fas fa-file-alt me-2 text-muted"></i>{{ $t('Configured Paper Size') }}</td>
                                         <td class="spec-value font-monospace fw-bold text-primary">
                                             {{ data?.normal_paper_size || 'A4' }}
+                                        </td>
+                                    </tr>
+                                    <tr v-if="data?.printer_type === 'normal'">
+                                        <td class="spec-label"><i class="fas fa-layer-group me-2 text-muted"></i>{{ $t('Invoice Layout') }}</td>
+                                        <td class="spec-value">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace">
+                                                <i class="fas fa-file-invoice me-1"></i>
+                                                {{ getInvoiceLayoutName(data?.invoice_layout) }}
+                                            </span>
                                         </td>
                                     </tr>
                                     <tr v-else>
@@ -665,6 +674,11 @@ export default {
             if (!val) return '4" × 2" (Standard Barcode Tag)';
             const match = this.$root.global?.label_presets?.find((p) => p.value === val);
             return match ? match.name : val;
+        },
+        getInvoiceLayoutName(val) {
+            if (val === "layout2") return "Layout 2 (Modern)";
+            if (val === "layout3") return "Layout 3 (Compact)";
+            return "Layout 1 (Classic)";
         },
     },
     created() {
