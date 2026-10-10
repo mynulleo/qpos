@@ -298,14 +298,10 @@
                       <small class="text-muted text-decoration-line-through d-block" style="font-size: 11px;">
                         {{ $t('Tk.') }} {{ $bnNum(formatPrice(cItem.base_rate)) }}
                       </small>
-                      <span class="badge bg-danger bg-opacity-10 text-danger border border-danger p-0 px-1 font-monospace" style="font-size: 10px;" :title="cItem.discount_title">
-                        <i class="fas fa-tag me-1"></i>-{{ $t('Tk.') }} {{ $bnNum(formatPrice(cItem.discount_amount)) }}
-                        <span v-if="cItem.discount_display">({{ cItem.discount_display }})</span>
-                      </span>
                     </div>
                     <!-- Rate input with wholesale/retail indicator badge underneath -->
                     <div class="d-flex flex-column align-items-end">
-                      <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace p-1" style="max-width: 80px; font-size: 13px;" v-model.number="cItem.rate">
+                      <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace p-1" style="max-width: 80px; font-size: 13px;" v-model.number="cItem.rate" @input="onCartItemRateChange(cItem)">
                       <span class="badge mt-0.5" :class="effectivePriceNature === 'wholesale' ? 'bg-primary bg-opacity-10 text-primary border border-primary' : 'bg-secondary bg-opacity-10 text-secondary border border-secondary'" style="font-size: 9px;" :title="effectivePriceNature === 'wholesale' ? 'Wholesale Price applied' : 'Retail Price applied'">
                         {{ effectivePriceNature === 'wholesale' ? $t('Wholesale') : $t('Retail') }}
                       </span>
@@ -656,7 +652,6 @@
                   <div class="text-end">
                     <div v-if="modalSelection.discount_amount > 0">
                       <small class="text-muted text-decoration-line-through me-1">{{ $t('Tk.') }} {{ $bnNum(formatPrice(modalSelection.base_rate)) }}</small>
-                      <span class="badge bg-danger bg-opacity-10 text-danger border border-danger font-monospace px-1 py-0 me-1" style="font-size: 10px;">-{{ $t('Tk.') }} {{ $bnNum(formatPrice(modalSelection.discount_amount)) }}</span>
                     </div>
                     <span class="small font-monospace">
                       <span class="badge me-1" :class="effectivePriceNature === 'wholesale' ? 'bg-primary' : 'bg-secondary'" style="font-size: 10px;">
@@ -1179,7 +1174,10 @@ export default {
       return this.cart.reduce((sum, i) => sum + (floatval(i.qty) || 0), 0);
     },
     cartSubtotal() {
-      return this.cart.reduce((sum, i) => sum + (floatval(i.qty) * floatval(i.rate)), 0);
+      return this.cart.reduce((sum, i) => {
+        const base = floatval(i.base_rate) > 0 ? floatval(i.base_rate) : floatval(i.rate);
+        return sum + (floatval(i.qty) * base);
+      }, 0);
     },
     maxRedeemablePoints() {
       if (!this.client || !this.client.coupon_enabled || !this.client.points_balance) return 0;
@@ -1508,7 +1506,7 @@ export default {
 
       // Filter discounts applicable on date & nature
       const validDiscounts = this.activeDiscounts.filter(d => {
-        if (d.status != 1 && d.status !== true) return false;
+        if (d.status != 1 && d.status !== true && d.status !== 'active') return false;
         if (d.valid_from && d.valid_from > today) return false;
         if (d.valid_to && d.valid_to < today) return false;
         if (d.applicable_on && d.applicable_on !== 'both' && d.applicable_on !== nature) return false;
@@ -1516,7 +1514,24 @@ export default {
       });
 
       // 1. Priority: Item-wise discount
-      let matchedDiscount = validDiscounts.find(d => d.scope === 'item' && d.item_id == item.id);
+      let matchedDiscount = validDiscounts.find(d => {
+        if (d.scope !== 'item') return false;
+        if (Array.isArray(d.items)) {
+          return d.items.map(Number).includes(Number(item.id));
+        }
+        if (d.items && typeof d.items === 'object') {
+          return Object.values(d.items).map(Number).includes(Number(item.id));
+        }
+        if (typeof d.items === 'string') {
+          try {
+            const parsed = JSON.parse(d.items);
+            if (Array.isArray(parsed)) return parsed.map(Number).includes(Number(item.id));
+          } catch(e) {
+            return d.items.split(',').map(s => Number(s.trim())).includes(Number(item.id));
+          }
+        }
+        return d.item_id == item.id;
+      });
 
       // 2. Fallback: Category-wise discount
       if (!matchedDiscount && item.category_id) {
@@ -1570,6 +1585,8 @@ export default {
         cItem.discount_display = discountDisplay || '';
         cItem.rate = finalRate;
       });
+
+      this.syncCartDiscount();
 
       if (this.is_vat_applicable && floatval(this.vat_percent) > 0) {
         this.calculateVatAmount();
@@ -1806,6 +1823,7 @@ export default {
           currentSerials.push(cleanSerial);
           existingCartItem.serial_no = currentSerials.join(', ');
           existingCartItem.qty = currentSerials.length;
+          this.syncCartDiscount();
           this.$toast(`"${item.title}" এ সিরিয়াল (${cleanSerial}) যোগ করা হয়েছে (Qty: ${existingCartItem.qty})`, 'success');
           this.searchTerm = '';
           this.searchResults = [];
@@ -1893,6 +1911,8 @@ export default {
           available_stock: availableStock,
         });
       }
+
+      this.syncCartDiscount();
 
       this.$toast(`"${item.title}" কার্টে যোগ করা হয়েছে`, 'success');
 
@@ -2006,6 +2026,30 @@ export default {
       const count = this.getSerialsCount(cItem.serial_no);
       if (count > 0 && cItem.qty < count) {
         cItem.qty = count;
+      }
+      this.syncCartDiscount();
+    },
+    onCartItemRateChange(cItem) {
+      if (!cItem) return;
+      const currentRate = floatval(cItem.rate);
+      const baseRate = floatval(cItem.base_rate);
+      if (baseRate > 0) {
+        cItem.discount_amount = Math.max(0, Number((baseRate - currentRate).toFixed(2)));
+      } else {
+        cItem.base_rate = currentRate;
+        cItem.discount_amount = 0;
+      }
+      this.syncCartDiscount();
+    },
+    syncCartDiscount() {
+      const itemsDiscountTotal = this.cart.reduce((sum, item) => {
+        const qty = floatval(item.qty || 0);
+        const discAmt = floatval(item.discount_amount || 0);
+        return sum + (discAmt * qty);
+      }, 0);
+      this.discount = Number(itemsDiscountTotal.toFixed(2));
+      if (this.is_vat_applicable && floatval(this.vat_percent) > 0) {
+        this.calculateVatAmount();
       }
     },
     toggleSerialTag(sn) {
@@ -2310,6 +2354,7 @@ export default {
         });
       }
 
+      this.syncCartDiscount();
       this.closeItemModal();
       this.$toast('Item added to cart', 'success');
 
@@ -2324,9 +2369,11 @@ export default {
     },
     removeCartItem(index) {
       this.cart.splice(index, 1);
+      this.syncCartDiscount();
     },
     clearCart() {
       this.cart = [];
+      this.syncCartDiscount();
     },
     redeemAllPoints() {
       this.points_to_redeem = this.maxRedeemablePoints;

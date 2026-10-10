@@ -18,6 +18,7 @@ use App\Models\Commission;
 use App\Models\SalarySheet;
 use App\Models\SalarySheetDetail;
 use App\Models\LoanInfo;
+use App\Models\Grn;
 use App\Models\Invoice;
 use App\Models\InvoiceDetails;
 use App\Models\Item;
@@ -988,77 +989,478 @@ trait ReportTrait
 
     public function getExpenseStatement($searchdata)
     {
-        $query = ExpenseDetail::with([
-            'expense:id,expenseid,expense_date,employee_id,approved_by,approved_date',
-            'expense.approved_admin:id,full_name',
-            'expense.employee:id,full_name',
-            'account:id,account_code,account_name'
-        ])
+        $from = !empty($searchdata['from_date']) ? vue_to_server_date($searchdata['from_date']) : null;
+        $to   = !empty($searchdata['to_date']) ? vue_to_server_date($searchdata['to_date']) : null;
+
+        $moduleType    = $searchdata['module_type'] ?? 'all'; // 'all', 'expense', 'loan', 'grn', 'salary', 'commission'
+        $employeeId    = $searchdata['employee_id'] ?? null;
+        $supplierId    = $searchdata['supplier_id'] ?? null;
+        $branchId      = $searchdata['branch_id'] ?? null;
+        $paymentMethod = $searchdata['payment_method'] ?? null;
+        $keyword       = !empty($searchdata['keyword']) ? trim($searchdata['keyword']) : null;
+
+        $records = collect([]);
+
+        // 1. EXPENSES (ExpenseDetail)
+        if ($moduleType === 'all' || $moduleType === 'expense') {
+            $expQuery = ExpenseDetail::with([
+                'expense:id,expenseid,expense_date,employee_id,approved_by,approved_date',
+                'expense.approved_admin:id,full_name',
+                'expense.employee:id,full_name,branch_id',
+                'expense.employee.branch:id,branch_name',
+                'account:id,account_code,account_name'
+            ])
             ->whereNull('expense_details.deleted_at')
+            ->whereHas('expense', function ($q) use ($from, $to, $employeeId, $branchId) {
+                $q->whereNotNull('approved_by')->whereNull('deleted_at');
+                if ($from && $to) {
+                    $q->whereBetween('expense_date', [$from, $to]);
+                }
+                if ($employeeId) {
+                    $q->where('employee_id', $employeeId);
+                }
+                if ($branchId) {
+                    $q->whereHas('employee', function ($eq) use ($branchId) {
+                        $eq->where('branch_id', $branchId);
+                    });
+                }
+            });
 
-            // 🔹 Paid Amount per Expense Detail
-            ->addSelect([
-                'paid_amount' => DB::table('payment_details as pd')
-                    ->whereColumn('pd.reference_id', 'expense_details.id')
-                    ->where('pd.reference_type', 'ExpenseDetail')
+            if (!empty($searchdata['account_id'])) {
+                $expQuery->where('account_id', $searchdata['account_id']);
+            }
+
+            $expenseRows = $expQuery->get()->map(function ($row) {
+                $paid = (float) DB::table('payment_details as pd')
+                    ->where(function ($q) use ($row) {
+                        $q->where(function ($sq) use ($row) {
+                            $sq->where('pd.reference_type', 'ExpenseDetail')
+                               ->where('pd.reference_id', $row->id);
+                        })->orWhere(function ($sq) use ($row) {
+                            $sq->where('pd.reference_type', 'Expense')
+                               ->where('pd.reference_id', $row->expense_id);
+                        });
+                    })
                     ->whereNull('pd.deleted_at')
-                    ->selectRaw('COALESCE(SUM(pd.amount),0)')
-            ]);
+                    ->sum('pd.amount');
 
-        // 🔹 Only Approved Expense
-        $query->whereHas('expense', function ($q) {
-            $q->whereNotNull('approved_by')
-                ->whereNull('deleted_at');
-        });
+                // Fallback: If no payment_details, check if a payment exists with payslipno = expenseid
+                if ($paid <= 0 && $row->expense && !empty($row->expense->expenseid)) {
+                    $fallbackPaid = (float) DB::table('payments')
+                        ->where('payslipno', $row->expense->expenseid)
+                        ->where('payment_type', 'Pay')
+                        ->whereNull('deleted_at')
+                        ->sum('amount');
+                    if ($fallbackPaid > 0) {
+                        $paid = $fallbackPaid;
+                    }
+                }
 
-        // 🔹 Account Filter
-        if (!empty($searchdata['account_id'])) {
-            $query->where('account_id', $searchdata['account_id']);
+                $amount = (float) $row->amount;
+                $due = max(0, $amount - $paid);
+
+                $dateRaw = $row->expense ? ($row->expense->getRawOriginal('expense_date') ?? $row->expense->expense_date) : null;
+                $branchName = $row->expense && $row->expense->employee && $row->expense->employee->branch
+                    ? $row->expense->employee->branch->branch_name
+                    : 'Main Branch';
+
+                return [
+                    'id'               => 'exp_' . $row->id,
+                    'source_type'      => 'Expense',
+                    'source_badge'     => 'badge bg-info text-white',
+                    'raw_date'         => $dateRaw,
+                    'date'             => $row->expense ? $row->expense->expense_date : '',
+                    'ref_no'           => $row->expense ? $row->expense->expenseid : ('EXP-' . $row->expense_id),
+                    'branch_name'      => $branchName,
+                    'account_name'     => $row->account ? ($row->account->account_code ? $row->account->account_code . ' - ' : '') . $row->account->account_name : ($row->narration ?: 'General Expense'),
+                    'payee_name'       => $row->expense && $row->expense->employee ? $row->expense->employee->full_name : 'Office',
+                    'employee_id'      => $row->expense ? $row->expense->employee_id : null,
+                    'supplier_id'      => null,
+                    'approved_by_name' => $row->expense && $row->expense->approved_admin ? $row->expense->approved_admin->full_name : 'Admin',
+                    'approved_date'    => $row->expense ? $row->expense->approved_date : '',
+                    'amount'           => $amount,
+                    'paid_amount'      => $paid,
+                    'due_amount'       => $due,
+                    // Backward compatibility with legacy Vue bindings
+                    'expense'          => [
+                        'expense_date'   => $row->expense ? $row->expense->expense_date : '',
+                        'branch'         => ['branch_name' => $branchName],
+                        'employee'       => ['full_name' => $row->expense && $row->expense->employee ? $row->expense->employee->full_name : 'Office'],
+                        'approved_admin' => ['full_name' => $row->expense && $row->expense->approved_admin ? $row->expense->approved_admin->full_name : 'Admin'],
+                        'approved_date'  => $row->expense ? $row->expense->approved_date : '',
+                    ],
+                    'account'          => $row->account ? [
+                        'account_code'   => $row->account->account_code,
+                        'account_name'   => $row->account->account_name
+                    ] : [
+                        'account_code'   => 'EXP',
+                        'account_name'   => 'General Expense'
+                    ],
+                ];
+            });
+
+            $records = $records->merge($expenseRows);
         }
 
-        // 🔹 Employee Filter
-        if (!empty($searchdata['employee_id'])) {
-            $query->whereHas('expense', function ($q) use ($searchdata) {
-                $q->where('employee_id', $searchdata['employee_id']);
+        // 2. LOANS (LoanInfo)
+        if (($moduleType === 'all' || $moduleType === 'loan') && empty($supplierId)) {
+            $loanQuery = LoanInfo::with([
+                'employee:id,full_name,branch_id',
+                'employee.branch:id,branch_name',
+                'approved_admin:id,full_name'
+            ])
+            ->whereNull('deleted_at')
+            ->where('status', 'active');
+
+            if ($from && $to) {
+                $loanQuery->whereBetween('trns_date', [$from, $to]);
+            }
+            if ($employeeId) {
+                $loanQuery->where('employee_id', $employeeId);
+            }
+            if ($branchId) {
+                $loanQuery->whereHas('employee', function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                });
+            }
+
+            $loanRows = $loanQuery->get()->map(function ($row) {
+                $paid = (float) DB::table('payment_details')
+                    ->where('reference_type', 'LoanInfo')
+                    ->where('reference_id', $row->id)
+                    ->whereNull('deleted_at')
+                    ->sum('amount');
+
+                $amount = (float) $row->amount;
+                $due = max(0, $amount - $paid);
+
+                $dateRaw = $row->getRawOriginal('trns_date') ?? $row->trns_date;
+                $branchName = $row->employee && $row->employee->branch ? $row->employee->branch->branch_name : 'Main Branch';
+
+                return [
+                    'id'               => 'loan_' . $row->id,
+                    'source_type'      => 'Loan',
+                    'source_badge'     => 'badge bg-warning text-dark',
+                    'raw_date'         => $dateRaw,
+                    'date'             => $row->trns_date,
+                    'ref_no'           => $row->trnsid ?: ('LOAN-' . $row->id),
+                    'branch_name'      => $branchName,
+                    'account_name'     => 'Employee Loan & Advance (' . ($row->trns_type ?: 'Loan') . ')',
+                    'payee_name'       => $row->employee ? $row->employee->full_name : 'N/A',
+                    'employee_id'      => $row->employee_id,
+                    'supplier_id'      => null,
+                    'approved_by_name' => $row->approved_admin ? $row->approved_admin->full_name : ($row->approved_by ? 'Admin' : 'Pending'),
+                    'approved_date'    => $row->approved_date ?: $row->trns_date,
+                    'amount'           => $amount,
+                    'paid_amount'      => $paid,
+                    'due_amount'       => $due,
+                    'expense'          => [
+                        'expense_date'   => $row->trns_date,
+                        'branch'         => ['branch_name' => $branchName],
+                        'employee'       => ['full_name' => $row->employee ? $row->employee->full_name : 'N/A'],
+                        'approved_admin' => ['full_name' => $row->approved_admin ? $row->approved_admin->full_name : 'Admin'],
+                        'approved_date'  => $row->approved_date ?: $row->trns_date,
+                    ],
+                    'account'          => [
+                        'account_code'   => 'LOAN',
+                        'account_name'   => 'Employee Loan & Advance'
+                    ]
+                ];
+            });
+
+            $records = $records->merge($loanRows);
+        }
+
+        // 3. GRN (Goods Received Note / Supplier Purchases)
+        if (($moduleType === 'all' || $moduleType === 'grn') && empty($employeeId)) {
+            $grnQuery = Grn::with([
+                'supplier:id,org_name,name,mobile',
+                'warehouse:id,name,branch_id',
+                'warehouse.branch:id,branch_name',
+                'purchase:id,invoiceno'
+            ])
+            ->whereNull('deleted_at')
+            ->where('status', 'active');
+
+            if ($from && $to) {
+                $grnQuery->whereBetween('grn_date', [$from, $to]);
+            }
+            if ($supplierId) {
+                $grnQuery->where('supplier_id', $supplierId);
+            }
+            if ($branchId) {
+                $grnQuery->whereHas('warehouse', function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                });
+            }
+
+            $grnRows = $grnQuery->get()->map(function ($row) {
+                $paid = (float) DB::table('payment_details')
+                    ->where('reference_type', 'GRN')
+                    ->where('reference_id', $row->id)
+                    ->whereNull('deleted_at')
+                    ->sum('amount');
+
+                $amount = (float) $row->total_amount;
+                $due = max(0, $amount - $paid);
+
+                $dateRaw = $row->getRawOriginal('grn_date') ?? $row->grn_date;
+                $supplierName = $row->supplier ? ($row->supplier->org_name ?: $row->supplier->name) : 'Supplier';
+                $branchName = $row->warehouse && $row->warehouse->branch ? $row->warehouse->branch->branch_name : 'Main Branch';
+                $poText = $row->purchase ? ' (PO: ' . $row->purchase->invoiceno . ')' : '';
+
+                return [
+                    'id'               => 'grn_' . $row->id,
+                    'source_type'      => 'GRN',
+                    'source_badge'     => 'badge bg-primary text-white',
+                    'raw_date'         => $dateRaw,
+                    'date'             => $row->grn_date,
+                    'ref_no'           => $row->grn_no . $poText,
+                    'branch_name'      => $branchName,
+                    'account_name'     => 'Supplier Purchase Goods (GRN)',
+                    'payee_name'       => $supplierName,
+                    'employee_id'      => null,
+                    'supplier_id'      => $row->supplier_id,
+                    'approved_by_name' => 'Admin',
+                    'approved_date'    => $row->grn_date,
+                    'amount'           => $amount,
+                    'paid_amount'      => $paid,
+                    'due_amount'       => $due,
+                    'expense'          => [
+                        'expense_date'   => $row->grn_date,
+                        'branch'         => ['branch_name' => $branchName],
+                        'employee'       => ['full_name' => $supplierName],
+                        'approved_admin' => ['full_name' => 'Admin'],
+                        'approved_date'  => $row->grn_date,
+                    ],
+                    'account'          => [
+                        'account_code'   => 'GRN',
+                        'account_name'   => 'Goods Received Note'
+                    ]
+                ];
+            });
+
+            $records = $records->merge($grnRows);
+        }
+
+        // 4. SALARIES (SalarySheetDetail)
+        if (($moduleType === 'all' || $moduleType === 'salary') && empty($supplierId)) {
+            $salaryQuery = SalarySheetDetail::with([
+                'salary_sheet:id,title,month,year,generated_date,approved_by',
+                'salary_sheet.approved_admin:id,full_name',
+                'employee:id,full_name,branch_id',
+                'employee.branch:id,branch_name'
+            ])
+            ->whereNull('salary_sheet_details.deleted_at')
+            ->whereHas('salary_sheet', function ($q) use ($from, $to) {
+                $q->whereNull('deleted_at')->whereNotNull('approved_by');
+                if ($from && $to) {
+                    $q->whereBetween('generated_date', [$from, $to]);
+                }
+            });
+
+            if ($employeeId) {
+                $salaryQuery->where('employee_id', $employeeId);
+            }
+            if ($branchId) {
+                $salaryQuery->whereHas('employee', function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                });
+            }
+
+            $salaryRows = $salaryQuery->get()->map(function ($row) {
+                $paid = (float) DB::table('payment_details')
+                    ->whereIn('reference_type', ['SalarySheetDetail', 'SalarySheet'])
+                    ->where('reference_id', $row->id)
+                    ->whereNull('deleted_at')
+                    ->sum('amount');
+
+                $amount = (float) ($row->total ?? $row->salary);
+                $due = max(0, $amount - $paid);
+
+                $dateRaw = $row->salary_sheet ? ($row->salary_sheet->getRawOriginal('generated_date') ?? $row->salary_sheet->generated_date) : null;
+                $branchName = $row->employee && $row->employee->branch ? $row->employee->branch->branch_name : 'Main Branch';
+                $sheetTitle = $row->salary_sheet ? ($row->salary_sheet->title ?: ($row->salary_sheet->month . ' ' . $row->salary_sheet->year)) : 'Salary Sheet';
+
+                return [
+                    'id'               => 'sal_' . $row->id,
+                    'source_type'      => 'Salary',
+                    'source_badge'     => 'badge bg-success text-white',
+                    'raw_date'         => $dateRaw,
+                    'date'             => $row->salary_sheet ? $row->salary_sheet->generated_date : '',
+                    'ref_no'           => $sheetTitle,
+                    'branch_name'      => $branchName,
+                    'account_name'     => 'Employee Salary & Allowance',
+                    'payee_name'       => $row->employee ? $row->employee->full_name : 'Staff',
+                    'employee_id'      => $row->employee_id,
+                    'supplier_id'      => null,
+                    'approved_by_name' => $row->salary_sheet && $row->salary_sheet->approved_admin ? $row->salary_sheet->approved_admin->full_name : 'Admin',
+                    'approved_date'    => $row->salary_sheet ? $row->salary_sheet->generated_date : '',
+                    'amount'           => $amount,
+                    'paid_amount'      => $paid,
+                    'due_amount'       => $due,
+                    'expense'          => [
+                        'expense_date'   => $row->salary_sheet ? $row->salary_sheet->generated_date : '',
+                        'branch'         => ['branch_name' => $branchName],
+                        'employee'       => ['full_name' => $row->employee ? $row->employee->full_name : 'Staff'],
+                        'approved_admin' => ['full_name' => $row->salary_sheet && $row->salary_sheet->approved_admin ? $row->salary_sheet->approved_admin->full_name : 'Admin'],
+                        'approved_date'  => $row->salary_sheet ? $row->salary_sheet->generated_date : '',
+                    ],
+                    'account'          => [
+                        'account_code'   => 'SAL',
+                        'account_name'   => 'Salary & Allowance'
+                    ]
+                ];
+            });
+
+            $records = $records->merge($salaryRows);
+        }
+
+        // 5. COMMISSIONS (Commission)
+        if (($moduleType === 'all' || $moduleType === 'commission') && empty($supplierId)) {
+            $commQuery = Commission::with([
+                'employee:id,full_name,branch_id',
+                'employee.branch:id,branch_name',
+                'agent:id,full_name,mobile',
+                'approved_admin:id,full_name'
+            ])
+            ->whereNull('deleted_at')
+            ->where('status', 'active')
+            ->whereNotNull('approved_by');
+
+            if ($from && $to) {
+                $commQuery->where(function ($q) use ($from, $to) {
+                    $q->whereBetween('approved_date', [$from, $to])
+                      ->orWhereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+                });
+            }
+            if ($employeeId) {
+                $commQuery->where('employee_id', $employeeId);
+            }
+            if ($branchId) {
+                $commQuery->whereHas('employee', function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                });
+            }
+
+            $commRows = $commQuery->get()->map(function ($row) {
+                $paid = (float) DB::table('payment_details')
+                    ->where('reference_type', 'Commission')
+                    ->where('reference_id', $row->id)
+                    ->whereNull('deleted_at')
+                    ->sum('amount');
+
+                $amount = (float) $row->amount;
+                $due = max(0, $amount - $paid);
+
+                $payee = $row->agent ? ($row->agent->full_name . ' (Agent)') : ($row->employee ? ($row->employee->full_name . ' (Staff)') : 'Reference');
+                $branchName = $row->employee && $row->employee->branch ? $row->employee->branch->branch_name : 'Main Branch';
+                $date = $row->approved_date ?: date('d M, Y', strtotime($row->created_at));
+
+                return [
+                    'id'               => 'comm_' . $row->id,
+                    'source_type'      => 'Commission',
+                    'source_badge'     => 'badge bg-secondary text-white',
+                    'raw_date'         => $row->created_at,
+                    'date'             => $date,
+                    'ref_no'           => 'COMM-' . $row->id,
+                    'branch_name'      => $branchName,
+                    'account_name'     => 'Commission Expense',
+                    'payee_name'       => $payee,
+                    'employee_id'      => $row->employee_id,
+                    'supplier_id'      => null,
+                    'approved_by_name' => $row->approved_admin ? $row->approved_admin->full_name : 'Admin',
+                    'approved_date'    => $date,
+                    'amount'           => $amount,
+                    'paid_amount'      => $paid,
+                    'due_amount'       => $due,
+                    'expense'          => [
+                        'expense_date'   => $date,
+                        'branch'         => ['branch_name' => $branchName],
+                        'employee'       => ['full_name' => $payee],
+                        'approved_admin' => ['full_name' => $row->approved_admin ? $row->approved_admin->full_name : 'Admin'],
+                        'approved_date'  => $date,
+                    ],
+                    'account'          => [
+                        'account_code'   => 'COMM',
+                        'account_name'   => 'Commission Expense'
+                    ]
+                ];
+            });
+
+            $records = $records->merge($commRows);
+        }
+
+        // Optional payment_method filter
+        if ($paymentMethod) {
+            $records = $records->filter(function ($r) use ($paymentMethod) {
+                $parts = explode('_', $r['id']);
+                $prefix = $parts[0];
+                $realId = $parts[1] ?? 0;
+                $refType = match($prefix) {
+                    'exp' => 'ExpenseDetail',
+                    'loan' => 'LoanInfo',
+                    'grn' => 'GRN',
+                    'sal' => 'SalarySheetDetail',
+                    'comm' => 'Commission',
+                    default => null
+                };
+                if (!$refType) return false;
+                return DB::table('payment_details as pd')
+                    ->join('payments as p', 'p.id', '=', 'pd.payment_id')
+                    ->where('pd.reference_type', $refType)
+                    ->where('pd.reference_id', $realId)
+                    ->where('p.payment_method', $paymentMethod)
+                    ->whereNull('pd.deleted_at')
+                    ->whereNull('p.deleted_at')
+                    ->exists();
             });
         }
 
-        // 🔹 Branch Filter
-        if (!empty($searchdata['branch_id'])) {
-            $query->whereHas('expense', function ($q) use ($searchdata) {
-                $q->where('branch_id', $searchdata['branch_id']);
+        // Keyword search filter
+        if ($keyword) {
+            $kw = strtolower($keyword);
+            $records = $records->filter(function ($r) use ($kw) {
+                return str_contains(strtolower($r['ref_no']), $kw)
+                    || str_contains(strtolower($r['payee_name']), $kw)
+                    || str_contains(strtolower($r['account_name']), $kw)
+                    || str_contains(strtolower($r['source_type']), $kw);
             });
         }
 
-        // 🔹 Date Range Filter (Optional)
-        if (!empty($searchdata['from_date']) && !empty($searchdata['to_date'])) {
+        // Sort by date descending
+        $sortedRecords = $records->sortByDesc(function ($r) {
+            return strtotime($r['raw_date'] ?? $r['date'] ?? '1970-01-01');
+        })->values();
 
-            $from = vue_to_server_date($searchdata['from_date']);
-            $to   = vue_to_server_date($searchdata['to_date']);
+        // Totals
+        $totalExpense = (float) $sortedRecords->sum('amount');
+        $totalPaid    = (float) $sortedRecords->sum('paid_amount');
+        $totalDue     = (float) $sortedRecords->sum('due_amount');
 
-            $query->whereHas('expense', function ($q) use ($from, $to) {
-                $q->whereBetween('expense_date', [$from, $to]);
-            });
-        }
-
-        $details = $query->get();
-
-        // 🔹 Add Due Amount Manually
-        $details->transform(function ($item) {
-            $item->due_amount = $item->amount - $item->paid_amount;
-            return $item;
-        });
-
-        // 🔹 Totals
-        $total_expense = $details->sum('amount');
-        $total_paid    = $details->sum('paid_amount');
-        $total_due     = $details->sum('due_amount');
+        // Breakdown by module
+        $breakdown = [
+            'expense'    => ['count' => $sortedRecords->where('source_type', 'Expense')->count(), 'amount' => (float)$sortedRecords->where('source_type', 'Expense')->sum('amount'), 'paid' => (float)$sortedRecords->where('source_type', 'Expense')->sum('paid_amount'), 'due' => (float)$sortedRecords->where('source_type', 'Expense')->sum('due_amount')],
+            'loan'       => ['count' => $sortedRecords->where('source_type', 'Loan')->count(), 'amount' => (float)$sortedRecords->where('source_type', 'Loan')->sum('amount'), 'paid' => (float)$sortedRecords->where('source_type', 'Loan')->sum('paid_amount'), 'due' => (float)$sortedRecords->where('source_type', 'Loan')->sum('due_amount')],
+            'grn'        => ['count' => $sortedRecords->where('source_type', 'GRN')->count(), 'amount' => (float)$sortedRecords->where('source_type', 'GRN')->sum('amount'), 'paid' => (float)$sortedRecords->where('source_type', 'GRN')->sum('paid_amount'), 'due' => (float)$sortedRecords->where('source_type', 'GRN')->sum('due_amount')],
+            'salary'     => ['count' => $sortedRecords->where('source_type', 'Salary')->count(), 'amount' => (float)$sortedRecords->where('source_type', 'Salary')->sum('amount'), 'paid' => (float)$sortedRecords->where('source_type', 'Salary')->sum('paid_amount'), 'due' => (float)$sortedRecords->where('source_type', 'Salary')->sum('due_amount')],
+            'commission' => ['count' => $sortedRecords->where('source_type', 'Commission')->count(), 'amount' => (float)$sortedRecords->where('source_type', 'Commission')->sum('amount'), 'paid' => (float)$sortedRecords->where('source_type', 'Commission')->sum('paid_amount'), 'due' => (float)$sortedRecords->where('source_type', 'Commission')->sum('due_amount')],
+        ];
 
         return response()->json([
-            'details'        => $details,
-            'total_expense'  => $total_expense,
-            'total_paid'     => $total_paid,
-            'total_due'      => $total_due,
+            'details'        => $sortedRecords,
+            'total_expense'  => $totalExpense,
+            'total_paid'     => $totalPaid,
+            'total_due'      => $totalDue,
+            'breakdown'      => $breakdown,
+            'counts'         => [
+                'all'        => $sortedRecords->count(),
+                'expense'    => $breakdown['expense']['count'],
+                'loan'       => $breakdown['loan']['count'],
+                'grn'        => $breakdown['grn']['count'],
+                'salary'     => $breakdown['salary']['count'],
+                'commission' => $breakdown['commission']['count'],
+            ]
         ]);
     }
 
