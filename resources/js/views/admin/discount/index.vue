@@ -1,5 +1,37 @@
 <template>
   <index-page :show_status="false">
+    <template v-slot:button>
+      <AddOrBackButton :route="model + '.create'" :portion="model" :icon="'plus'" />
+      <router-link
+        v-if="!$root.checkPermission(model + '.create')"
+        :to="{ name: model + '.create' }"
+        class="back_or_add_btn"
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        :data-bs-title="$t('Add')"
+        v-x-tooltip
+      >
+        <span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-plus"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M12 5l0 14" />
+            <path d="M5 12l14 0" />
+          </svg>
+        </span>
+        {{ $t('Add') }}
+      </router-link>
+    </template>
     <template v-slot:search-field>
       <v-select-container :title="$t('Discount Scope')" field="search_data.discount_type" col="3">
         <v-select
@@ -97,7 +129,7 @@ export default {
       ],
       statusOptions: [
         { title: "Active", value: "active" },
-        { title: "Inactive", value: "inactive" },
+        { title: "Deactive", value: "deactive" },
       ],
     };
   },

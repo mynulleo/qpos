@@ -598,7 +598,10 @@ class PosController extends BaseController
             $originalAmount = 0;
 
             foreach ($cart as $item) {
-                $originalAmount += floatval($item['rate']) * floatval($item['qty']);
+                $itemBaseRate = !empty($item['base_rate']) && floatval($item['base_rate']) > 0
+                    ? floatval($item['base_rate'])
+                    : floatval($item['rate']);
+                $originalAmount += $itemBaseRate * floatval($item['qty']);
             }
 
             $discount = floatval($request->input('discount', 0));
@@ -648,8 +651,10 @@ class PosController extends BaseController
             // Create Invoice Details & Stock Transactions
             foreach ($cart as $cartItem) {
                 $qty = floatval($cartItem['qty']);
-                $rate = floatval($cartItem['rate']);
-                $itemTotal = $qty * $rate;
+                $itemBaseRate = !empty($cartItem['base_rate']) && floatval($cartItem['base_rate']) > 0
+                    ? floatval($cartItem['base_rate'])
+                    : floatval($cartItem['rate']);
+                $itemTotal = $qty * $itemBaseRate;
                 $colorId = !empty($cartItem['color_id']) ? $cartItem['color_id'] : null;
                 $sizeId = !empty($cartItem['size_id']) ? $cartItem['size_id'] : null;
                 $serialNo = !empty($cartItem['serial_no']) ? $cartItem['serial_no'] : null;
@@ -665,7 +670,7 @@ class PosController extends BaseController
                     'account_id' => 0,
                     'description' => 'POS Item Sale' . ($serialNo ? " (Serial: {$serialNo})" : ''),
                     'qty' => $qty,
-                    'amount' => $rate,
+                    'amount' => $itemBaseRate,
                     'total_amount' => $itemTotal,
                     'status' => 'active',
                 ]);

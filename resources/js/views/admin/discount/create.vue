@@ -27,7 +27,9 @@
                 field="data.status"
                 title=""
                 :on-label="$t('Active')"
-                :off-label="$t('Inactive')"
+                :off-label="$t('Deactive')"
+                :on-value="'active'"
+                :off-value="'deactive'"
                 :req="true"
                 col="12"
               />
@@ -72,47 +74,145 @@
             <!-- 4. Category Dropdown (Visible when scope is category) -->
             <div class="col-md-6" v-if="data.discount_type === 'category'">
               <label class="form-label small fw-bold text-dark mb-1">{{ $t("Target Category") }} <span class="text-danger">*</span></label>
-              <v-select
-                v-model="data.category_id"
-                label="title"
-                :reduce="(obj) => obj.id"
-                :options="categories"
-                :placeholder="$t('-- Select Category --')"
-                :closeOnSelect="true"
-              />
+              <div class="v-select-wrapper">
+                <v-select
+                  v-model="data.category_id"
+                  label="title"
+                  :reduce="(obj) => obj.id"
+                  :options="categories"
+                  :placeholder="$t('-- Select Category --')"
+                  :closeOnSelect="true"
+                />
+              </div>
             </div>
 
-            <!-- 5. Item Dropdown (Visible when scope is item) -->
-            <div class="col-md-6" v-if="data.discount_type === 'item'">
-              <label class="form-label small fw-bold text-dark mb-1">{{ $t("Target Product / Item") }} <span class="text-danger">*</span></label>
-              <v-select
-                v-model="data.item_id"
-                label="title"
-                :reduce="(obj) => obj.id"
-                :options="items"
-                :placeholder="$t('-- Select Product / Item --')"
-                :closeOnSelect="true"
-              >
-                <template #option="option">
-                  <div>
-                    <span class="fw-bold">{{ option.title }}</span>
-                    <span class="badge bg-light text-dark border ms-2 font-monospace" v-if="option.barcode">{{ option.barcode }}</span>
+            <!-- 5. Unified Item Selection (Visible when scope is item for both Create and Edit) -->
+            <div class="col-12" v-if="data.discount_type === 'item'">
+              <div class="card border p-3 rounded bg-white shadow-sm">
+                <!-- Header with Title, Count & Action Buttons -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom">
+                  <div class="d-flex align-items-center gap-2">
+                    <label class="form-label fw-bold text-dark mb-0">
+                      <i class="fas fa-boxes text-primary me-1"></i>
+                      {{ $t("Target Products / Items") }} <span class="text-danger">*</span>
+                    </label>
+                    <span v-if="data.items && data.items.length > 0" class="badge bg-success px-2 py-1">
+                      {{ data.items.length }} {{ $t("Item(s) Selected") }}
+                    </span>
                   </div>
-                </template>
-              </v-select>
+
+                  <!-- Quick Action Buttons -->
+                  <div class="d-flex align-items-center gap-2">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary py-1 px-3 d-flex align-items-center gap-1"
+                      @click="selectAllItems"
+                      :title="$t('Select all items')"
+                    >
+                      <i class="fas fa-check-double"></i>
+                      <span>{{ $t("Select All Items") }} ({{ items.length }})</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger py-1 px-3 d-flex align-items-center gap-1"
+                      @click="clearAllItems"
+                      v-if="data.items && data.items.length > 0"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                      <span>{{ $t("Clear Selection") }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Category Quick Helper Row -->
+                <div class="row g-2 align-items-center mb-3 p-2 bg-light rounded border">
+                  <div class="col-md-5">
+                    <label class="form-label small text-muted mb-1">{{ $t("Quick Filter / Add by Category:") }}</label>
+                    <div class="v-select-wrapper">
+                      <v-select
+                        v-model="categoryFilterId"
+                        label="title"
+                        :reduce="(obj) => obj.id"
+                        :options="categories"
+                        :placeholder="$t('-- Filter by Category --')"
+                        :closeOnSelect="true"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-md-7 d-flex align-items-end pt-md-4">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary py-1 px-3 me-2"
+                      v-if="categoryFilterId"
+                      @click="addCategoryItems"
+                    >
+                      <i class="fas fa-plus-circle text-success me-1"></i>
+                      {{ $t("Add All Items from this Category") }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-link text-muted py-1 px-2 text-decoration-none"
+                      v-if="categoryFilterId"
+                      @click="categoryFilterId = null"
+                    >
+                      <i class="fas fa-times me-1"></i> {{ $t("Clear Filter") }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Multiple Items Dropdown with Right-side Checkmark & Single-place entry -->
+                <div class="form-group mb-1">
+                  <label class="form-label small fw-bold text-dark mb-1">
+                    {{ $t("Select Items (Search by Product Name or Barcode)") }} <span class="text-danger">*</span>
+                  </label>
+                  <div class="v-select-wrapper v-select-multiple-wrapper">
+                    <v-select
+                      v-model="data.items"
+                      :multiple="true"
+                      label="title"
+                      :reduce="(obj) => obj.id"
+                      :options="filteredItems"
+                      :placeholder="$t('-- Search & Select Products / Items --')"
+                      :closeOnSelect="false"
+                      :deselect-from-dropdown="true"
+                    >
+                      <template #option="option">
+                        <div class="d-flex align-items-center justify-content-between py-1 w-100">
+                          <div class="d-flex align-items-center">
+                            <span class="fw-bold text-dark">{{ option.title }}</span>
+                            <span class="badge bg-light text-dark border ms-2 font-monospace" v-if="option.barcode">{{ option.barcode }}</span>
+                            <span class="text-muted small ms-2" v-if="option.category && option.category.title">({{ option.category.title }})</span>
+                          </div>
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small font-monospace" v-if="option.sell_price">৳{{ option.sell_price }}</span>
+                            <i v-if="isItemSelected(option.id)" class="fas fa-check-circle text-success fs-6 ms-2" :title="$t('Selected')"></i>
+                            <i v-else class="far fa-circle text-muted fs-6 ms-2 opacity-25"></i>
+                          </div>
+                        </div>
+                      </template>
+                    </v-select>
+                  </div>
+                  <small class="text-muted d-block mt-1">
+                    <i class="fas fa-info-circle text-primary me-1"></i>
+                    {{ $t("All selected items are saved together in a single campaign row. Click selected items in dropdown or click '×' to deselect.") }}
+                  </small>
+                </div>
+              </div>
             </div>
 
             <!-- 6. Applicable On (Price Nature) -->
             <div class="col-md-6">
               <label class="form-label small fw-bold text-dark mb-1">{{ $t("Applicable On (Sale Nature)") }} <span class="text-danger">*</span></label>
-              <v-select
-                v-model="data.applicable_on"
-                label="title"
-                :reduce="(obj) => obj.value"
-                :options="applicableOptions"
-                :placeholder="$t('-- Select Applicable Sale Nature --')"
-                :closeOnSelect="true"
-              />
+              <div class="v-select-wrapper">
+                <v-select
+                  v-model="data.applicable_on"
+                  label="title"
+                  :reduce="(obj) => obj.value"
+                  :options="applicableOptions"
+                  :placeholder="$t('-- Select Applicable Sale Nature --')"
+                  :closeOnSelect="true"
+                />
+              </div>
               <small class="text-muted d-block mt-1">
                 {{ $t("Specifies whether this discount applies to Retail sale price, Wholesale sale price, or Both.") }}
               </small>
@@ -223,7 +323,7 @@ export default {
         name: "",
         discount_type: "category",
         category_id: null,
-        item_id: null,
+        items: [],
         applicable_on: "both",
         unit: "percentage",
         discount_value: 10,
@@ -232,6 +332,7 @@ export default {
         status: "active",
         description: "",
       },
+      categoryFilterId: null,
       categories: [],
       items: [],
       applicableOptions: [
@@ -246,10 +347,18 @@ export default {
       validate: this.validation,
     };
   },
+  computed: {
+    filteredItems() {
+      if (!this.categoryFilterId) {
+        return this.items;
+      }
+      return this.items.filter((item) => item.category_id == this.categoryFilterId);
+    },
+  },
   watch: {
     "data.discount_type"(newVal) {
       if (newVal === "category") {
-        this.data.item_id = null;
+        this.data.items = [];
       } else if (newVal === "item") {
         this.data.category_id = null;
       }
@@ -264,6 +373,9 @@ export default {
       const day = String(d.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     },
+    isItemSelected(itemId) {
+      return Array.isArray(this.data.items) && this.data.items.includes(itemId);
+    },
     getCategories() {
       axios.get("getcategories/Item").then((res) => {
         this.categories = res.data || [];
@@ -274,6 +386,22 @@ export default {
         this.items = res.data || [];
       });
     },
+    selectAllItems() {
+      this.data.items = this.items.map((i) => i.id);
+      this.$toast(`${this.items.length} items selected`, "info");
+    },
+    clearAllItems() {
+      this.data.items = [];
+    },
+    addCategoryItems() {
+      if (!this.categoryFilterId) return;
+      const catItems = this.items.filter((i) => i.category_id == this.categoryFilterId);
+      const newIds = catItems.map((i) => i.id);
+      const current = Array.isArray(this.data.items) ? this.data.items : [];
+      const merged = Array.from(new Set([...current, ...newIds]));
+      this.data.items = merged;
+      this.$toast(`${newIds.length} items added from category`, "success");
+    },
     submit() {
       this.$validate().then((res) => {
         const error = this.validation.countErrors();
@@ -283,9 +411,11 @@ export default {
           return false;
         }
 
-        if (this.data.discount_type === "item" && !this.data.item_id) {
-          this.$toast("Please select a target Item", "warning");
-          return false;
+        if (this.data.discount_type === "item") {
+          if (!Array.isArray(this.data.items) || this.data.items.length === 0) {
+            this.$toast("Please select at least one Product / Item", "warning");
+            return false;
+          }
         }
 
         if (error > 0) {
@@ -307,7 +437,23 @@ export default {
     if (this.$route.params.id) {
       this.page_title = "Discount Edit";
       this.setBreadcrumbs(this.model, "edit");
-      this.get_data(`${this.model}/${this.$route.params.id}`);
+      this.get_data(`${this.model}/${this.$route.params.id}`).then((res) => {
+        if (res && res.data) {
+          if (res.data.title && !this.data.name) this.data.name = res.data.title;
+          if (res.data.scope) this.data.discount_type = res.data.scope;
+          if (res.data.items && Array.isArray(res.data.items)) {
+            this.data.items = res.data.items.map(Number);
+          } else if (res.data.item_id) {
+            this.data.items = [Number(res.data.item_id)];
+          }
+          if (res.data.notes && !this.data.description) this.data.description = res.data.notes;
+          if (res.data.status === 1 || res.data.status === '1' || res.data.status === 'active') {
+            this.data.status = 'active';
+          } else {
+            this.data.status = 'deactive';
+          }
+        }
+      });
     } else {
       this.page_title = "Discount Create";
       this.setBreadcrumbs(this.model, "create");
@@ -344,5 +490,85 @@ export default {
 <style scoped>
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* Fix v-select standard container & borders */
+.v-select-wrapper {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e1e3e1;
+  width: 100%;
+  min-height: 38px;
+}
+
+.v-select-multiple-wrapper {
+  min-height: 44px;
+}
+
+/* Fix vue-select styling */
+:deep(.v-select .vs__dropdown-toggle) {
+  border: none !important;
+  padding: 4px 8px !important;
+  min-height: 38px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+}
+
+/* Override global .vs__selected { position: absolute !important; } for multiple mode */
+:deep(.v-select.vs--multiple .vs__selected) {
+  position: static !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  background-color: #eef5ff !important;
+  color: #0d6efd !important;
+  border: 1px solid #cfe2ff !important;
+  border-radius: 6px !important;
+  padding: 2px 8px !important;
+  margin: 2px 4px 2px 0 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  z-index: 1 !important;
+}
+
+:deep(.v-select.vs--multiple .vs__selected-options) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 3px !important;
+  padding: 2px !important;
+  max-height: 140px !important;
+  overflow-y: auto !important;
+}
+
+:deep(.v-select.vs--multiple .vs__deselect) {
+  fill: #0d6efd !important;
+  margin-left: 6px !important;
+  cursor: pointer !important;
+}
+
+:deep(.v-select.vs--multiple .vs__deselect:hover) {
+  fill: #dc3545 !important;
+}
+
+:deep(.v-select.vs--multiple .vs__search) {
+  margin: 2px !important;
+  padding: 2px 4px !important;
+  border: none !important;
+  font-size: 13px !important;
+}
+
+:deep(.vs__dropdown-option) {
+  padding: 8px 12px !important;
+  border-bottom: 1px solid #f2f2f2 !important;
+}
+
+:deep(.vs__dropdown-option--highlight) {
+  background-color: #f0f7ff !important;
+  color: #0d6efd !important;
+}
+
+:deep(.vs__dropdown-option--selected) {
+  background-color: #f6fdf8 !important;
 }
 </style>

@@ -19,14 +19,79 @@ class Discount extends BaseModel
 
     protected $casts = [
         'discount_value' => 'float',
+        'items'          => 'array',
     ];
 
     protected $appends = [
+        'name',
+        'unit',
+        'description',
         'target_title',
         'discount_display',
         'validity',
         'is_expired'
     ];
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['title'] ?? null;
+    }
+
+    public function setNameAttribute($value)
+    {
+        $this->attributes['title'] = $value;
+    }
+
+    public function getDescriptionAttribute()
+    {
+        return $this->attributes['notes'] ?? null;
+    }
+
+    public function setDescriptionAttribute($value)
+    {
+        $this->attributes['notes'] = $value;
+    }
+
+    public function getUnitAttribute()
+    {
+        return $this->attributes['discount_type'] ?? 'percentage';
+    }
+
+    public function setUnitAttribute($value)
+    {
+        $this->attributes['discount_type'] = $value;
+    }
+
+    public function getItemIdAttribute()
+    {
+        if (!empty($this->items) && is_array($this->items)) {
+            return $this->items[0] ?? null;
+        }
+        return null;
+    }
+
+    public function getStatusAttribute($value)
+    {
+        return ($value === 'active' || $value == 1 || $value === '1') ? 'active' : 'deactive';
+    }
+
+    public function setStatusAttribute($value)
+    {
+        if ($value === 'deactive' || $value === 'inactive' || $value === 0 || $value === '0' || $value === false) {
+            $this->attributes['status'] = 'deactive';
+        } else {
+            $this->attributes['status'] = 'active';
+        }
+    }
+
+    public function setDiscountTypeAttribute($value)
+    {
+        if (in_array($value, ['category', 'item'])) {
+            $this->attributes['scope'] = $value;
+        } else {
+            $this->attributes['discount_type'] = $value;
+        }
+    }
 
     public function getTargetTitleAttribute()
     {
@@ -34,11 +99,19 @@ class Discount extends BaseModel
         if ($scope === 'category') {
             return ($this->category ? $this->category->title : 'N/A') . ' (Category)';
         } elseif ($scope === 'item') {
-            $title = $this->item ? $this->item->title : 'N/A';
-            if ($this->item && $this->item->barcode) {
-                $title .= ' [' . $this->item->barcode . ']';
+            $itemIds = is_array($this->items) ? $this->items : [];
+            $count = count($itemIds);
+            if ($count === 0) {
+                return 'N/A (Item)';
             }
-            return $title;
+            if ($count === 1) {
+                $item = Item::find($itemIds[0]);
+                if ($item) {
+                    return $item->title . ($item->barcode ? ' [' . $item->barcode . ']' : '');
+                }
+                return "Item #{$itemIds[0]}";
+            }
+            return "{$count} Items Selected";
         }
         return 'All';
     }
@@ -68,11 +141,6 @@ class Discount extends BaseModel
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
-    }
-
-    public function item()
-    {
-        return $this->belongsTo(Item::class, 'item_id', 'id');
     }
 
     public function creator()

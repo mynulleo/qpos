@@ -65,9 +65,14 @@ class Employee extends BaseModel
 		return $this->belongsTo(Designation::class);
 	}
 
+	public function branch()
+	{
+		return $this->belongsTo(Branch::class, 'branch_id', 'id');
+	}
+
 	public function offic_branch()
 	{
-		return $this->belongsTo(Branch::class);
+		return $this->belongsTo(Branch::class, 'branch_id', 'id');
 	}
 
 	public function bank()
