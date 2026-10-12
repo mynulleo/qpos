@@ -39,12 +39,30 @@
                   <th>{{ $t("Target Summary") }}</th>
                   <td>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                      <strong class="text-dark">{{ data.target_title || $t("All") }}</strong>
+                      <strong class="text-dark">
+                        <template v-if="data.scope === 'category'">
+                          {{ data.category ? data.category.title : $t("N/A") }} ({{ $t("Category") }})
+                        </template>
+                        <template v-else-if="data.scope === 'item'">
+                          <template v-if="data.items_details && data.items_details.length === 1">
+                            {{ data.items_details[0].title }} {{ data.items_details[0].barcode ? `[${data.items_details[0].barcode}]` : '' }}
+                          </template>
+                          <template v-else-if="data.items && data.items.length > 1">
+                            {{ $locale === 'bn' ? $bnNum(data.items.length) : data.items.length }} {{ $t("Items Selected") }}
+                          </template>
+                          <template v-else>
+                            {{ data.target_title || $t("All") }}
+                          </template>
+                        </template>
+                        <template v-else>
+                          {{ $t("All") }}
+                        </template>
+                      </strong>
                       <span
                         v-if="data.scope === 'category' && data.category_summary"
                         class="badge bg-success bg-opacity-10 text-success border border-success font-monospace"
                       >
-                        <i class="fas fa-cubes me-1"></i>{{ data.category_summary.total_items }} {{ $t("Items Covered") }}
+                        <i class="fas fa-cubes me-1"></i>{{ $locale === 'bn' ? $bnNum(data.category_summary.total_items) : data.category_summary.total_items }} {{ $t("Items Covered") }}
                       </span>
                     </div>
                   </td>
@@ -53,9 +71,9 @@
                   <th>{{ $t("Discount Rate / Value") }}</th>
                   <td>
                     <span class="badge bg-danger bg-opacity-10 text-danger border border-danger fs-6 px-3 py-1 font-monospace fw-bold">
-                      <i class="fas fa-tag me-1"></i>{{ data.discount_display || (data.discount_value + (data.discount_type === 'percentage' ? '%' : ' ৳')) }}
+                      <i class="fas fa-tag me-1"></i>{{ formatDiscountDisplay(data) }}
                     </span>
-                    <span class="text-muted small ms-2 text-capitalize">({{ data.discount_type || data.unit }})</span>
+                    <span class="text-muted small ms-2 text-capitalize">({{ $t(data.discount_type || data.unit) }})</span>
                   </td>
                 </tr>
                 <tr>
@@ -109,7 +127,7 @@
                   <th>{{ $t("Validity Period") }}</th>
                   <td>
                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-2 py-1 font-monospace">
-                      {{ data.validity || '-' }}
+                      {{ formatValidity(data) }}
                     </span>
                   </td>
                 </tr>
@@ -151,10 +169,10 @@
                 <div>
                   <span class="text-muted small d-block mb-1">{{ $t("Total Category Items") }}</span>
                   <h4 class="mb-0 fw-bold text-dark font-monospace">
-                    {{ data.category_summary.total_items }}
+                    {{ $locale === 'bn' ? $bnNum(data.category_summary.total_items) : data.category_summary.total_items }}
                   </h4>
                   <small class="text-success fw-semibold">
-                    <i class="fas fa-check-circle me-1"></i>{{ data.category_summary.active_items }} {{ $t("Active") }}
+                    <i class="fas fa-check-circle me-1"></i>{{ $locale === 'bn' ? $bnNum(data.category_summary.active_items) : data.category_summary.active_items }} {{ $t("Active") }}
                   </small>
                 </div>
                 <div class="kpi-icon-circle bg-primary bg-opacity-10 text-primary">
@@ -191,10 +209,10 @@
                 <div>
                   <span class="text-muted small d-block mb-1">{{ $t("Campaign Benefit") }}</span>
                   <h4 class="mb-0 fw-bold text-danger font-monospace">
-                    {{ data.discount_display }}
+                    {{ formatDiscountDisplay(data) }}
                   </h4>
                   <small class="text-muted">
-                    {{ $t("On all") }} {{ data.category_summary.total_items }} {{ $t("category items") }}
+                    {{ $t("On all") }} {{ $locale === 'bn' ? $bnNum(data.category_summary.total_items) : data.category_summary.total_items }} {{ $t("category items") }}
                   </small>
                 </div>
                 <div class="kpi-icon-circle bg-danger bg-opacity-10 text-danger">
@@ -233,7 +251,7 @@
               {{ $t("Category Wide Coverage Policy:") }}
             </strong>
             <span class="text-secondary small">
-              {{ $t("This discount applies to all existing") }} <strong>{{ data.category_summary.total_items }} {{ $t("items") }}</strong> {{ $t("under") }} <strong>"{{ data.category ? data.category.title : '' }}"</strong> {{ $t("as well as any newly added items in this category. Whenever any of these items are added to the POS cart, the discount will be applied automatically.") }}
+              {{ $t("This discount applies to all existing") }} <strong>{{ $locale === 'bn' ? $bnNum(data.category_summary.total_items) : data.category_summary.total_items }} {{ $t("items") }}</strong> {{ $t("under") }} <strong>"{{ data.category ? data.category.title : '' }}"</strong> {{ $t("as well as any newly added items in this category. Whenever any of these items are added to the POS cart, the discount will be applied automatically.") }}
             </span>
           </div>
         </div>
@@ -255,10 +273,10 @@
                 </span>
               </h6>
               <span class="badge bg-primary fw-bold">
-                {{ filteredItems.length }} {{ $t("Items") }}
+                {{ $locale === 'bn' ? $bnNum(filteredItems.length) : filteredItems.length }} {{ $t("Items") }}
               </span>
               <span class="badge bg-white text-dark fw-bold" v-if="filteredItems.length !== (data.items_details || []).length">
-                {{ $t("Filtered from") }} {{ (data.items_details || []).length }}
+                {{ $t("Filtered from") }} {{ $locale === 'bn' ? $bnNum((data.items_details || []).length) : (data.items_details || []).length }}
               </span>
             </div>
 
@@ -286,15 +304,15 @@
               </div>
 
               <!-- Page Size Selector -->
-              <select class="form-select form-select-sm text-dark bg-white" style="width: 100px;" v-model.number="pageSize">
-                <option :value="10">10 / page</option>
-                <option :value="25">25 / page</option>
-                <option :value="50">50 / page</option>
-                <option :value="100">100 / page</option>
+              <select class="form-select form-select-sm text-dark bg-white" style="width: 110px;" v-model.number="pageSize">
+                <option :value="10">{{ $locale === 'bn' ? $bnNum(10) : 10 }} / {{ $t('page') }}</option>
+                <option :value="25">{{ $locale === 'bn' ? $bnNum(25) : 25 }} / {{ $t('page') }}</option>
+                <option :value="50">{{ $locale === 'bn' ? $bnNum(50) : 50 }} / {{ $t('page') }}</option>
+                <option :value="100">{{ $locale === 'bn' ? $bnNum(100) : 100 }} / {{ $t('page') }}</option>
               </select>
 
               <span class="badge bg-danger fs-6 fw-bold">
-                {{ data.discount_display }} {{ $t("OFF") }}
+                {{ formatDiscountDisplay(data) }} {{ $t("OFF") }}
               </span>
             </div>
           </div>
@@ -318,7 +336,7 @@
                 <tbody>
                   <tr v-for="(item, index) in paginatedItems" :key="item.id">
                     <td class="text-center font-monospace text-muted">
-                      {{ (currentPage - 1) * pageSize + index + 1 }}
+                      {{ $locale === 'bn' ? $bnNum((currentPage - 1) * pageSize + index + 1) : ((currentPage - 1) * pageSize + index + 1) }}
                     </td>
                     <td>
                       <strong class="text-dark">{{ item.title }}</strong>
@@ -363,7 +381,7 @@
             <!-- Table Pagination Controls -->
             <div class="p-3 bg-light border-top d-flex align-items-center justify-content-between flex-wrap gap-2" v-if="totalPages > 1">
               <span class="text-muted small">
-                {{ $t("Showing") }} <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> - <strong>{{ Math.min(currentPage * pageSize, filteredItems.length) }}</strong> {{ $t("of") }} <strong>{{ filteredItems.length }}</strong> {{ $t("products") }}
+                {{ $t("Showing") }} <strong>{{ $locale === 'bn' ? $bnNum((currentPage - 1) * pageSize + 1) : (currentPage - 1) * pageSize + 1 }}</strong> - <strong>{{ $locale === 'bn' ? $bnNum(Math.min(currentPage * pageSize, filteredItems.length)) : Math.min(currentPage * pageSize, filteredItems.length) }}</strong> {{ $t("of") }} <strong>{{ $locale === 'bn' ? $bnNum(filteredItems.length) : filteredItems.length }}</strong> {{ $t("products") }}
               </span>
 
               <div class="d-flex align-items-center gap-1">
@@ -377,7 +395,7 @@
                 </button>
 
                 <span class="badge bg-white text-dark border px-3 py-2 font-monospace">
-                  {{ $t("Page") }} {{ currentPage }} / {{ totalPages }}
+                  {{ $t("Page") }} {{ $locale === 'bn' ? $bnNum(currentPage) : currentPage }} / {{ $locale === 'bn' ? $bnNum(totalPages) : totalPages }}
                 </span>
 
                 <button
@@ -472,7 +490,11 @@ export default {
       if (!dateStr) return "-";
       try {
         const d = new Date(dateStr);
-        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const yyyy = d.getFullYear();
+        const str = `${dd}-${mm}-${yyyy}`;
+        return this.$locale === "bn" ? this.$bnNum(str) : str;
       } catch (e) {
         return dateStr;
       }
@@ -481,25 +503,43 @@ export default {
       if (!dateStr) return "-";
       try {
         const d = new Date(dateStr);
-        return d.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2, "0");
+        const min = String(d.getMinutes()).padStart(2, "0");
+        const str = `${dd}-${mm}-${yyyy} ${hh}:${min}`;
+        return this.$locale === "bn" ? this.$bnNum(str) : str;
       } catch (e) {
         return dateStr;
       }
     },
     formatPrice(val) {
       const num = Number(val) || 0;
-      return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return this.$locale === "bn" ? this.$bnNum(formatted) : formatted;
+    },
+    formatDiscountDisplay(item) {
+      if (!item) return "-";
+      const type = item.discount_type || item.unit;
+      const val = item.discount_value;
+      if (type === "percentage") {
+        const numStr = String(parseFloat(val || 0));
+        return (this.$locale === "bn" ? this.$bnNum(numStr) : numStr) + "%";
+      }
+      const numFormatted = Number(val || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return "৳ " + (this.$locale === "bn" ? this.$bnNum(numFormatted) : numFormatted);
+    },
+    formatValidity(item) {
+      if (!item || (!item.valid_from && !item.valid_to)) return "-";
+      const from = this.formatDate(item.valid_from);
+      const to = this.formatDate(item.valid_to);
+      return `${from} ${this.$t("to")} ${to}`;
     },
     calculateDiscountAmount(basePrice) {
       const price = Number(basePrice) || 0;
       const discVal = Number(this.data.discount_value) || 0;
-      if (this.data.discount_type === "percentage") {
+      if (this.data.discount_type === "percentage" || this.data.unit === "percentage") {
         return Number(((price * discVal) / 100).toFixed(2));
       }
       return Number(Math.min(price, discVal).toFixed(2));
@@ -511,8 +551,8 @@ export default {
     },
   },
   created() {
-    this.page_title = `${this.headline(this.model)} Details`;
-    this.setBreadcrumbs(this.model, "view");
+    this.page_title = "Discount Details";
+    this.setBreadcrumbs(this.model, "view", "Discount");
     this.get_data(`${this.model}/${this.$route.params.id}`);
   },
 };

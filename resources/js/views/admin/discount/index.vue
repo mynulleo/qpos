@@ -66,6 +66,67 @@
         />
       </v-select-container>
     </template>
+
+    <!-- Column Slots for translated and beautifully formatted table cells -->
+    <template v-slot:discount_type="{ item }">
+      <td class="text-center" @click="pushToViewRoute(item.id)">
+        <span v-if="item.discount_type === 'category' || item.scope === 'category'" class="badge bg-warning text-dark border">
+          <i class="fas fa-folder me-1"></i>{{ $t('Category Wise') }}
+        </span>
+        <span v-else class="badge bg-info text-dark border">
+          <i class="fas fa-boxes me-1"></i>{{ $t('Item Wise') }}
+        </span>
+      </td>
+    </template>
+
+    <template v-slot:target_title="{ item }">
+      <td @click="pushToViewRoute(item.id)">
+        <template v-if="item.scope === 'category' || item.discount_type === 'category'">
+          <strong>{{ item.category ? item.category.title : $t('N/A') }}</strong>
+          <span class="text-muted small ms-1">({{ $t('Category') }})</span>
+        </template>
+        <template v-else-if="item.scope === 'item' || item.discount_type === 'item'">
+          <template v-if="item.items && item.items.length === 1">
+            <strong>{{ item.target_title }}</strong>
+          </template>
+          <template v-else-if="item.items && item.items.length > 1">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary font-monospace">
+              {{ $locale === 'bn' ? $bnNum(item.items.length) : item.items.length }} {{ $t('Items Selected') }}
+            </span>
+          </template>
+          <template v-else>
+            {{ item.target_title || $t('N/A') }}
+          </template>
+        </template>
+        <template v-else>
+          {{ item.target_title || $t('All') }}
+        </template>
+      </td>
+    </template>
+
+    <template v-slot:applicable_on="{ item }">
+      <td class="text-center" @click="pushToViewRoute(item.id)">
+        <span class="badge bg-light text-dark border px-2 py-1">
+          {{ item.applicable_on === 'both' ? $t('Retail & Wholesale') : (item.applicable_on === 'retail' ? $t('Retail') : (item.applicable_on === 'wholesale' ? $t('Wholesale') : $t('Both'))) }}
+        </span>
+      </td>
+    </template>
+
+    <template v-slot:discount_display="{ item }">
+      <td class="text-center" @click="pushToViewRoute(item.id)">
+        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger fw-bold font-monospace">
+          {{ formatDiscountDisplay(item) }}
+        </span>
+      </td>
+    </template>
+
+    <template v-slot:validity="{ item }">
+      <td class="text-center" @click="pushToViewRoute(item.id)">
+        <span class="small font-monospace">
+          {{ formatValidity(item) }}
+        </span>
+      </td>
+    </template>
   </index-page>
 </template>
 
@@ -118,20 +179,28 @@ export default {
         meta: [],
         links: [],
       },
-      discountTypeOptions: [
-        { title: "Category Wise", value: "category" },
-        { title: "Item Wise", value: "item" },
-      ],
-      applicableOptions: [
-        { title: "Retail", value: "retail" },
-        { title: "Wholesale", value: "wholesale" },
-        { title: "Both (Retail & Wholesale)", value: "both" },
-      ],
-      statusOptions: [
-        { title: "Active", value: "active" },
-        { title: "Deactive", value: "deactive" },
-      ],
     };
+  },
+  computed: {
+    discountTypeOptions() {
+      return [
+        { title: this.$t("Category Wise"), value: "category" },
+        { title: this.$t("Item Wise"), value: "item" },
+      ];
+    },
+    applicableOptions() {
+      return [
+        { title: this.$t("Retail"), value: "retail" },
+        { title: this.$t("Wholesale"), value: "wholesale" },
+        { title: this.$t("Both (Retail & Wholesale)"), value: "both" },
+      ];
+    },
+    statusOptions() {
+      return [
+        { title: this.$t("Active"), value: "active" },
+        { title: this.$t("Deactive"), value: "deactive" },
+      ];
+    },
   },
   provide() {
     return {
@@ -146,6 +215,45 @@ export default {
     };
   },
   methods: {
+    pushToViewRoute(id) {
+      if (this.$root.checkPermission(this.model + ".show")) {
+        this.$router.push({
+          name: this.model + ".show",
+          params: { id: id },
+          query: { page: this.$route.query.page },
+        });
+      }
+    },
+    formatDiscountDisplay(item) {
+      if (!item) return "-";
+      const type = item.discount_type || item.unit;
+      const val = item.discount_value;
+      if (type === "percentage") {
+        const numStr = String(parseFloat(val));
+        return (this.$locale === "bn" ? this.$bnNum(numStr) : numStr) + "%";
+      }
+      const numFormatted = Number(val || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return "৳ " + (this.$locale === "bn" ? this.$bnNum(numFormatted) : numFormatted);
+    },
+    formatValidity(item) {
+      if (!item || (!item.valid_from && !item.valid_to)) return "-";
+      const formatDateStr = (dateStr) => {
+        if (!dateStr) return "-";
+        try {
+          const d = new Date(dateStr);
+          const dd = String(d.getDate()).padStart(2, "0");
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const yyyy = d.getFullYear();
+          const str = `${dd}-${mm}-${yyyy}`;
+          return this.$locale === "bn" ? this.$bnNum(str) : str;
+        } catch (e) {
+          return dateStr;
+        }
+      };
+      const from = formatDateStr(item.valid_from);
+      const to = formatDateStr(item.valid_to);
+      return `${from} ${this.$t("to")} ${to}`;
+    },
     search() {
       this.$router.push({
         name: this.model + ".index",
@@ -165,7 +273,7 @@ export default {
   },
   created() {
     this.getRouteName(this.model);
-    this.setBreadcrumbs(this.model, "index");
+    this.setBreadcrumbs(this.model, "index", "Discount");
     this.page_title = "Discount Management";
     this.search();
   },

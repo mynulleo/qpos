@@ -97,7 +97,7 @@
                       {{ $t("Target Products / Items") }} <span class="text-danger">*</span>
                     </label>
                     <span v-if="data.items && data.items.length > 0" class="badge bg-success px-2 py-1">
-                      {{ data.items.length }} {{ $t("Item(s) Selected") }}
+                      {{ $locale === 'bn' ? $bnNum(data.items.length) : data.items.length }} {{ $t("Item(s) Selected") }}
                     </span>
                   </div>
 
@@ -110,7 +110,7 @@
                       :title="$t('Select all items')"
                     >
                       <i class="fas fa-check-double"></i>
-                      <span>{{ $t("Select All Items") }} ({{ items.length }})</span>
+                      <span>{{ $t("Select All Items") }} ({{ $locale === 'bn' ? $bnNum(items.length) : items.length }})</span>
                     </button>
                     <button
                       type="button"
@@ -184,7 +184,7 @@
                             <span class="text-muted small ms-2" v-if="option.category && option.category.title">({{ option.category.title }})</span>
                           </div>
                           <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted small font-monospace" v-if="option.sell_price">৳{{ option.sell_price }}</span>
+                            <span class="text-muted small font-monospace" v-if="option.sell_price">৳{{ $locale === 'bn' ? $bnNum(option.sell_price) : option.sell_price }}</span>
                             <i v-if="isItemSelected(option.id)" class="fas fa-check-circle text-success fs-6 ms-2" :title="$t('Selected')"></i>
                             <i v-else class="far fa-circle text-muted fs-6 ms-2 opacity-25"></i>
                           </div>
@@ -302,7 +302,7 @@
               <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing...") }}
             </template>
             <template v-else>
-              <i class="fas fa-check-circle"></i> {{ $t($route.params.id ? "Update Discount" : "Save Discount") }}
+              <i class="fas fa-check-circle"></i> {{ $route.params.id ? $t("Update Discount") : $t("Save Discount") }}
             </template>
           </button>
         </div>
@@ -335,11 +335,6 @@ export default {
       categoryFilterId: null,
       categories: [],
       items: [],
-      applicableOptions: [
-        { title: "Both (Retail & Wholesale)", value: "both" },
-        { title: "Retail Only", value: "retail" },
-        { title: "Wholesale Only", value: "wholesale" },
-      ],
     };
   },
   provide() {
@@ -353,6 +348,13 @@ export default {
         return this.items;
       }
       return this.items.filter((item) => item.category_id == this.categoryFilterId);
+    },
+    applicableOptions() {
+      return [
+        { title: this.$t("Both (Retail & Wholesale)"), value: "both" },
+        { title: this.$t("Retail Only"), value: "retail" },
+        { title: this.$t("Wholesale Only"), value: "wholesale" },
+      ];
     },
   },
   watch: {
@@ -388,7 +390,8 @@ export default {
     },
     selectAllItems() {
       this.data.items = this.items.map((i) => i.id);
-      this.$toast(`${this.items.length} items selected`, "info");
+      const count = this.$locale === "bn" ? this.$bnNum(this.items.length) : this.items.length;
+      this.$toast(`${count} ${this.$t("items selected")}`, "info");
     },
     clearAllItems() {
       this.data.items = [];
@@ -400,26 +403,28 @@ export default {
       const current = Array.isArray(this.data.items) ? this.data.items : [];
       const merged = Array.from(new Set([...current, ...newIds]));
       this.data.items = merged;
-      this.$toast(`${newIds.length} items added from category`, "success");
+      const count = this.$locale === "bn" ? this.$bnNum(newIds.length) : newIds.length;
+      this.$toast(`${count} ${this.$t("items added from category")}`, "success");
     },
     submit() {
       this.$validate().then((res) => {
         const error = this.validation.countErrors();
 
         if (this.data.discount_type === "category" && !this.data.category_id) {
-          this.$toast("Please select a target Category", "warning");
+          this.$toast(this.$t("Please select a target Category"), "warning");
           return false;
         }
 
         if (this.data.discount_type === "item") {
           if (!Array.isArray(this.data.items) || this.data.items.length === 0) {
-            this.$toast("Please select at least one Product / Item", "warning");
+            this.$toast(this.$t("Please select at least one Product / Item"), "warning");
             return false;
           }
         }
 
         if (error > 0) {
-          this.$toast(`You need to fill ${error} more empty mandatory fields`, "warning");
+          const errCount = this.$locale === "bn" ? this.$bnNum(error) : error;
+          this.$toast(`${this.$t("You need to fill")} ${errCount} ${this.$t("more empty mandatory fields")}`, "warning");
           return false;
         }
 
@@ -436,7 +441,7 @@ export default {
   created() {
     if (this.$route.params.id) {
       this.page_title = "Discount Edit";
-      this.setBreadcrumbs(this.model, "edit");
+      this.setBreadcrumbs(this.model, "edit", "Discount");
       this.get_data(`${this.model}/${this.$route.params.id}`).then((res) => {
         if (res && res.data) {
           if (res.data.title && !this.data.name) this.data.name = res.data.title;
@@ -456,7 +461,7 @@ export default {
       });
     } else {
       this.page_title = "Discount Create";
-      this.setBreadcrumbs(this.model, "create");
+      this.setBreadcrumbs(this.model, "create", "Discount");
     }
     this.getCategories();
     this.getItems();
