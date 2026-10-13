@@ -315,8 +315,8 @@ class InvoiceController extends BaseController
             $seriesTitle = $d->item && $d->item->series ? $d->item->series->title : null;
             $colorTitle = $d->color ? ($d->color->title ?? $d->color->name) : ($d->item && $d->item->color ? ($d->item->color->title ?? $d->item->color->name) : null);
             $sizeTitle = $d->size ? ($d->size->title ?? $d->size->name) : ($d->item && $d->item->size ? ($d->item->size->title ?? $d->item->size->name) : null);
-            $warrantyType = $d->warranty_type && $d->warranty_type !== 'none' ? $d->warranty_type : ($d->item ? $d->item->warranty_type : 'none');
-            $warrantyPeriod = $d->warranty_period ?: ($d->item ? $d->item->warranty_period : null);
+            $warrantyType = $d->warranty_type && $d->warranty_type !== 'none' ? $d->warranty_type : 'none';
+            $warrantyPeriod = $d->warranty_type && $d->warranty_type !== 'none' ? $d->warranty_period : null;
 
             return [
                 'id' => $d->id,

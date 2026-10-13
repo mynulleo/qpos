@@ -21,14 +21,14 @@
         <div class="card-header theme-bg text-white py-2 px-3">
           <span class="fw-bold fs-6">
             <i class="fas fa-search me-2 text-warning"></i>
-            <span>{{ $t('Step 1: Serial Number Verification') }}</span>
+            <span>{{ $t('Step 1: Serial / Invoice Verification') }}</span>
           </span>
         </div>
         <div class="card-body p-4 bg-light">
           <div class="row g-3 align-items-center">
             <div class="col-lg-7 col-md-12">
               <label class="form-label fw-bold text-dark mb-2" style="font-size: 13px;">
-                {{ $t('Enter or Scan Item Serial Number') }}:
+                {{ $t('Enter or Scan Serial Number or Invoice Number') }}:
               </label>
               <div class="serial-search-box d-flex align-items-center shadow-sm">
                 <div class="search-icon-prefix d-flex align-items-center justify-content-center">
@@ -37,7 +37,7 @@
                 <input
                   type="text"
                   class="form-control serial-search-input font-monospace fw-bold"
-                  :placeholder="$t('Scan or type Serial No and press Enter...')"
+                  :placeholder="$t('Scan or type Serial No or Invoice No and press Enter...')"
                   v-model="searchSerial"
                   @keyup.enter="checkSerialEligibility"
                 />
@@ -48,13 +48,13 @@
                   :disabled="searching"
                 >
                   <i :class="searching ? 'fas fa-spinner fa-spin' : 'fas fa-search'"></i>
-                  <span>{{ $t('Verify Serial') }}</span>
+                  <span>{{ $t('Verify') }}</span>
                 </button>
               </div>
 
               <small class="text-muted d-block mt-2" style="font-size: 12px;">
                 <i class="fas fa-info-circle text-primary me-1"></i>
-                <span>{{ $t('Type or scan serial number to automatically verify sales record & warranty validity.') }}</span>
+                <span>{{ $t('Type or scan serial or invoice number to automatically verify sales record & warranty validity.') }}</span>
               </small>
             </div>
 
@@ -76,6 +76,41 @@
 
     <!-- 📢 Step 2: Verification Banners -->
     <div class="results-step-wrapper mb-4" v-if="verificationResult">
+      <!-- 📦 Multiple Items in Invoice Picker -->
+      <div class="card border border-primary border-opacity-25 shadow-sm mb-3 bg-white" v-if="verificationResult.invoice_items && verificationResult.invoice_items.length > 1">
+        <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+          <span class="small fw-bold text-dark">
+            <i class="fas fa-boxes text-primary me-2"></i>
+            <span>{{ $t('Invoice Items') }} ({{ verificationResult.invoice_items.length }}) - {{ $t('Select Item for Claim') }}</span>
+          </span>
+          <span class="badge bg-primary text-white font-monospace">Inv #{{ verificationResult.invoice_no }}</span>
+        </div>
+        <div class="card-body p-2">
+          <div class="list-group list-group-flush">
+            <button
+              type="button"
+              v-for="invItem in verificationResult.invoice_items"
+              :key="invItem.id"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3 rounded mb-1 border"
+              :class="{ 'border-primary bg-primary bg-opacity-10 fw-bold': form.invoice_detail_id === invItem.id }"
+              @click="selectInvoiceItem(invItem.id)"
+            >
+              <div>
+                <span class="d-block text-dark">{{ invItem.title }}</span>
+                <small class="text-muted font-monospace" v-if="invItem.serial_no">S/N: {{ invItem.serial_no }}</small>
+                <small class="text-muted" v-if="invItem.color_title || invItem.size_title"> ({{ invItem.color_title }} {{ invItem.size_title }})</small>
+              </div>
+              <div class="text-end">
+                <span class="badge" :class="invItem.warranty_type === 'guarantee' ? 'bg-success' : (invItem.warranty_type !== 'none' && invItem.warranty_period ? 'bg-primary' : 'bg-secondary')">
+                  {{ invItem.warranty_period || (invItem.warranty_type === 'none' ? 'No Warranty' : invItem.warranty_type) }}
+                </span>
+                <i class="fas fa-check-circle text-primary ms-2" v-if="form.invoice_detail_id === invItem.id"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 1. ELIGIBLE BANNER -->
       <div class="alert alert-success border-2 shadow-sm d-flex align-items-start gap-3 p-3" v-if="verificationResult.eligible">
         <i class="fas fa-check-circle fs-1 text-success mt-1"></i>
@@ -421,7 +456,7 @@ export default {
   methods: {
     checkSerialEligibility() {
       if (!this.searchSerial || this.searchSerial.trim() === '') {
-        this.$toast('Please enter or scan a serial number', 'warning');
+        this.$toast('Please enter or scan a serial number or invoice number', 'warning');
         return;
       }
 
@@ -446,7 +481,35 @@ export default {
         })
         .catch(err => {
           this.searching = false;
-          this.$toast('Error verifying serial number', 'error');
+          this.$toast('Error verifying serial or invoice number', 'error');
+          console.error(err);
+        });
+    },
+    selectInvoiceItem(detailId) {
+      if (!detailId) return;
+      this.searching = true;
+      axios.get('warrantyClaim/check-serial', { 
+        params: { 
+          serial_no: this.searchSerial.trim(), 
+          invoice_detail_id: detailId 
+        } 
+      })
+        .then(res => {
+          const resData = res.data;
+          this.searching = false;
+          this.$nextTick(() => {
+            this.verificationResult = resData;
+            if (resData.found) {
+              this.populateForm(resData);
+            }
+            if (resData.message) {
+              this.$toast(resData.message, resData.eligible ? 'success' : (resData.found ? 'warning' : 'error'));
+            }
+          });
+        })
+        .catch(err => {
+          this.searching = false;
+          this.$toast('Error selecting invoice item', 'error');
           console.error(err);
         });
     },
@@ -570,6 +633,15 @@ export default {
     if (this.$route.params.id) {
       this.isEdit = true;
       this.loadClaimForEdit(this.$route.params.id);
+    }
+  },
+  mounted() {
+    const qSerial = this.$route.query.serial || this.$route.query.serial_no || this.$route.query.invoice || this.$route.query.invoice_no;
+    if (qSerial && !this.isEdit) {
+      this.searchSerial = String(qSerial).trim();
+      this.$nextTick(() => {
+        this.checkSerialEligibility();
+      });
     }
   },
 };

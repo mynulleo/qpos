@@ -28,6 +28,8 @@
             baseurl: "{{ url('/') }}",
             asset_url: "{{ str()->of(asset('/'))->trim('/') }}",
             storage_url: "{{ str()->of(Storage::url('/'))->trim('/') }}",
+            user: @json(Auth::guard('admin')->user()),
+            role: "{{ Auth::guard('admin')->user()?->role?->name ?? (Auth::guard('admin')->user()?->role_id == 1 ? 'Administrator' : '') }}",
         }
     </script>
 

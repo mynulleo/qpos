@@ -988,8 +988,36 @@ class ReportController extends BaseController
                 $sizeTitle = $purchaseDetail->size ? $purchaseDetail->size->title : null;
             }
 
-            $warrantyType = $item && $item->warranty_type ? $item->warranty_type : 'none';
-            $warrantyPeriod = $item && $item->warranty_period ? $item->warranty_period : '';
+            // ⭐️ Priority 1: Check warranty directly from soldDetail (invoice_details), then purchaseDetail, then fallback to item
+            $warrantyPeriod = '';
+            if ($soldDetail && !empty($soldDetail->warranty_period) && trim($soldDetail->warranty_period) !== '') {
+                $warrantyPeriod = trim($soldDetail->warranty_period);
+            } elseif ($soldDetail && !empty($soldDetail->warranty_duration) && trim($soldDetail->warranty_duration) !== '') {
+                $warrantyPeriod = trim($soldDetail->warranty_duration);
+            } elseif ($purchaseDetail && !empty($purchaseDetail->warranty_period) && trim($purchaseDetail->warranty_period) !== '') {
+                $warrantyPeriod = trim($purchaseDetail->warranty_period);
+            } elseif ($item && !empty($item->warranty_period) && trim($item->warranty_period) !== '') {
+                $warrantyPeriod = trim($item->warranty_period);
+            }
+
+            $warrantyType = 'none';
+            if ($soldDetail && !empty($soldDetail->warranty_type) && trim($soldDetail->warranty_type) !== '' && $soldDetail->warranty_type !== 'none') {
+                $warrantyType = trim($soldDetail->warranty_type);
+            } elseif ($purchaseDetail && !empty($purchaseDetail->warranty_type) && trim($purchaseDetail->warranty_type) !== '' && $purchaseDetail->warranty_type !== 'none') {
+                $warrantyType = trim($purchaseDetail->warranty_type);
+            } elseif ($item && !empty($item->warranty_type) && trim($item->warranty_type) !== '' && $item->warranty_type !== 'none') {
+                $warrantyType = trim($item->warranty_type);
+            } elseif (!empty($warrantyPeriod)) {
+                $warrantyType = (stripos($warrantyPeriod, 'guarantee') !== false || stripos($warrantyPeriod, 'গ্যারান্টি') !== false) ? 'guarantee' : 'warranty';
+            }
+
+            if ($warrantyType !== 'guarantee' && $warrantyType !== 'none' && !empty($warrantyPeriod)) {
+                if (stripos($warrantyPeriod, 'guarantee') !== false || stripos($warrantyPeriod, 'গ্যারান্টি') !== false) {
+                    $warrantyType = 'guarantee';
+                } else {
+                    $warrantyType = 'warranty';
+                }
+            }
 
             // Sales details
             $invoice = $soldDetail ? $soldDetail->invoice : null;
@@ -1014,7 +1042,16 @@ class ReportController extends BaseController
                 if ($warrantyType === 'none' || empty($warrantyPeriod)) {
                     $wStatus = 'no_warranty';
                 } else {
-                    $expiryDate = $this->calculateExpiryDateHelper($saleDate, $warrantyPeriod);
+                    if ($soldDetail && !empty($soldDetail->warranty_expires_at)) {
+                        try {
+                            $expiryDate = Carbon::parse($soldDetail->warranty_expires_at)->format('Y-m-d');
+                        } catch (\Exception $e) {
+                            $expiryDate = null;
+                        }
+                    }
+                    if (!$expiryDate) {
+                        $expiryDate = $this->calculateExpiryDateHelper($saleDate, $warrantyPeriod);
+                    }
                     if ($expiryDate) {
                         $expCarbon = Carbon::parse($expiryDate);
                         if ($today->lte($expCarbon)) {
@@ -1158,11 +1195,16 @@ class ReportController extends BaseController
             $saleDate = Carbon::parse($saleDateStr);
             $period = strtolower(trim($warrantyPeriodStr));
 
+            $bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            $enDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+            $period = str_replace($bnDigits, $enDigits, $period);
+            $period = str_replace(['বছর', 'মাস', 'দিন', 'সপ্তাহ'], ['year', 'month', 'day', 'week'], $period);
+
             if (str_contains($period, 'lifetime')) {
                 return $saleDate->copy()->addYears(50)->format('Y-m-d');
             }
 
-            preg_match('/(\d+)\s*(year|yr|month|mon|day|d)/i', $period, $matches);
+            preg_match('/(\d+)\s*(year|yr|month|mon|day|d|week|wk)/i', $period, $matches);
 
             if (!empty($matches)) {
                 $amount = intval($matches[1]);
@@ -1172,6 +1214,8 @@ class ReportController extends BaseController
                     return $saleDate->copy()->addYears($amount)->format('Y-m-d');
                 } elseif (str_starts_with($unit, 'm')) {
                     return $saleDate->copy()->addMonths($amount)->format('Y-m-d');
+                } elseif (str_starts_with($unit, 'w')) {
+                    return $saleDate->copy()->addWeeks($amount)->format('Y-m-d');
                 } elseif (str_starts_with($unit, 'd')) {
                     return $saleDate->copy()->addDays($amount)->format('Y-m-d');
                 }
@@ -1216,6 +1260,7 @@ class ReportController extends BaseController
             'size:id,title',
             'invoice:id,invoice_no,invoice_date,amount',
             'invoice.client:id,name,mobile,address',
+            'invoiceDetail:id,invoice_id,warranty_type,warranty_period,warranty_expires_at,serial_no',
             'creator:id,full_name,email',
             'logs' => function ($q) {
                 $q->with('creator:id,full_name,email')->latest('id');

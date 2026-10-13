@@ -9,6 +9,13 @@ namespace App\Http\Controllers\Admin;
 use Exception;
 use App\Models\Client;
 use App\Models\Workorder;
+use App\Models\Invoice;
+use App\Models\Payment;
+use App\Models\SalesReturn;
+use App\Models\ClientPointTransaction;
+use App\Models\WarrantyClaim;
+use App\Models\Quotation;
+use App\Models\System\SiteSetting;
 use App\Traits\ClientTrait;
 use Illuminate\Http\Request;
 use App\Http\Resources\Resource;
@@ -113,9 +120,103 @@ class ClientController extends BaseController
                 'bank:id,bank_name',
                 'district:id,district_name',
             ]
-        )->find($id);
+        )->findOrFail($id);
 
-        return response()->json($client->toArray());
+        // Invoices list (recent first)
+        $invoices = Invoice::where('client_id', $id)
+            ->latest('id')
+            ->get(['id', 'invoice_no', 'invoice_date', 'original_amount', 'amount', 'paid_amount', 'discount', 'coupon_discount', 'earned_points', 'redeemed_points', 'vat', 'is_closed', 'status', 'created_at']);
+
+        // Payments list
+        $payments = Payment::where('client_id', $id)
+            ->with(['fund_account:id,account_name', 'bank:id,bank_name'])
+            ->latest('id')
+            ->get(['id', 'payslipno', 'payment_type', 'payment_date', 'amount', 'discount', 'fund_account_id', 'bank_id', 'payment_method', 'mbanking_type', 'trxid', 'status', 'created_at']);
+
+        // Sales Returns list
+        $salesReturns = SalesReturn::where('client_id', $id)
+            ->with(['invoice:id,invoice_no', 'branch:id,name'])
+            ->latest('id')
+            ->get();
+
+        // Loyalty Points Transactions
+        $pointTransactions = ClientPointTransaction::where('client_id', $id)
+            ->with(['invoice:id,invoice_no', 'creator:id,full_name'])
+            ->latest('id')
+            ->get();
+
+        // Warranty Claims
+        $warrantyClaims = WarrantyClaim::where('client_id', $id)
+            ->with(['item:id,title,barcode', 'invoice:id,invoice_no'])
+            ->latest('id')
+            ->get();
+
+        // Quotations
+        $quotations = Quotation::where('client_id', $id)
+            ->with(['branch:id,name'])
+            ->latest('id')
+            ->get(['id', 'branch_id', 'quotation_no', 'quotation_date', 'validity_date', 'subject', 'total_amount', 'status', 'created_at']);
+
+        // Loyalty point redeem rate from site settings
+        $siteSetting = SiteSetting::first();
+        $redeemRate = (float)($siteSetting->point_redeem_rate ?? 10);
+        if ($redeemRate <= 0) {
+            $redeemRate = 10;
+        }
+
+        // Calculate aggregated metrics
+        $totalPurchase = (float)$invoices->sum('amount');
+        $totalPaid = (float)$invoices->sum('paid_amount');
+        $totalInvoiceDue = (float)$invoices->filter(function ($inv) {
+            return $inv->amount > $inv->paid_amount;
+        })->sum(function ($inv) {
+            return $inv->amount - $inv->paid_amount;
+        });
+        $previousDue = (float)($client->previous_due ?? 0);
+        $totalDue = $totalInvoiceDue + $previousDue;
+
+        $totalReturnsCount = $salesReturns->count();
+        $totalReturnAmount = (float)$salesReturns->sum('total_refund_amount');
+
+        $pointsBalance = (float)($client->points_balance ?? 0);
+        $pointsCashValue = round($pointsBalance / $redeemRate, 2);
+        $totalPointsEarned = (float)$pointTransactions->where('type', 'Earn')->sum('points_in');
+        $totalPointsRedeemed = (float)$pointTransactions->where('type', 'Redeem')->sum('points_out');
+
+        $summary = [
+            'total_purchase' => $totalPurchase,
+            'total_paid' => $totalPaid,
+            'total_due' => $totalDue,
+            'invoice_due' => $totalInvoiceDue,
+            'previous_due' => $previousDue,
+            'due_limit' => (float)($client->due_limit ?? 0),
+            'total_invoices' => $invoices->count(),
+            'paid_invoices_count' => $invoices->where('is_closed', 1)->count(),
+            'due_invoices_count' => $invoices->where('is_closed', 0)->count(),
+            'total_payments_count' => $payments->count(),
+            'total_payments_amount' => (float)$payments->sum('amount'),
+            'total_returns' => $totalReturnsCount,
+            'total_return_amount' => $totalReturnAmount,
+            'points_balance' => $pointsBalance,
+            'points_redeem_rate' => $redeemRate,
+            'points_cash_value' => $pointsCashValue,
+            'total_points_earned' => $totalPointsEarned,
+            'total_points_redeemed' => $totalPointsRedeemed,
+            'total_warranty_claims' => $warrantyClaims->count(),
+            'total_quotations' => $quotations->count(),
+            'total_quotations_amount' => (float)$quotations->sum('total_amount'),
+        ];
+
+        $res = $client->toArray();
+        $res['summary'] = $summary;
+        $res['invoices'] = $invoices;
+        $res['payments'] = $payments;
+        $res['sales_returns'] = $salesReturns;
+        $res['point_transactions'] = $pointTransactions;
+        $res['warranty_claims'] = $warrantyClaims;
+        $res['quotations'] = $quotations;
+
+        return response()->json($res);
     }
 
     /**

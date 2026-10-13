@@ -200,7 +200,7 @@ class GrnController extends BaseController
      */
     public function create()
     {
-        return view('layouts.backend_app');
+        return view('admin.layouts.admin_app');
     }
 
     /**
@@ -290,6 +290,10 @@ class GrnController extends BaseController
                 'wholesale_price'         => (float) ($detail->wholesale_price ?? ($detail->item->wholesale_price ?? $detail->selling_price ?? 0)),
                 'total_amount'            => (float) ($remainingQty * $detail->price),
                 'serial_no'               => '',
+                'warranty_type'           => $detail->warranty_type ?? ($detail->item->warranty_type ?? 'none'),
+                'warranty_duration'       => $detail->warranty_duration ?? ($detail->item->warranty_months ?? null),
+                'warranty_period'         => $detail->warranty_period ?? ($detail->item->warranty_period ?? ''),
+                'warranty_expires_at'     => $detail->warranty_expires_at ?? null,
                 'note'                    => '',
             ];
         }
@@ -462,6 +466,10 @@ class GrnController extends BaseController
                         'selling_price'           => $sellingPrice,
                         'total_amount'            => $lineTotal,
                         'serial_no'               => $serialNo,
+                        'warranty_type'           => !empty($item['warranty_type']) ? $item['warranty_type'] : 'none',
+                        'warranty_duration'       => !empty($item['warranty_duration']) ? intval($item['warranty_duration']) : null,
+                        'warranty_period'         => !empty($item['warranty_period']) ? $item['warranty_period'] : null,
+                        'warranty_expires_at'     => !empty($item['warranty_expires_at']) ? date('Y-m-d', strtotime($item['warranty_expires_at'])) : null,
                         'note'                    => $item['note'] ?? null,
                         'status'                  => 'active',
                     ]);
@@ -622,7 +630,7 @@ class GrnController extends BaseController
     public function show(Request $request, $id)
     {
         if ($request->format() == 'html') {
-            return view('layouts.backend_app');
+            return view('admin.layouts.admin_app');
         }
 
         $grn = Grn::with([
@@ -649,7 +657,7 @@ class GrnController extends BaseController
      */
     public function edit($id)
     {
-        return view('layouts.backend_app');
+        return view('admin.layouts.admin_app');
     }
 
     /**
@@ -769,6 +777,10 @@ class GrnController extends BaseController
                         'selling_price'           => $sellingPrice,
                         'total_amount'            => $lineTotal,
                         'serial_no'               => $serialNo,
+                        'warranty_type'           => !empty($item['warranty_type']) ? $item['warranty_type'] : 'none',
+                        'warranty_duration'       => !empty($item['warranty_duration']) ? intval($item['warranty_duration']) : null,
+                        'warranty_period'         => !empty($item['warranty_period']) ? $item['warranty_period'] : null,
+                        'warranty_expires_at'     => !empty($item['warranty_expires_at']) ? date('Y-m-d', strtotime($item['warranty_expires_at'])) : null,
                         'note'                    => $item['note'] ?? null,
                         'status'                  => 'active',
                     ]);

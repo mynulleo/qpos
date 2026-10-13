@@ -139,6 +139,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('grn/purchase-items/{purchase_id}', [App\Http\Controllers\Admin\GrnController::class, 'purchaseitems'])->name('grn.purchaseitems');
     Route::get('grn/statistics', [App\Http\Controllers\Admin\GrnController::class, 'statistics'])->name('grn.statistics');
     Route::post('grn/check-serials', [App\Http\Controllers\Admin\GrnController::class, 'checkSerials'])->name('grn.checkserials');
+    Route::post('grn/checkSerials', [App\Http\Controllers\Admin\GrnController::class, 'checkSerials'])->name('grn.checkSerials');
     
     // Label Print & Barcode Utility Routes
     Route::get('generate-item-barcode', [App\Http\Controllers\Admin\ItemController::class, 'getGeneratedBarcode']);

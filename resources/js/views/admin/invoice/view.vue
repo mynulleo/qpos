@@ -672,8 +672,9 @@ export default {
       return item.barcode || item.item?.barcode || '';
     },
     getItemWarranty(item) {
-      const wType = item.warranty_type || item.item?.warranty_type;
-      const wPeriod = item.warranty_period || item.item?.warranty_period;
+      if (!item) return '';
+      const wType = item.warranty_type;
+      const wPeriod = item.warranty_period;
       if (wType && wType !== 'none' && wPeriod && typeof wPeriod === 'string' && wPeriod.trim() !== '') {
         const label = wType === 'guarantee' ? 'Guarantee' : 'Warranty';
         return `${label}: ${wPeriod.trim()}`;

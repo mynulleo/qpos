@@ -64,5 +64,30 @@ class Client extends BaseModel
         return $this->hasMany(ClientPointTransaction::class, 'client_id', 'id')->latest('id');
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'client_id', 'id')->latest('id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'client_id', 'id')->latest('id');
+    }
+
+    public function salesReturns()
+    {
+        return $this->hasMany(SalesReturn::class, 'client_id', 'id')->latest('id');
+    }
+
+    public function warrantyClaims()
+    {
+        return $this->hasMany(WarrantyClaim::class, 'client_id', 'id')->latest('id');
+    }
+
+    public function quotations()
+    {
+        return $this->hasMany(Quotation::class, 'client_id', 'id')->latest('id');
+    }
+
     // date format
 }

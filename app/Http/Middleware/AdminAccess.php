@@ -18,20 +18,26 @@ class AdminAccess
     {
         $controllerAction = class_basename(Route::currentRouteName());
         if (isset($controllerAction)) {
-            $permitedMenuArr = App::make('permittedMenuArr');
-            if (! in_array($controllerAction, $permitedMenuArr)) {
-                return abort(403);
+            $user = auth()->guard('admin')->user() ?? auth()->user();
+            // Role 1 (Administrator) & Role 2 (System Admin) bypass role-based restriction
+            $isSuperAdmin = $user && isset($user->role_id) && in_array((int)$user->role_id, [1, 2]);
+
+            if (!$isSuperAdmin) {
+                $permitedMenuArr = App::make('permittedMenuArr');
+                if (! in_array($controllerAction, $permitedMenuArr)) {
+                    return abort(403);
+                }
             }
-            // if ($response->status()) {
-            //     # code...
-            // }
-            if ($request->format() == 'html') {
+
+            if ($request->format() == 'html' || (!$request->expectsJson() && !$request->ajax())) {
                 return response(view('admin.layouts.admin_app'));
-            } elseif ($request->format() == 'json') {
+            } elseif ($request->format() == 'json' || $request->expectsJson() || $request->ajax()) {
                 return $next($request);
             } else {
-                abort(404);
+                return response(view('admin.layouts.admin_app'));
             }
         }
+
+        return $next($request);
     }
 }
