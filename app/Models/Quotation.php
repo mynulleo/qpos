@@ -17,6 +17,33 @@ class Quotation extends BaseModel
 
     protected $logName = "Quotation";
 
+    protected $casts = [
+        'terms_conditions' => 'array',
+    ];
+
+    public function getTermsConditionsAttribute($value)
+    {
+        if (empty($value)) return [];
+        if (is_array($value)) {
+            if (count($value) === 1 && is_string($value[0]) && (str_starts_with(trim($value[0]), '[') || str_starts_with(trim($value[0]), '{'))) {
+                $sub = json_decode($value[0], true);
+                if (is_array($sub)) return $sub;
+            }
+            return $value;
+        }
+        $decoded = json_decode($value, true);
+        if (is_string($decoded)) {
+            $decoded = json_decode($decoded, true);
+        }
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+        if (is_string($value) && trim($value) !== '') {
+            return array_values(array_filter(array_map('trim', explode("\n", $value))));
+        }
+        return [];
+    }
+
     /**
      * Generate auto unique Quotation Number.
      * Format: QT-YYMM-0001

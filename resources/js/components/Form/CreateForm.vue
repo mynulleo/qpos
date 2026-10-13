@@ -143,12 +143,18 @@ export default {
         };
     },
 
-    inject: ["validate"],
+    inject: {
+        validate: {
+            default: () => ({ errors: [] }),
+        },
+    },
 
     methods: {
         emitFormSubmit() {
             this.$emit("onSubmit");
-            this.formValidationErrorScroll(this.validate.errors);
+            if (this.validate && Array.isArray(this.validate.errors) && this.validate.errors.length > 0) {
+                this.formValidationErrorScroll(this.validate.errors);
+            }
         },
     },
 

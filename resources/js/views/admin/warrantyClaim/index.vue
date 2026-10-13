@@ -42,8 +42,8 @@
               @click="showAdvanced = !showAdvanced"
               data-bs-toggle="tooltip"
               data-bs-placement="top"
-              data-bs-title="Advance Filter"
-              title="Advance Filter"
+              :data-bs-title="$t('Advance Filter')"
+              :title="$t('Advance Filter')"
               v-x-tooltip
             >
               <i class="fas fa-sliders-h"></i>
@@ -59,15 +59,15 @@
               class="p_btn"
               data-bs-toggle="tooltip"
               data-bs-placement="top"
-              data-bs-title="Export to Excel"
-              title="Export to Excel"
+              :data-bs-title="$t('Export to Excel')"
+              :title="$t('Export to Excel')"
               v-x-tooltip
             >
               <download-excel
                 :data="exportData"
                 :fields="exportFields"
                 name="warranty_claims.xls"
-                title="Export to Excel"
+                :title="$t('Export to Excel')"
                 class="d-flex align-items-center justify-content-center w-100 h-100 cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-excel">
@@ -87,8 +87,8 @@
               @click="printTable"
               data-bs-toggle="tooltip"
               data-bs-placement="top"
-              data-bs-title="Print Table"
-              title="Print Table"
+              :data-bs-title="$t('Print Table')"
+              :title="$t('Print Table')"
               v-x-tooltip
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer">
@@ -110,29 +110,29 @@
             <!-- Specific Serial Search -->
             <div class="col-md-2 col-sm-6">
               <label class="form-label small fw-bold text-muted mb-1">{{ $t('Serial / IMEI No') }}</label>
-              <input type="text" class="form-control form-control-sm font-monospace" placeholder="Serial No..." v-model="search_data.serial_no" @keyup.enter="search">
+              <input type="text" class="form-control form-control-sm font-monospace" :placeholder="$t('Serial No...')" v-model="search_data.serial_no" @keyup.enter="search">
             </div>
 
             <!-- Specific Claim No -->
             <div class="col-md-2 col-sm-6">
               <label class="form-label small fw-bold text-muted mb-1">{{ $t('Claim Ticket No') }}</label>
-              <input type="text" class="form-control form-control-sm font-monospace" placeholder="CLM-..." v-model="search_data.claim_no" @keyup.enter="search">
+              <input type="text" class="form-control form-control-sm font-monospace" :placeholder="$t('CLM-...')" v-model="search_data.claim_no" @keyup.enter="search">
             </div>
 
             <!-- Claim Status Filter -->
             <div class="col-md-2 col-sm-6">
               <label class="form-label small fw-bold text-muted mb-1">{{ $t('Claim Status') }}</label>
               <select class="form-select form-select-sm" v-model="search_data.current_status" @change="search">
-                <option value="">-- All Statuses --</option>
-                <option value="received">Received</option>
-                <option value="in_progress">In Progress</option>
-                <option value="sent_to_vendor">Sent To Vendor</option>
-                <option value="in_service">In Service</option>
-                <option value="repaired">Repaired</option>
-                <option value="replaced">Replaced</option>
-                <option value="ready_for_delivery">Ready For Delivery</option>
-                <option value="delivered">Delivered</option>
-                <option value="rejected">Rejected</option>
+                <option value="">{{ $t('-- All Statuses --') }}</option>
+                <option value="received">{{ $t('Received') }}</option>
+                <option value="in_progress">{{ $t('In Progress') }}</option>
+                <option value="sent_to_vendor">{{ $t('Sent To Vendor') }}</option>
+                <option value="in_service">{{ $t('In Service') }}</option>
+                <option value="repaired">{{ $t('Repaired') }}</option>
+                <option value="replaced">{{ $t('Replaced') }}</option>
+                <option value="ready_for_delivery">{{ $t('Ready For Delivery') }}</option>
+                <option value="delivered">{{ $t('Delivered') }}</option>
+                <option value="rejected">{{ $t('Rejected') }}</option>
               </select>
             </div>
 
@@ -140,7 +140,7 @@
             <div class="col-md-2 col-sm-6">
               <label class="form-label small fw-bold text-muted mb-1">{{ $t('Coverage Type') }}</label>
               <select class="form-select form-select-sm" v-model="search_data.warranty_type" @change="search">
-                <option value="">-- All Types --</option>
+                <option value="">{{ $t('-- All Types --') }}</option>
                 <option value="warranty">{{ $t('Warranty') }}</option>
                 <option value="guarantee">{{ $t('Guarantee') }}</option>
               </select>
@@ -195,23 +195,23 @@
             >
               <td class="text-center fw-bold text-secondary font-monospace">{{ (table.meta.from || 1) + idx }}</td>
               <td>
-                <router-link :to="{ name: 'warrantyClaim.show', params: { id: claim.id } }" class="fw-bold font-monospace theme-text text-decoration-none d-block" title="Click to View Details">
+                <router-link :to="{ name: 'warrantyClaim.show', params: { id: claim.id } }" class="fw-bold font-monospace theme-text text-decoration-none d-block" :title="$t('Click to View Details')">
                   <i class="fas fa-ticket-alt me-1 text-warning"></i>
                   <span>{{ claim.claim_no }}</span>
                 </router-link>
                 <small class="text-secondary font-monospace" v-if="claim.invoice">
-                  <span>Inv: #{{ claim.invoice.invoice_no || claim.invoice.invoiceno }}</span>
+                  <span>{{ $t('Inv') }}: #{{ claim.invoice.invoice_no || claim.invoice.invoiceno }}</span>
                 </small>
               </td>
               <td>
                 <div class="fw-bold text-dark font-monospace" style="font-size: 12px;">{{ claim.claim_date }}</div>
                 <small class="text-secondary font-monospace d-block" v-if="claim.expected_delivery_date" style="font-size: 11px;">
-                  <span>Exp: {{ claim.expected_delivery_date }}</span>
+                  <span>{{ $t('Exp') }}: {{ claim.expected_delivery_date }}</span>
                 </small>
               </td>
               <td>
-                <div class="fw-bold text-dark text-truncate" style="max-width: 240px;" :title="claim.item ? claim.item.title : 'Item'">
-                  {{ claim.item ? claim.item.title : 'Item' }}
+                <div class="fw-bold text-dark text-truncate" style="max-width: 240px;" :title="claim.item ? claim.item.title : $t('Item')">
+                  {{ claim.item ? claim.item.title : $t('Item') }}
                 </div>
                 <div class="badge theme-bg text-white font-monospace mt-1 px-2 py-0.5" v-if="claim.serial_no">
                   <i class="fas fa-barcode me-1"></i><span>{{ claim.serial_no }}</span>
@@ -221,24 +221,24 @@
                 </small>
               </td>
               <td>
-                <div class="fw-bold text-dark">{{ claim.customer_name || 'Walk-in Customer' }}</div>
+                <div class="fw-bold text-dark">{{ claim.customer_name || $t('Walk-in Customer') }}</div>
                 <div class="small font-monospace theme-text fw-semibold">
                   <i class="fas fa-phone-alt me-1 text-secondary"></i>
-                  <span>{{ claim.customer_mobile || 'N/A' }}</span>
+                  <span>{{ claim.customer_mobile || $t('N/A') }}</span>
                 </div>
               </td>
               <td>
                 <span class="badge" :class="claim.warranty_type === 'guarantee' ? 'bg-success' : 'theme-bg text-white'">
-                  {{ claim.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}
+                  {{ claim.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }}
                 </span>
                 <small class="text-secondary d-block mt-1 font-monospace" style="font-size: 11px;">{{ claim.warranty_period || '' }}</small>
                 <small class="text-danger fw-bold font-monospace d-block" v-if="claim.warranty_expiry_date" style="font-size: 11px;">
-                  <span>Exp: {{ claim.warranty_expiry_date }}</span>
+                  <span>{{ $t('Exp') }}: {{ claim.warranty_expiry_date }}</span>
                 </small>
               </td>
               <td class="text-center position-relative">
                 <span class="badge px-2 py-1 rounded-pill shadow-xs" :class="getStatusBadgeClass(claim.current_status)">
-                  {{ formatStatusLabel(claim.current_status) }}
+                  {{ $t(formatStatusLabel(claim.current_status)) }}
                 </span>
 
                 <!-- ⭐️ Seamless Floating Row Hover Action Buttons (Appears On Hover) -->
@@ -248,7 +248,7 @@
                     <router-link
                       :to="{ name: 'warrantyClaim.show', params: { id: claim.id } }"
                       class="btn btn-xs btn-outline-primary border-0"
-                      title="View Claim Details & Tracking History"
+                      :title="$t('View Claim Details & Tracking History')"
                     >
                       <i class="fas fa-eye"></i>
                     </router-link>
@@ -257,7 +257,7 @@
                     <router-link
                       :to="{ name: 'warrantyClaim.edit', params: { id: claim.id } }"
                       class="btn btn-xs btn-outline-warning border-0"
-                      title="Edit Claim"
+                      :title="$t('Edit Claim')"
                     >
                       <i class="fas fa-edit"></i>
                     </router-link>
@@ -267,7 +267,7 @@
                       type="button"
                       class="btn btn-xs btn-outline-danger border-0"
                       @click="deleteClaim(claim.id)"
-                      title="Delete Claim"
+                      :title="$t('Delete Claim')"
                     >
                       <i class="fas fa-trash"></i>
                     </button>
@@ -308,7 +308,7 @@
               <span class="badge theme-bg text-white font-monospace">{{ table.meta.total || 0 }}</span>
             </div>
             <div class="small text-secondary font-monospace d-none d-md-inline" v-if="table.meta.total > 0">
-              Showing {{ table.meta.from || 1 }} to {{ table.meta.to || table.datas.length }}
+              {{ $t('Showing') }} {{ table.meta.from || 1 }} {{ $t('to') }} {{ table.meta.to || table.datas.length }}
             </div>
           </div>
 
@@ -320,7 +320,7 @@
                 class="btn btn-xs btn-outline-secondary py-1 px-2"
                 :disabled="table.meta.current_page <= 1"
                 @click="changePage(table.meta.current_page - 1)"
-                title="Previous Page"
+                :title="$t('Previous Page')"
               >
                 <i class="fas fa-chevron-left"></i>
               </button>
@@ -334,7 +334,7 @@
                 class="btn btn-xs btn-outline-secondary py-1 px-2"
                 :disabled="table.meta.current_page >= table.meta.last_page"
                 @click="changePage(table.meta.current_page + 1)"
-                title="Next Page"
+                :title="$t('Next Page')"
               >
                 <i class="fas fa-chevron-right"></i>
               </button>
@@ -464,7 +464,7 @@ export default {
           }
         })
         .catch(err => {
-          this.$toast('Failed to load warranty claims', 'error');
+          this.$toast(this.$t('Failed to load warranty claims'), 'error');
           console.error(err);
         })
         .finally(() => {
@@ -496,14 +496,14 @@ export default {
       }
     },
     deleteClaim(id) {
-      if (confirm('Are you sure you want to delete this warranty claim?')) {
+      if (confirm(this.$t('Are you sure you want to delete this warranty claim?'))) {
         axios.delete(`${this.model}/${id}`)
           .then(() => {
-            this.$toast('Claim deleted successfully', 'success');
+            this.$toast(this.$t('Claim deleted successfully'), 'success');
             this.fetchClaims(this.search_data.page);
           })
           .catch(err => {
-            this.$toast('Failed to delete claim', 'error');
+            this.$toast(this.$t('Failed to delete claim'), 'error');
           });
       }
     },
@@ -512,11 +512,11 @@ export default {
       if (!printContents) return;
 
       const printWindow = window.open('', '', 'width=900,height=700');
-      printWindow.document.write('<html><head><title>Warranty Claims Report</title>');
+      printWindow.document.write(`<html><head><title>${this.$t('Warranty Claims Report')}</title>`);
       printWindow.document.write('<link rel="stylesheet" href="/assets/backend/css/style.css">');
       printWindow.document.write('<style>body { padding: 20px; font-family: sans-serif; font-size: 12px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 6px; text-align: left; } th { background-color: #112C47; color: #fff; }</style>');
       printWindow.document.write('</head><body>');
-      printWindow.document.write('<h3 style="margin-bottom: 5px;">Warranty Claims List</h3>');
+      printWindow.document.write(`<h3 style="margin-bottom: 5px;">${this.$t('Warranty Claims List')}</h3>`);
       printWindow.document.write(printContents.innerHTML);
       printWindow.document.write('</body></html>');
       printWindow.document.close();

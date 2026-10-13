@@ -47,11 +47,6 @@ class Expense extends BaseModel
         return $this->hasMany(ExpenseDetail::class, 'expense_id', 'id');
     }
 
-    public function workorder()
-    {
-        return $this->belongsTo(Workorder::class, 'workorder_id', 'id');
-    }
-
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'id');

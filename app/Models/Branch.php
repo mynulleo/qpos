@@ -14,6 +14,18 @@ class Branch extends BaseModel
 
     protected $logName = "Branch";
 
+    protected $appends = ['name', 'title'];
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['branch_name'] ?? '';
+    }
+
+    public function getTitleAttribute()
+    {
+        return $this->attributes['branch_name'] ?? '';
+    }
+
     // file image push
     public function district()
     {

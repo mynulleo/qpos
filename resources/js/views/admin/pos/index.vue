@@ -261,7 +261,7 @@
                 </tr>
               </thead>
               <tbody v-if="cart.length > 0">
-                <tr v-for="(cItem, idx) in cart" :key="'cart_row_' + (cItem.item_id || 0) + '_' + (cItem.color_id || 0) + '_' + (cItem.size_id || 0) + '_' + idx">
+                <tr v-for="(cItem, idx) in cart" :key="'cart_row_' + (cItem.item_id || 0) + '_' + (cItem.color_id || 0) + '_' + (cItem.size_id || 0)">
                   <td>
                     <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" :title="cItem.title">{{ cItem.title }}</div>
                     <small class="text-muted font-monospace" style="font-size: 11px;">{{ cItem.barcode }}</small>
@@ -698,9 +698,11 @@
 
                 <!-- Selected Serial Tags Badges -->
                 <div class="d-flex flex-wrap gap-1 mb-1.5 p-1 bg-light border rounded align-items-center" v-if="serialTags.length > 0" style="max-height: 80px; overflow-y: auto;">
-                  <span v-for="(stag, stIdx) in serialTags" :key="'stag_' + stIdx + '_' + stag" class="badge bg-primary text-white font-monospace d-inline-flex align-items-center gap-1 py-1 px-2" style="font-size: 11px;">
+                  <span v-for="stag in serialTags" :key="'stag_' + stag" class="badge bg-primary text-white font-monospace d-inline-flex align-items-center gap-1 py-1 px-2" style="font-size: 11px;">
                     <span>{{ stag }}</span>
-                    <i class="fas fa-times cursor-pointer ms-1 text-white-50 hover-text-white" @click.stop="removeSerialTag(stIdx)" :title="$t('Remove')"></i>
+                    <span role="button" class="cursor-pointer ms-1 text-white-50 hover-text-white d-inline-flex align-items-center" @click.stop="removeSerialTag(stag)" :title="$t('Remove')">
+                      <i class="fas fa-times"></i>
+                    </span>
                   </span>
                   <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 ms-auto font-monospace" style="font-size: 10px;" @click="clearAllSerialTags" :title="$t('Clear All')">
                     <i class="fas fa-trash-alt me-1"></i>{{ $t('Clear') }}
@@ -744,7 +746,8 @@
                       style="font-size: 11px;"
                       @click="toggleSerialTag(sn)"
                     >
-                      <i class="fas fa-check me-1" v-if="serialTags.includes(sn)"></i>{{ sn }}
+                      <i class="fas fa-check me-1" v-show="serialTags.includes(sn)"></i>
+                      <span>{{ sn }}</span>
                     </button>
                   </div>
                 </div>
@@ -2323,8 +2326,16 @@ export default {
         this.syncSerialTagsToModal();
       }
     },
-    removeSerialTag(index) {
-      this.serialTags.splice(index, 1);
+    removeSerialTag(target) {
+      if (typeof target === 'number') {
+        this.serialTags.splice(target, 1);
+      } else if (typeof target === 'string') {
+        const clean = target.trim().toLowerCase();
+        const idx = this.serialTags.findIndex(s => s.toLowerCase() === clean);
+        if (idx > -1) {
+          this.serialTags.splice(idx, 1);
+        }
+      }
       this.syncSerialTagsToModal();
     },
     clearAllSerialTags() {

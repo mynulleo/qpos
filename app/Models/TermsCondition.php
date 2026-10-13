@@ -24,6 +24,6 @@ class TermsCondition extends BaseModel
 
     public function scopeByModule($query, $module)
     {
-        return $query->where('module_name', $module);
+        return $query->whereRaw('LOWER(module_name) = ?', [strtolower(trim($module))]);
     }
 }

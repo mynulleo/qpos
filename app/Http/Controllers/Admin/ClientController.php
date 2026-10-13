@@ -135,7 +135,7 @@ class ClientController extends BaseController
 
         // Sales Returns list
         $salesReturns = SalesReturn::where('client_id', $id)
-            ->with(['invoice:id,invoice_no', 'branch:id,name'])
+            ->with(['invoice:id,invoice_no', 'branch:id,branch_name'])
             ->latest('id')
             ->get();
 
@@ -153,7 +153,7 @@ class ClientController extends BaseController
 
         // Quotations
         $quotations = Quotation::where('client_id', $id)
-            ->with(['branch:id,name'])
+            ->with(['branch:id,branch_name'])
             ->latest('id')
             ->get(['id', 'branch_id', 'quotation_no', 'quotation_date', 'validity_date', 'subject', 'total_amount', 'status', 'created_at']);
 

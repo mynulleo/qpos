@@ -28,8 +28,8 @@ class QuotationController extends BaseController
     {
         $query = Quotation::with([
             'client:id,org_name,name,mobile,email,address',
-            'branch:id,title',
-            'preparedBy:id,name,full_name'
+            'branch:id,branch_name',
+            'preparedBy:id,full_name,mobile'
         ])->latest('id');
 
         // Global search
@@ -129,6 +129,21 @@ class QuotationController extends BaseController
                 $details = json_decode($details, true) ?? [];
             }
             unset($data['quotation_details'], $data['details']);
+
+            // Customer Type
+            $data['customer_type'] = !empty($data['customer_type']) ? $data['customer_type'] : 'retail';
+
+            // Terms and conditions
+            if (isset($data['terms_conditions'])) {
+                if (is_array($data['terms_conditions'])) {
+                    $data['terms_conditions'] = array_values(array_filter(array_map('trim', $data['terms_conditions'])));
+                } elseif (is_string($data['terms_conditions']) && str_starts_with(trim($data['terms_conditions']), '[')) {
+                    $decoded = json_decode($data['terms_conditions'], true);
+                    if (is_array($decoded)) {
+                        $data['terms_conditions'] = array_values(array_filter(array_map('trim', $decoded)));
+                    }
+                }
+            }
 
             if (empty($details) || !is_array($details)) {
                 return response()->json([
@@ -245,10 +260,10 @@ class QuotationController extends BaseController
 
         $quotation = Quotation::with([
             'client:id,org_name,name,mobile,email,address',
-            'branch:id,title,address',
+            'branch:id,branch_name,address',
             'currency:id,title,short_name,symbol',
-            'preparedBy:id,name,full_name,phone',
-            'createdBy:id,name,full_name',
+            'preparedBy:id,full_name,mobile',
+            'createdBy:id,full_name',
             'quotation_details' => function ($q) {
                 $q->with([
                     'item:id,title,barcode,model_no,category_id,brand_id,unit_id',
@@ -331,6 +346,23 @@ class QuotationController extends BaseController
                 $details = json_decode($details, true) ?? [];
             }
             unset($data['quotation_details'], $data['details']);
+
+            // Customer Type
+            if (isset($data['customer_type'])) {
+                $data['customer_type'] = !empty($data['customer_type']) ? $data['customer_type'] : 'retail';
+            }
+
+            // Terms and conditions
+            if (isset($data['terms_conditions'])) {
+                if (is_array($data['terms_conditions'])) {
+                    $data['terms_conditions'] = array_values(array_filter(array_map('trim', $data['terms_conditions'])));
+                } elseif (is_string($data['terms_conditions']) && str_starts_with(trim($data['terms_conditions']), '[')) {
+                    $decoded = json_decode($data['terms_conditions'], true);
+                    if (is_array($decoded)) {
+                        $data['terms_conditions'] = array_values(array_filter(array_map('trim', $decoded)));
+                    }
+                }
+            }
 
             if (empty($details) || !is_array($details)) {
                 return response()->json([

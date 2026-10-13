@@ -18,13 +18,13 @@
               <span class="font-monospace theme-text">{{ claim.claim_no }}</span>
             </h4>
             <span class="badge fs-6 px-3 py-1 rounded-pill shadow-sm" :class="getStatusBadgeClass(claim.current_status)">
-              {{ formatStatusLabel(claim.current_status) }}
+              {{ $t(formatStatusLabel(claim.current_status)) }}
             </span>
           </div>
           <small class="text-secondary fw-semibold mt-1 d-block">
             <span>{{ $t('Registered on:') }}</span> <strong class="text-dark">{{ claim.claim_date }}</strong>
             <span class="mx-1">•</span>
-            <span>{{ $t('Created by:') }}</span> <strong class="text-dark">{{ claim.creator ? claim.creator.name : 'System' }}</strong>
+            <span>{{ $t('Created by:') }}</span> <strong class="text-dark">{{ claim.creator ? claim.creator.name : $t('System') }}</strong>
           </small>
         </div>
 
@@ -57,7 +57,7 @@
                 <i class="fas fa-inbox"></i>
               </div>
               <span class="small fw-bold d-block text-dark">1. {{ $t('Received') }}</span>
-              <small class="text-secondary" style="font-size: 11px;">পণ্য গ্রহণ</small>
+              <small class="text-secondary" style="font-size: 11px;">{{ $t('Item Received') }}</small>
             </div>
 
             <div class="pipeline-step text-center position-relative" style="z-index: 2;" :class="{ 'active': isStepActive('in_progress') || isStepActive('in_service') || isStepActive('sent_to_vendor') }">
@@ -65,7 +65,7 @@
                 <i class="fas fa-tools"></i>
               </div>
               <span class="small fw-bold d-block text-dark">2. {{ $t('In Progress') }}</span>
-              <small class="text-secondary" style="font-size: 11px;">সার্ভিসিং ও প্রসেসিং</small>
+              <small class="text-secondary" style="font-size: 11px;">{{ $t('Service & Processing') }}</small>
             </div>
 
             <div class="pipeline-step text-center position-relative" style="z-index: 2;" :class="{ 'active': isStepActive('repaired') || isStepActive('replaced') }">
@@ -73,7 +73,7 @@
                 <i class="fas fa-check"></i>
               </div>
               <span class="small fw-bold d-block text-dark">3. {{ $t('Repaired / Replaced') }}</span>
-              <small class="text-secondary" style="font-size: 11px;">মেরামত সম্পন্ন</small>
+              <small class="text-secondary" style="font-size: 11px;">{{ $t('Repair Completed') }}</small>
             </div>
 
             <div class="pipeline-step text-center position-relative" style="z-index: 2;" :class="{ 'active': isStepActive('ready_for_delivery') }">
@@ -81,7 +81,7 @@
                 <i class="fas fa-box-open"></i>
               </div>
               <span class="small fw-bold d-block text-dark">4. {{ $t('Ready for Delivery') }}</span>
-              <small class="text-secondary" style="font-size: 11px;">ডেলিভারি প্রস্তুত</small>
+              <small class="text-secondary" style="font-size: 11px;">{{ $t('Ready for Delivery') }}</small>
             </div>
 
             <div class="pipeline-step text-center position-relative" style="z-index: 2;" :class="{ 'active': isStepActive('delivered') }">
@@ -89,7 +89,7 @@
                 <i class="fas fa-handshake"></i>
               </div>
               <span class="small fw-bold d-block text-dark">5. {{ $t('Delivered') }}</span>
-              <small class="text-secondary" style="font-size: 11px;">গ্রাহককে হস্তান্তর</small>
+              <small class="text-secondary" style="font-size: 11px;">{{ $t('Delivered to Customer') }}</small>
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@
                 <span>{{ $t('Customer & Sales Info') }}</span>
               </span>
               <span class="badge bg-light text-dark font-monospace" v-if="claim.invoice">
-                Inv #{{ claim.invoice.invoice_no || claim.invoice.invoiceno }}
+                {{ $t('Inv') }} #{{ claim.invoice.invoice_no || claim.invoice.invoiceno }}
               </span>
             </div>
             <div class="card-body p-3">
@@ -123,11 +123,11 @@
                   </tr>
                   <tr>
                     <th>{{ $t('Address:') }}</th>
-                    <td class="text-dark">{{ claim.customer_address || 'N/A' }}</td>
+                    <td class="text-dark">{{ claim.customer_address || $t('N/A') }}</td>
                   </tr>
                   <tr>
                     <th>{{ $t('Sale Date:') }}</th>
-                    <td class="font-monospace text-dark">{{ claim.sale_date || 'N/A' }}</td>
+                    <td class="font-monospace text-dark">{{ claim.sale_date || $t('N/A') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -147,13 +147,13 @@
                 <tbody>
                   <tr>
                     <th width="35%">{{ $t('Product Title:') }}</th>
-                    <td class="fw-bold text-dark fs-6">{{ claim.item ? claim.item.title : 'Item' }}</td>
+                    <td class="fw-bold text-dark fs-6">{{ claim.item ? claim.item.title : $t('Item') }}</td>
                   </tr>
                   <tr>
                     <th>{{ $t('Serial Number:') }}</th>
                     <td>
                       <span class="badge theme-bg text-white font-monospace fs-6 px-2 py-1">
-                        {{ claim.serial_no || 'N/A' }}
+                        {{ claim.serial_no || $t('N/A') }}
                       </span>
                     </td>
                   </tr>
@@ -168,17 +168,17 @@
                     <th>{{ $t('Coverage Type:') }}</th>
                     <td>
                       <span class="badge" :class="claim.warranty_type === 'guarantee' ? 'bg-success' : 'theme-bg text-white'">
-                        {{ claim.warranty_type === 'guarantee' ? 'Guarantee (গ্যারান্টি)' : 'Warranty (ওয়ারেন্টি)' }}
+                        {{ claim.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }}
                       </span>
                     </td>
                   </tr>
                   <tr>
                     <th>{{ $t('Policy Duration:') }}</th>
-                    <td class="fw-bold text-dark">{{ claim.warranty_period || 'N/A' }}</td>
+                    <td class="fw-bold text-dark">{{ claim.warranty_period || $t('N/A') }}</td>
                   </tr>
                   <tr>
                     <th>{{ $t('Policy Expiry:') }}</th>
-                    <td class="text-danger fw-bold font-monospace">{{ claim.warranty_expiry_date || 'N/A' }}</td>
+                    <td class="text-danger fw-bold font-monospace">{{ claim.warranty_expiry_date || $t('N/A') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -205,7 +205,7 @@
               <div class="row g-2 pt-2 border-top">
                 <div class="col-6">
                   <span class="text-secondary small d-block">{{ $t('Expected Delivery:') }}</span>
-                  <strong class="text-dark font-monospace">{{ claim.expected_delivery_date || 'N/A' }}</strong>
+                  <strong class="text-dark font-monospace">{{ claim.expected_delivery_date || $t('N/A') }}</strong>
                 </div>
                 <div class="col-6" v-if="claim.delivered_date">
                   <span class="text-secondary small d-block">{{ $t('Delivered Date:') }}</span>
@@ -228,7 +228,7 @@
                 <div>
                   <span class="small fw-bold text-dark d-block">{{ $t('Internal Service Cost') }}:</span>
                   <span v-if="claim.expense_id" class="badge bg-danger-subtle text-danger border border-danger-subtle small mt-1 font-monospace">
-                    <i class="fas fa-file-invoice-dollar me-1"></i>Expense #{{ claim.expense ? claim.expense.expenseid : claim.expense_id }} Voucher Posted
+                    <i class="fas fa-file-invoice-dollar me-1"></i>{{ $t('Expense') }} #{{ claim.expense ? claim.expense.expenseid : claim.expense_id }} {{ $t('Voucher Posted') }}
                   </span>
                 </div>
                 <strong class="font-monospace text-dark">Tk. {{ formatPrice(claim.service_cost) }}</strong>
@@ -237,7 +237,7 @@
                 <div>
                   <span class="small fw-bold text-dark d-block">{{ $t('Customer Service Charge') }}:</span>
                   <span v-if="claim.payment_id" class="badge bg-success-subtle text-success border border-success-subtle small mt-1 font-monospace">
-                    <i class="fas fa-check-circle me-1"></i>Payment #{{ claim.payment ? claim.payment.payslipno : claim.payment_id }} Received & Voucher Posted
+                    <i class="fas fa-check-circle me-1"></i>{{ $t('Payment') }} #{{ claim.payment ? claim.payment.payslipno : claim.payment_id }} {{ $t('Received & Voucher Posted') }}
                   </span>
                 </div>
                 <strong class="font-monospace theme-text fs-6 fw-bold">Tk. {{ formatPrice(claim.customer_charge) }}</strong>
@@ -255,7 +255,7 @@
                 <i class="fas fa-plus-circle me-2 text-warning"></i>
                 <span>{{ $t('Quick Status Update & Note') }}</span>
               </span>
-              <span class="badge bg-warning text-dark fw-bold font-monospace">Current: {{ formatStatusLabel(claim.current_status) }}</span>
+              <span class="badge bg-warning text-dark fw-bold font-monospace">{{ $t('Current:') }} {{ $t(formatStatusLabel(claim.current_status)) }}</span>
             </div>
             <div class="card-body p-3 bg-light">
               <form @submit.prevent="addTrackingLog">
@@ -269,7 +269,7 @@
                       :class="logForm.status === 'received' ? 'btn-secondary text-white active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'received'"
                     >
-                      <i class="fas fa-inbox me-1"></i><span>Received</span>
+                      <i class="fas fa-inbox me-1"></i><span>{{ $t('Received') }}</span>
                     </button>
                     <button
                       type="button"
@@ -277,7 +277,7 @@
                       :class="logForm.status === 'in_progress' ? 'btn-primary text-white active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'in_progress'"
                     >
-                      <i class="fas fa-spinner me-1"></i><span>In Progress</span>
+                      <i class="fas fa-spinner me-1"></i><span>{{ $t('In Progress') }}</span>
                     </button>
                     <button
                       type="button"
@@ -285,7 +285,7 @@
                       :class="logForm.status === 'sent_to_vendor' ? 'btn-warning text-dark active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'sent_to_vendor'"
                     >
-                      <i class="fas fa-truck me-1"></i><span>Sent To Vendor</span>
+                      <i class="fas fa-truck me-1"></i><span>{{ $t('Sent To Vendor') }}</span>
                     </button>
                     <button
                       type="button"
@@ -293,7 +293,7 @@
                       :class="logForm.status === 'in_service' ? 'btn-info text-dark active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'in_service'"
                     >
-                      <i class="fas fa-tools me-1"></i><span>In Service</span>
+                      <i class="fas fa-tools me-1"></i><span>{{ $t('In Service') }}</span>
                     </button>
                     <button
                       type="button"
@@ -301,7 +301,7 @@
                       :class="logForm.status === 'repaired' ? 'btn-success active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'repaired'"
                     >
-                      <i class="fas fa-check-circle me-1"></i><span>Repaired</span>
+                      <i class="fas fa-check-circle me-1"></i><span>{{ $t('Repaired') }}</span>
                     </button>
                     <button
                       type="button"
@@ -309,7 +309,7 @@
                       :class="logForm.status === 'replaced' ? 'btn-success active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'replaced'"
                     >
-                      <i class="fas fa-sync-alt me-1"></i><span>Replaced</span>
+                      <i class="fas fa-sync-alt me-1"></i><span>{{ $t('Replaced') }}</span>
                     </button>
                     <button
                       type="button"
@@ -317,7 +317,7 @@
                       :class="logForm.status === 'ready_for_delivery' ? 'btn-theme active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'ready_for_delivery'"
                     >
-                      <i class="fas fa-box-open me-1"></i><span>Ready For Delivery</span>
+                      <i class="fas fa-box-open me-1"></i><span>{{ $t('Ready For Delivery') }}</span>
                     </button>
                     <button
                       type="button"
@@ -325,7 +325,7 @@
                       :class="logForm.status === 'delivered' ? 'btn-dark active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'delivered'"
                     >
-                      <i class="fas fa-handshake me-1"></i><span>Delivered</span>
+                      <i class="fas fa-handshake me-1"></i><span>{{ $t('Delivered') }}</span>
                     </button>
                     <button
                       type="button"
@@ -333,7 +333,7 @@
                       :class="logForm.status === 'rejected' ? 'btn-danger active' : 'btn-outline-secondary'"
                       @click="logForm.status = 'rejected'"
                     >
-                      <i class="fas fa-ban me-1"></i><span>Rejected</span>
+                      <i class="fas fa-ban me-1"></i><span>{{ $t('Rejected') }}</span>
                     </button>
                   </div>
                 </div>
@@ -356,17 +356,17 @@
                   <div class="col-md-4">
                     <label class="form-label small fw-bold text-secondary mb-1">{{ $t('Follow-up Reminder:') }}</label>
                     <div class="input-group">
-                      <span class="input-group-text bg-white" title="Follow-up Reminder Date">
+                      <span class="input-group-text bg-white" :title="$t('Follow-up Reminder Date')">
                         <i class="fas fa-bell text-warning"></i>
                       </span>
-                      <input type="date" class="form-control" v-model="logForm.reminder_date" placeholder="Reminder Date">
+                      <input type="date" class="form-control" v-model="logForm.reminder_date" :placeholder="$t('Reminder Date')">
                     </div>
                   </div>
 
                   <div class="col-md-4">
                     <label class="form-label small fw-bold text-secondary mb-1">
                       <span>{{ $t('Customer Charge:') }}</span>
-                      <i v-if="claim.payment_id || claim.customer_charge > 0" class="fas fa-lock text-secondary ms-1" title="Payment Received (Locked)"></i>
+                      <i v-if="claim.payment_id || claim.customer_charge > 0" class="fas fa-lock text-secondary ms-1" :title="$t('Payment Received (Locked)')"></i>
                     </label>
                     <div class="input-group">
                       <span class="input-group-text bg-white fw-bold">৳</span>
@@ -379,9 +379,9 @@
                         :readonly="claim.payment_id || claim.customer_charge > 0"
                         v-model.number="logForm.customer_charge" 
                         placeholder="0.00"
-                        :title="claim.payment_id || claim.customer_charge > 0 ? 'Payment Received (Locked)' : ''"
+                        :title="claim.payment_id || claim.customer_charge > 0 ? $t('Payment Received (Locked)') : ''"
                       >
-                      <span v-if="claim.payment_id || claim.customer_charge > 0" class="input-group-text bg-light text-secondary border-start-0 px-2" title="Payment Received (Locked)">
+                      <span v-if="claim.payment_id || claim.customer_charge > 0" class="input-group-text bg-light text-secondary border-start-0 px-2" :title="$t('Payment Received (Locked)')">
                         <i class="fas fa-lock fa-xs"></i>
                       </span>
                     </div>
@@ -407,7 +407,7 @@
                 <span>{{ $t('Status History & Remarks Timeline') }}</span>
               </span>
               <span class="badge bg-light text-dark fw-bold font-monospace">
-                {{ claim.logs ? claim.logs.length : 0 }} Steps
+                {{ claim.logs ? claim.logs.length : 0 }} {{ $t('Steps') }}
               </span>
             </div>
             <div class="card-body p-3">
@@ -431,14 +431,14 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
                       <div class="d-flex align-items-center gap-2">
                         <span class="badge px-2 py-0.5 small" :class="getStatusBadgeClass(log.status)">
-                          {{ formatStatusLabel(log.status) }}
+                          {{ $t(formatStatusLabel(log.status)) }}
                         </span>
                         <span class="small fw-bold text-dark">
                           <i class="fas fa-user-circle text-secondary me-1"></i>
-                          <span>{{ log.creator ? log.creator.name : 'Staff' }}</span>
+                          <span>{{ log.creator ? log.creator.name : $t('Staff') }}</span>
                         </span>
                         <span class="badge bg-success-subtle text-success border border-success-subtle py-0 px-1 font-monospace" style="font-size: 10px;" v-if="idx === 0">
-                          Latest
+                          {{ $t('Latest') }}
                         </span>
                       </div>
                       <span class="text-secondary font-monospace" style="font-size: 11px;">
@@ -456,7 +456,7 @@
                     <div class="d-flex flex-wrap gap-2 mt-1 pt-1" v-if="log.reminder_date">
                       <span class="badge bg-warning-subtle text-dark border border-warning" style="font-size: 11px;">
                         <i class="fas fa-bell me-1 text-warning"></i>
-                        <span>Follow-up: {{ log.reminder_date }}</span>
+                        <span>{{ $t('Follow-up:') }} {{ log.reminder_date }}</span>
                       </span>
                     </div>
                   </div>
@@ -483,38 +483,38 @@
             <div style="font-size: 10px;">{{ $root.site?.address || '' }}</div>
             <div style="font-size: 10px;">Mob: {{ $root.site?.mobile1 || '' }} <span v-if="$root.site?.mobile2">/ {{ $root.site?.mobile2 }}</span></div>
             <div style="font-size: 12px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 3px 0; letter-spacing: 1px;">
-              WARRANTY CLAIM TICKET
+              {{ $t('Claim Ticket') }}
             </div>
           </div>
 
           <div style="margin-bottom: 6px; font-size: 10px; line-height: 1.3;">
             <div style="display: flex; justify-content: space-between;">
-              <span><strong>Claim No:</strong> {{ claim.claim_no }}</span>
-              <span><strong>Date:</strong> {{ claim.claim_date }}</span>
+              <span><strong>{{ $t('Claim Ticket No') }}:</strong> {{ claim.claim_no }}</span>
+              <span><strong>{{ $t('Date') }}:</strong> {{ claim.claim_date }}</span>
             </div>
-            <div><strong>Customer:</strong> {{ claim.customer_name }}</div>
-            <div><strong>Mobile:</strong> {{ claim.customer_mobile }}</div>
-            <div v-if="claim.customer_address"><strong>Address:</strong> {{ claim.customer_address }}</div>
-            <div><strong>Status:</strong> {{ formatStatusLabel(claim.current_status) }}</div>
+            <div><strong>{{ $t('Customer:') }}</strong> {{ claim.customer_name }}</div>
+            <div><strong>{{ $t('Mobile:') }}</strong> {{ claim.customer_mobile }}</div>
+            <div v-if="claim.customer_address"><strong>{{ $t('Address:') }}</strong> {{ claim.customer_address }}</div>
+            <div><strong>{{ $t('Claim Status') }}:</strong> {{ $t(formatStatusLabel(claim.current_status)) }}</div>
           </div>
 
           <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0; margin-bottom: 6px; font-size: 10px; line-height: 1.35;">
-            <div><strong>Item:</strong> {{ claim.item ? claim.item.title : 'Item' }}</div>
-            <div v-if="claim.serial_no"><strong>Serial No:</strong> {{ claim.serial_no }}</div>
-            <div v-if="claim.invoice_no"><strong>Inv Ref:</strong> {{ claim.invoice_no }}</div>
-            <div><strong>Coverage:</strong> {{ claim.warranty_type === 'guarantee' ? 'Replacement Guarantee' : 'Official Warranty' }} ({{ claim.warranty_period }})</div>
-            <div v-if="claim.warranty_expiry_date"><strong>Expiry Date:</strong> {{ claim.warranty_expiry_date }}</div>
-            <div v-if="claim.expected_delivery_date"><strong>Exp. Delivery:</strong> {{ claim.expected_delivery_date }}</div>
+            <div><strong>{{ $t('Item:') }}</strong> {{ claim.item ? claim.item.title : $t('Item') }}</div>
+            <div v-if="claim.serial_no"><strong>{{ $t('Serial Number') }}:</strong> {{ claim.serial_no }}</div>
+            <div v-if="claim.invoice_no"><strong>{{ $t('Invoice No') }}:</strong> {{ claim.invoice_no }}</div>
+            <div><strong>{{ $t('Coverage Policy') }}:</strong> {{ claim.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }} ({{ claim.warranty_period }})</div>
+            <div v-if="claim.warranty_expiry_date"><strong>{{ $t('Expiry Date') }}:</strong> {{ claim.warranty_expiry_date }}</div>
+            <div v-if="claim.expected_delivery_date"><strong>{{ $t('Expected Delivery:') }}</strong> {{ claim.expected_delivery_date }}</div>
           </div>
 
           <div style="margin-bottom: 6px; font-size: 10px; line-height: 1.35;">
-            <div><strong>Reported Problem:</strong></div>
+            <div><strong>{{ $t('Reported Defect / Issue:') }}</strong></div>
             <div style="padding-left: 5px; color: #222;">{{ claim.problem_description }}</div>
             <div v-if="claim.accessories_received" style="margin-top: 2px;">
-              <strong>Accessories Received:</strong> {{ claim.accessories_received }}
+              <strong>{{ $t('Accessories Received:') }}</strong> {{ claim.accessories_received }}
             </div>
             <div v-if="claim.customer_charge > 0" style="margin-top: 2px; font-weight: bold;">
-              <strong>Estimated Charge:</strong> Tk. {{ formatPrice(claim.customer_charge) }}
+              <strong>{{ $t('Estimated Service Charge:') }}</strong> Tk. {{ formatPrice(claim.customer_charge) }}
             </div>
           </div>
 
@@ -524,8 +524,8 @@
           </div>
 
           <div style="border-top: 1px dashed #000; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; font-size: 9px;">
-            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">Customer Sign</div>
-            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">Authorized Sign</div>
+            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">{{ $t("Customer's Signature") }}</div>
+            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">{{ $t('Authorized Service Seal') }}</div>
           </div>
         </div>
 
@@ -534,35 +534,35 @@
           <div style="text-align: center; margin-bottom: 5px;">
             <h2 style="font-size: 13px; font-weight: bold; margin: 0 0 1px 0; text-transform: uppercase;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
             <div style="font-size: 8.5px;">{{ $root.site?.address || '' }}</div>
-            <div style="font-size: 8.5px;">Mob: {{ $root.site?.mobile1 || '' }}</div>
+            <div style="font-size: 8.5px;">{{ $t('Mobile:') }} {{ $root.site?.mobile1 || '' }}</div>
             <div style="font-size: 10.5px; font-weight: bold; margin-top: 3px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2px 0;">
-              WARRANTY CLAIM SLIP
+              {{ $t('Claim Ticket') }}
             </div>
           </div>
 
           <div style="margin-bottom: 4px; font-size: 8.5px; line-height: 1.2;">
-            <div><strong>Ticket:</strong> {{ claim.claim_no }}</div>
-            <div><strong>Date:</strong> {{ claim.claim_date }}</div>
-            <div><strong>Cust:</strong> {{ claim.customer_name }}</div>
-            <div><strong>Ph:</strong> {{ claim.customer_mobile }}</div>
+            <div><strong>{{ $t('Claim Ticket') }}:</strong> {{ claim.claim_no }}</div>
+            <div><strong>{{ $t('Date') }}:</strong> {{ claim.claim_date }}</div>
+            <div><strong>{{ $t('Customer:') }}</strong> {{ claim.customer_name }}</div>
+            <div><strong>{{ $t('Mobile:') }}</strong> {{ claim.customer_mobile }}</div>
           </div>
 
           <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 3px 0; margin-bottom: 4px; font-size: 8.5px;">
-            <div><strong>Item:</strong> {{ claim.item ? claim.item.title : 'Item' }}</div>
-            <div v-if="claim.serial_no"><strong>S/N:</strong> {{ claim.serial_no }}</div>
-            <div><strong>Type:</strong> {{ claim.warranty_type }} ({{ claim.warranty_period }})</div>
-            <div v-if="claim.expected_delivery_date"><strong>Delivery:</strong> {{ claim.expected_delivery_date }}</div>
+            <div><strong>{{ $t('Item:') }}</strong> {{ claim.item ? claim.item.title : $t('Item') }}</div>
+            <div v-if="claim.serial_no"><strong>{{ $t('S/N') }}:</strong> {{ claim.serial_no }}</div>
+            <div><strong>{{ $t('Coverage Policy') }}:</strong> {{ claim.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }} ({{ claim.warranty_period }})</div>
+            <div v-if="claim.expected_delivery_date"><strong>{{ $t('Expected Delivery:') }}</strong> {{ claim.expected_delivery_date }}</div>
           </div>
 
           <div style="margin-bottom: 4px; font-size: 8.5px;">
-            <div><strong>Problem:</strong> {{ claim.problem_description }}</div>
-            <div v-if="claim.accessories_received"><strong>Acc:</strong> {{ claim.accessories_received }}</div>
-            <div v-if="claim.customer_charge > 0"><strong>Charge:</strong> Tk. {{ formatPrice(claim.customer_charge) }}</div>
+            <div><strong>{{ $t('Problem Description') }}:</strong> {{ claim.problem_description }}</div>
+            <div v-if="claim.accessories_received"><strong>{{ $t('Accessories Received:') }}</strong> {{ claim.accessories_received }}</div>
+            <div v-if="claim.customer_charge > 0"><strong>{{ $t('Customer Charge:') }}</strong> Tk. {{ formatPrice(claim.customer_charge) }}</div>
           </div>
 
           <div style="border-top: 1px dashed #000; padding-top: 12px; margin-top: 10px; display: flex; justify-content: space-between; font-size: 8px;">
-            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">Customer</div>
-            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">Authorized</div>
+            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">{{ $t("Customer's Signature") }}</div>
+            <div style="border-top: 1px solid #000; width: 45%; text-align: center;">{{ $t('Authorized Service Seal') }}</div>
           </div>
         </div>
 
@@ -573,31 +573,31 @@
             <div>
               <h2 style="font-size: 16px; font-weight: bold; margin: 0; color: #112C47;">{{ $root.site?.title || 'QPOS STORE' }}</h2>
               <div style="font-size: 10px; color: #444;">{{ $root.site?.address || '' }}</div>
-              <div style="font-size: 10px; color: #444;">Phone: {{ $root.site?.mobile1 || '' }} | Email: {{ $root.site?.contact_email || '' }}</div>
+              <div style="font-size: 10px; color: #444;">{{ $t('Mobile:') }} {{ $root.site?.mobile1 || '' }} | {{ $t('Email') }}: {{ $root.site?.contact_email || '' }}</div>
             </div>
             <div style="text-align: right;">
               <div style="display: inline-block; background: #112C47; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 3px;">
-                WARRANTY CLAIM TICKET
+                {{ $t('Claim Ticket') }}
               </div>
               <div style="font-size: 12px; font-weight: bold; margin-top: 4px; font-family: monospace; color: #112C47;">#{{ claim.claim_no }}</div>
-              <div style="font-size: 9.5px; color: #555;">Date: {{ claim.claim_date }}</div>
+              <div style="font-size: 9.5px; color: #555;">{{ $t('Date') }}: {{ claim.claim_date }}</div>
             </div>
           </div>
 
           <!-- Customer & Product Grid -->
           <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
             <div style="width: 48%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px; font-size: 10px;">
-              <strong style="color: #112C47; text-transform: uppercase; font-size: 9.5px;">Customer Details (গ্রাহকের তথ্য):</strong>
+              <strong style="color: #112C47; text-transform: uppercase; font-size: 9.5px;">{{ $t('Customer Details') }}:</strong>
               <div style="font-weight: bold; font-size: 11px; margin-top: 2px;">{{ claim.customer_name }}</div>
-              <div>Mobile: <strong>{{ claim.customer_mobile }}</strong></div>
-              <div v-if="claim.customer_address">Address: {{ claim.customer_address }}</div>
+              <div>{{ $t('Mobile:') }} <strong>{{ claim.customer_mobile }}</strong></div>
+              <div v-if="claim.customer_address">{{ $t('Address:') }} {{ claim.customer_address }}</div>
             </div>
             <div style="width: 48%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px; font-size: 10px;">
-              <strong style="color: #112C47; text-transform: uppercase; font-size: 9.5px;">Item & Policy Coverage:</strong>
-              <div style="font-weight: bold; font-size: 11px; margin-top: 2px;">{{ claim.item ? claim.item.title : 'Item' }}</div>
-              <div v-if="claim.serial_no">S/N: <strong style="font-family: monospace; color: #0284c7;">{{ claim.serial_no }}</strong></div>
-              <div>Coverage: <span style="font-weight: bold; color: #16a34a;">{{ claim.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }} ({{ claim.warranty_period }})</span></div>
-              <div v-if="claim.expected_delivery_date">Exp. Delivery: <strong>{{ claim.expected_delivery_date }}</strong></div>
+              <strong style="color: #112C47; text-transform: uppercase; font-size: 9.5px;">{{ $t('Item & Policy Coverage') }}:</strong>
+              <div style="font-weight: bold; font-size: 11px; margin-top: 2px;">{{ claim.item ? claim.item.title : $t('Item') }}</div>
+              <div v-if="claim.serial_no">{{ $t('S/N') }}: <strong style="font-family: monospace; color: #0284c7;">{{ claim.serial_no }}</strong></div>
+              <div>{{ $t('Coverage Policy') }}: <span style="font-weight: bold; color: #16a34a;">{{ claim.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }} ({{ claim.warranty_period }})</span></div>
+              <div v-if="claim.expected_delivery_date">{{ $t('Expected Delivery:') }} <strong>{{ claim.expected_delivery_date }}</strong></div>
             </div>
           </div>
 
@@ -627,8 +627,8 @@
 
           <!-- Signatures -->
           <div style="display: flex; justify-content: space-between; font-size: 9px; color: #333;">
-            <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Customer's Signature</div>
-            <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">Authorized Service Engineer</div>
+            <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">{{ $t("Customer's Signature") }}</div>
+            <div style="border-top: 1px dashed #64748b; width: 35%; text-align: center; padding-top: 3px;">{{ $t('Authorized Service Seal') }}</div>
           </div>
         </div>
 
@@ -646,11 +646,11 @@
             </div>
             <div style="text-align: right;">
               <div style="display: inline-block; background: #112C47; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 14px; border-radius: 4px; letter-spacing: 0.5px;">
-                WARRANTY CLAIM ACKNOWLEDGEMENT
+                {{ $t('Claim Ticket') }}
               </div>
               <div style="font-size: 15px; font-weight: bold; margin-top: 6px; font-family: monospace; color: #112C47;">#{{ claim.claim_no }}</div>
-              <div style="font-size: 11px; color: #64748b;"><strong>Received Date:</strong> {{ claim.claim_date }}</div>
-              <div style="font-size: 11px; color: #64748b;"><strong>Status:</strong> {{ formatStatusLabel(claim.current_status) }}</div>
+              <div style="font-size: 11px; color: #64748b;"><strong>{{ $t('Received Date') }}:</strong> {{ claim.claim_date }}</div>
+              <div style="font-size: 11px; color: #64748b;"><strong>{{ $t('Claim Status') }}:</strong> {{ $t(formatStatusLabel(claim.current_status)) }}</div>
             </div>
           </div>
 
@@ -659,27 +659,27 @@
             <!-- Customer Box -->
             <div style="width: 48%; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px;">
               <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #112C47; margin-bottom: 4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
-                1. Customer & Contact Information
+                1. {{ $t('Customer & Contact Information') }}
               </div>
               <div style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 4px;">{{ claim.customer_name }}</div>
-              <div style="font-size: 11.5px; color: #334155; margin-top: 2px;"><strong>Mobile:</strong> {{ claim.customer_mobile }}</div>
-              <div style="font-size: 11px; color: #475569; margin-top: 2px;" v-if="claim.customer_address"><strong>Address:</strong> {{ claim.customer_address }}</div>
+              <div style="font-size: 11.5px; color: #334155; margin-top: 2px;"><strong>{{ $t('Mobile:') }}</strong> {{ claim.customer_mobile }}</div>
+              <div style="font-size: 11px; color: #475569; margin-top: 2px;" v-if="claim.customer_address"><strong>{{ $t('Address:') }}</strong> {{ claim.customer_address }}</div>
             </div>
 
             <!-- Product Box -->
             <div style="width: 48%; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px;">
               <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #112C47; margin-bottom: 4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
-                2. Product & Warranty Verification
+                2. {{ $t('Product & Warranty Verification') }}
               </div>
-              <div style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 4px;">{{ claim.item ? claim.item.title : 'Item' }}</div>
+              <div style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 4px;">{{ claim.item ? claim.item.title : $t('Item') }}</div>
               <div style="font-size: 11.5px; color: #334155; margin-top: 2px;" v-if="claim.serial_no">
-                Serial No (S/N): <strong style="font-family: monospace; color: #0284c7;">{{ claim.serial_no }}</strong>
+                {{ $t('Serial Number') }} (S/N): <strong style="font-family: monospace; color: #0284c7;">{{ claim.serial_no }}</strong>
               </div>
               <div style="font-size: 11px; color: #475569; margin-top: 2px;" v-if="claim.invoice_no">
-                Original Invoice Ref: <strong>#{{ claim.invoice_no }}</strong>
+                {{ $t('Invoice No') }}: <strong>#{{ claim.invoice_no }}</strong>
               </div>
               <div style="font-size: 11px; color: #16a34a; font-weight: 600; margin-top: 2px;">
-                Policy Coverage: {{ claim.warranty_type === 'guarantee' ? 'Replacement Guarantee' : 'Official Warranty' }} ({{ claim.warranty_period }})
+                {{ $t('Coverage Policy') }}: {{ claim.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }} ({{ claim.warranty_period }})
               </div>
             </div>
           </div>
@@ -687,7 +687,7 @@
           <!-- Section 3: Technical Defect & Inspection Details -->
           <div style="background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 14px; overflow: hidden;">
             <div style="background: #f1f5f9; padding: 6px 12px; font-size: 11px; font-weight: bold; color: #112C47; text-transform: uppercase;">
-              3. Claim Inspection, Fault Description & Handover Check
+              3. {{ $t('Claim Inspection, Fault Description & Handover Check') }}
             </div>
             <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
               <tbody>
@@ -697,11 +697,11 @@
                 </tr>
                 <tr style="border-bottom: 1px solid #e2e8f0;">
                   <th style="padding: 8px 12px; text-align: left; background: #fafafa; color: #475569;">{{ $t('Received Accessories:') }}</th>
-                  <td style="padding: 8px 12px;">{{ claim.accessories_received || 'Main Unit Only' }}</td>
+                  <td style="padding: 8px 12px;">{{ claim.accessories_received || $t('Main Unit Only') }}</td>
                 </tr>
                 <tr style="border-bottom: 1px solid #e2e8f0;">
                   <th style="padding: 8px 12px; text-align: left; background: #fafafa; color: #475569;">{{ $t('Estimated Delivery Date:') }}</th>
-                  <td style="padding: 8px 12px; font-weight: bold; color: #0284c7;">{{ claim.expected_delivery_date || 'Within 7-14 Business Days' }}</td>
+                  <td style="padding: 8px 12px; font-weight: bold; color: #0284c7;">{{ claim.expected_delivery_date || $t('Within 7-14 Business Days') }}</td>
                 </tr>
                 <tr v-if="claim.customer_charge > 0">
                   <th style="padding: 8px 12px; text-align: left; background: #fafafa; color: #475569;">{{ $t('Customer Payable / Service Charge:') }}</th>
@@ -713,7 +713,7 @@
 
           <!-- Section 4: Terms & Service Agreement -->
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; font-size: 10px; color: #64748b; line-height: 1.4; margin-bottom: 30px;">
-            <div style="font-weight: bold; color: #334155; margin-bottom: 2px;">Service Terms & Customer Notice:</div>
+            <div style="font-weight: bold; color: #334155; margin-bottom: 2px;">{{ $t('Service Terms & Customer Notice:') }}</div>
             <div>1. Customers must present this original acknowledgement slip when collecting the serviced product.</div>
             <div>2. Any physical burn, water ingress, or unauthorized repair attempts found during lab inspection will void the warranty.</div>
             <div>3. Unclaimed items after 30 days from final notification date may incur storage charges or be disposed of according to policy.</div>
@@ -721,9 +721,9 @@
 
           <!-- Signatures -->
           <div style="display: flex; justify-content: space-between; margin-top: 40px; font-size: 11px; color: #334155;">
-            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Customer's Signature</div>
-            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Received By (Staff)</div>
-            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">Authorized Service Seal</div>
+            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">{{ $t("Customer's Signature") }}</div>
+            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">{{ $t('Received By (Staff)') }}</div>
+            <div style="border-top: 1px dashed #64748b; width: 30%; text-align: center; padding-top: 4px;">{{ $t('Authorized Service Seal') }}</div>
           </div>
         </div>
       </div>
@@ -807,7 +807,7 @@ export default {
           }
         })
         .catch(err => {
-          this.$toast('Failed to load claim details', 'error');
+          this.$toast(this.$t('Failed to load claim details'), 'error');
           console.error(err);
         })
         .finally(() => {
@@ -816,20 +816,20 @@ export default {
     },
     addTrackingLog() {
       if (!this.logForm.remarks || this.logForm.remarks.trim() === '') {
-        this.$toast('Please enter a remark or progress note', 'warning');
+        this.$toast(this.$t('Please enter a remark or progress note'), 'warning');
         return;
       }
 
       this.addingLog = true;
       axios.post(`warrantyClaim/${this.claim.id}/add-log`, this.logForm)
         .then(res => {
-          this.$toast('Tracking status & note updated successfully!', 'success');
+          this.$toast(this.$t('Tracking status & note updated successfully!'), 'success');
           this.claim = res.data.data;
           this.logForm.remarks = '';
           this.logForm.reminder_date = '';
         })
         .catch(err => {
-          this.$toast('Failed to add tracking log', 'error');
+          this.$toast(this.$t('Failed to add tracking log'), 'error');
           console.error(err);
         })
         .finally(() => {

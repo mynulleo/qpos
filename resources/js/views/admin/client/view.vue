@@ -146,19 +146,19 @@
         <!-- 1. Total Purchases -->
         <div class="col-xl col-md-4 col-sm-6">
           <div class="card border-0 shadow-sm h-100 metric-card metric-primary">
-            <div class="card-body p-3 d-flex align-items-center justify-content-between">
-              <div>
-                <span class="text-muted small fw-bold text-uppercase d-block">{{ $t('Total Purchases') }}</span>
-                <h4 class="fw-bold mb-1 font-monospace text-dark">
-                  ৳ {{ formatNum(summary.total_purchase) }}
+            <div class="card-body p-3 d-flex align-items-center justify-content-between gap-2">
+              <div class="overflow-hidden">
+                <span class="text-muted small fw-bold text-uppercase d-block text-truncate">{{ $t('Total Purchases') }}</span>
+                <h4 class="fw-bold mb-1 font-monospace text-dark text-nowrap">
+                  <span class="text-nowrap">৳&nbsp;{{ formatNum(summary.total_purchase) }}</span>
                 </h4>
-                <small class="text-secondary">
+                <small class="text-secondary text-nowrap d-block">
                   <strong>{{ summary.total_invoices || 0 }}</strong> {{ $t('Invoices') }}
                   <span class="text-success ms-1">({{ summary.paid_invoices_count || 0 }} {{ $t('Paid') }})</span>
                 </small>
               </div>
               <div class="metric-icon-box bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
-                <i class="fas fa-shopping-bag fs-4"></i>
+                <i class="fas fa-shopping-bag fs-5"></i>
               </div>
             </div>
           </div>
@@ -167,18 +167,18 @@
         <!-- 2. Total Paid -->
         <div class="col-xl col-md-4 col-sm-6">
           <div class="card border-0 shadow-sm h-100 metric-card metric-success">
-            <div class="card-body p-3 d-flex align-items-center justify-content-between">
-              <div>
-                <span class="text-muted small fw-bold text-uppercase d-block">{{ $t('Total Paid') }}</span>
-                <h4 class="fw-bold mb-1 font-monospace text-success">
-                  ৳ {{ formatNum(summary.total_paid) }}
+            <div class="card-body p-3 d-flex align-items-center justify-content-between gap-2">
+              <div class="overflow-hidden">
+                <span class="text-muted small fw-bold text-uppercase d-block text-truncate">{{ $t('Total Paid') }}</span>
+                <h4 class="fw-bold mb-1 font-monospace text-success text-nowrap">
+                  <span class="text-nowrap">৳&nbsp;{{ formatNum(summary.total_paid) }}</span>
                 </h4>
-                <small class="text-secondary">
+                <small class="text-secondary text-nowrap d-block">
                   <strong>{{ summary.total_payments_count || 0 }}</strong> {{ $t('Payments') }}
                 </small>
               </div>
               <div class="metric-icon-box bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                <i class="fas fa-wallet fs-4"></i>
+                <i class="fas fa-wallet fs-5"></i>
               </div>
             </div>
           </div>
@@ -190,27 +190,27 @@
             class="card border-0 shadow-sm h-100 metric-card"
             :class="summary.total_due > 0 ? 'metric-danger border-start-danger' : 'metric-success'"
           >
-            <div class="card-body p-3 d-flex align-items-center justify-content-between">
-              <div>
-                <span class="text-muted small fw-bold text-uppercase d-block">
+            <div class="card-body p-3 d-flex align-items-center justify-content-between gap-2">
+              <div class="overflow-hidden">
+                <span class="text-muted small fw-bold text-uppercase d-block text-truncate">
                   {{ $t('Total Outstanding Due') }}
                 </span>
                 <h4
-                  class="fw-bold mb-1 font-monospace"
+                  class="fw-bold mb-1 font-monospace text-nowrap"
                   :class="summary.total_due > 0 ? 'text-danger' : 'text-success'"
                 >
-                  ৳ {{ formatNum(summary.total_due) }}
+                  <span class="text-nowrap">৳&nbsp;{{ formatNum(summary.total_due) }}</span>
                 </h4>
-                <small class="text-secondary d-block">
-                  <span v-if="summary.previous_due > 0">Prev: ৳ {{ formatNum(summary.previous_due) }} | </span>
-                  <span>Invoice: ৳ {{ formatNum(summary.invoice_due) }}</span>
+                <small class="text-secondary d-block text-nowrap">
+                  <span v-if="summary.previous_due > 0" class="text-nowrap">Prev: ৳&nbsp;{{ formatNum(summary.previous_due) }} | </span>
+                  <span class="text-nowrap">Invoice: ৳&nbsp;{{ formatNum(summary.invoice_due) }}</span>
                 </small>
               </div>
               <div
                 class="metric-icon-box rounded-circle d-flex align-items-center justify-content-center"
                 :class="summary.total_due > 0 ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'"
               >
-                <i class="fas fa-file-invoice-dollar fs-4"></i>
+                <i class="fas fa-file-invoice-dollar fs-5"></i>
               </div>
             </div>
           </div>
@@ -219,19 +219,19 @@
         <!-- 4. Loyalty Points Balance -->
         <div class="col-xl col-md-6 col-sm-6">
           <div class="card border-0 shadow-sm h-100 metric-card metric-warning">
-            <div class="card-body p-3 d-flex align-items-center justify-content-between">
-              <div>
-                <span class="text-muted small fw-bold text-uppercase d-block">{{ $t('Loyalty Points') }}</span>
-                <h4 class="fw-bold mb-1 font-monospace text-warning-dark">
+            <div class="card-body p-3 d-flex align-items-center justify-content-between gap-2">
+              <div class="overflow-hidden">
+                <span class="text-muted small fw-bold text-uppercase d-block text-truncate">{{ $t('Loyalty Points') }}</span>
+                <h4 class="fw-bold mb-1 font-monospace text-warning-dark text-nowrap">
                   {{ formatPoints(summary.points_balance) }} <small class="fs-6 fw-normal text-muted">{{ $t('Pts') }}</small>
                 </h4>
-                <small class="text-secondary">
-                  ≈ <strong>৳ {{ formatNum(summary.points_cash_value) }}</strong>
+                <small class="text-secondary text-nowrap d-block">
+                  ≈ <strong class="text-nowrap">৳&nbsp;{{ formatNum(summary.points_cash_value) }}</strong>
                   <span class="text-muted ms-1">({{ summary.total_points_earned || 0 }} {{ $t('Earned') }})</span>
                 </small>
               </div>
               <div class="metric-icon-box bg-warning bg-opacity-15 text-warning-dark rounded-circle d-flex align-items-center justify-content-center">
-                <i class="fas fa-coins fs-4"></i>
+                <i class="fas fa-coins fs-5"></i>
               </div>
             </div>
           </div>
@@ -240,18 +240,18 @@
         <!-- 5. Sales Returns -->
         <div class="col-xl col-md-6 col-sm-6">
           <div class="card border-0 shadow-sm h-100 metric-card metric-info">
-            <div class="card-body p-3 d-flex align-items-center justify-content-between">
-              <div>
-                <span class="text-muted small fw-bold text-uppercase d-block">{{ $t('Sales Returns') }}</span>
-                <h4 class="fw-bold mb-1 font-monospace text-dark">
-                  ৳ {{ formatNum(summary.total_return_amount) }}
+            <div class="card-body p-3 d-flex align-items-center justify-content-between gap-2">
+              <div class="overflow-hidden">
+                <span class="text-muted small fw-bold text-uppercase d-block text-truncate">{{ $t('Sales Returns') }}</span>
+                <h4 class="fw-bold mb-1 font-monospace text-dark text-nowrap">
+                  <span class="text-nowrap">৳&nbsp;{{ formatNum(summary.total_return_amount) }}</span>
                 </h4>
-                <small class="text-secondary">
+                <small class="text-secondary text-nowrap d-block">
                   <strong>{{ summary.total_returns || 0 }}</strong> {{ $t('Returns Recorded') }}
                 </small>
               </div>
               <div class="metric-icon-box bg-info bg-opacity-15 text-info rounded-circle d-flex align-items-center justify-content-center">
-                <i class="fas fa-undo-alt fs-4"></i>
+                <i class="fas fa-undo-alt fs-5"></i>
               </div>
             </div>
           </div>
@@ -501,14 +501,14 @@
                         </tr>
                         <tr>
                           <th>{{ $t('Previous Due Balance') }}</th>
-                          <td class="font-monospace fw-bold" :class="data.previous_due > 0 ? 'text-danger' : 'text-success'">
-                            ৳ {{ formatNum(data.previous_due) }}
+                          <td class="font-monospace fw-bold text-nowrap" :class="data.previous_due > 0 ? 'text-danger' : 'text-success'">
+                            <span class="text-nowrap">৳&nbsp;{{ formatNum(data.previous_due) }}</span>
                           </td>
                         </tr>
                         <tr>
                           <th>{{ $t('Due Limit (Credit Limit)') }}</th>
-                          <td class="font-monospace fw-bold text-dark">
-                            ৳ {{ formatNum(data.due_limit) }}
+                          <td class="font-monospace fw-bold text-dark text-nowrap">
+                            <span class="text-nowrap">৳&nbsp;{{ formatNum(data.due_limit) }}</span>
                           </td>
                         </tr>
                       </tbody>
@@ -630,25 +630,25 @@
                       <span class="small font-monospace">{{ inv.invoice_date }}</span>
                     </td>
 
-                    <td class="text-end font-monospace">৳ {{ formatNum(inv.original_amount) }}</td>
+                    <td class="text-end font-monospace text-nowrap">৳&nbsp;{{ formatNum(inv.original_amount) }}</td>
                     
-                    <td class="text-end font-monospace text-muted">
-                      <span v-if="inv.discount > 0">-৳ {{ formatNum(inv.discount) }}</span>
+                    <td class="text-end font-monospace text-muted text-nowrap">
+                      <span v-if="inv.discount > 0">-৳&nbsp;{{ formatNum(inv.discount) }}</span>
                       <span v-else>0.00</span>
                     </td>
 
-                    <td class="text-end font-monospace text-muted">+৳ {{ formatNum(inv.vat) }}</td>
+                    <td class="text-end font-monospace text-muted text-nowrap">+৳&nbsp;{{ formatNum(inv.vat) }}</td>
                     
-                    <td class="text-end font-monospace fw-bold text-dark">
-                      ৳ {{ formatNum(inv.amount) }}
+                    <td class="text-end font-monospace fw-bold text-dark text-nowrap">
+                      ৳&nbsp;{{ formatNum(inv.amount) }}
                     </td>
 
-                    <td class="text-end font-monospace text-success fw-semibold">
-                      ৳ {{ formatNum(inv.paid_amount) }}
+                    <td class="text-end font-monospace text-success fw-semibold text-nowrap">
+                      ৳&nbsp;{{ formatNum(inv.paid_amount) }}
                     </td>
 
-                    <td class="text-end font-monospace fw-bold" :class="(inv.amount - inv.paid_amount) > 0 ? 'text-danger' : 'text-success'">
-                      ৳ {{ formatNum(inv.amount - inv.paid_amount) }}
+                    <td class="text-end font-monospace fw-bold text-nowrap" :class="(inv.amount - inv.paid_amount) > 0 ? 'text-danger' : 'text-success'">
+                      ৳&nbsp;{{ formatNum(inv.amount - inv.paid_amount) }}
                     </td>
 
                     <td class="text-center">
@@ -675,9 +675,9 @@
                 <tfoot class="table-light fw-bold font-monospace">
                   <tr>
                     <td colspan="6" class="text-end">{{ $t('Summary Total:') }}</td>
-                    <td class="text-end text-dark">৳ {{ formatNum(summary.total_purchase) }}</td>
-                    <td class="text-end text-success">৳ {{ formatNum(summary.total_paid) }}</td>
-                    <td class="text-end text-danger">৳ {{ formatNum(summary.invoice_due) }}</td>
+                    <td class="text-end text-dark text-nowrap">৳&nbsp;{{ formatNum(summary.total_purchase) }}</td>
+                    <td class="text-end text-success text-nowrap">৳&nbsp;{{ formatNum(summary.total_paid) }}</td>
+                    <td class="text-end text-danger text-nowrap">৳&nbsp;{{ formatNum(summary.invoice_due) }}</td>
                     <td colspan="2"></td>
                   </tr>
                 </tfoot>
@@ -756,12 +756,12 @@
                     <td class="font-monospace small text-muted">
                       {{ pay.trxid || pay.chequeno || '-' }}
                     </td>
-                    <td class="text-end font-monospace text-muted">
-                      <span v-if="pay.discount > 0">৳ {{ formatNum(pay.discount) }}</span>
+                    <td class="text-end font-monospace text-muted text-nowrap">
+                      <span v-if="pay.discount > 0">৳&nbsp;{{ formatNum(pay.discount) }}</span>
                       <span v-else>-</span>
                     </td>
-                    <td class="text-end font-monospace fw-bold text-success fs-6">
-                      ৳ {{ formatNum(pay.amount) }}
+                    <td class="text-end font-monospace fw-bold text-success fs-6 text-nowrap">
+                      ৳&nbsp;{{ formatNum(pay.amount) }}
                     </td>
                     <td class="text-center">
                       <span class="badge bg-light text-dark border">{{ pay.status }}</span>
@@ -772,7 +772,7 @@
                 <tfoot class="table-light fw-bold font-monospace">
                   <tr>
                     <td colspan="8" class="text-end">{{ $t('Total Payments Received:') }}</td>
-                    <td class="text-end text-success fs-6">৳ {{ formatNum(summary.total_payments_amount) }}</td>
+                    <td class="text-end text-success fs-6 text-nowrap">৳&nbsp;{{ formatNum(summary.total_payments_amount) }}</td>
                     <td></td>
                   </tr>
                 </tfoot>
@@ -825,8 +825,8 @@
                       <span v-else class="text-muted">-</span>
                     </td>
                     <td class="text-center font-monospace fw-bold">{{ ret.total_qty }}</td>
-                    <td class="text-end font-monospace fw-bold text-danger">
-                      ৳ {{ formatNum(ret.total_refund_amount) }}
+                    <td class="text-end font-monospace fw-bold text-danger text-nowrap">
+                      ৳&nbsp;{{ formatNum(ret.total_refund_amount) }}
                     </td>
                     <td>{{ ret.payment_method || 'Adjusted / Cash' }}</td>
                     <td class="small text-muted">{{ ret.return_reason || ret.note || '-' }}</td>
@@ -839,7 +839,7 @@
                 <tfoot class="table-light fw-bold font-monospace">
                   <tr>
                     <td colspan="5" class="text-end">{{ $t('Total Refund Issued:') }}</td>
-                    <td class="text-end text-danger">৳ {{ formatNum(summary.total_return_amount) }}</td>
+                    <td class="text-end text-danger text-nowrap">৳&nbsp;{{ formatNum(summary.total_return_amount) }}</td>
                     <td colspan="3"></td>
                   </tr>
                 </tfoot>
@@ -868,10 +868,10 @@
                   </div>
                   <div class="col-md-3 border-end">
                     <span class="text-muted small fw-bold text-uppercase d-block">{{ $t('Estimated Cash Value') }}</span>
-                    <h4 class="fw-bold mb-0 text-success font-monospace">
-                      ৳ {{ formatNum(summary.points_cash_value) }}
+                    <h4 class="fw-bold mb-0 text-success font-monospace text-nowrap">
+                      ৳&nbsp;{{ formatNum(summary.points_cash_value) }}
                     </h4>
-                    <small class="text-muted">Rate: {{ summary.points_redeem_rate }} Pts = ৳ 1.00</small>
+                    <small class="text-muted text-nowrap">Rate: {{ summary.points_redeem_rate }} Pts = ৳&nbsp;1.00</small>
                   </div>
                   <div class="col-md-3 border-end">
                     <span class="text-muted small fw-bold text-uppercase d-block">{{ $t('Total Earned') }}</span>
@@ -924,8 +924,8 @@
                     <td class="text-end font-monospace fw-bold" :class="tx.type === 'Earn' ? 'text-success' : 'text-danger'">
                       {{ tx.type === 'Earn' ? '+' + formatPoints(tx.points_in) : '-' + formatPoints(tx.points_out) }}
                     </td>
-                    <td class="text-end font-monospace text-muted">
-                      ৳ {{ formatNum(tx.amount_equivalent || (tx.points_in ? tx.points_in / 10 : tx.points_out / 10)) }}
+                    <td class="text-end font-monospace text-muted text-nowrap">
+                      ৳&nbsp;{{ formatNum(tx.amount_equivalent || (tx.points_in ? tx.points_in / 10 : tx.points_out / 10)) }}
                     </td>
                     <td class="font-monospace">
                       <router-link
@@ -1005,8 +1005,8 @@
                         {{ clm.current_status || 'Received' }}
                       </span>
                     </td>
-                    <td class="text-end font-monospace text-dark">
-                      ৳ {{ formatNum(clm.customer_charge || 0) }}
+                    <td class="text-end font-monospace text-dark text-nowrap">
+                      ৳&nbsp;{{ formatNum(clm.customer_charge || 0) }}
                     </td>
                     <td class="text-center">
                       <router-link
@@ -1060,8 +1060,8 @@
                     <td class="font-monospace small">{{ q.quotation_date }}</td>
                     <td class="font-monospace small text-muted">{{ q.validity_date || '-' }}</td>
                     <td>{{ q.subject || '-' }}</td>
-                    <td class="text-end font-monospace fw-bold text-dark">
-                      ৳ {{ formatNum(q.total_amount) }}
+                    <td class="text-end font-monospace fw-bold text-dark text-nowrap">
+                      ৳&nbsp;{{ formatNum(q.total_amount) }}
                     </td>
                     <td class="text-center">
                       <span class="badge bg-info text-dark">{{ q.status || 'Draft' }}</span>
@@ -1208,27 +1208,27 @@
       <div class="row g-2 mb-3 text-center">
         <div class="col border p-2 rounded bg-light">
           <small class="text-muted fw-bold d-block">{{ $t('TOTAL PURCHASE') }}</small>
-          <strong class="font-monospace fs-6">৳ {{ formatNum(summary.total_purchase) }}</strong>
+          <strong class="font-monospace fs-6 text-nowrap">৳&nbsp;{{ formatNum(summary.total_purchase) }}</strong>
           <small class="text-muted d-block" style="font-size: 10px;">{{ summary.total_invoices || 0 }} {{ $t('Invoices') }}</small>
         </div>
         <div class="col border p-2 rounded bg-light">
           <small class="text-muted fw-bold d-block">{{ $t('TOTAL PAID') }}</small>
-          <strong class="font-monospace fs-6 text-success">৳ {{ formatNum(summary.total_paid) }}</strong>
+          <strong class="font-monospace fs-6 text-success text-nowrap">৳&nbsp;{{ formatNum(summary.total_paid) }}</strong>
           <small class="text-muted d-block" style="font-size: 10px;">{{ summary.total_payments_count || 0 }} {{ $t('Payments') }}</small>
         </div>
         <div class="col border p-2 rounded bg-light" style="border: 2px solid #dc3545 !important;">
           <small class="text-danger fw-bold d-block">{{ $t('TOTAL DUE BALANCE') }}</small>
-          <strong class="font-monospace fs-6 text-danger">৳ {{ formatNum(summary.total_due) }}</strong>
+          <strong class="font-monospace fs-6 text-danger text-nowrap">৳&nbsp;{{ formatNum(summary.total_due) }}</strong>
           <small class="text-muted d-block" style="font-size: 10px;">{{ $t('Net Outstanding') }}</small>
         </div>
         <div class="col border p-2 rounded bg-light">
           <small class="text-muted fw-bold d-block">{{ $t('LOYALTY POINTS') }}</small>
-          <strong class="font-monospace fs-6 text-warning-dark">{{ formatPoints(summary.points_balance) }} Pts</strong>
-          <small class="text-muted d-block" style="font-size: 10px;">≈ ৳ {{ formatNum(summary.points_cash_value) }}</small>
+          <strong class="font-monospace fs-6 text-warning-dark text-nowrap">{{ formatPoints(summary.points_balance) }} Pts</strong>
+          <small class="text-muted d-block text-nowrap" style="font-size: 10px;">≈ ৳&nbsp;{{ formatNum(summary.points_cash_value) }}</small>
         </div>
         <div class="col border p-2 rounded bg-light">
           <small class="text-muted fw-bold d-block">{{ $t('SALES RETURNS') }}</small>
-          <strong class="font-monospace fs-6">৳ {{ formatNum(summary.total_return_amount) }}</strong>
+          <strong class="font-monospace fs-6 text-nowrap">৳&nbsp;{{ formatNum(summary.total_return_amount) }}</strong>
           <small class="text-muted d-block" style="font-size: 10px;">{{ summary.total_returns || 0 }} {{ $t('Returns') }}</small>
         </div>
       </div>
@@ -1248,51 +1248,51 @@
             <td class="text-center font-monospace">1</td>
             <td class="fw-semibold">{{ $t('Total Sales Purchases (সর্বমোট বিক্রয়)') }}</td>
             <td class="text-center small">{{ summary.total_invoices || 0 }} {{ $t('Invoices') }} ({{ summary.paid_invoices_count || 0 }} {{ $t('Paid') }}, {{ summary.due_invoices_count || 0 }} {{ $t('Due') }})</td>
-            <td class="text-end font-monospace fw-bold text-dark">৳ {{ formatNum(summary.total_purchase) }}</td>
+            <td class="text-end font-monospace fw-bold text-dark text-nowrap">৳&nbsp;{{ formatNum(summary.total_purchase) }}</td>
           </tr>
           <tr>
             <td class="text-center font-monospace">2</td>
             <td class="fw-semibold">{{ $t('Total Amount Paid (পরিশোধিত টাকা)') }}</td>
             <td class="text-center small">{{ summary.total_payments_count || 0 }} {{ $t('Payment Transactions') }}</td>
-            <td class="text-end font-monospace fw-bold text-success">৳ {{ formatNum(summary.total_paid) }}</td>
+            <td class="text-end font-monospace fw-bold text-success text-nowrap">৳&nbsp;{{ formatNum(summary.total_paid) }}</td>
           </tr>
           <tr>
             <td class="text-center font-monospace">3</td>
             <td>{{ $t('Current Invoice Due (ইনভয়েস বকেয়া)') }}</td>
             <td class="text-center small">{{ summary.due_invoices_count || 0 }} {{ $t('Unsettled Invoices') }}</td>
-            <td class="text-end font-monospace text-dark">৳ {{ formatNum(summary.invoice_due) }}</td>
+            <td class="text-end font-monospace text-dark text-nowrap">৳&nbsp;{{ formatNum(summary.invoice_due) }}</td>
           </tr>
           <tr>
             <td class="text-center font-monospace">4</td>
             <td>{{ $t('Previous Due Balance (পূর্বের বকেয়া)') }}</td>
             <td class="text-center small">{{ $t('Opening Balance Carried Forward') }}</td>
-            <td class="text-end font-monospace text-dark">৳ {{ formatNum(summary.previous_due) }}</td>
+            <td class="text-end font-monospace text-dark text-nowrap">৳&nbsp;{{ formatNum(summary.previous_due) }}</td>
           </tr>
           <tr class="table-light fw-bold" style="background-color: #f1f5f9 !important;">
             <td class="text-center font-monospace">5</td>
             <td class="text-danger fw-bold">{{ $t('Total Net Outstanding Due (সর্বমোট বকেয়া)') }}</td>
             <td class="text-center text-danger small fw-bold">{{ $t('Total Payable to Company') }}</td>
-            <td class="text-end font-monospace fw-bold fs-6 text-danger">৳ {{ formatNum(summary.total_due) }}</td>
+            <td class="text-end font-monospace fw-bold fs-6 text-danger text-nowrap">৳&nbsp;{{ formatNum(summary.total_due) }}</td>
           </tr>
           <tr>
             <td class="text-center font-monospace">6</td>
             <td>{{ $t('Credit Limit / Due Limit (সর্বোচ্চ বকেয়া সীমা)') }}</td>
             <td class="text-center small">{{ $t('Authorized Credit Margin') }}</td>
-            <td class="text-end font-monospace fw-bold text-dark">৳ {{ formatNum(data.due_limit) }}</td>
+            <td class="text-end font-monospace fw-bold text-dark text-nowrap">৳&nbsp;{{ formatNum(data.due_limit) }}</td>
           </tr>
           <tr>
             <td class="text-center font-monospace">7</td>
             <td>{{ $t('Loyalty Points Balance (লয়ালটি পয়েন্ট)') }}</td>
             <td class="text-center small">Earned: {{ formatPoints(summary.total_points_earned) }} | Redeemed: {{ formatPoints(summary.total_points_redeemed) }}</td>
-            <td class="text-end font-monospace text-warning-dark fw-bold">
-              {{ formatPoints(summary.points_balance) }} Pts (≈ ৳ {{ formatNum(summary.points_cash_value) }})
+            <td class="text-end font-monospace text-warning-dark fw-bold text-nowrap">
+              {{ formatPoints(summary.points_balance) }} Pts (<span class="text-nowrap">≈ ৳&nbsp;{{ formatNum(summary.points_cash_value) }}</span>)
             </td>
           </tr>
           <tr>
             <td class="text-center font-monospace">8</td>
             <td>{{ $t('Total Sales Returns (পণ্য ফেরত মূল্য)') }}</td>
             <td class="text-center small">{{ summary.total_returns || 0 }} {{ $t('Return Cases') }}</td>
-            <td class="text-end font-monospace text-dark">৳ {{ formatNum(summary.total_return_amount) }}</td>
+            <td class="text-end font-monospace text-dark text-nowrap">৳&nbsp;{{ formatNum(summary.total_return_amount) }}</td>
           </tr>
           <tr>
             <td class="text-center font-monospace">9</td>
@@ -1304,7 +1304,7 @@
             <td class="text-center font-monospace">10</td>
             <td>{{ $t('Quotations / Proposals Issued (কোটেশন)') }}</td>
             <td class="text-center small">{{ summary.total_quotations || 0 }} {{ $t('Proposals') }}</td>
-            <td class="text-end font-monospace text-dark">৳ {{ formatNum(summary.total_quotations_amount) }}</td>
+            <td class="text-end font-monospace text-dark text-nowrap">৳&nbsp;{{ formatNum(summary.total_quotations_amount) }}</td>
           </tr>
         </tbody>
       </table>
@@ -1520,10 +1520,24 @@ export default {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
 }
 
+.metric-card h4 {
+  font-size: clamp(1.1rem, 1.25vw, 1.35rem) !important;
+  white-space: nowrap !important;
+  letter-spacing: -0.3px;
+}
+
 .metric-icon-box {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
+}
+
+.metric-icon-box i {
+  font-size: 1.2rem !important;
+}
+
+.text-nowrap {
+  white-space: nowrap !important;
 }
 
 .border-start-danger {

@@ -118,6 +118,14 @@
                   <td class="fw-bold text-secondary">{{ $t('Reference / RFQ') }}:</td>
                   <td class="text-end font-monospace text-dark">{{ data.reference_no }}</td>
                 </tr>
+                <tr v-if="data.customer_type">
+                  <td class="fw-bold text-secondary">{{ $t('Customer Type') }}:</td>
+                  <td class="text-end font-monospace text-dark text-capitalize">
+                    <span :class="data.customer_type === 'wholesale' ? 'badge bg-warning text-dark' : 'badge bg-primary text-white'">
+                      {{ data.customer_type }}
+                    </span>
+                  </td>
+                </tr>
                 <tr v-if="data.prepared_by && data.prepared_by.name">
                   <td class="fw-bold text-secondary">{{ $t('Prepared By') }}:</td>
                   <td class="text-end text-dark">{{ data.prepared_by.full_name || data.prepared_by.name }}</td>
@@ -219,7 +227,7 @@
       </div>
 
       <!-- 6. Commercial Terms & Conditions Block -->
-      <div class="row g-3 mb-5 terms-section" v-if="data.payment_terms || data.delivery_terms || data.warranty_terms || data.terms_conditions">
+      <div class="row g-3 mb-5 terms-section" v-if="data.payment_terms || data.delivery_terms || data.warranty_terms || formattedTermsConditions.length > 0">
         <div class="col-12">
           <div class="p-3 bg-light rounded-3 border" style="border-left: 4px solid #112C47 !important;">
             <h6 class="fw-bold text-uppercase small mb-2 border-bottom pb-1" style="color: #112C47;">
@@ -234,8 +242,14 @@
               <div class="col-md-6" v-if="data.warranty_terms">
                 <strong>• {{ $t('Warranty Terms') }}:</strong> {{ data.warranty_terms }}
               </div>
-              <div class="col-12 mt-2" v-if="data.terms_conditions">
-                <div style="white-space: pre-line;">{{ data.terms_conditions }}</div>
+              <div class="col-12 mt-2" v-if="formattedTermsConditions.length > 0">
+                <div class="fw-bold mb-1 text-secondary small">{{ $t('Commercial Conditions') }}:</div>
+                <ul class="mb-0 ps-2 list-unstyled">
+                  <li v-for="(tc, tcIdx) in formattedTermsConditions" :key="tcIdx" class="mb-1 d-flex align-items-start gap-2">
+                    <span class="badge bg-secondary-subtle text-secondary font-monospace" style="font-size: 10px;">{{ tcIdx + 1 }}</span>
+                    <span>{{ tc }}</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -307,11 +321,30 @@ export default {
         payment_terms: "",
         delivery_terms: "",
         warranty_terms: "",
-        terms_conditions: "",
+        terms_conditions: [],
         note: "",
         quotation_details: [],
       },
     };
+  },
+
+  computed: {
+    formattedTermsConditions() {
+      if (!this.data.terms_conditions) return [];
+      if (Array.isArray(this.data.terms_conditions)) {
+        return this.data.terms_conditions.filter((t) => typeof t === "string" && t.trim() !== "");
+      }
+      if (typeof this.data.terms_conditions === "string") {
+        try {
+          const parsed = JSON.parse(this.data.terms_conditions);
+          if (Array.isArray(parsed)) {
+            return parsed.filter((t) => typeof t === "string" && t.trim() !== "");
+          }
+        } catch (e) {}
+        return this.data.terms_conditions.split("\n").map((t) => t.trim()).filter(Boolean);
+      }
+      return [];
+    },
   },
 
   methods: {
