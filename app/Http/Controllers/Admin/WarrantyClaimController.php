@@ -36,6 +36,7 @@ class WarrantyClaimController extends BaseController
             'size:id,title',
             'client:id,name,mobile',
             'invoice:id,invoice_no,invoice_date',
+            'invoiceDetail:id,invoice_id,warranty_type,warranty_period,warranty_expires_at,serial_no',
             'creator:id,full_name,email',
         ])->latest();
 
@@ -118,17 +119,79 @@ class WarrantyClaimController extends BaseController
             ], 422);
         }
 
+        $invoiceDetail = null;
+
+        // 0. If a specific invoice_detail_id is requested, load it directly
+        if ($request->filled('invoice_detail_id')) {
+            $invoiceDetail = InvoiceDetails::with([
+                'invoice.client',
+                'item.category:id,title',
+                'color:id,title',
+                'size:id,title',
+            ])
+            ->where('id', $request->input('invoice_detail_id'))
+            ->where('status', 'active')
+            ->first();
+        }
+
         // 1. Search for serial number in sold items (InvoiceDetails)
-        $invoiceDetail = InvoiceDetails::with([
-            'invoice.client',
-            'item.category:id,title',
-            'color:id,title',
-            'size:id,title',
-        ])
-        ->where('serial_no', 'like', "%{$serialNo}%")
-        ->where('status', 'active')
-        ->latest('id')
-        ->first();
+        if (!$invoiceDetail) {
+            $cleanInvNo = ltrim($serialNo, '#');
+
+            $invoiceDetail = InvoiceDetails::with([
+                'invoice.client',
+                'item.category:id,title',
+                'color:id,title',
+                'size:id,title',
+            ])
+            ->where('serial_no', 'like', "%{$serialNo}%")
+            ->where('status', 'active')
+            ->latest('id')
+            ->first();
+        }
+
+        // 1.1 If not found directly by serial, check if user provided an Invoice No / ID
+        if (!$invoiceDetail) {
+            $invoiceDetail = InvoiceDetails::with([
+                'invoice.client',
+                'item.category:id,title',
+                'color:id,title',
+                'size:id,title',
+            ])
+            ->whereHas('invoice', function ($iq) use ($serialNo, $cleanInvNo) {
+                $iq->where('invoice_no', $serialNo)
+                   ->orWhere('invoice_no', $cleanInvNo)
+                   ->orWhere('id', $cleanInvNo);
+            })
+            ->where(function ($wq) {
+                $wq->whereNotNull('warranty_period')
+                   ->where('warranty_period', '!=', '')
+                   ->orWhere(function ($wtq) {
+                       $wtq->whereNotNull('warranty_type')
+                           ->where('warranty_type', '!=', 'none');
+                   });
+            })
+            ->where('status', 'active')
+            ->latest('id')
+            ->first();
+
+            if (!$invoiceDetail) {
+                $invoiceDetail = InvoiceDetails::with([
+                    'invoice.client',
+                    'item.category:id,title',
+                    'color:id,title',
+                    'size:id,title',
+                ])
+                ->whereHas('invoice', function ($iq) use ($serialNo, $cleanInvNo) {
+                    $iq->where('invoice_no', $serialNo)
+                       ->orWhere('invoice_no', $cleanInvNo)
+                       ->orWhere('id', $cleanInvNo);
+                })
+                ->where('status', 'active')
+                ->latest('id')
+                ->first();
+            }
+        }
 
         // 2. If not sold, check if it exists in Purchase (unsold inventory)
         if (!$invoiceDetail) {
@@ -144,6 +207,13 @@ class WarrantyClaimController extends BaseController
 
             if ($purchaseDetail) {
                 $pItem = $purchaseDetail->item;
+                $pWarrantyType = !empty($purchaseDetail->warranty_type) && $purchaseDetail->warranty_type !== 'none'
+                    ? $purchaseDetail->warranty_type
+                    : ($pItem && !empty($pItem->warranty_type) ? $pItem->warranty_type : 'warranty');
+                $pWarrantyPeriod = !empty($purchaseDetail->warranty_period)
+                    ? $purchaseDetail->warranty_period
+                    : ($pItem && !empty($pItem->warranty_period) ? $pItem->warranty_period : '');
+
                 return response()->json([
                     'found' => true,
                     'sold' => false,
@@ -160,8 +230,8 @@ class WarrantyClaimController extends BaseController
                     'color_title' => $purchaseDetail->color ? $purchaseDetail->color->title : null,
                     'size_id' => $purchaseDetail->size_id,
                     'size_title' => $purchaseDetail->size ? $purchaseDetail->size->title : null,
-                    'warranty_type' => $pItem && $pItem->warranty_type ? $pItem->warranty_type : 'warranty',
-                    'warranty_period' => $pItem && $pItem->warranty_period ? $pItem->warranty_period : '',
+                    'warranty_type' => $pWarrantyType,
+                    'warranty_period' => $pWarrantyPeriod,
                     'purchase_info' => [
                         'purchase_no' => $purchaseDetail->purchase ? $purchaseDetail->purchase->id : 'N/A',
                         'purchase_date' => $purchaseDetail->purchase ? $purchaseDetail->purchase->purchase_date : 'N/A',
@@ -195,10 +265,38 @@ class WarrantyClaimController extends BaseController
         } catch (Exception $e) {
             $saleDate = date('Y-m-d');
         }
-        $warrantyType = $item && $item->warranty_type ? $item->warranty_type : 'none';
-        $warrantyPeriod = $item && $item->warranty_period ? $item->warranty_period : '';
+
+        // ⭐️ Priority 1: Check warranty directly from invoice_details (sold terms), then fallback to item
+        $warrantyPeriod = '';
+        if (!empty($invoiceDetail->warranty_period) && trim($invoiceDetail->warranty_period) !== '') {
+            $warrantyPeriod = trim($invoiceDetail->warranty_period);
+        } elseif (!empty($invoiceDetail->warranty_duration) && trim($invoiceDetail->warranty_duration) !== '') {
+            $warrantyPeriod = trim($invoiceDetail->warranty_duration);
+        } elseif ($item && !empty($item->warranty_period) && trim($item->warranty_period) !== '') {
+            $warrantyPeriod = trim($item->warranty_period);
+        }
+
+        $warrantyType = 'none';
+        if (!empty($invoiceDetail->warranty_type) && trim($invoiceDetail->warranty_type) !== '' && $invoiceDetail->warranty_type !== 'none') {
+            $warrantyType = trim($invoiceDetail->warranty_type);
+        } elseif ($item && !empty($item->warranty_type) && trim($item->warranty_type) !== '' && $item->warranty_type !== 'none') {
+            $warrantyType = trim($item->warranty_type);
+        } elseif (!empty($warrantyPeriod)) {
+            $warrantyType = (stripos($warrantyPeriod, 'guarantee') !== false) ? 'guarantee' : 'warranty';
+        }
 
         $expiryDate = null;
+        if (!empty($invoiceDetail->warranty_expires_at)) {
+            try {
+                $expiryDate = Carbon::parse($invoiceDetail->warranty_expires_at);
+            } catch (Exception $e) {
+                $expiryDate = null;
+            }
+        }
+        if (!$expiryDate && !empty($warrantyPeriod)) {
+            $expiryDate = $this->calculateExpiryDate($saleDate, $warrantyPeriod);
+        }
+
         $isEligible = false;
         $remainingDays = 0;
         $expiredDays = 0;
@@ -210,7 +308,6 @@ class WarrantyClaimController extends BaseController
             $isEligible = false;
             $message = 'এই পণ্যটিতে কোনো ওয়ারেন্টি বা গ্যারান্টি সুবিধা নেই।';
         } else {
-            $expiryDate = $this->calculateExpiryDate($saleDate, $warrantyPeriod);
             $today = Carbon::today();
 
             if ($expiryDate) {
@@ -235,9 +332,36 @@ class WarrantyClaimController extends BaseController
         }
 
         // Check if there are previous claims on this serial
-        $existingClaims = WarrantyClaim::where('serial_no', $serialNo)
-            ->latest('id')
-            ->get(['id', 'claim_no', 'claim_date', 'current_status', 'problem_description']);
+        $matchedSerial = !empty($invoiceDetail->serial_no) ? $invoiceDetail->serial_no : $serialNo;
+        $existingClaims = WarrantyClaim::where(function ($cq) use ($matchedSerial, $serialNo) {
+            $cq->where('serial_no', $matchedSerial)
+              ->orWhere('serial_no', $serialNo);
+        })
+        ->latest('id')
+        ->get(['id', 'claim_no', 'claim_date', 'current_status', 'problem_description']);
+
+        $invoiceItems = [];
+        if ($invoice) {
+            $invoiceItems = InvoiceDetails::with(['item:id,title,barcode', 'color:id,title', 'size:id,title'])
+                ->where('invoice_id', $invoice->id)
+                ->where('status', 'active')
+                ->get()
+                ->map(function ($d) {
+                    $wPeriod = !empty($d->warranty_period) ? $d->warranty_period : (!empty($d->warranty_duration) ? $d->warranty_duration : ($d->item ? $d->item->warranty_period : ''));
+                    $wType = !empty($d->warranty_type) && $d->warranty_type !== 'none' ? $d->warranty_type : ($d->item && $d->item->warranty_type !== 'none' ? $d->item->warranty_type : 'none');
+                    return [
+                        'id' => $d->id,
+                        'item_id' => $d->item_id,
+                        'title' => $d->item ? $d->item->title : 'Item',
+                        'serial_no' => $d->serial_no,
+                        'color_title' => $d->color ? $d->color->title : null,
+                        'size_title' => $d->size ? $d->size->title : null,
+                        'warranty_type' => $wType,
+                        'warranty_period' => $wPeriod,
+                        'warranty_expires_at' => $d->warranty_expires_at,
+                    ];
+                });
+        }
 
         return response()->json([
             'found' => true,
@@ -245,7 +369,7 @@ class WarrantyClaimController extends BaseController
             'eligible' => $isEligible,
             'status_type' => $statusType,
             'message' => $message,
-            'serial_no' => $serialNo,
+            'serial_no' => $matchedSerial,
             'invoice_id' => $invoice ? $invoice->id : null,
             'invoice_no' => $invoice ? ($invoice->invoice_no ?? $invoice->invoiceno ?? 'N/A') : 'N/A',
             'invoice_detail_id' => $invoiceDetail->id,
@@ -267,6 +391,7 @@ class WarrantyClaimController extends BaseController
             'remaining_days' => $remainingDays,
             'expired_days' => $expiredDays,
             'existing_claims' => $existingClaims,
+            'invoice_items' => $invoiceItems,
         ]);
     }
 
@@ -279,11 +404,16 @@ class WarrantyClaimController extends BaseController
             $saleDate = Carbon::parse($saleDateStr);
             $period = strtolower(trim($warrantyPeriodStr));
 
+            $bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            $enDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+            $period = str_replace($bnDigits, $enDigits, $period);
+            $period = str_replace(['বছর', 'মাস', 'দিন', 'সপ্তাহ'], ['year', 'month', 'day', 'week'], $period);
+
             if (str_contains($period, 'lifetime')) {
                 return $saleDate->copy()->addYears(50);
             }
 
-            preg_match('/(\d+)\s*(year|yr|month|mon|day|d)/i', $period, $matches);
+            preg_match('/(\d+)\s*(year|yr|month|mon|day|d|week|wk)/i', $period, $matches);
 
             if (!empty($matches)) {
                 $amount = intval($matches[1]);
@@ -293,6 +423,8 @@ class WarrantyClaimController extends BaseController
                     return $saleDate->copy()->addYears($amount);
                 } elseif (str_starts_with($unit, 'm')) {
                     return $saleDate->copy()->addMonths($amount);
+                } elseif (str_starts_with($unit, 'w')) {
+                    return $saleDate->copy()->addWeeks($amount);
                 } elseif (str_starts_with($unit, 'd')) {
                     return $saleDate->copy()->addDays($amount);
                 }
@@ -327,6 +459,27 @@ class WarrantyClaimController extends BaseController
             }
             if (empty($data['claim_date'])) {
                 $data['claim_date'] = date('Y-m-d');
+            }
+
+            // Verify / backfill warranty information from invoice_details if linked
+            if (!empty($data['invoice_detail_id'])) {
+                $soldInvDetail = InvoiceDetails::find($data['invoice_detail_id']);
+                if ($soldInvDetail) {
+                    if (empty($data['warranty_period']) && !empty($soldInvDetail->warranty_period)) {
+                        $data['warranty_period'] = $soldInvDetail->warranty_period;
+                    } elseif (empty($data['warranty_period']) && !empty($soldInvDetail->warranty_duration)) {
+                        $data['warranty_period'] = $soldInvDetail->warranty_duration;
+                    }
+                    if (empty($data['warranty_type']) && !empty($soldInvDetail->warranty_type) && $soldInvDetail->warranty_type !== 'none') {
+                        $data['warranty_type'] = $soldInvDetail->warranty_type;
+                    }
+                    if (empty($data['warranty_expiry_date']) && !empty($soldInvDetail->warranty_expires_at)) {
+                        $data['warranty_expiry_date'] = $soldInvDetail->warranty_expires_at;
+                    }
+                    if (empty($data['serial_no']) && !empty($soldInvDetail->serial_no)) {
+                        $data['serial_no'] = $soldInvDetail->serial_no;
+                    }
+                }
             }
 
             // Sanitize all date fields to Y-m-d or null
@@ -384,6 +537,7 @@ class WarrantyClaimController extends BaseController
             'size',
             'client',
             'invoice.client',
+            'invoiceDetail',
             'expense.expense_details.account',
             'payment.payment_details.account',
             'logs.creator:id,full_name,email',

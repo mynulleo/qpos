@@ -445,7 +445,7 @@ class LibController extends Controller
         if (!empty($categoryid)) {
             $query->where('category_id', $categoryid);
         }
-        return $query->select('id', 'title', 'category_id', 'barcode', 'model_no', 'unit_id', 'warranty_type', 'is_serialized', 'opening_rate')->get();
+        return $query->select('id', 'title', 'category_id', 'barcode', 'model_no', 'unit_id', 'warranty_type', 'is_serialized', 'opening_rate', 'retail_price', 'wholesale_price')->get();
     }
 
     public function getGroupAccounts()
@@ -466,7 +466,9 @@ class LibController extends Controller
             ->select(
                 'id',
                 'account_type',
-                DB::raw("CONCAT(account_code, ' - ', account_name) as name")
+                'account_code',
+                'account_name',
+                DB::raw("IF(account_code IS NOT NULL AND TRIM(account_code) != '', CONCAT(TRIM(account_code), ' - ', account_name), account_name) as name")
             )
             ->get();
         return $expense_accounts;

@@ -30,25 +30,38 @@ class ExpenseController extends BaseController
      */
     public function index(Request $request)
     {
-        $query  = Expense::with(['workorder:id,order_no,order_date', 'employee:id,full_name', 'approved_admin:id,full_name'])->latest();
-        if ($request->has('field_name') && $request->has('value')) {
+        $query  = Expense::with(['employee:id,full_name', 'approved_admin:id,full_name'])->latest();
+        if ($request->filled('field_name') && $request->filled('value')) {
             $query->whereLike($request->field_name, $request->value);
         }
 
-        if ($request->has('workorder_id')) {
-            $query->where('workorder_id', $request->workorder_id);
-        }
-
-        if ($request->has('employee_id')) {
+        if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->employee_id);
         }
 
-        if ($request->has('from_expense_date') && $request->empty('to_expense_date')) {
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('approval_status')) {
+            if ($request->approval_status === 'approved') {
+                $query->whereNotNull('approved_by');
+            } elseif ($request->approval_status === 'pending') {
+                $query->whereNull('approved_by');
+            }
+        }
+
+        if ($request->filled('from_expense_date') && !$request->filled('to_expense_date')) {
             $date_from = vue_to_server_date($request->from_expense_date);
             $query->where('expense_date', '>=', $date_from);
         }
 
-        if ($request->has('from_expense_date') && $request->has('to_expense_date')) {
+        if (!$request->filled('from_expense_date') && $request->filled('to_expense_date')) {
+            $date_to = vue_to_server_date($request->to_expense_date);
+            $query->where('expense_date', '<=', $date_to);
+        }
+
+        if ($request->filled('from_expense_date') && $request->filled('to_expense_date')) {
             $date_from = vue_to_server_date($request->from_expense_date);
             $date_to = vue_to_server_date($request->to_expense_date);
             $query->whereBetween('expense_date', [$date_from, $date_to]);
@@ -133,7 +146,7 @@ class ExpenseController extends BaseController
         if ($request->format() == 'html') {
             return view('layouts.backend_app');
         }
-        $expense = Expense::with(['expense_details.account', 'workorder:id,order_no,order_date', 'employee:id,full_name', 'approved_admin:id,full_name'])->find($id);
+        $expense = Expense::with(['expense_details.account', 'employee:id,full_name', 'approved_admin:id,full_name'])->find($id);
         return $expense;
     }
 

@@ -21,14 +21,14 @@
         <div class="card-header theme-bg text-white py-2 px-3">
           <span class="fw-bold fs-6">
             <i class="fas fa-search me-2 text-warning"></i>
-            <span>{{ $t('Step 1: Serial Number Verification') }}</span>
+            <span>{{ $t('Step 1: Serial / Invoice Verification') }}</span>
           </span>
         </div>
         <div class="card-body p-4 bg-light">
           <div class="row g-3 align-items-center">
             <div class="col-lg-7 col-md-12">
               <label class="form-label fw-bold text-dark mb-2" style="font-size: 13px;">
-                {{ $t('Enter or Scan Item Serial Number') }}:
+                {{ $t('Enter or Scan Serial Number or Invoice Number') }}:
               </label>
               <div class="serial-search-box d-flex align-items-center shadow-sm">
                 <div class="search-icon-prefix d-flex align-items-center justify-content-center">
@@ -37,7 +37,7 @@
                 <input
                   type="text"
                   class="form-control serial-search-input font-monospace fw-bold"
-                  :placeholder="$t('Scan or type Serial No and press Enter...')"
+                  :placeholder="$t('Scan or type Serial No or Invoice No and press Enter...')"
                   v-model="searchSerial"
                   @keyup.enter="checkSerialEligibility"
                 />
@@ -48,13 +48,13 @@
                   :disabled="searching"
                 >
                   <i :class="searching ? 'fas fa-spinner fa-spin' : 'fas fa-search'"></i>
-                  <span>{{ $t('Verify Serial') }}</span>
+                  <span>{{ $t('Verify') }}</span>
                 </button>
               </div>
 
               <small class="text-muted d-block mt-2" style="font-size: 12px;">
                 <i class="fas fa-info-circle text-primary me-1"></i>
-                <span>{{ $t('Type or scan serial number to automatically verify sales record & warranty validity.') }}</span>
+                <span>{{ $t('Type or scan serial or invoice number to automatically verify sales record & warranty validity.') }}</span>
               </small>
             </div>
 
@@ -76,6 +76,41 @@
 
     <!-- 📢 Step 2: Verification Banners -->
     <div class="results-step-wrapper mb-4" v-if="verificationResult">
+      <!-- 📦 Multiple Items in Invoice Picker -->
+      <div class="card border border-primary border-opacity-25 shadow-sm mb-3 bg-white" v-if="verificationResult.invoice_items && verificationResult.invoice_items.length > 1">
+        <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+          <span class="small fw-bold text-dark">
+            <i class="fas fa-boxes text-primary me-2"></i>
+            <span>{{ $t('Invoice Items') }} ({{ verificationResult.invoice_items.length }}) - {{ $t('Select Item for Claim') }}</span>
+          </span>
+          <span class="badge bg-primary text-white font-monospace">{{ $t('Inv') }} #{{ verificationResult.invoice_no }}</span>
+        </div>
+        <div class="card-body p-2">
+          <div class="list-group list-group-flush">
+            <button
+              type="button"
+              v-for="invItem in verificationResult.invoice_items"
+              :key="invItem.id"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3 rounded mb-1 border"
+              :class="{ 'border-primary bg-primary bg-opacity-10 fw-bold': form.invoice_detail_id === invItem.id }"
+              @click="selectInvoiceItem(invItem.id)"
+            >
+              <div>
+                <span class="d-block text-dark">{{ invItem.title }}</span>
+                <small class="text-muted font-monospace" v-if="invItem.serial_no">{{ $t('S/N') }}: {{ invItem.serial_no }}</small>
+                <small class="text-muted" v-if="invItem.color_title || invItem.size_title"> ({{ invItem.color_title }} {{ invItem.size_title }})</small>
+              </div>
+              <div class="text-end">
+                <span class="badge" :class="invItem.warranty_type === 'guarantee' ? 'bg-success' : (invItem.warranty_type !== 'none' && invItem.warranty_period ? 'bg-primary' : 'bg-secondary')">
+                  {{ invItem.warranty_period || (invItem.warranty_type === 'none' ? $t('No Warranty') : $t(invItem.warranty_type)) }}
+                </span>
+                <i class="fas fa-check-circle text-primary ms-2" v-if="form.invoice_detail_id === invItem.id"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 1. ELIGIBLE BANNER -->
       <div class="alert alert-success border-2 shadow-sm d-flex align-items-start gap-3 p-3" v-if="verificationResult.eligible">
         <i class="fas fa-check-circle fs-1 text-success mt-1"></i>
@@ -83,19 +118,19 @@
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="alert-heading fw-bold mb-1 text-success">
               <i class="fas fa-shield-alt me-1"></i>
-              <span>Eligible for {{ verificationResult.warranty_type === 'guarantee' ? 'Guarantee (গ্যারান্টি)' : 'Warranty (ওয়ারেন্টি)' }}!</span>
+              <span>{{ $t('Eligible for') }} {{ verificationResult.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }}!</span>
             </h5>
             <span class="badge bg-success fs-6 px-3 py-1 font-monospace">
-              {{ verificationResult.remaining_days }} Days Remaining
+              {{ verificationResult.remaining_days }} {{ $t('Days Remaining') }}
             </span>
           </div>
           <p class="mb-2 small text-dark">
             {{ verificationResult.message }}
           </p>
           <div class="row g-2 bg-white rounded p-2 border border-success-subtle small font-monospace text-dark">
-            <div class="col-md-4"><strong>Invoice:</strong> {{ verificationResult.invoice_no }} ({{ verificationResult.sale_date }})</div>
-            <div class="col-md-4"><strong>Item:</strong> {{ verificationResult.item_title }}</div>
-            <div class="col-md-4"><strong>Policy:</strong> {{ verificationResult.warranty_period }} (Exp: {{ verificationResult.warranty_expiry_date }})</div>
+            <div class="col-md-4"><strong>{{ $t('Invoice') }}:</strong> {{ verificationResult.invoice_no }} ({{ verificationResult.sale_date }})</div>
+            <div class="col-md-4"><strong>{{ $t('Item') }}:</strong> {{ verificationResult.item_title }}</div>
+            <div class="col-md-4"><strong>{{ $t('Policy') }}:</strong> {{ verificationResult.warranty_period }} ({{ $t('Exp') }}: {{ verificationResult.warranty_expiry_date }})</div>
           </div>
         </div>
       </div>
@@ -110,10 +145,10 @@
               <span>{{ $t('Not Eligible for Free Warranty Coverage') }}</span>
             </h5>
             <span class="badge bg-danger fs-6 px-3 py-1 font-monospace" v-if="verificationResult.status_type === 'expired'">
-              Expired {{ verificationResult.expired_days }} Days Ago
+              {{ $t('Expired') }} {{ verificationResult.expired_days }} {{ $t('Days Ago') }}
             </span>
             <span class="badge bg-secondary fs-6 px-3 py-1" v-if="verificationResult.status_type !== 'expired'">
-              {{ verificationResult.status_type === 'unsold' ? 'Unsold Item' : 'No Warranty Policy' }}
+              {{ verificationResult.status_type === 'unsold' ? $t('Unsold Item') : $t('No Warranty Policy') }}
             </span>
           </div>
           <p class="mb-2 small text-dark fw-bold">
@@ -123,24 +158,24 @@
           <div class="bg-white rounded p-3 border shadow-sm small text-dark mt-2" v-if="verificationResult.sold">
             <h6 class="fw-bold border-bottom pb-1 mb-2 theme-text">
               <i class="fas fa-history me-1"></i>
-              <span>Original Sale & Customer Information (বিক্রয় ও কাস্টমার তথ্য):</span>
+              <span>{{ $t('Original Sale & Customer Information') }}:</span>
             </h6>
             <div class="row g-2 font-monospace">
-              <div class="col-md-4"><strong>Invoice No:</strong> {{ verificationResult.invoice_no }}</div>
-              <div class="col-md-4"><strong>Sale Date:</strong> {{ verificationResult.sale_date }}</div>
-              <div class="col-md-4"><strong>Customer:</strong> {{ verificationResult.customer_name }} ({{ verificationResult.customer_mobile }})</div>
-              <div class="col-md-6"><strong>Product:</strong> {{ verificationResult.item_title }} <span v-if="verificationResult.color_title">({{ verificationResult.color_title }}/{{ verificationResult.size_title }})</span></div>
-              <div class="col-md-6"><strong>Warranty Expiry Date:</strong> {{ verificationResult.warranty_expiry_date || 'No Warranty Policy' }}</div>
+              <div class="col-md-4"><strong>{{ $t('Invoice No') }}:</strong> {{ verificationResult.invoice_no }}</div>
+              <div class="col-md-4"><strong>{{ $t('Sale Date') }}:</strong> {{ verificationResult.sale_date }}</div>
+              <div class="col-md-4"><strong>{{ $t('Customer') }}:</strong> {{ verificationResult.customer_name }} ({{ verificationResult.customer_mobile }})</div>
+              <div class="col-md-6"><strong>{{ $t('Product') }}:</strong> {{ verificationResult.item_title }} <span v-if="verificationResult.color_title">({{ verificationResult.color_title }}/{{ verificationResult.size_title }})</span></div>
+              <div class="col-md-6"><strong>{{ $t('Expiry Date') }}:</strong> {{ verificationResult.warranty_expiry_date || $t('No Warranty Policy') }}</div>
             </div>
 
             <div class="mt-2 pt-2 border-top" v-if="verificationResult.existing_claims && verificationResult.existing_claims.length > 0">
               <span class="text-danger fw-bold">
                 <i class="fas fa-exclamation-circle me-1"></i>
-                <span>Previous Claims on this Serial (পূর্ববর্তী ক্লেইম সমূহ):</span>
+                <span>{{ $t('Previous Claims on this Serial') }}:</span>
               </span>
               <ul class="mb-0 ps-3 mt-1 small">
                 <li v-for="ec in verificationResult.existing_claims" :key="ec.id">
-                  <strong>{{ ec.claim_no }}</strong> ({{ ec.claim_date }}): Status: <span class="badge bg-secondary">{{ formatStatusLabel(ec.current_status) }}</span> - {{ ec.problem_description }}
+                  <strong>{{ ec.claim_no }}</strong> ({{ ec.claim_date }}): {{ $t('Status') }}: <span class="badge bg-secondary">{{ $t(formatStatusLabel(ec.current_status)) }}</span> - {{ ec.problem_description }}
                 </li>
               </ul>
             </div>
@@ -154,13 +189,13 @@
           <div class="bg-white rounded p-3 border shadow-sm small text-dark mt-2" v-if="verificationResult.purchase_info">
             <h6 class="fw-bold border-bottom pb-1 mb-2 text-info">
               <i class="fas fa-boxes me-1"></i>
-              <span>Purchase Record Information (ক্রয় সংক্রান্ত তথ্য):</span>
+              <span>{{ $t('Purchase Record Information') }}:</span>
             </h6>
             <div class="row g-2 font-monospace">
-              <div class="col-md-6"><strong>Product:</strong> {{ verificationResult.purchase_info.item_title }}</div>
-              <div class="col-md-6"><strong>Supplier:</strong> {{ verificationResult.purchase_info.supplier }}</div>
-              <div class="col-md-6"><strong>Purchase Date:</strong> {{ verificationResult.purchase_info.purchase_date }}</div>
-              <div class="col-md-6"><strong>Status:</strong> Available in Stock (Not yet sold to any customer)</div>
+              <div class="col-md-6"><strong>{{ $t('Product') }}:</strong> {{ verificationResult.purchase_info.item_title }}</div>
+              <div class="col-md-6"><strong>{{ $t('Supplier') }}:</strong> {{ verificationResult.purchase_info.supplier }}</div>
+              <div class="col-md-6"><strong>{{ $t('Purchase Date') }}:</strong> {{ verificationResult.purchase_info.purchase_date }}</div>
+              <div class="col-md-6"><strong>{{ $t('Status') }}:</strong> {{ $t('Available in Stock (Not yet sold to any customer)') }}</div>
             </div>
           </div>
         </div>
@@ -172,7 +207,7 @@
         <div>
           <h5 class="alert-heading fw-bold mb-1">{{ $t('Serial Number Not Found!') }}</h5>
           <p class="mb-0 small">
-            {{ verificationResult.message || 'The specified serial number does not match any purchase or sales records in the database.' }}
+            {{ verificationResult.message || $t('The specified serial number does not match any purchase or sales records in the database.') }}
           </p>
         </div>
       </div>
@@ -194,41 +229,41 @@
               </div>
               <div class="card-body p-3">
                 <div class="mb-2">
-                  <label class="form-label small fw-bold text-muted mb-0">Item Title:</label>
-                  <div class="fw-bold text-dark fs-6">{{ form.item_title || 'Item' }}</div>
+                  <label class="form-label small fw-bold text-muted mb-0">{{ $t('Item Title:') }}</label>
+                  <div class="fw-bold text-dark fs-6">{{ form.item_title || $t('Item') }}</div>
                 </div>
                 <div class="row g-2 mb-2">
                   <div class="col-6">
-                    <label class="form-label small fw-bold text-muted mb-0">Serial Number:</label>
-                    <div class="font-monospace fw-bold theme-text">{{ form.serial_no || 'N/A' }}</div>
+                    <label class="form-label small fw-bold text-muted mb-0">{{ $t('Serial Number:') }}</label>
+                    <div class="font-monospace fw-bold theme-text">{{ form.serial_no || $t('N/A') }}</div>
                   </div>
                   <div class="col-6">
-                    <label class="form-label small fw-bold text-muted mb-0">Invoice No:</label>
-                    <div class="font-monospace fw-bold text-dark">{{ form.invoice_no || 'N/A' }}</div>
+                    <label class="form-label small fw-bold text-muted mb-0">{{ $t('Invoice No:') }}</label>
+                    <div class="font-monospace fw-bold text-dark">{{ form.invoice_no || $t('N/A') }}</div>
                   </div>
                 </div>
                 <div class="row g-2 mb-2">
                   <div class="col-6">
-                    <label class="form-label small fw-bold text-muted mb-0">Coverage Type:</label>
+                    <label class="form-label small fw-bold text-muted mb-0">{{ $t('Coverage Type:') }}</label>
                     <div>
                       <span class="badge" :class="form.warranty_type === 'guarantee' ? 'bg-success' : 'theme-bg text-white'">
-                        {{ form.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}
+                        {{ form.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }}
                       </span>
                     </div>
                   </div>
                   <div class="col-6">
-                    <label class="form-label small fw-bold text-muted mb-0">Warranty Period:</label>
-                    <div class="small fw-bold text-dark">{{ form.warranty_period || 'N/A' }}</div>
+                    <label class="form-label small fw-bold text-muted mb-0">{{ $t('Warranty Period:') }}</label>
+                    <div class="small fw-bold text-dark">{{ form.warranty_period || $t('N/A') }}</div>
                   </div>
                 </div>
                 <div class="row g-2">
                   <div class="col-6">
-                    <label class="form-label small fw-bold text-muted mb-0">Sale Date:</label>
-                    <div class="small">{{ form.sale_date || 'N/A' }}</div>
+                    <label class="form-label small fw-bold text-muted mb-0">{{ $t('Sale Date:') }}</label>
+                    <div class="small">{{ form.sale_date || $t('N/A') }}</div>
                   </div>
                   <div class="col-6">
-                    <label class="form-label small fw-bold text-muted mb-0">Expiry Date:</label>
-                    <div class="small fw-bold text-danger">{{ form.warranty_expiry_date || 'N/A' }}</div>
+                    <label class="form-label small fw-bold text-muted mb-0">{{ $t('Expiry Date:') }}</label>
+                    <div class="small fw-bold text-danger">{{ form.warranty_expiry_date || $t('N/A') }}</div>
                   </div>
                 </div>
               </div>
@@ -245,7 +280,7 @@
               <div class="card-body p-3">
                 <div class="mb-2">
                   <label class="form-label small fw-bold text-dark mb-1">{{ $t('Customer Name') }} *</label>
-                  <input type="text" class="form-control form-control-sm fw-bold" v-model="form.customer_name" required placeholder="Customer Name">
+                  <input type="text" class="form-control form-control-sm fw-bold" v-model="form.customer_name" required :placeholder="$t('Customer Name')">
                 </div>
                 <div class="mb-2">
                   <label class="form-label small fw-bold text-dark mb-1">{{ $t('Mobile Number') }} *</label>
@@ -253,7 +288,7 @@
                 </div>
                 <div>
                   <label class="form-label small fw-bold text-dark mb-1">{{ $t('Address') }}</label>
-                  <textarea class="form-control form-control-sm" rows="2" v-model="form.customer_address" placeholder="Customer address..."></textarea>
+                  <textarea class="form-control form-control-sm" rows="2" v-model="form.customer_address" :placeholder="$t('Customer address...')"></textarea>
                 </div>
               </div>
             </div>
@@ -281,19 +316,19 @@
 
                   <div class="col-12">
                     <label class="form-label small fw-bold text-dark">{{ $t('Problem Description') }} *</label>
-                    <textarea class="form-control" rows="3" v-model="form.problem_description" required placeholder="e.g. Display not working, Power issue, Sound buzzing..."></textarea>
+                    <textarea class="form-control" rows="3" v-model="form.problem_description" required :placeholder="$t('e.g. Display not working, Power issue, Sound buzzing...')"></textarea>
                   </div>
 
                   <div class="col-12">
                     <label class="form-label small fw-bold text-dark">{{ $t('Received Accessories / Items') }}</label>
                     <div class="d-flex flex-wrap gap-2 mb-2">
-                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('Original Box')">+ Original Box</span>
-                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('Power Adapter / Charger')">+ Adapter</span>
-                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('USB / Power Cable')">+ Cable</span>
-                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('Warranty Card / Receipt')">+ Warranty Card</span>
-                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('Remote Controller')">+ Remote</span>
+                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('Original Box')">+ {{ $t('Original Box') }}</span>
+                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('Power Adapter / Charger')">+ {{ $t('Adapter') }}</span>
+                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('USB / Power Cable')">+ {{ $t('Cable') }}</span>
+                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('Warranty Card / Receipt')">+ {{ $t('Warranty Card') }}</span>
+                      <span class="badge bg-light text-dark border cursor-pointer accessory-chip" @click="appendAccessory('Remote Controller')">+ {{ $t('Remote') }}</span>
                     </div>
-                    <input type="text" class="form-control form-control-sm" v-model="form.accessories_received" placeholder="e.g. Original Box, Power Adapter, Remote">
+                    <input type="text" class="form-control form-control-sm" v-model="form.accessories_received" :placeholder="$t('e.g. Original Box, Power Adapter, Remote')">
                   </div>
 
                   <div class="col-md-6">
@@ -332,9 +367,9 @@
                         :readonly="isEdit || !!form.payment_id"
                         v-model.number="form.customer_charge" 
                         placeholder="0.00"
-                        :title="isEdit || form.payment_id ? 'Payment Received (Locked)' : ''"
+                        :title="isEdit || form.payment_id ? $t('Payment Received (Locked)') : ''"
                       >
-                      <span v-if="isEdit || form.payment_id" class="input-group-text bg-light text-secondary border-start-0 px-2" title="Payment Received (Locked)">
+                      <span v-if="isEdit || form.payment_id" class="input-group-text bg-light text-secondary border-start-0 px-2" :title="$t('Payment Received (Locked)')">
                         <i class="fas fa-lock fa-xs"></i>
                       </span>
                     </div>
@@ -342,7 +377,7 @@
 
                   <div class="col-12" v-if="!isEdit">
                     <label class="form-label small fw-bold text-dark">{{ $t('Initial Tracking Note / Remarks') }}</label>
-                    <textarea class="form-control form-control-sm" rows="2" v-model="form.initial_remarks" placeholder="Optional notes for tracking timeline..."></textarea>
+                    <textarea class="form-control form-control-sm" rows="2" v-model="form.initial_remarks" :placeholder="$t('Optional notes for tracking timeline...')"></textarea>
                   </div>
                 </div>
               </div>
@@ -421,7 +456,7 @@ export default {
   methods: {
     checkSerialEligibility() {
       if (!this.searchSerial || this.searchSerial.trim() === '') {
-        this.$toast('Please enter or scan a serial number', 'warning');
+        this.$toast(this.$t('Please enter or scan a serial number or invoice number'), 'warning');
         return;
       }
 
@@ -446,7 +481,35 @@ export default {
         })
         .catch(err => {
           this.searching = false;
-          this.$toast('Error verifying serial number', 'error');
+          this.$toast(this.$t('Error verifying serial or invoice number'), 'error');
+          console.error(err);
+        });
+    },
+    selectInvoiceItem(detailId) {
+      if (!detailId) return;
+      this.searching = true;
+      axios.get('warrantyClaim/check-serial', { 
+        params: { 
+          serial_no: this.searchSerial.trim(), 
+          invoice_detail_id: detailId 
+        } 
+      })
+        .then(res => {
+          const resData = res.data;
+          this.searching = false;
+          this.$nextTick(() => {
+            this.verificationResult = resData;
+            if (resData.found) {
+              this.populateForm(resData);
+            }
+            if (resData.message) {
+              this.$toast(resData.message, resData.eligible ? 'success' : (resData.found ? 'warning' : 'error'));
+            }
+          });
+        })
+        .catch(err => {
+          this.searching = false;
+          this.$toast(this.$t('Error selecting invoice item'), 'error');
           console.error(err);
         });
     },
@@ -477,7 +540,7 @@ export default {
     },
     submitClaim() {
       if (!this.form.customer_name || !this.form.customer_mobile || !this.form.problem_description) {
-        this.$toast('Please fill all required fields marked with *', 'warning');
+        this.$toast(this.$t('Please fill all required fields marked with *'), 'warning');
         return;
       }
 
@@ -488,7 +551,7 @@ export default {
       axios[method](url, this.form)
         .then(res => {
           const claimId = this.isEdit ? this.form.id : (res.data.data ? res.data.data.id : res.data.id);
-          this.$toast(`Warranty Claim ${this.isEdit ? 'updated' : 'registered'} successfully!`, 'success');
+          this.$toast(this.isEdit ? this.$t('Warranty Claim updated successfully!') : this.$t('Warranty Claim registered successfully!'), 'success');
           if (!this.isEdit) {
             this.$router.push({ name: 'warrantyClaim.show', params: { id: claimId }, query: { autoPrint: 1 } });
           } else {
@@ -496,7 +559,7 @@ export default {
           }
         })
         .catch(err => {
-          this.$toast(err.response?.data?.message || err.response?.data?.exception || 'Failed to save warranty claim', 'error');
+          this.$toast(err.response?.data?.message || err.response?.data?.exception || this.$t('Failed to save warranty claim'), 'error');
           console.error(err);
         })
         .finally(() => {
@@ -540,7 +603,7 @@ export default {
           };
         })
         .catch(err => {
-          this.$toast('Failed to load claim for editing', 'error');
+          this.$toast(this.$t('Failed to load claim for editing'), 'error');
           console.error(err);
         })
         .finally(() => {
@@ -570,6 +633,15 @@ export default {
     if (this.$route.params.id) {
       this.isEdit = true;
       this.loadClaimForEdit(this.$route.params.id);
+    }
+  },
+  mounted() {
+    const qSerial = this.$route.query.serial || this.$route.query.serial_no || this.$route.query.invoice || this.$route.query.invoice_no;
+    if (qSerial && !this.isEdit) {
+      this.searchSerial = String(qSerial).trim();
+      this.$nextTick(() => {
+        this.checkSerialEligibility();
+      });
     }
   },
 };

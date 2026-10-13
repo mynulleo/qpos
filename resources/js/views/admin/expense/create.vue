@@ -50,35 +50,21 @@
               id="date1"
               v-model="data.expense_date"
               field="data.expense_date"
-              title="Expense Date"
-              placeholder="Expense Date"
-              col="3"
+              :title="$t('Expense Date')"
+              :placeholder="$t('Expense Date')"
+              col="4"
               :req="true"
             ></date-picker>
 
             <Select
-              title="Workorder (Optional)"
-              v-model="data.workorder_id"
-              col="3"
-              field="data.workorder_id"
-              label="name"
-              :reduce="(obj) => obj.id"
-              :options="workorders"
-              placeholder="-- Select Workorder --"
-              :closeOnSelect="true"
-              :appendToBody="true"
-              :required="false"
-            />
-
-            <Select
-              title="Employee In-Charge"
+              :title="$t('Employee In-Charge')"
               v-model="data.employee_id"
-              col="3"
+              col="5"
               field="data.employee_id"
               label="full_name"
               :reduce="(obj) => obj.id"
               :options="$root.global.employees"
-              placeholder="-- Select Employee --"
+              :placeholder="$t('-- Select Employee --')"
               :closeOnSelect="true"
               :appendToBody="true"
               :required="false"
@@ -91,8 +77,8 @@
                   v-model="data.status"
                   field="data.status"
                   title="status"
-                  on-label="Active"
-                  off-label="Inactive"
+                  :on-label="$t('Active')"
+                  :off-label="$t('Inactive')"
                   :req="true"
                 ></Switch>
               </div>
@@ -110,7 +96,7 @@
             <span class="fw-bold small text-dark d-flex align-items-center gap-2">
               <i class="fas fa-list-ol text-primary"></i>{{ $t('Expense Items & Account Breakdown') }}</span>
             <span class="badge bg-primary rounded-pill px-2">
-              {{ (data.expense_details || []).length }} Items
+              {{ (data.expense_details || []).length }} {{ $t('Items') }}
             </span>
           </div>
 
@@ -126,7 +112,7 @@
 
         <div class="card-body p-3">
           <!-- Quick Add Common Expense Category Chips -->
-          <div class="mb-3 p-2 bg-light rounded-3 border d-flex flex-wrap align-items-center gap-2" v-if="quickExpenseOptions.length > 0">
+          <div class="mb-3 p-2 bg-light rounded-3 border d-flex flex-wrap align-items-center gap-2" v-if="accounts.length > 0">
             <span class="small fw-bold text-secondary d-flex align-items-center gap-1 me-1">
               <i class="fas fa-bolt text-warning"></i> {{ $t("Quick Add Heads:") }}
             </span>
@@ -139,6 +125,74 @@
               @click="addPredefinedExpenseRow(opt)">
               <i class="fas fa-plus text-success" style="font-size: 9px;"></i> {{ opt.name }}
             </button>
+            <button
+              type="button"
+              class="btn btn-xs btn-outline-primary bg-white py-1 px-2 rounded-pill shadow-xs ms-auto d-inline-flex align-items-center gap-1"
+              style="font-size: 11px;"
+              @click="openQuickHeadsModal"
+              :title="$t('Customize Quick Heads')">
+              <i class="fas fa-cog text-primary" style="font-size: 10px;"></i> {{ $t('Customize Quick Heads') }}
+            </button>
+          </div>
+
+          <!-- ⚙️ Customize Quick Add Heads Modal -->
+          <div class="modal fade" id="quickHeadsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+              <div class="modal-content border-0 shadow">
+                <div class="modal-header py-2 bg-light border-bottom">
+                  <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="fas fa-bolt text-warning"></i> {{ $t('Customize Quick Add Heads') }}
+                  </h6>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3">
+                  <p class="text-muted small mb-2">
+                    {{ $t('Select the accounts you want to see in the quick add bar:') }}
+                  </p>
+                  <div class="mb-2">
+                    <input
+                      type="text"
+                      class="form-control form-control-sm"
+                      :placeholder="$t('Search account head...')"
+                      v-model="quickHeadsSearch"
+                    />
+                  </div>
+                  <div class="border rounded-2 p-2 bg-white" style="max-height: 260px; overflow-y: auto;">
+                    <div
+                      v-for="acc in filteredAccountsForModal"
+                      :key="acc.id"
+                      class="form-check py-1 border-bottom border-light">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        :id="'head_' + acc.id"
+                        :value="acc.id"
+                        v-model="tempSelectedHeadIds"
+                      />
+                      <label class="form-check-label small fw-semibold text-dark" :for="'head_' + acc.id" style="cursor: pointer;">
+                        {{ acc.name }}
+                      </label>
+                    </div>
+                    <div v-if="filteredAccountsForModal.length === 0" class="text-muted small text-center py-3">
+                      {{ $t('No matching accounts found') }}
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer py-2 bg-light border-top d-flex justify-content-between">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" @click="resetQuickHeadsToDefault">
+                    <i class="fas fa-undo me-1"></i> {{ $t('Reset to Default') }}
+                  </button>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                      {{ $t('Cancel') }}
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" @click="saveCustomQuickHeads">
+                      <i class="fas fa-check me-1"></i> {{ $t('Save Quick Heads') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Expense Details Table -->
@@ -173,7 +227,7 @@
                         label="name"
                         :reduce="(obj) => obj.id"
                         :options="accounts"
-                        placeholder="-- Select Expense Account --"
+                        :placeholder="$t('-- Select Expense Account --')"
                         :closeOnSelect="true"
                         :appendToBody="true"
                       />
@@ -185,7 +239,7 @@
                     <input
                       type="text"
                       class="form-control form-control-sm"
-                      placeholder="Enter details / remarks (e.g. Office electricity bill)..."
+                      :placeholder="$t('Enter details / remarks (e.g. Office electricity bill)...')"
                       v-model="expensedetail.narration"
                     />
                   </td>
@@ -193,7 +247,7 @@
                   <!-- Amount with Currency Styling -->
                   <td>
                     <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-light fw-bold font-monospace">Tk</span>
+                      <span class="input-group-text bg-light fw-bold font-monospace">{{ $t('Tk.') }}</span>
                       <input
                         type="number"
                         step="0.01"
@@ -213,7 +267,7 @@
                         type="button"
                         class="btn btn-outline-danger btn-sm p-1 rounded-circle d-flex align-items-center justify-content-center"
                         style="width: 28px; height: 28px;"
-                        title="Delete Row"
+                        :title="$t('Delete Row')"
                         @click.prevent="removeExpenseDetails(index)"
                         v-if="data.expense_details.length > 1">
                         <i class="fas fa-trash-alt" style="font-size: 11px;"></i>
@@ -223,7 +277,7 @@
                         type="button"
                         class="btn btn-outline-primary btn-sm p-1 rounded-circle d-flex align-items-center justify-content-center"
                         style="width: 28px; height: 28px;"
-                        title="Add Next Row"
+                        :title="$t('Add Next Row')"
                         @click.prevent="addExpenseDetailsRow">
                         <i class="fas fa-plus" style="font-size: 11px;"></i>
                       </button>
@@ -269,7 +323,6 @@ export default {
       page_title: "",
       data: {
         expense_date: this.$filter.today(),
-        workorder_id: null,
         employee_id: null,
         status: "active",
         total_amount: 0,
@@ -282,14 +335,27 @@ export default {
         ],
       },
       accounts: [],
-      workorders: [],
+      customQuickHeadIds: JSON.parse(localStorage.getItem("qpos_quick_expense_heads") || "[]"),
+      tempSelectedHeadIds: [],
+      quickHeadsSearch: "",
     };
   },
 
   computed: {
     quickExpenseOptions() {
       if (!this.accounts || this.accounts.length === 0) return [];
-      return this.accounts.slice(0, 6);
+      if (this.customQuickHeadIds && this.customQuickHeadIds.length > 0) {
+        const selected = this.accounts.filter((a) => this.customQuickHeadIds.includes(a.id));
+        if (selected.length > 0) return selected;
+      }
+      return this.accounts.filter((a) => a && a.name).slice(0, 6);
+    },
+
+    filteredAccountsForModal() {
+      if (!this.accounts) return [];
+      if (!this.quickHeadsSearch) return this.accounts;
+      const q = this.quickHeadsSearch.toLowerCase();
+      return this.accounts.filter((a) => (a.name || "").toLowerCase().includes(q));
     },
   },
 
@@ -344,16 +410,6 @@ export default {
       });
     },
 
-    getWorkorders() {
-      axios
-        .get(`getworkorders/`)
-        .then((response) => {
-          this.workorders = response.data || [];
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    },
 
     getAccountsByType() {
       const accounttype = "Expense";
@@ -407,6 +463,31 @@ export default {
         this.calculateTotals();
       }
     },
+
+    openQuickHeadsModal() {
+      this.quickHeadsSearch = "";
+      if (this.customQuickHeadIds && this.customQuickHeadIds.length > 0) {
+        this.tempSelectedHeadIds = [...this.customQuickHeadIds];
+      } else {
+        this.tempSelectedHeadIds = this.quickExpenseOptions.map((a) => a.id);
+      }
+      $("#quickHeadsModal").modal("show");
+    },
+
+    saveCustomQuickHeads() {
+      this.customQuickHeadIds = [...this.tempSelectedHeadIds];
+      localStorage.setItem("qpos_quick_expense_heads", JSON.stringify(this.customQuickHeadIds));
+      $("#quickHeadsModal").modal("hide");
+      this.$toast(this.$t("Quick Add Heads updated successfully"), "success");
+    },
+
+    resetQuickHeadsToDefault() {
+      this.customQuickHeadIds = [];
+      localStorage.removeItem("qpos_quick_expense_heads");
+      this.tempSelectedHeadIds = this.accounts.slice(0, 6).map((a) => a.id);
+      $("#quickHeadsModal").modal("hide");
+      this.$toast(this.$t("Reset Quick Add Heads to default"), "info");
+    },
   },
 
   created() {
@@ -417,7 +498,6 @@ export default {
       this.page_title = this.headline(this.model) + " Create";
     }
     this.getAccountsByType();
-    this.getWorkorders();
   },
 
   validators: {

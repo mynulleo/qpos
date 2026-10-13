@@ -14,11 +14,11 @@
             <h3 class="fw-bold text-black text-uppercase mb-0" style="font-size: 16px; line-height: 1.2; color: #000000 !important;">{{ currentSite.title || 'QPOS STORE' }}</h3>
             <p class="mb-0 text-black fw-medium" style="font-size: 9.5px; line-height: 1.25; color: #000000 !important;">{{ currentSite.address }}</p>
             <p class="mb-0 text-black fw-medium" style="font-size: 9.5px; line-height: 1.25; color: #000000 !important;">
-                Phone: {{ currentSite.mobile1 }} <span v-if="currentSite.mobile2">/ {{ currentSite.mobile2 }}</span> | Email: {{ currentSite.contact_email || currentSite.email }}
-                <span v-if="currentSite.bin_no || currentSite.vat_no"> | BIN: {{ currentSite.bin_no || currentSite.vat_no }}</span>
+                {{ $t('Phone:') }} {{ currentSite.mobile1 }} <span v-if="currentSite.mobile2">/ {{ currentSite.mobile2 }}</span> | {{ $t('Email:') }} {{ currentSite.contact_email || currentSite.email }}
+                <span v-if="currentSite.bin_no || currentSite.vat_no"> | {{ $t('BIN / VAT:') }} {{ currentSite.bin_no || currentSite.vat_no }}</span>
             </p>
             <div v-if="orgMemberships && orgMemberships.length > 0" class="d-flex justify-content-center align-items-center gap-2 mt-1">
-                <span class="text-uppercase fw-bold text-black me-1" style="font-size: 9px; letter-spacing: 0.5px; color: #000000 !important;">Member of:</span>
+                <span class="text-uppercase fw-bold text-black me-1" style="font-size: 9px; letter-spacing: 0.5px; color: #000000 !important;">{{ $t('Member of:') }}</span>
                 <template v-for="(m, mIdx) in orgMemberships" :key="mIdx">
                     <img v-if="m.logo || m.logo_url" 
                          :src="m.logo_url || m.logo" 
@@ -32,7 +32,7 @@
 
         <div class="text-center my-2">
             <h2 class="text-uppercase text-black fw-bold mb-0" style="font-size: 22px; font-weight: 900; letter-spacing: 4px; color: #000000 !important; line-height: 1.1;">
-                INVOICE
+                {{ $t('INVOICE') }}
             </h2>
         </div>
 
@@ -40,20 +40,20 @@
         <table class="table table-sm table-bordered border-dark mb-2" style="font-size: 10.5px; color: #000000 !important;">
             <tbody>
                 <tr style="color: #000000 !important;">
-                    <td width="33%" class="text-black" style="padding: 3px 6px; color: #000000 !important;"><strong>Invoice No:</strong> <span class="font-monospace fw-bold" style="color: #000000 !important;">#{{ data.invoice_no }}</span></td>
-                    <td width="33%" class="text-black" style="padding: 3px 6px; color: #000000 !important;"><strong>Date:</strong> <span class="text-nowrap" style="white-space: nowrap !important; color: #000000 !important;">{{ data.invoice_date }}</span></td>
+                    <td width="33%" class="text-black" style="padding: 3px 6px; color: #000000 !important;"><strong>{{ $t('Invoice No:') }}</strong> <span class="font-monospace fw-bold" style="color: #000000 !important;">#{{ data.invoice_no }}</span></td>
+                    <td width="33%" class="text-black" style="padding: 3px 6px; color: #000000 !important;"><strong>{{ $t('Date:') }}</strong> <span class="text-nowrap" style="white-space: nowrap !important; color: #000000 !important;">{{ data.invoice_date }}</span></td>
                     <td width="34%" class="text-black" style="padding: 3px 6px; color: #000000 !important;">
-                        <strong>Sold By:</strong> <span class="fw-semibold" style="color: #000000 !important;">{{ getSellerName(data) }}</span>
+                        <strong>{{ $t('Sold By:') }}</strong> <span class="fw-semibold" style="color: #000000 !important;">{{ getSellerName(data) }}</span>
                         <span v-if="getSellerId(data)" class="ms-1">(ID: {{ getSellerId(data) }})</span>
                     </td>
                 </tr>
                 <tr style="color: #000000 !important;">
                     <td colspan="2" style="padding: 3px 6px; color: #000000 !important;">
-                        <strong>Customer:</strong> {{ data.client?.name || 'Walk-in Customer' }}
+                        <strong>{{ $t('Customer:') }}</strong> {{ data.client?.name || $t('Walk-in Customer') }}
                         <span v-if="data.client?.mobile" class="ms-1 text-black" style="color: #000000 !important;">({{ data.client.mobile }})</span>
                     </td>
                     <td style="padding: 3px 6px; color: #000000 !important;">
-                        <strong>Address:</strong> {{ data.delivery_address || (data.client?.address || 'N/A') }}
+                        <strong>{{ $t('Address:') }}</strong> {{ data.delivery_address || (data.client?.address || 'N/A') }}
                     </td>
                 </tr>
             </tbody>
@@ -75,20 +75,16 @@
                     <td class="text-center text-black fw-bold" style="padding: 4px 4px; color: #000000 !important;">{{ index + 1 }}</td>
                     <td style="padding: 4px 6px; color: #000000 !important; word-break: break-word;">
                         <div class="fw-bold text-black" style="font-size: 11px; line-height: 1.25; color: #000000 !important;">{{ getItemTitle(invd) }}</div>
-                        <!-- ⭐️ Barcode right below Item Title -->
-                        <div v-if="getItemBarcode(invd)" class="text-black font-monospace mt-1" style="font-size: 9px; line-height: 1.3; color: #000000 !important;">
-                            <strong style="color: #000000 !important;">Barcode:</strong> {{ getItemBarcode(invd) }}
-                        </div>
                         <!-- ⭐️ Specifications -->
                         <div class="d-flex flex-wrap gap-1 mt-1" v-if="getItemSpecs(invd).length > 0">
                             <span v-for="(spec, sIdx) in getItemSpecs(invd)" :key="sIdx" 
                                   style="background: #f8fafc; border: 1px solid #000000; border-radius: 2px; padding: 1px 4px; font-size: 9px; color: #000; display: inline-block;">
-                                <strong>{{ spec.label }}:</strong> {{ spec.value }}
+                                <strong>{{ $t(spec.label) }}:</strong> {{ spec.value }}
                             </span>
                         </div>
                         <!-- ⭐️ All Serial Numbers (S/N) starting directly next to S/N: -->
                         <div v-if="getItemSerials(invd).length > 0" class="text-black mt-1" style="font-size: 10.5px; line-height: 1.35; color: #000000 !important; word-break: break-word;">
-                            <span class="font-monospace text-black fw-bold" style="font-size: 10.5px; color: #000000 !important;"><strong style="font-weight: 800; color: #000000 !important;">S/N: </strong>{{ getItemSerials(invd).join(', ') }}</span>
+                            <span class="font-monospace text-black fw-bold" style="font-size: 10.5px; color: #000000 !important;"><strong style="font-weight: 800; color: #000000 !important;">{{ $t('S/N:') }} </strong>{{ getItemSerials(invd).join(', ') }}</span>
                         </div>
                     </td>
                     <td class="text-center font-monospace fw-bold text-nowrap text-black" style="padding: 4px 4px; white-space: nowrap !important; font-size: 11px; color: #000000 !important;">{{ formatQty(invd.qty) }}</td>
@@ -104,18 +100,18 @@
             <div class="col-6 d-flex flex-column justify-content-between">
                 <!-- In Words (Clean, Outside Box Borders) -->
                 <div class="py-1 mb-1" style="font-size: 10.5px; line-height: 1.35; color: #000000 !important;">
-                    <strong style="color: #000000 !important; font-weight: 800;">In Words:</strong> 
+                    <strong style="color: #000000 !important; font-weight: 800;">{{ $t('In Words:') }}</strong> 
                     <span style="color: #000000 !important;">{{ numberToWords(data.amount) }}</span>
                 </div>
                 
                 <!-- Bank Details directly below In Words / at bottom -->
                 <div v-if="currentSite?.bank_name" class="p-2 bg-white rounded border border-dark mt-auto" style="font-size: 9.5px; color: #000000 !important; line-height: 1.35; border-left: 3px solid #000000 !important;">
-                    <strong style="color: #000000 !important; font-weight: 800;"><i class="fas fa-university me-1 text-black"></i>Bank Details:</strong> 
+                    <strong style="color: #000000 !important; font-weight: 800;"><i class="fas fa-university me-1 text-black"></i>{{ $t('Bank Details:') }}</strong> 
                     <div class="font-monospace fw-bold text-black" style="font-size: 9.5px; color: #000000 !important;">
-                        Bank: {{ currentSite.bank_name }} <span v-if="currentSite.branch_name">({{ currentSite.branch_name }})</span>
+                        {{ $t('Bank:') }} {{ currentSite.bank_name }} <span v-if="currentSite.branch_name">({{ currentSite.branch_name }})</span>
                     </div>
                     <div class="font-monospace fw-bold text-black" style="font-size: 9.5px; color: #000000 !important;">
-                        A/C No: {{ currentSite.account_number }}
+                        {{ $t('A/C No:') }} {{ currentSite.account_number }}
                     </div>
                 </div>
             </div>
@@ -161,15 +157,15 @@
         <div class="row g-2 mt-3 mb-3">
             <div class="col-12">
                 <div class="pt-2" style="border-top: 1px solid #94a3b8 !important; font-size: 10px; color: #000000 !important; line-height: 1.45;">
-                    <strong class="text-black d-block mb-1" style="font-size: 10px; font-weight: 800; color: #000000 !important;">Terms & Conditions:</strong>
+                    <strong class="text-black d-block mb-1" style="font-size: 10px; font-weight: 800; color: #000000 !important;">{{ $t('Terms & Conditions:') }}</strong>
                     <div v-if="data.terms_conditions && data.terms_conditions.length > 0" class="text-black" style="color: #000000 !important;">
                         <div v-for="(tc, tcIdx) in data.terms_conditions" :key="tcIdx" class="mb-1" style="line-height: 1.45;">
                             {{ tcIdx + 1 }}. {{ tc }}
                         </div>
                     </div>
                     <div v-else class="text-black" style="color: #000000 !important;">
-                        <div class="mb-1" style="line-height: 1.45;">1. Goods once sold are subject to standard return policy.</div>
-                        <div class="mb-1" style="line-height: 1.45;">2. Commercial claims require presenting this original invoice.</div>
+                        <div class="mb-1" style="line-height: 1.45;">1. {{ $t('Goods once sold are subject to standard return policy.') }}</div>
+                        <div class="mb-1" style="line-height: 1.45;">2. {{ $t('Commercial claims require presenting this original invoice.') }}</div>
                     </div>
                 </div>
             </div>
@@ -178,13 +174,13 @@
         <!-- ✍️ 3 Signatures in Compact Box (Bottom Pinned) -->
         <div class="row signature-section" style="font-size: 9.5px; margin-top: auto !important; padding-top: 30px;">
             <div class="col-4 text-center">
-                <div class="border-top border-dark pt-1 mx-2 fw-bold text-black" style="color: #000000 !important;">Received By</div>
+                <div class="border-top border-dark pt-1 mx-2 fw-bold text-black" style="color: #000000 !important;">{{ $t('Received By') }}</div>
             </div>
             <div class="col-4 text-center">
-                <div class="border-top border-dark pt-1 mx-2 fw-bold text-black" style="color: #000000 !important;">Prepared By</div>
+                <div class="border-top border-dark pt-1 mx-2 fw-bold text-black" style="color: #000000 !important;">{{ $t('Prepared By') }}</div>
             </div>
             <div class="col-4 text-center">
-                <div class="border-top border-dark pt-1 mx-2 fw-bold text-black" style="color: #000000 !important;">Authorized Signatory</div>
+                <div class="border-top border-dark pt-1 mx-2 fw-bold text-black" style="color: #000000 !important;">{{ $t('Authorized Signatory') }}</div>
             </div>
         </div>
     </div>
@@ -257,8 +253,9 @@ export default {
             return item.barcode || item.item?.barcode || '';
         },
         getItemWarranty(item) {
-            const wType = item.warranty_type || item.item?.warranty_type;
-            const wPeriod = item.warranty_period || item.item?.warranty_period;
+            if (!item) return '';
+            const wType = item.warranty_type;
+            const wPeriod = item.warranty_period;
             if (wType && wType !== 'none' && wPeriod && typeof wPeriod === 'string' && wPeriod.trim() !== '') {
                 const label = wType === 'guarantee' ? 'Guarantee' : 'Warranty';
                 return `${label}: ${wPeriod.trim()}`;
@@ -378,9 +375,74 @@ export default {
             const f = parseFloat(val);
             return isNaN(f) ? '0.00' : f.toFixed(2);
         },
+        bengaliNumberToWords(number) {
+            const bangla0to99 = [
+                "", "এক", "দুই", "তিন", "চার", "পাঁচ", "ছয়", "সাত", "আট", "নয়", "দশ",
+                "এগারো", "বারো", "তেরো", "চৌদ্দ", "পনেরো", "ষোল", "সতেরো", "আঠারো", "উনিশ", "বিশ",
+                "একুশ", "বাইশ", "তেইশ", "চব্বিশ", "পঁচিশ", "ছাব্বিশ", "সাতাশ", "আটাশ", "উনত্রিশ", "ত্রিশ",
+                "একত্রিশ", "বত্রিশ", "তেত্রিশ", "চৌত্রিশ", "পঁয়ত্রিশ", "ছত্রিশ", "সাঁইত্রিশ", "আটত্রিশ", "ঊনচল্লিশ", "চল্লিশ",
+                "একচল্লিশ", "বিয়াল্লিশ", "তেতাল্লিশ", "চুয়াল্লিশ", "পঁয়তাল্লিশ", "ছেচল্লিশ", "সাতচল্লিশ", "আটচল্লিশ", "ঊনপঞ্চাশ", "পঞ্চাশ",
+                "একান্ন", "বায়ান্ন", "তিপ্পান্ন", "চুয়ান্ন", "পঞ্চান্ন", "ছাপ্পান্ন", "সাতান্ন", "আটান্ন", "ঊনষাট", "ষাট",
+                "একষট্টি", "বাষট্টি", "তেষট্টি", "চৌষট্টি", "পঁয়ষট্টি", "ছেষট্টি", "সাতষট্টি", "আটষট্টি", "ঊনসত্তর", "সত্তর",
+                "একাত্তর", "বাহাত্তর", "তিয়াত্তর", "চুয়াত্তর", "পঁচাত্তর", "ছিয়াত্তর", "সাতাত্তর", "আটাত্তর", "ঊনআশি", "আশি",
+                "একাশি", "বিরাশি", "তিরাশি", "চুরাশি", "পঁচাশি", "ছিয়াশি", "সাতাশি", "আটাশি", "ঊননব্বই", "নব্বই",
+                "একানব্বই", "বানব্বই", "তিরানব্বই", "চুরানব্বই", "পঁচানব্বই", "ছিয়ানব্বই", "সাতানব্বই", "আটানব্বই", "নিরানব্বই"
+            ];
+            const hundreds = ["", "একশত", "দুইশত", "তিনশত", "চারশত", "পাঁচশত", "ছয়শত", "সাতশত", "আটশত", "নয়শত"];
+
+            function convertNumber(n) {
+                n = parseInt(n, 10);
+                if (n <= 0) return "";
+                if (n < 100) return bangla0to99[n] || "";
+                let words = [];
+                if (n >= 10000000) {
+                    const crore = Math.floor(n / 10000000);
+                    words.push(convertNumber(crore) + " কোটি");
+                    n = n % 10000000;
+                }
+                if (n >= 100000) {
+                    const lakh = Math.floor(n / 100000);
+                    words.push(bangla0to99[lakh] + " লক্ষ");
+                    n = n % 100000;
+                }
+                if (n >= 1000) {
+                    const thousand = Math.floor(n / 1000);
+                    words.push(bangla0to99[thousand] + " হাজার");
+                    n = n % 1000;
+                }
+                if (n >= 100) {
+                    const hundred = Math.floor(n / 100);
+                    words.push(hundreds[hundred] || (bangla0to99[hundred] + " শত"));
+                    n = n % 100;
+                }
+                if (n > 0) {
+                    words.push(bangla0to99[n]);
+                }
+                return words.join(" ");
+            }
+
+            const numFixed = Number(number).toFixed(2);
+            const [takaStr, paisaStr] = numFixed.split(".");
+            const taka = parseInt(takaStr, 10) || 0;
+            const paisa = parseInt(paisaStr, 10) || 0;
+
+            let result = "";
+            if (taka > 0) {
+                result += convertNumber(taka) + " টাকা";
+            }
+            if (paisa > 0) {
+                result += (result ? " " : "") + bangla0to99[paisa] + " পয়সা";
+            }
+            return (result.trim() ? result.trim() + " মাত্র" : "শূন্য টাকা মাত্র");
+        },
         numberToWords(val) {
             const n = parseFloat(val);
-            if (isNaN(n) || n === 0) return 'Zero Taka Only';
+            if (isNaN(n) || n === 0) {
+                return this.$locale === 'bn' ? 'শূন্য টাকা মাত্র' : 'Zero Taka Only';
+            }
+            if (this.$locale === 'bn') {
+                return this.bengaliNumberToWords(n);
+            }
             
             const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
             const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];

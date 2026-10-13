@@ -351,6 +351,7 @@
                   <th style="min-width: 90px;">{{ $t('Remaining') }}</th>
                   <th style="min-width: 110px;">{{ $t('Receive Qty') }}</th>
                   <th style="min-width: 110px;" v-if="isElectronicsShop">{{ $t('Serials') }}</th>
+                  <th style="min-width: 130px;" v-if="isElectronicsShop">{{ $t('Warranty') }}</th>
                   <th style="min-width: 110px;">{{ $t('Rate') }}</th>
                   <th style="min-width: 120px;">{{ $t('Total') }}</th>
                 </tr>
@@ -390,11 +391,28 @@
                         type="button"
                         class="btn btn-sm btn-outline-primary position-relative px-2 py-1 serial-btn w-100"
                         :class="{ 'active-serial': getSerialCount(pitem.serial_no) > 0 }"
-                        @click="openSerialModal(index, pitem)"
+                        @click="openSerialModal(index, pitem, 'serials')"
                         :title="$t('Scan / Add Serial Numbers')"
                       >
                         <i class="fas fa-barcode me-1"></i> {{ $t('Serials') }}
                         <span class="badge bg-danger ms-1" v-if="getSerialCount(pitem.serial_no) > 0">{{ getSerialCount(pitem.serial_no) }}</span>
+                      </button>
+                    </td>
+                    <td class="text-center" v-if="isElectronicsShop">
+                      <button
+                        type="button"
+                        class="btn btn-sm position-relative px-2 py-1 serial-btn w-100"
+                        :class="(pitem.warranty_type && pitem.warranty_type !== 'none') ? (pitem.warranty_type === 'guarantee' ? 'btn-outline-success active-warranty fw-bold' : 'btn-outline-primary active-warranty fw-bold') : 'btn-outline-secondary'"
+                        @click="openSerialModal(index, pitem, 'warranty')"
+                        :title="$t('Configure / Add Warranty')"
+                      >
+                        <i class="fas fa-shield-alt me-1"></i>
+                        <span v-if="pitem.warranty_type && pitem.warranty_type !== 'none'">
+                          {{ pitem.warranty_period || (pitem.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty')) }}
+                        </span>
+                        <span v-else class="text-muted">
+                          {{ $t('+ Warranty') }}
+                        </span>
                       </button>
                     </td>
                     <td class="text-end font-monospace">{{ formatCurrency(pitem.unit_price) }}</td>
@@ -403,7 +421,7 @@
                 </template>
                 <template v-else>
                   <tr>
-                    <td colspan="10" class="text-center py-5 text-muted">
+                    <td :colspan="isElectronicsShop ? 11 : 10" class="text-center py-5 text-muted">
                       <i class="fas fa-cart-arrow-down fa-3x mb-2 d-block opacity-25"></i>
                       <h6 class="fw-bold text-secondary">{{ $t("No Purchase Order Selected") }}</h6>
                       <p class="small text-muted mb-0">{{ $t("Please select a pending Purchase Order from the dropdown above to load items.") }}</p>
@@ -415,6 +433,7 @@
                 <tr class="fw-bold align-middle">
                   <td :colspan="isElectronicsShop ? 6 : 7" class="text-end text-dark pe-3">{{ $t('Summary Totals:') }}</td>
                   <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
+                  <td v-if="isElectronicsShop" class="text-center text-muted small">-</td>
                   <td v-if="isElectronicsShop" class="text-center text-muted small">-</td>
                   <td class="text-end text-dark">{{ $t('Total:') }}</td>
                   <td class="text-end font-monospace text-success fs-6 text-nowrap">{{ formatCurrency(data.total_amount) }}</td>
@@ -466,6 +485,7 @@
                   <th style="width: 11%;" class="text-end" v-if="showWholesalePrice">{{ $t('Wholesale Price') }}</th>
                   <th style="width: 8%;">{{ $t('Qty') }}</th>
                   <th style="width: 10%;" v-if="isElectronicsShop">{{ $t('Serials') }}</th>
+                  <th style="width: 12%;" v-if="isElectronicsShop">{{ $t('Warranty') }}</th>
                   <th style="width: 12%;" class="text-end pe-3">{{ $t('Total Amount') }}</th>
                   <th style="width: 8%;">{{ $t('Actions') }}</th>
                 </tr>
@@ -538,11 +558,30 @@
                       type="button"
                       class="btn btn-sm btn-outline-primary position-relative px-2 py-1 serial-btn"
                       :class="{ 'active-serial': getSerialCount(pitem.serial_no) > 0 }"
-                      @click="openEditProductModal(index, pitem)"
+                      @click="openEditProductModal(index, pitem, 'serials')"
                       :title="$t('View / Edit Serial Numbers')"
                     >
                       <i class="fas fa-barcode me-1"></i> {{ $t('Serials') }}
                       <span class="badge bg-danger ms-1" v-if="getSerialCount(pitem.serial_no) > 0">{{ getSerialCount(pitem.serial_no) }}</span>
+                    </button>
+                  </td>
+
+                  <!-- Warranty (Electronics Shop) -->
+                  <td class="text-center" v-if="isElectronicsShop">
+                    <button
+                      type="button"
+                      class="btn btn-sm position-relative px-2 py-1 serial-btn"
+                      :class="(pitem.warranty_type && pitem.warranty_type !== 'none') ? (pitem.warranty_type === 'guarantee' ? 'btn-outline-success active-warranty fw-bold' : 'btn-outline-primary active-warranty fw-bold') : 'btn-outline-secondary'"
+                      @click="openEditProductModal(index, pitem, 'warranty')"
+                      :title="$t('View / Edit Warranty')"
+                    >
+                      <i class="fas fa-shield-alt me-1"></i>
+                      <span v-if="pitem.warranty_type && pitem.warranty_type !== 'none'">
+                        {{ pitem.warranty_period || (pitem.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty')) }}
+                      </span>
+                      <span v-else class="text-muted">
+                        {{ $t('+ Warranty') }}
+                      </span>
                     </button>
                   </td>
 
@@ -576,13 +615,13 @@
 
                 <!-- Empty State -->
                 <tr v-if="!data.grn_details || data.grn_details.length === 0">
-                  <td :colspan="isElectronicsShop ? 10 : 9" class="text-center py-5 text-muted bg-white">
+                  <td :colspan="isElectronicsShop ? 11 : 9" class="text-center py-5 text-muted bg-white">
                     <div class="empty-state-wrapper py-3">
                       <div class="empty-icon theme-bg-soft text-theme rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
                         <i class="fas fa-cart-plus fa-2x"></i>
                       </div>
                       <h6 class="fw-bold text-dark mb-1">{{ $t("No products added yet") }}</h6>
-                      <p class="text-muted small mb-3">{{ $t('Click "+ Add Product Row" button to configure product specifications, pricing, quantities and serials.') }}</p>
+                      <p class="text-muted small mb-3">{{ $t('Click "+ Add Product Row" button to configure product specifications, pricing, quantities, serials and warranty.') }}</p>
                       <button
                         type="button"
                         class="btn btn-primary btn-sm px-4 fw-bold shadow-sm"
@@ -597,6 +636,7 @@
                 <tr class="fw-bold align-middle">
                   <td :colspan="6" class="text-end text-dark pe-3">{{ $t('Summary Totals:') }}</td>
                   <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
+                  <td v-if="isElectronicsShop" class="text-center text-muted small">-</td>
                   <td v-if="isElectronicsShop" class="text-center text-muted small">-</td>
                   <td class="text-end font-monospace text-success fs-6 text-nowrap pe-3">{{ formatCurrency(data.sub_total || data.total_amount) }}</td>
                   <td></td>
@@ -1136,6 +1176,98 @@
                   </div>
                 </div>
               </div>
+
+              <!-- 🛡️ Warranty & Guarantee Policy (Collapsible Accordion for Electronics Shop) -->
+              <div class="col-12" v-if="isElectronicsShop">
+                <div class="border rounded-3 overflow-hidden shadow-xs mt-2">
+                  <!-- Accordion Header (Click to toggle) -->
+                  <div
+                    class="p-3 bg-light d-flex align-items-center justify-content-between cursor-pointer border-bottom-0"
+                    :class="{ 'border-bottom': modalForm.showWarrantySection }"
+                    @click="modalForm.showWarrantySection = !modalForm.showWarrantySection"
+                    style="user-select: none;"
+                  >
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="text-success fs-6">
+                        <i class="fas fa-shield-alt"></i>
+                      </div>
+                      <div>
+                        <strong class="text-dark small d-block">{{ $t('Warranty & Guarantee Policy') }}</strong>
+                        <span class="text-muted" style="font-size: 11px;">
+                          {{ modalForm.showWarrantySection ? $t('Click to collapse warranty policy section') : $t('Click to configure device warranty/guarantee duration') }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <span
+                        class="badge rounded-pill font-monospace"
+                        :class="modalForm.warranty_type === 'guarantee' ? 'bg-success text-white' : (modalForm.warranty_type === 'warranty' ? 'bg-primary text-white' : 'bg-secondary bg-opacity-25 text-dark')"
+                      >
+                        <i class="fas fa-certificate me-1" v-if="modalForm.warranty_type !== 'none'"></i>
+                        {{ modalForm.warranty_type !== 'none' ? (modalForm.warranty_period ? `${modalForm.warranty_period} (${modalForm.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty')})` : (modalForm.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty'))) : $t('No Warranty') }}
+                      </span>
+                      <i class="fas fa-chevron-down text-muted transition-transform" :class="{ 'fa-rotate-180': modalForm.showWarrantySection }"></i>
+                    </div>
+                  </div>
+
+                  <!-- Accordion Body -->
+                  <div v-show="modalForm.showWarrantySection" class="p-3 bg-white">
+                    <!-- Coverage Type Radio Options -->
+                    <div class="mb-3">
+                      <label class="form-label fw-bold small text-dark d-block mb-2">{{ $t('Coverage Type:') }}</label>
+                      <div class="d-flex flex-wrap gap-3">
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input cursor-pointer" type="radio" id="modalWarrantyNone" value="none" v-model="modalForm.warranty_type" />
+                          <label class="form-check-label small cursor-pointer" for="modalWarrantyNone">{{ $t('None') }}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input cursor-pointer" type="radio" id="modalWarrantyType" value="warranty" v-model="modalForm.warranty_type" />
+                          <label class="form-check-label small fw-bold text-primary cursor-pointer" for="modalWarrantyType">
+                            <i class="fas fa-tools me-1"></i>{{ $t('Warranty (ওয়ারেন্টি)') }}
+                          </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input cursor-pointer" type="radio" id="modalGuaranteeType" value="guarantee" v-model="modalForm.warranty_type" />
+                          <label class="form-check-label small fw-bold text-success cursor-pointer" for="modalGuaranteeType">
+                            <i class="fas fa-certificate me-1"></i>{{ $t('Guarantee (গ্যারান্টি)') }}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Warranty Period & Suggestions (When warranty or guarantee selected) -->
+                    <div v-if="modalForm.warranty_type === 'warranty' || modalForm.warranty_type === 'guarantee'">
+                      <label class="form-label fw-bold small text-dark mb-1">
+                        {{ modalForm.warranty_type === 'guarantee' ? $t('Guarantee Period / Terms:') : $t('Warranty Period / Terms:') }}
+                      </label>
+                      <div class="input-group input-group-sm mb-2">
+                        <span class="input-group-text bg-light text-primary">
+                          <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <input
+                          type="text"
+                          class="form-control form-control-sm fw-bold"
+                          :placeholder="$t('e.g. 1 Year, 6 Months, 7 Days Replacement...')"
+                          v-model="modalForm.warranty_period"
+                        />
+                      </div>
+
+                      <!-- Quick Duration Suggestion Badges -->
+                      <div class="d-flex flex-wrap gap-1 align-items-center">
+                        <span class="small text-muted me-1" style="font-size: 11px;">{{ $t('Quick Presets:') }}</span>
+                        <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalForm.warranty_period = '7 Days Replacement'">7 Days Replacement</span>
+                        <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalForm.warranty_period = '1 Month'">1 Month</span>
+                        <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalForm.warranty_period = '3 Months'">3 Months</span>
+                        <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalForm.warranty_period = '6 Months'">6 Months</span>
+                        <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalForm.warranty_period = '1 Year'">1 Year</span>
+                        <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalForm.warranty_period = '2 Years'">2 Years</span>
+                        <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalForm.warranty_period = '3 Years'">3 Years</span>
+                        <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalForm.warranty_period = 'Lifetime'">Lifetime</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1165,11 +1297,15 @@
           <div class="modal-header theme-bg text-white py-3 px-4">
             <div class="d-flex align-items-center gap-2">
               <div class="bg-white bg-opacity-20 rounded p-2 text-white">
-                <i class="fas fa-barcode fs-5"></i>
+                <i :class="modalActiveTab === 'warranty' ? 'fas fa-shield-alt fs-5' : 'fas fa-barcode fs-5'"></i>
               </div>
               <div>
-                <h5 class="modal-title fw-bold fs-6 mb-0 text-white">{{ $t('Manage Serial Numbers') }}</h5>
-                <span class="small text-white-50">{{ $t('Add or scan unique device serial numbers') }}</span>
+                <h5 class="modal-title fw-bold fs-6 mb-0 text-white">
+                  {{ isElectronicsShop ? $t('Device Tracking: Serials & Warranty') : $t('Manage Serial Numbers') }}
+                </h5>
+                <span class="small text-white-50">
+                  {{ isElectronicsShop ? $t('Configure serial numbers and warranty/guarantee coverage for this item') : $t('Add or scan unique device serial numbers') }}
+                </span>
               </div>
             </div>
             <button type="button" class="btn-close btn-close-white" @click="closeSerialModal"></button>
@@ -1185,116 +1321,234 @@
               </div>
               <div class="d-flex align-items-center gap-2 font-monospace">
                 <span class="badge bg-secondary">{{ $t('Received Qty') }}: {{ activeRowItem.received_qty || 0 }}</span>
-                <span class="badge theme-bg text-white">{{ $t('Serials') }}: {{ modalSerials.length }}</span>
-              </div>
-            </div>
-
-            <!-- Tabs: Single Entry vs Bulk Entry -->
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <div class="btn-group btn-group-sm" role="group">
-                <button
-                  type="button"
-                  class="btn"
-                  :class="!bulkEntryMode ? 'btn-primary' : 'btn-outline-secondary'"
-                  @click="bulkEntryMode = false"
-                >
-                  <i class="fas fa-keyboard me-1"></i> {{ $t('Quick / Barcode Entry') }}
-                </button>
-                <button
-                  type="button"
-                  class="btn"
-                  :class="bulkEntryMode ? 'btn-primary' : 'btn-outline-secondary'"
-                  @click="bulkEntryMode = true"
-                >
-                  <i class="fas fa-paste me-1"></i> {{ $t('Bulk Paste List') }}
-                </button>
-              </div>
-
-              <div class="d-flex align-items-center gap-2">
-                <button
-                  type="button"
-                  class="btn btn-xs btn-outline-secondary"
-                  @click="copyAllModalSerialsStandalone"
-                  :disabled="modalSerials.length === 0"
-                  :title="$t('Copy all serials to clipboard')"
-                >
-                  <i class="fas fa-copy me-1"></i> {{ $t('Copy All') }}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-xs btn-outline-danger"
-                  @click="clearAllModalSerialsStandalone"
-                  :disabled="modalSerials.length === 0"
-                  :title="$t('Clear list')"
-                >
-                  <i class="fas fa-trash-alt me-1"></i> {{ $t('Clear') }}
-                </button>
-              </div>
-            </div>
-
-            <!-- 1. Single Scan / Text Input -->
-            <div v-if="!bulkEntryMode" class="mb-3">
-              <div class="input-group">
-                <span class="input-group-text bg-light text-muted"><i class="fas fa-barcode"></i></span>
-                <input
-                  ref="serialInput"
-                  type="text"
-                  class="form-control font-monospace fw-bold"
-                  :placeholder="$t('Type or scan serial number and press Enter...')"
-                  v-model="tempSerial"
-                  @keyup.enter.prevent="addSerialFromInput"
-                />
-                <button type="button" class="btn btn-primary fw-bold px-4" @click.prevent="addSerialFromInput">
-                  <i class="fas fa-plus me-1"></i> {{ $t('Add') }}
-                </button>
-              </div>
-              <small class="text-muted mt-1 d-block">
-                <i class="fas fa-info-circle me-1 text-primary"></i> {{ $t('Press Enter to instantly add serial numbers one by one.') }}
-              </small>
-            </div>
-
-            <!-- 2. Bulk Paste Textarea -->
-            <div v-else class="mb-3">
-              <textarea
-                class="form-control font-monospace"
-                rows="4"
-                v-model="bulkSerialText"
-                :placeholder="$t('Paste multiple serial numbers separated by line break, comma, or space (e.g. SN001, SN002)...')"
-              ></textarea>
-              <div class="d-flex justify-content-end mt-2">
-                <button type="button" class="btn btn-sm btn-primary fw-bold px-3" @click.prevent="processBulkSerials">
-                  <i class="fas fa-plus-circle me-1"></i> {{ $t('Add Extracted Serials') }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Serial Badges List Box -->
-            <div class="serials-list-box p-3 border rounded bg-light">
-              <div v-if="modalSerials.length > 0" class="d-flex flex-wrap gap-2">
+                <span class="badge theme-bg text-white" v-if="isElectronicsShop">{{ $t('Serials') }}: {{ modalSerials.length }}</span>
                 <span
-                  v-for="(sn, sIdx) in modalSerials"
-                  :key="sIdx"
-                  class="badge serial-badge font-monospace p-2 d-flex align-items-center gap-2 shadow-xs"
+                  v-if="isElectronicsShop"
+                  class="badge"
+                  :class="modalWarrantyType === 'guarantee' ? 'bg-success text-white' : (modalWarrantyType === 'warranty' ? 'bg-primary text-white' : 'bg-secondary bg-opacity-25 text-dark')"
                 >
-                  <span class="badge-num">#{{ sIdx + 1 }}</span>
-                  <span class="fw-bold">{{ sn }}</span>
-                  <i class="fas fa-times delete-serial-btn ms-1" @click="removeSerial(sIdx)" :title="$t('Remove Serial')"></i>
+                  <i class="fas fa-shield-alt me-1" v-if="modalWarrantyType !== 'none'"></i>
+                  {{ modalWarrantyType !== 'none' ? (modalWarrantyPeriod || (modalWarrantyType === 'guarantee' ? $t('Guarantee') : $t('Warranty'))) : $t('No Warranty') }}
                 </span>
               </div>
-              <div v-else class="text-center py-4 text-muted">
-                <i class="fas fa-barcode fa-2x mb-2 text-secondary opacity-50 d-block"></i>
-                <p class="mb-0 small">{{ $t('No serial numbers entered yet.') }}</p>
+            </div>
+
+            <!-- Tab Switcher (Electronics Shop Only) -->
+            <div class="mb-3" v-if="isElectronicsShop">
+              <ul class="nav nav-pills nav-fill p-1 bg-light rounded border">
+                <li class="nav-item">
+                  <button
+                    type="button"
+                    class="nav-link py-2 fw-bold d-flex align-items-center justify-content-center gap-2 cursor-pointer border-0"
+                    :class="{ 'active bg-primary text-white shadow-sm': modalActiveTab === 'serials', 'text-dark': modalActiveTab !== 'serials' }"
+                    @click="modalActiveTab = 'serials'"
+                  >
+                    <i class="fas fa-barcode"></i>
+                    <span>{{ $t('Serial Numbers') }}</span>
+                    <span class="badge rounded-pill" :class="modalActiveTab === 'serials' ? 'bg-white text-primary' : 'bg-secondary bg-opacity-25 text-dark'">
+                      {{ modalSerials.length }}
+                    </span>
+                  </button>
+                </li>
+                <li class="nav-item">
+                  <button
+                    type="button"
+                    class="nav-link py-2 fw-bold d-flex align-items-center justify-content-center gap-2 cursor-pointer border-0"
+                    :class="{ 'active bg-success text-white shadow-sm': modalActiveTab === 'warranty', 'text-dark': modalActiveTab !== 'warranty' }"
+                    @click="modalActiveTab = 'warranty'"
+                  >
+                    <i class="fas fa-shield-alt"></i>
+                    <span>{{ $t('Warranty & Guarantee Policy') }}</span>
+                    <span class="badge rounded-pill" :class="modalActiveTab === 'warranty' ? 'bg-white text-success' : 'bg-secondary bg-opacity-25 text-dark'">
+                      {{ modalWarrantyType !== 'none' ? (modalWarrantyPeriod || (modalWarrantyType === 'guarantee' ? $t('Guarantee') : $t('Warranty'))) : $t('None') }}
+                    </span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <!-- 🏷️ Tab 1: Serial Numbers Entry -->
+            <div v-show="!isElectronicsShop || modalActiveTab === 'serials'">
+              <!-- Tabs: Single Entry vs Bulk Entry -->
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="btn-group btn-group-sm" role="group">
+                  <button
+                    type="button"
+                    class="btn"
+                    :class="!bulkEntryMode ? 'btn-primary' : 'btn-outline-secondary'"
+                    @click="bulkEntryMode = false"
+                  >
+                    <i class="fas fa-keyboard me-1"></i> {{ $t('Quick / Barcode Entry') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn"
+                    :class="bulkEntryMode ? 'btn-primary' : 'btn-outline-secondary'"
+                    @click="bulkEntryMode = true"
+                  >
+                    <i class="fas fa-paste me-1"></i> {{ $t('Bulk Paste List') }}
+                  </button>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-outline-secondary"
+                    @click="copyAllModalSerialsStandalone"
+                    :disabled="modalSerials.length === 0"
+                    :title="$t('Copy all serials to clipboard')"
+                  >
+                    <i class="fas fa-copy me-1"></i> {{ $t('Copy All') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-outline-danger"
+                    @click="clearAllModalSerialsStandalone"
+                    :disabled="modalSerials.length === 0"
+                    :title="$t('Clear list')"
+                  >
+                    <i class="fas fa-trash-alt me-1"></i> {{ $t('Clear') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 1. Single Scan / Text Input -->
+              <div v-if="!bulkEntryMode" class="mb-3">
+                <div class="input-group">
+                  <span class="input-group-text bg-light text-muted"><i class="fas fa-barcode"></i></span>
+                  <input
+                    ref="serialInput"
+                    type="text"
+                    class="form-control font-monospace fw-bold"
+                    :placeholder="$t('Type or scan serial number and press Enter...')"
+                    v-model="tempSerial"
+                    @keyup.enter.prevent="addSerialFromInput"
+                  />
+                  <button type="button" class="btn btn-primary fw-bold px-4" @click.prevent="addSerialFromInput">
+                    <i class="fas fa-plus me-1"></i> {{ $t('Add') }}
+                  </button>
+                </div>
+                <small class="text-muted mt-1 d-block">
+                  <i class="fas fa-info-circle me-1 text-primary"></i> {{ $t('Press Enter to instantly add serial numbers one by one.') }}
+                </small>
+              </div>
+
+              <!-- 2. Bulk Paste Textarea -->
+              <div v-else class="mb-3">
+                <textarea
+                  class="form-control font-monospace"
+                  rows="4"
+                  v-model="bulkSerialText"
+                  :placeholder="$t('Paste multiple serial numbers separated by line break, comma, or space (e.g. SN001, SN002)...')"
+                ></textarea>
+                <div class="d-flex justify-content-end mt-2">
+                  <button type="button" class="btn btn-sm btn-primary fw-bold px-3" @click.prevent="processBulkSerials">
+                    <i class="fas fa-plus-circle me-1"></i> {{ $t('Add Extracted Serials') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Serial Badges List Box -->
+              <div class="serials-list-box p-3 border rounded bg-light">
+                <div v-if="modalSerials.length > 0" class="d-flex flex-wrap gap-2">
+                  <span
+                    v-for="(sn, sIdx) in modalSerials"
+                    :key="sIdx"
+                    class="badge serial-badge font-monospace p-2 d-flex align-items-center gap-2 shadow-xs"
+                  >
+                    <span class="badge-num">#{{ sIdx + 1 }}</span>
+                    <span class="fw-bold">{{ sn }}</span>
+                    <i class="fas fa-times delete-serial-btn ms-1" @click="removeSerial(sIdx)" :title="$t('Remove Serial')"></i>
+                  </span>
+                </div>
+                <div v-else class="text-center py-4 text-muted">
+                  <i class="fas fa-barcode fa-2x mb-2 text-secondary opacity-50 d-block"></i>
+                  <p class="mb-0 small">{{ $t('No serial numbers entered yet.') }}</p>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                <span class="fw-bold text-dark">
+                  {{ $t('Total Serials Entered:') }}
+                  <span class="text-primary font-monospace fs-5">{{ modalSerials.length }}</span>
+                </span>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="syncQtyCheck" v-model="syncQtyWithSerials" />
+                  <label class="form-check-label small fw-bold" for="syncQtyCheck">{{ $t('Auto sync Received Qty to') }} {{ modalSerials.length }}</label>
+                </div>
               </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-              <span class="fw-bold text-dark">
-                {{ $t('Total Serials Entered:') }}
-                <span class="text-primary font-monospace fs-5">{{ modalSerials.length }}</span>
-              </span>
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="syncQtyCheck" v-model="syncQtyWithSerials" />
-                <label class="form-check-label small fw-bold" for="syncQtyCheck">{{ $t('Auto sync Received Qty to') }} {{ modalSerials.length }}</label>
+            <!-- 🛡️ Tab 2: Warranty & Guarantee Policy (Electronics Shop) -->
+            <div v-show="isElectronicsShop && modalActiveTab === 'warranty'" class="warranty-tab-content p-3 border rounded bg-white">
+              <!-- Coverage Type Selector -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-dark d-block mb-2">{{ $t('Coverage Type:') }}</label>
+                <div class="d-flex flex-wrap gap-3">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input cursor-pointer" type="radio" id="standaloneWarrantyNone" value="none" v-model="modalWarrantyType" />
+                    <label class="form-check-label small cursor-pointer" for="standaloneWarrantyNone">{{ $t('None') }}</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input cursor-pointer" type="radio" id="standaloneWarrantyType" value="warranty" v-model="modalWarrantyType" />
+                    <label class="form-check-label small fw-bold text-primary cursor-pointer" for="standaloneWarrantyType">
+                      <i class="fas fa-tools me-1"></i>{{ $t('Warranty (ওয়ারেন্টি)') }}
+                    </label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input cursor-pointer" type="radio" id="standaloneGuaranteeType" value="guarantee" v-model="modalWarrantyType" />
+                    <label class="form-check-label small fw-bold text-success cursor-pointer" for="standaloneGuaranteeType">
+                      <i class="fas fa-certificate me-1"></i>{{ $t('Guarantee (গ্যারান্টি)') }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Warranty Period Field (When warranty or guarantee selected) -->
+              <div v-if="modalWarrantyType === 'warranty' || modalWarrantyType === 'guarantee'" class="mb-3">
+                <label class="form-label fw-bold small text-dark mb-1">
+                  {{ modalWarrantyType === 'guarantee' ? $t('Guarantee Period / Terms:') : $t('Warranty Period / Terms:') }}
+                </label>
+                <div class="input-group input-group-sm mb-2">
+                  <span class="input-group-text bg-light text-primary">
+                    <i class="fas fa-calendar-alt"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control form-control-sm fw-bold"
+                    :placeholder="$t('e.g. 1 Year, 6 Months, 7 Days Replacement...')"
+                    v-model="modalWarrantyPeriod"
+                  />
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="d-flex flex-wrap gap-1 align-items-center mb-3">
+                  <span class="small text-muted me-1" style="font-size: 11px;">{{ $t('Quick Presets:') }}</span>
+                  <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalWarrantyPeriod = '7 Days Replacement'">7 Days Replacement</span>
+                  <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalWarrantyPeriod = '1 Month'">1 Month</span>
+                  <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalWarrantyPeriod = '3 Months'">3 Months</span>
+                  <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalWarrantyPeriod = '6 Months'">6 Months</span>
+                  <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalWarrantyPeriod = '1 Year'">1 Year</span>
+                  <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalWarrantyPeriod = '2 Years'">2 Years</span>
+                  <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalWarrantyPeriod = '3 Years'">3 Years</span>
+                  <span class="badge bg-light text-dark border cursor-pointer hover-shadow" @click="modalWarrantyPeriod = 'Lifetime'">Lifetime</span>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="alert alert-success py-2 px-3 small d-flex align-items-center gap-2 mb-0">
+                  <i class="fas fa-check-circle text-success fs-5"></i>
+                  <div>
+                    <strong>{{ modalWarrantyType === 'guarantee' ? $t('Replacement Guarantee Active') : $t('Official Warranty Active') }}</strong>:
+                    <span>{{ modalWarrantyPeriod || $t('Standard Terms') }} — {{ $t('Will be recorded for all received units in this item row.') }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- When 'none' is selected -->
+              <div v-else class="text-center py-4 text-muted">
+                <i class="fas fa-shield-alt fa-2x mb-2 text-secondary opacity-50 d-block"></i>
+                <p class="mb-0 small">{{ $t('No warranty or guarantee policy is assigned to this item.') }}</p>
+                <small class="text-muted">{{ $t('Select "Warranty" or "Guarantee" above if you wish to track coverage.') }}</small>
               </div>
             </div>
           </div>
@@ -1305,7 +1559,7 @@
               {{ $t('Cancel') }}
             </button>
             <button type="button" class="btn btn-primary btn-sm px-4 fw-bold shadow-sm" @click="saveSerialsFromModal">
-              <i class="fas fa-check me-1"></i> {{ $t('Save Serials') }}
+              <i class="fas fa-check me-1"></i> {{ isElectronicsShop ? $t('Save Device Details') : $t('Save Serials') }}
             </button>
           </div>
         </div>
@@ -1447,10 +1701,18 @@ export default {
         bulkMode: false,
         showSerialsSection: false,
         syncQtyWithSerials: true,
+        warranty_type: 'none',
+        warranty_period: '',
+        warranty_duration: null,
+        showWarrantySection: false,
       },
 
-      // Standalone Serial modal state (PO mode)
+      // Standalone Serial & Warranty modal state (PO mode & row details)
       showSerialModal: false,
+      modalActiveTab: 'serials',
+      modalWarrantyType: 'none',
+      modalWarrantyPeriod: '',
+      modalWarrantyDuration: null,
       activeRowIndex: null,
       tempSerial: '',
       bulkSerialText: '',
@@ -1741,11 +2003,15 @@ export default {
         bulkMode: false,
         showSerialsSection: false, // collapsed by default!
         syncQtyWithSerials: true,
+        warranty_type: 'none',
+        warranty_period: '',
+        warranty_duration: null,
+        showWarrantySection: false,
       };
       this.showProductModal = true;
     },
 
-    openEditProductModal(index, pitem) {
+    openEditProductModal(index, pitem, defaultTab = null) {
       this.isEditingModal = true;
       const unitPrice = parseFloat(pitem.unit_price) || 0;
       const retailPrice = parseFloat(pitem.retail_price !== undefined && pitem.retail_price !== null ? pitem.retail_price : pitem.selling_price) || 0;
@@ -1754,6 +2020,9 @@ export default {
       const qty = parseFloat(pitem.received_qty) || 1;
       const totalAmount = parseFloat(pitem.total_amount) || Number((unitPrice * qty).toFixed(2));
       const serials = pitem.serial_no ? pitem.serial_no.split(',').map((s) => s.trim()).filter((s) => s.length > 0) : [];
+      const warrantyType = pitem.warranty_type || pitem.item?.warranty_type || 'none';
+      const warrantyPeriod = pitem.warranty_period || pitem.item?.warranty_period || '';
+      const warrantyDuration = pitem.warranty_duration || pitem.item?.warranty_months || null;
 
       this.modalForm = {
         rowIndex: index,
@@ -1776,8 +2045,12 @@ export default {
         tempSerial: '',
         bulkSerialText: '',
         bulkMode: false,
-        showSerialsSection: serials.length > 0, // open if already has serials
+        showSerialsSection: defaultTab === 'warranty' ? false : (serials.length > 0),
         syncQtyWithSerials: true,
+        warranty_type: warrantyType,
+        warranty_period: warrantyPeriod,
+        warranty_duration: warrantyDuration,
+        showWarrantySection: defaultTab === 'warranty' || (warrantyType !== 'none' && this.isElectronicsShop),
       };
 
       if (pitem.category_id && (!pitem.items || pitem.items.length === 0)) {
@@ -1832,6 +2105,21 @@ export default {
         this.modalForm.retail_price = parseFloat(selectedObj.retail_price || selectedObj.selling_price || selectedObj.sale_price || 0) || 0;
         this.modalForm.wholesale_price = parseFloat(selectedObj.wholesale_price || selectedObj.whole_sale_price || 0) || 0;
         this.modalForm.selling_price = this.modalForm.retail_price || this.modalForm.wholesale_price || 0;
+
+        if (this.isElectronicsShop) {
+          if (selectedObj.warranty_type && selectedObj.warranty_type !== 'none') {
+            this.modalForm.warranty_type = selectedObj.warranty_type;
+            this.modalForm.warranty_period = selectedObj.warranty_period || '';
+            this.modalForm.warranty_duration = selectedObj.warranty_months || null;
+            this.modalForm.showWarrantySection = true;
+          } else if (selectedObj.warranty_period) {
+            this.modalForm.warranty_type = 'warranty';
+            this.modalForm.warranty_period = selectedObj.warranty_period;
+            this.modalForm.warranty_duration = selectedObj.warranty_months || null;
+            this.modalForm.showWarrantySection = true;
+          }
+        }
+
         this.onModalPriceOrQtyChange();
       }
     },
@@ -2004,6 +2292,9 @@ export default {
         remaining_qty: 0,
         total_amount: totalAmount,
         serial_no: serialStr,
+        warranty_type: this.isElectronicsShop ? (this.modalForm.warranty_type || 'none') : 'none',
+        warranty_period: this.isElectronicsShop ? (this.modalForm.warranty_period || '') : '',
+        warranty_duration: this.isElectronicsShop ? (this.modalForm.warranty_duration || null) : null,
       };
 
       if (!this.data.grn_details) {
@@ -2065,9 +2356,10 @@ export default {
       return serialStr.split(',').map((s) => s.trim()).filter((s) => s.length > 0).length;
     },
 
-    // Standalone Serial Modal (for PO mode)
-    openSerialModal(index, pitem) {
+    // Standalone Serial & Warranty Modal (for PO mode & row editing)
+    openSerialModal(index, pitem, defaultTab = 'serials') {
       this.activeRowIndex = index;
+      this.modalActiveTab = defaultTab;
       this.tempSerial = '';
       this.bulkSerialText = '';
       this.bulkEntryMode = false;
@@ -2076,10 +2368,21 @@ export default {
       } else {
         this.modalSerials = [];
       }
+
+      if (this.isElectronicsShop) {
+        this.modalWarrantyType = pitem.warranty_type || pitem.item?.warranty_type || 'none';
+        this.modalWarrantyPeriod = pitem.warranty_period || pitem.item?.warranty_period || '';
+        this.modalWarrantyDuration = pitem.warranty_duration || pitem.item?.warranty_months || null;
+      } else {
+        this.modalWarrantyType = 'none';
+        this.modalWarrantyPeriod = '';
+        this.modalWarrantyDuration = null;
+      }
+
       this.showSerialModal = true;
 
       this.$nextTick(() => {
-        if (this.$refs.serialInput) {
+        if (this.$refs.serialInput && this.modalActiveTab === 'serials') {
           this.$refs.serialInput.focus();
         }
       });
@@ -2088,7 +2391,11 @@ export default {
     closeSerialModal() {
       this.showSerialModal = false;
       this.activeRowIndex = null;
+      this.modalActiveTab = 'serials';
       this.modalSerials = [];
+      this.modalWarrantyType = 'none';
+      this.modalWarrantyPeriod = '';
+      this.modalWarrantyDuration = null;
       this.tempSerial = '';
       this.bulkSerialText = '';
     },
@@ -2169,6 +2476,12 @@ export default {
         const serialStr = this.modalSerials.join(', ');
         row.serial_no = serialStr;
 
+        if (this.isElectronicsShop) {
+          row.warranty_type = this.modalWarrantyType || 'none';
+          row.warranty_period = this.modalWarrantyPeriod || '';
+          row.warranty_duration = this.modalWarrantyDuration || null;
+        }
+
         if (this.syncQtyWithSerials && this.modalSerials.length > 0) {
           if (this.activeTab === 'po') {
             row.received_qty = Math.min(row.remaining_qty, this.modalSerials.length);
@@ -2180,7 +2493,7 @@ export default {
         }
       }
       this.closeSerialModal();
-      this.$toast(this.$t('Serial numbers updated'), 'success');
+      this.$toast(this.isElectronicsShop ? this.$t('Device details updated') : this.$t('Serial numbers updated'), 'success');
     },
 
     submit: function () {
@@ -2460,6 +2773,20 @@ export default {
   background-color: rgba(17, 44, 71, 0.08);
   border-color: #112C47;
   color: #112C47;
+}
+
+.active-warranty {
+  background-color: rgba(22, 101, 52, 0.08) !important;
+  border-color: #16a34a !important;
+  color: #15803d !important;
+}
+
+.hover-shadow {
+  transition: all 0.15s ease;
+}
+.hover-shadow:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
 }
 
 .dashed-btn {

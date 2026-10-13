@@ -1555,6 +1555,14 @@ const routes = [
 function checkAuth(to, from, next) {
     let role = localStorage.getItem("role");
     let user = localStorage.getItem("user");
+    if ((!user || user === "undefined" || user === "null") && typeof window !== "undefined" && window.laravel && window.laravel.user) {
+        user = JSON.stringify(window.laravel.user);
+        role = window.laravel.role || role || "Administrator";
+        try {
+            localStorage.setItem("user", user);
+            localStorage.setItem("role", role);
+        } catch (e) {}
+    }
     if ((user && user !== "undefined" && user !== "null") || role) {
         next();
     } else {

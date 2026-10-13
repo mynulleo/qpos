@@ -36,6 +36,7 @@
     <!-- Css -->
     <link href="{{ without_cache('admin/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ without_cache('admin/css/magnific-popup.css') }}" rel="stylesheet">
+    <link href="{{ without_cache('admin/fontawesome/css/all.min.css') }}" rel="stylesheet">
     <link href="{{ without_cache('build/admin/css/style.css') }}" rel="stylesheet">
     <link href="{{ without_cache('admin/css/custom.css') }}" rel="stylesheet">
 
@@ -51,7 +52,6 @@
     <!-- Script -->
     <script src="{{ without_cache('admin/js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ without_cache('admin/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ without_cache('admin/fontawesome/js/all.js') }}"></script>
     <script src="{{ without_cache('admin/js/script.js') }}"></script>
     <script src="{{ without_cache('admin/js/custom.js') }}"></script>
     <script src="{{ without_cache('build/js/login_app.js') }}" defer></script>

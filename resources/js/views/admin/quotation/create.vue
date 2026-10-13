@@ -43,7 +43,7 @@
 
             <!-- Row 2: Customer & Contacts -->
             <!-- Client Selector -->
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label fw-bold small text-theme mb-1 d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-user-tie me-1"></i> {{ $t('Customer / Client') }}:</span>
                 <span class="text-muted small" v-if="selectedClientInfo">📱 {{ selectedClientInfo.mobile }}</span>
@@ -63,10 +63,27 @@
                       <strong>{{ option.org_name || option.name }}</strong>
                       <span class="text-muted small d-block" v-if="option.org_name && option.name">{{ $t('Attn:') }} {{ option.name }}</span>
                     </div>
-                    <small class="text-primary font-monospace" v-if="option.mobile">📱 {{ option.mobile }}</small>
+                    <div class="text-end">
+                      <small class="badge bg-secondary-subtle text-secondary font-monospace d-block" v-if="option.customer_type">{{ option.customer_type }}</small>
+                      <small class="text-primary font-monospace" v-if="option.mobile">📱 {{ option.mobile }}</small>
+                    </div>
                   </div>
                 </template>
               </v-select>
+            </div>
+
+            <!-- Customer Type -->
+            <div class="col-md-2">
+              <label class="form-label fw-bold small text-theme mb-1 d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-users-cog me-1 text-primary"></i> {{ $t('Customer Type') }}:</span>
+                <span class="badge" :class="data.customer_type === 'wholesale' ? 'bg-warning text-dark' : 'bg-primary text-white'" style="font-size: 10px;">
+                  {{ data.customer_type === 'wholesale' ? $t('Wholesale') : $t('Retail') }}
+                </span>
+              </label>
+              <select class="form-select form-select-sm shadow-sm fw-semibold" v-model="data.customer_type" @change="onCustomerTypeChange">
+                <option value="retail">{{ $t('Retail') }}</option>
+                <option value="wholesale">{{ $t('Wholesale') }}</option>
+              </select>
             </div>
 
             <!-- Client / Org Name -->
@@ -86,7 +103,7 @@
             </div>
 
             <!-- Client Email -->
-            <div class="col-md-3">
+            <div class="col-md-2">
               <label class="form-label fw-semibold small text-theme mb-1">
                 <i class="fas fa-envelope me-1"></i> {{ $t('Email Address') }}
               </label>
@@ -213,7 +230,10 @@
                       </div>
                     </div>
                     <div class="text-end font-monospace">
-                      <span class="badge bg-success text-white">{{ $t('Tk.') }} {{ $bnNum(formatCurrencyNumber(option.selling_price)) }}</span>
+                      <span class="badge bg-success text-white">{{ $t('Tk.') }} {{ $bnNum(formatCurrencyNumber(getItemPriceByCustomerType(option))) }}</span>
+                      <small class="d-block text-muted" style="font-size: 10px;">
+                        {{ data.customer_type === 'wholesale' ? $t('Wholesale') : $t('Retail') }}
+                      </small>
                     </div>
                   </div>
                 </template>
@@ -414,12 +434,86 @@
                   <input type="text" class="form-control form-control-sm" v-model="data.warranty_terms" :placeholder="$t('e.g. 1 Year service warranty...')" />
                 </div>
 
-                <!-- Terms & Conditions Multiline -->
+                <!-- Terms & Conditions from terms_conditions table with Checkbox & Editable Input -->
                 <div class="col-12">
-                  <label class="form-label small fw-bold text-theme">
-                    <i class="fas fa-file-contract me-1"></i> {{ $t('Terms & Conditions') }}:
-                  </label>
-                  <textarea class="form-control form-control-sm" rows="3" v-model="data.terms_conditions" placeholder="1. Quotation validity is 15 days.&#10;2. Prices are inclusive/exclusive of VAT.&#10;3. Physical signature required upon acceptance."></textarea>
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label small fw-bold text-theme mb-0">
+                      <i class="fas fa-file-contract me-1 text-primary"></i> {{ $t('Terms & Conditions') }}
+                      <span class="badge bg-primary-subtle text-primary border ms-1 font-monospace" v-if="termsList.length">
+                        {{ termsList.filter(t => t.is_checked).length }} / {{ termsList.length }} {{ $t('Active') }}
+                      </span>
+                    </label>
+                    <div class="btn-group btn-group-sm">
+                      <button type="button" class="btn btn-xs btn-outline-secondary py-0" @click="toggleSelectAllTerms(true)" :title="$t('Select All')">
+                        <i class="fas fa-check-double me-1"></i>{{ $t('All') }}
+                      </button>
+                      <button type="button" class="btn btn-xs btn-outline-secondary py-0" @click="toggleSelectAllTerms(false)" :title="$t('Deselect All')">
+                        <i class="fas fa-times me-1"></i>{{ $t('None') }}
+                      </button>
+                      <button type="button" class="btn btn-xs btn-outline-primary py-0" @click="addCustomTerm" :title="$t('Add New Condition')">
+                        <i class="fas fa-plus me-1"></i>{{ $t('Add Condition') }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Checklist Container -->
+                  <div class="terms-conditions-container border rounded p-2 bg-light-subtle" style="max-height: 250px; overflow-y: auto;">
+                    <div v-if="termsList.length === 0" class="text-center py-3 text-muted small">
+                      <i class="fas fa-spinner fa-spin me-1" v-if="isLoadingTerms"></i>
+                      <span>{{ isLoadingTerms ? $t('Loading Terms & Conditions...') : $t('No conditions found for Quotation module.') }}</span>
+                      <button type="button" class="btn btn-xs btn-link d-block mx-auto mt-1" @click="addCustomTerm">{{ $t('+ Add Custom Condition') }}</button>
+                    </div>
+
+                    <div
+                      v-for="(term, tIdx) in termsList"
+                      :key="tIdx"
+                      class="d-flex align-items-center gap-2 mb-2 p-1 rounded bg-white border term-item-row"
+                      :class="{ 'border-primary shadow-sm': term.is_checked, 'opacity-75': !term.is_checked }"
+                    >
+                      <!-- Checkbox -->
+                      <div class="form-check form-check-inline m-0 ps-3">
+                        <input
+                          type="checkbox"
+                          class="form-check-input"
+                          :id="'term_chk_' + tIdx"
+                          v-model="term.is_checked"
+                          style="cursor: pointer; width: 1.15em; height: 1.15em;"
+                        />
+                      </div>
+
+                      <!-- Index / Serial Number Badge -->
+                      <span class="badge font-monospace text-muted small" style="min-width: 28px;">
+                        {{ tIdx + 1 }}.
+                      </span>
+
+                      <!-- Condition Input Box -->
+                      <input
+                        type="text"
+                        class="form-control form-control-sm border-0 flex-grow-1"
+                        :class="{ 'fw-semibold text-dark': term.is_checked, 'text-muted': !term.is_checked }"
+                        v-model="term.condition_text"
+                        :placeholder="$t('Type condition statement...')"
+                      />
+
+                      <!-- Default Tag if applicable -->
+                      <span class="badge bg-secondary-subtle text-secondary small px-2 py-1" v-if="term.is_default" style="font-size: 10px;">
+                        {{ $t('Default') }}
+                      </span>
+
+                      <!-- Remove Row Button -->
+                      <button
+                        type="button"
+                        class="btn btn-link text-danger btn-xs p-1 me-1"
+                        @click="removeTerm(tIdx)"
+                        :title="$t('Remove condition')"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="small text-muted mt-1 fst-italic" style="font-size: 11px;">
+                    <i class="fas fa-info-circle me-1 text-info"></i> {{ $t('Note: Only checked conditions will be saved with this quotation.') }}
+                  </div>
                 </div>
 
                 <!-- Note -->
@@ -573,6 +667,7 @@ export default {
         quotation_date: moment().format("YYYY-MM-DD"),
         validity_date: moment().add(15, "days").format("YYYY-MM-DD"),
         client_id: null,
+        customer_type: "retail",
         client_name: "",
         client_phone: "",
         client_email: "",
@@ -594,7 +689,7 @@ export default {
         payment_terms: "50% Advance along with Work Order, remaining 50% upon delivery/completion.",
         delivery_terms: "Within 3-5 working days after receiving confirmed work order.",
         warranty_terms: "1 Year standard warranty & technical support.",
-        terms_conditions: "1. Quotation is valid for 15 days from the date of issue.\n2. Prices are subject to revision after validity period.\n3. Physical signature and acceptance required.",
+        terms_conditions: [],
         note: "",
         remarks: "",
       },
@@ -602,6 +697,8 @@ export default {
       clients: [],
       categories: [],
       itemList: [],
+      termsList: [],
+      isLoadingTerms: false,
       selectedCategoryId: null,
       selectedItem: null,
       barcodeScanInput: "",
@@ -641,6 +738,12 @@ export default {
     },
   },
 
+  provide() {
+    return {
+      validate: this.validation,
+    };
+  },
+
   methods: {
     formatCurrencyNumber(val) {
       const num = Number(val || 0);
@@ -667,6 +770,45 @@ export default {
       this.data.total_amount = this.calculatedGrandTotal;
     },
 
+    getItemPriceByCustomerType(item, customerType = this.data.customer_type) {
+      if (!item) return 0;
+      const wholesale = Number(item.wholesale_price || 0);
+      const retail = Number(item.retail_price || item.selling_price || 0);
+      const selling = Number(item.selling_price || 0);
+
+      if (customerType === "wholesale") {
+        if (wholesale > 0) return wholesale;
+        if (retail > 0) return retail;
+        return selling;
+      } else {
+        // 'retail' is default
+        if (retail > 0) return retail;
+        if (wholesale > 0) return wholesale;
+        return selling;
+      }
+    },
+
+    onCustomerTypeChange() {
+      let updatedCount = 0;
+      this.details.forEach((row) => {
+        if (row.item_type === "product") {
+          const newPrice = this.getItemPriceByCustomerType(row);
+          if (newPrice > 0 && row.unit_price !== newPrice) {
+            row.unit_price = newPrice;
+            this.recalculateRow(row);
+            updatedCount++;
+          }
+        }
+      });
+      this.recalculateSummary();
+      if (updatedCount > 0) {
+        this.$toast(
+          `Customer type set to ${this.data.customer_type.toUpperCase()}. Updated unit prices for ${updatedCount} item(s).`,
+          "info"
+        );
+      }
+    },
+
     onClientSelect(client) {
       if (!client) return;
       this.selectedClientInfo = client;
@@ -674,6 +816,14 @@ export default {
       this.data.client_phone = client.mobile || client.phone || "";
       this.data.client_email = client.email || "";
       this.data.client_address = client.address || "";
+
+      if (client.customer_type) {
+        const prevType = this.data.customer_type;
+        this.data.customer_type = client.customer_type.toLowerCase();
+        if (prevType !== this.data.customer_type) {
+          this.onCustomerTypeChange();
+        }
+      }
     },
 
     onCategoryChange() {
@@ -720,7 +870,7 @@ export default {
         this.recalculateRow(this.details[existingIndex]);
         this.$toast(`Incremented quantity for ${item.title}`, "info");
       } else {
-        const unitPrice = Number(item.selling_price || 0);
+        const unitPrice = this.getItemPriceByCustomerType(item);
         const newRow = {
           item_type: "product",
           category_id: item.category_id || null,
@@ -734,6 +884,9 @@ export default {
           unit_name: item.unit ? item.unit.title : "Pcs",
           qty: 1,
           unit_price: unitPrice,
+          retail_price: Number(item.retail_price || item.selling_price || 0),
+          wholesale_price: Number(item.wholesale_price || 0),
+          selling_price: Number(item.selling_price || 0),
           discount_percent: 0,
           discount_amount: 0,
           total_price: unitPrice,
@@ -817,6 +970,75 @@ export default {
       });
     },
 
+    fetchTermsConditions(existingSavedTerms = null) {
+      this.isLoadingTerms = true;
+      axios
+        .get("termsCondition/by-module/Quotation")
+        .then((res) => {
+          const dbTerms = res.data || [];
+
+          if (existingSavedTerms && Array.isArray(existingSavedTerms) && existingSavedTerms.length > 0) {
+            // Reconcile with saved quotation terms
+            const mappedDbTerms = dbTerms.map((item) => {
+              const isMatched = existingSavedTerms.some(
+                (saved) => typeof saved === "string" && saved.trim().toLowerCase() === item.condition_text.trim().toLowerCase()
+              );
+              return {
+                id: item.id,
+                condition_text: item.condition_text,
+                is_checked: isMatched,
+                is_default: Boolean(item.is_default),
+              };
+            });
+
+            // Add any saved terms that weren't in db terms
+            const additionalTerms = existingSavedTerms
+              .filter((saved) => typeof saved === "string" && saved.trim() !== "" && !dbTerms.some((d) => d.condition_text.trim().toLowerCase() === saved.trim().toLowerCase()))
+              .map((saved) => ({
+                id: null,
+                condition_text: saved.trim(),
+                is_checked: true,
+                is_default: false,
+              }));
+
+            this.termsList = [...mappedDbTerms, ...additionalTerms];
+          } else {
+            // Create mode: Pre-check default conditions
+            this.termsList = dbTerms.map((item) => ({
+              id: item.id,
+              condition_text: item.condition_text || "",
+              is_checked: Boolean(item.is_default),
+              is_default: Boolean(item.is_default),
+            }));
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching terms & conditions:", err);
+        })
+        .finally(() => {
+          this.isLoadingTerms = false;
+        });
+    },
+
+    toggleSelectAllTerms(status) {
+      this.termsList.forEach((t) => {
+        t.is_checked = status;
+      });
+    },
+
+    addCustomTerm() {
+      this.termsList.push({
+        id: null,
+        condition_text: "",
+        is_checked: true,
+        is_default: false,
+      });
+    },
+
+    removeTerm(index) {
+      this.termsList.splice(index, 1);
+    },
+
     loadQuotationData(id) {
       this.$root.spinner = true;
       axios
@@ -830,6 +1052,7 @@ export default {
               quotation_date: q.quotation_date ? moment(q.quotation_date).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD"),
               validity_date: q.validity_date ? moment(q.validity_date).format("YYYY-MM-DD") : "",
               client_id: q.client_id,
+              customer_type: q.customer_type || (q.client ? q.client.customer_type : "retail") || "retail",
               client_name: q.client_name || (q.client ? q.client.org_name || q.client.name : ""),
               client_phone: q.client_phone || (q.client ? q.client.mobile : ""),
               client_email: q.client_email || (q.client ? q.client.email : ""),
@@ -851,10 +1074,23 @@ export default {
               payment_terms: q.payment_terms || "",
               delivery_terms: q.delivery_terms || "",
               warranty_terms: q.warranty_terms || "",
-              terms_conditions: q.terms_conditions || "",
+              terms_conditions: q.terms_conditions || [],
               note: q.note || "",
               remarks: q.remarks || "",
             };
+
+            let savedTerms = [];
+            if (Array.isArray(q.terms_conditions)) {
+              savedTerms = q.terms_conditions;
+            } else if (typeof q.terms_conditions === "string") {
+              try {
+                const parsed = JSON.parse(q.terms_conditions);
+                if (Array.isArray(parsed)) savedTerms = parsed;
+              } catch (e) {
+                savedTerms = q.terms_conditions.split("\n").map((s) => s.trim()).filter(Boolean);
+              }
+            }
+            this.fetchTermsConditions(savedTerms);
 
             if (q.client) {
               this.selectedClientInfo = q.client;
@@ -875,6 +1111,9 @@ export default {
                 unit_name: d.unit_name || (d.unit ? d.unit.title : "Pcs"),
                 qty: Number(d.qty || 1),
                 unit_price: Number(d.unit_price || 0),
+                retail_price: Number((d.item ? d.item.retail_price : 0) || d.unit_price || 0),
+                wholesale_price: Number((d.item ? d.item.wholesale_price : 0) || 0),
+                selling_price: Number((d.item ? d.item.selling_price : 0) || d.unit_price || 0),
                 discount_percent: Number(d.discount_percent || 0),
                 discount_amount: Number(d.discount_amount || 0),
                 total_price: Number(d.total_price || 0),
@@ -893,23 +1132,36 @@ export default {
     },
 
     submit() {
-      if (this.details.length === 0) {
-        this.$toast("Please add at least one item or service to the quotation!", "error");
-        return;
-      }
+      this.$validate().then((success) => {
+        const error = this.validation ? this.validation.countErrors() : 0;
+        if (error > 0) {
+          this.$toast("Please fill in the required fields!", "warning");
+          return false;
+        }
 
-      this.recalculateSummary();
+        if (this.details.length === 0) {
+          this.$toast("Please add at least one item or service to the quotation!", "error");
+          return;
+        }
 
-      const payload = {
-        ...this.data,
-        quotation_details: this.details,
-      };
+        this.recalculateSummary();
 
-      if (this.$route.params.id) {
-        this.update(this.model, payload, this.$route.params.id);
-      } else {
-        this.store(this.model, payload);
-      }
+        const checkedTerms = this.termsList
+          .filter((t) => t.is_checked && t.condition_text && t.condition_text.trim() !== "")
+          .map((t) => t.condition_text.trim());
+
+        const payload = {
+          ...this.data,
+          terms_conditions: checkedTerms,
+          quotation_details: this.details,
+        };
+
+        if (this.$route.params.id) {
+          this.update(this.model, payload, this.$route.params.id);
+        } else {
+          this.store(this.model, payload);
+        }
+      });
     },
   },
 
@@ -923,6 +1175,7 @@ export default {
       this.loadQuotationData(this.$route.params.id);
     } else {
       this.page_title = "Create Quotation";
+      this.fetchTermsConditions();
     }
   },
 

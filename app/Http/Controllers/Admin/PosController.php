@@ -36,7 +36,7 @@ class PosController extends BaseController
 
     public function index(Request $request)
     {
-        return view('layouts.backend_app');
+        return view('admin.layouts.admin_app');
     }
 
     public function searchCustomer(Request $request)
@@ -222,10 +222,75 @@ class PosController extends BaseController
         $allSerialItemIds = array_unique(array_merge($itemsWithPurchaseSerials, $grnSerialItemIds));
         $serialMap = array_flip($allSerialItemIds);
 
+        // Fetch Warranty information from GRN
+        $grnWarranties = [];
+        $serialWarrantyMap = [];
+        if (Schema::hasTable('grn_details')) {
+            $grnWarrantyRows = GrnDetail::whereIn('item_id', $itemIds)
+                ->where(function ($q) {
+                    $q->where(function ($sq) {
+                        $sq->whereNotNull('warranty_type')
+                           ->where('warranty_type', '!=', 'none');
+                    })->orWhere(function ($sq) {
+                        $sq->whereNotNull('warranty_period')
+                           ->where('warranty_period', '!=', '');
+                    });
+                })
+                ->latest('id')
+                ->get(['item_id', 'serial_no', 'warranty_type', 'warranty_period', 'warranty_duration']);
+
+            foreach ($grnWarrantyRows as $grow) {
+                if (!isset($grnWarranties[$grow->item_id])) {
+                    $grnWarranties[$grow->item_id] = [
+                        'warranty_type' => $grow->warranty_type ?: 'warranty',
+                        'warranty_period' => $grow->warranty_period ?: '',
+                        'warranty_duration' => $grow->warranty_duration,
+                    ];
+                }
+
+                if (!empty($grow->serial_no)) {
+                    $sns = preg_split('/[\r\n,;]+/', $grow->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                    foreach ($sns as $s) {
+                        $clean = strtolower(trim($s));
+                        if (!empty($clean) && !isset($serialWarrantyMap[$clean])) {
+                            $serialWarrantyMap[$clean] = [
+                                'warranty_type' => $grow->warranty_type ?: 'warranty',
+                                'warranty_period' => $grow->warranty_period ?: '',
+                                'warranty_duration' => $grow->warranty_duration,
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
         foreach ($items as $item) {
             $itemAvailableSerials = $availableSerialsMap[$item->id] ?? [];
             $item->available_serials = $itemAvailableSerials;
             $item->has_purchase_serials = !empty($itemAvailableSerials) || isset($serialMap[$item->id]);
+
+            // Warranty determination: GRN has first priority, item master is fallback
+            $grnWarranty = $grnWarranties[$item->id] ?? null;
+            if ($grnWarranty) {
+                $item->has_warranty = true;
+                $item->warranty_source = 'grn';
+                $item->warranty_type = $grnWarranty['warranty_type'];
+                $item->warranty_period = $grnWarranty['warranty_period'];
+                $item->warranty_duration = $grnWarranty['warranty_duration'];
+            } elseif ((!empty($item->warranty_type) && $item->warranty_type !== 'none') || !empty($item->warranty_period)) {
+                $item->has_warranty = true;
+                $item->warranty_source = 'item';
+                $item->warranty_type = $item->warranty_type ?: 'warranty';
+                $item->warranty_period = $item->warranty_period ?: '';
+                $item->warranty_duration = $item->warranty_months ?? null;
+            } else {
+                $item->has_warranty = false;
+                $item->warranty_source = 'none';
+                $item->warranty_type = 'none';
+                $item->warranty_period = '';
+                $item->warranty_duration = null;
+            }
+            $item->serial_warranty_map = $serialWarrantyMap;
         }
 
         // Also fetch list of all colors & sizes for fallback selection
@@ -362,8 +427,33 @@ class PosController extends BaseController
     public function getItemSerials(Request $request, $item_id)
     {
         $serialsMap = $this->getAvailableSerialsForItems([(int)$item_id]);
+
+        $grnWarranty = null;
+        if (Schema::hasTable('grn_details')) {
+            $grnRow = GrnDetail::where('item_id', (int)$item_id)
+                ->where(function ($q) {
+                    $q->where(function ($sq) {
+                        $sq->whereNotNull('warranty_type')
+                           ->where('warranty_type', '!=', 'none');
+                    })->orWhere(function ($sq) {
+                        $sq->whereNotNull('warranty_period')
+                           ->where('warranty_period', '!=', '');
+                    });
+                })
+                ->latest('id')
+                ->first(['warranty_type', 'warranty_period', 'warranty_duration']);
+            if ($grnRow) {
+                $grnWarranty = [
+                    'warranty_type' => $grnRow->warranty_type ?: 'warranty',
+                    'warranty_period' => $grnRow->warranty_period ?: '',
+                    'warranty_duration' => $grnRow->warranty_duration,
+                ];
+            }
+        }
+
         return response()->json([
-            'available_serials' => $serialsMap[(int)$item_id] ?? []
+            'available_serials' => $serialsMap[(int)$item_id] ?? [],
+            'grn_warranty' => $grnWarranty,
         ]);
     }
 
@@ -659,7 +749,22 @@ class PosController extends BaseController
                 $sizeId = !empty($cartItem['size_id']) ? $cartItem['size_id'] : null;
                 $serialNo = !empty($cartItem['serial_no']) ? $cartItem['serial_no'] : null;
 
-                InvoiceDetails::create([
+                $warrantyType = !empty($cartItem['warranty_type']) ? $cartItem['warranty_type'] : 'none';
+                $warrantyPeriod = !empty($cartItem['warranty_period']) ? trim($cartItem['warranty_period']) : null;
+                $warrantyDuration = !empty($cartItem['warranty_duration']) ? intval($cartItem['warranty_duration']) : null;
+                $warrantyExpiresAt = null;
+
+                if ($warrantyType !== 'none' && !empty($warrantyPeriod)) {
+                    $warrantyExpiresAt = $this->calculateExpiryDate(date('Y-m-d'), $warrantyPeriod);
+                }
+
+                $detailDescription = 'POS Item Sale' . ($serialNo ? " (Serial: {$serialNo})" : '');
+                if ($warrantyPeriod && $warrantyType !== 'none') {
+                    $coverageLabel = ($warrantyType === 'guarantee') ? 'Guarantee' : 'Warranty';
+                    $detailDescription .= " [{$coverageLabel}: {$warrantyPeriod}]";
+                }
+
+                $detailData = [
                     'invoice_id' => (string)$invoice->id,
                     'reference' => 'POS Sale',
                     'workorder_id' => 0,
@@ -668,12 +773,27 @@ class PosController extends BaseController
                     'size_id' => $sizeId,
                     'serial_no' => $serialNo,
                     'account_id' => 0,
-                    'description' => 'POS Item Sale' . ($serialNo ? " (Serial: {$serialNo})" : ''),
+                    'description' => $detailDescription,
                     'qty' => $qty,
                     'amount' => $itemBaseRate,
                     'total_amount' => $itemTotal,
                     'status' => 'active',
-                ]);
+                ];
+
+                if (Schema::hasColumn('invoice_details', 'warranty_type')) {
+                    $detailData['warranty_type'] = $warrantyType;
+                }
+                if (Schema::hasColumn('invoice_details', 'warranty_duration')) {
+                    $detailData['warranty_duration'] = $warrantyDuration;
+                }
+                if (Schema::hasColumn('invoice_details', 'warranty_period')) {
+                    $detailData['warranty_period'] = $warrantyPeriod;
+                }
+                if (Schema::hasColumn('invoice_details', 'warranty_expires_at')) {
+                    $detailData['warranty_expires_at'] = $warrantyExpiresAt ? ($warrantyExpiresAt instanceof \Carbon\Carbon ? $warrantyExpiresAt->format('Y-m-d') : (string)$warrantyExpiresAt) : null;
+                }
+
+                InvoiceDetails::create($detailData);
 
                 // Record stock out
                 StockTransaction::create([
@@ -1416,5 +1536,50 @@ class PosController extends BaseController
         ])->latest('created_at')->get();
 
         return response()->json($items);
+    }
+
+    /**
+     * Calculate expiry date from sale date and warranty period string.
+     */
+    public function calculateExpiryDate($saleDateStr, $warrantyPeriodStr)
+    {
+        if (empty($warrantyPeriodStr)) return null;
+
+        try {
+            $saleDate = \Carbon\Carbon::parse($saleDateStr);
+            $period = strtolower(trim($warrantyPeriodStr));
+
+            if (str_contains($period, 'lifetime')) {
+                return $saleDate->copy()->addYears(50)->format('Y-m-d');
+            }
+
+            preg_match('/(\d+)\s*(year|yr|month|mon|day|d)/i', $period, $matches);
+
+            if (!empty($matches)) {
+                $amount = intval($matches[1]);
+                $unit = strtolower($matches[2]);
+
+                if (str_starts_with($unit, 'y')) {
+                    return $saleDate->copy()->addYears($amount)->format('Y-m-d');
+                } elseif (str_starts_with($unit, 'm')) {
+                    return $saleDate->copy()->addMonths($amount)->format('Y-m-d');
+                } elseif (str_starts_with($unit, 'd')) {
+                    return $saleDate->copy()->addDays($amount)->format('Y-m-d');
+                }
+            }
+
+            // Fallback: check plain words
+            if (str_contains($period, 'year')) {
+                return $saleDate->copy()->addYear()->format('Y-m-d');
+            } elseif (str_contains($period, 'month')) {
+                return $saleDate->copy()->addMonth()->format('Y-m-d');
+            } elseif (str_contains($period, 'week')) {
+                return $saleDate->copy()->addWeek()->format('Y-m-d');
+            }
+
+            return $saleDate->copy()->addYear()->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

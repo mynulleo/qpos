@@ -250,17 +250,18 @@
             <table class="table table-hover table-sm align-middle mb-0" style="font-size: 13px;">
               <thead class="table-light sticky-top" style="z-index: 2;">
                 <tr>
-                  <th style="width: 26%;">{{ $t('Item Title') }}</th>
-                  <th style="width: 18%;">{{ $t('Color / Size') }}</th>
-                  <th style="width: 15%;" v-if="isElectronicsShop">{{ $t('Serial No') }}</th>
-                  <th style="width: 11%;" class="text-center">{{ $t('Qty') }}</th>
-                  <th style="width: 13%;" class="text-end">{{ $t('Price') }}</th>
-                  <th style="width: 12%;" class="text-end">{{ $t('Total') }}</th>
-                  <th style="width: 5%;" class="text-center">{{ $t('Act') }}</th>
+                  <th :style="{ width: isElectronicsShop ? '22%' : '28%' }">{{ $t('Item Title') }}</th>
+                  <th :style="{ width: isElectronicsShop ? '14%' : '18%' }">{{ $t('Color / Size') }}</th>
+                  <th style="width: 13%;" v-if="isElectronicsShop">{{ $t('Serial No') }}</th>
+                  <th style="width: 14%;" v-if="isElectronicsShop">{{ $t('Warranty') }}</th>
+                  <th :style="{ width: isElectronicsShop ? '8%' : '11%' }" class="text-center">{{ $t('Qty') }}</th>
+                  <th :style="{ width: isElectronicsShop ? '13%' : '15%' }" class="text-end">{{ $t('Price') }}</th>
+                  <th :style="{ width: isElectronicsShop ? '11%' : '13%' }" class="text-end">{{ $t('Total') }}</th>
+                  <th :style="{ width: isElectronicsShop ? '5%' : '5%' }" class="text-center">{{ $t('Act') }}</th>
                 </tr>
               </thead>
               <tbody v-if="cart.length > 0">
-                <tr v-for="(cItem, idx) in cart" :key="'cart_row_' + (cItem.item_id || 0) + '_' + (cItem.color_id || 0) + '_' + (cItem.size_id || 0) + '_' + idx">
+                <tr v-for="(cItem, idx) in cart" :key="'cart_row_' + (cItem.item_id || 0) + '_' + (cItem.color_id || 0) + '_' + (cItem.size_id || 0)">
                   <td>
                     <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" :title="cItem.title">{{ cItem.title }}</div>
                     <small class="text-muted font-monospace" style="font-size: 11px;">{{ cItem.barcode }}</small>
@@ -281,6 +282,24 @@
                     >
                     <div class="text-primary font-monospace mt-0.5" v-show="getSerialsCount(cItem.serial_no) > 0" style="font-size: 10px;">
                       <i class="fas fa-hashtag me-0.5"></i>{{ getSerialsCount(cItem.serial_no) }} {{ $t('Serials') }}
+                    </div>
+                  </td>
+                  <td v-if="isElectronicsShop">
+                    <button
+                      type="button"
+                      class="btn btn-xs rounded-pill d-inline-flex align-items-center gap-1 text-nowrap px-2 py-0.5 border"
+                      :class="(cItem.warranty_type && cItem.warranty_type !== 'none' && cItem.warranty_period) ? (cItem.warranty_type === 'guarantee' ? 'btn-success text-white shadow-sm' : 'btn-outline-primary bg-primary bg-opacity-10 text-primary border-primary fw-bold') : 'btn-outline-secondary text-muted bg-white'"
+                      @click="openCartWarrantyModal(cItem, idx)"
+                      :title="$t('Click to edit warranty duration or policy')"
+                    >
+                      <i class="fas fa-shield-alt" :class="cItem.warranty_type === 'guarantee' ? 'text-warning' : ((cItem.warranty_type && cItem.warranty_type !== 'none' && cItem.warranty_period) ? 'text-primary' : 'text-muted')"></i>
+                      <span class="font-monospace" style="font-size: 11px;">
+                        {{ (cItem.warranty_type && cItem.warranty_type !== 'none' && cItem.warranty_period) ? cItem.warranty_period : $t('+ Warranty') }}
+                      </span>
+                      <i class="fas fa-edit ms-0.5 opacity-75" style="font-size: 9px;" v-if="cItem.warranty_type && cItem.warranty_type !== 'none' && cItem.warranty_period"></i>
+                    </button>
+                    <div v-if="cItem.default_warranty_period && cItem.default_warranty_period !== cItem.warranty_period" class="text-muted font-monospace mt-0.5" style="font-size: 9.5px;" :title="$t('Original GRN Warranty')">
+                      <i class="fas fa-history me-0.5"></i>GRN: {{ cItem.default_warranty_period }}
                     </div>
                   </td>
                   <td class="text-center">
@@ -319,7 +338,7 @@
               </tbody>
               <tbody v-else>
                 <tr>
-                  <td :colspan="isElectronicsShop ? 7 : 6" class="text-center py-4 text-muted">
+                  <td :colspan="isElectronicsShop ? 8 : 6" class="text-center py-4 text-muted">
                     <i class="fas fa-shopping-basket fa-2x mb-2 text-secondary opacity-50"></i>
                     <p class="mb-0 small">{{ $t('Cart is empty. Search items above or scan barcode (F2) to add products.') }}</p>
                   </td>
@@ -679,9 +698,11 @@
 
                 <!-- Selected Serial Tags Badges -->
                 <div class="d-flex flex-wrap gap-1 mb-1.5 p-1 bg-light border rounded align-items-center" v-if="serialTags.length > 0" style="max-height: 80px; overflow-y: auto;">
-                  <span v-for="(stag, stIdx) in serialTags" :key="'stag_' + stIdx + '_' + stag" class="badge bg-primary text-white font-monospace d-inline-flex align-items-center gap-1 py-1 px-2" style="font-size: 11px;">
+                  <span v-for="stag in serialTags" :key="'stag_' + stag" class="badge bg-primary text-white font-monospace d-inline-flex align-items-center gap-1 py-1 px-2" style="font-size: 11px;">
                     <span>{{ stag }}</span>
-                    <i class="fas fa-times cursor-pointer ms-1 text-white-50 hover-text-white" @click.stop="removeSerialTag(stIdx)" :title="$t('Remove')"></i>
+                    <span role="button" class="cursor-pointer ms-1 text-white-50 hover-text-white d-inline-flex align-items-center" @click.stop="removeSerialTag(stag)" :title="$t('Remove')">
+                      <i class="fas fa-times"></i>
+                    </span>
                   </span>
                   <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 ms-auto font-monospace" style="font-size: 10px;" @click="clearAllSerialTags" :title="$t('Clear All')">
                     <i class="fas fa-trash-alt me-1"></i>{{ $t('Clear') }}
@@ -725,8 +746,94 @@
                       style="font-size: 11px;"
                       @click="toggleSerialTag(sn)"
                     >
-                      <i class="fas fa-check me-1" v-if="serialTags.includes(sn)"></i>{{ sn }}
+                      <i class="fas fa-check me-1" v-show="serialTags.includes(sn)"></i>
+                      <span>{{ sn }}</span>
                     </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 🛡️ Warranty & Guarantee Policy (For Electronics Shop) -->
+              <div class="col-12" v-if="isElectronicsShop">
+                <div class="card border border-info border-opacity-50 bg-light p-2 rounded">
+                  <div class="d-flex justify-content-between align-items-center mb-1.5">
+                    <label class="form-label fw-bold small mb-0 d-flex align-items-center gap-1 text-dark">
+                      <i class="fas fa-shield-alt text-primary"></i>
+                      <span>{{ $t('Warranty / Guarantee') }}</span>
+                    </label>
+                    <div class="d-flex align-items-center gap-1">
+                      <span v-if="modalSelection.grn_warranty_period" class="badge bg-secondary font-monospace" style="font-size: 10px;" :title="$t('Default recorded in GRN')">
+                        {{ $t('GRN Default') }}: {{ modalSelection.grn_warranty_period }} ({{ modalSelection.grn_warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty') }})
+                      </span>
+                      <button
+                        v-if="modalSelection.grn_warranty_period && (modalSelection.warranty_period !== modalSelection.grn_warranty_period || modalSelection.warranty_type !== modalSelection.grn_warranty_type)"
+                        type="button"
+                        class="btn btn-xs btn-link p-0 text-primary text-decoration-none fw-bold"
+                        style="font-size: 10.5px;"
+                        @click="resetModalWarrantyToDefault"
+                        :title="$t('Reset to GRN default warranty')"
+                      >
+                        <i class="fas fa-undo me-0.5"></i>{{ $t('Reset to GRN') }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Type Selector: None, Warranty, Guarantee -->
+                  <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="form-check form-check-inline mb-0">
+                      <input class="form-check-input cursor-pointer" type="radio" id="modalWTypeNone" value="none" v-model="modalSelection.warranty_type">
+                      <label class="form-check-label small fw-bold cursor-pointer" for="modalWTypeNone">{{ $t('None') }}</label>
+                    </div>
+                    <div class="form-check form-check-inline mb-0">
+                      <input class="form-check-input cursor-pointer" type="radio" id="modalWTypeWarranty" value="warranty" v-model="modalSelection.warranty_type">
+                      <label class="form-check-label small fw-bold text-primary cursor-pointer" for="modalWTypeWarranty">
+                        <i class="fas fa-shield-alt me-0.5"></i>{{ $t('Warranty') }}
+                      </label>
+                    </div>
+                    <div class="form-check form-check-inline mb-0">
+                      <input class="form-check-input cursor-pointer" type="radio" id="modalWTypeGuarantee" value="guarantee" v-model="modalSelection.warranty_type">
+                      <label class="form-check-label small fw-bold text-success cursor-pointer" for="modalWTypeGuarantee">
+                        <i class="fas fa-award me-0.5"></i>{{ $t('Guarantee') }}
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Warranty Period Input & Quick Presets (Visible when not 'none') -->
+                  <div v-if="modalSelection.warranty_type !== 'none'">
+                    <div class="input-group input-group-sm mb-1.5">
+                      <span class="input-group-text bg-white text-muted"><i class="fas fa-clock"></i></span>
+                      <input
+                        type="text"
+                        class="form-control form-control-sm font-monospace"
+                        :placeholder="$t('e.g. 1 Year, 6 Months, 7 Days Replacement')"
+                        v-model="modalSelection.warranty_period"
+                      >
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        v-if="modalSelection.warranty_period"
+                        @click="modalSelection.warranty_period = ''"
+                        :title="$t('Clear')"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+
+                    <!-- Quick Preset Badges -->
+                    <div class="d-flex flex-wrap gap-1 align-items-center">
+                      <small class="text-muted fw-bold me-1" style="font-size: 10px;">{{ $t('Quick Presets:') }}</small>
+                      <button
+                        v-for="preset in ['7 Days Replacement', '1 Month', '3 Months', '6 Months', '1 Year', '2 Years', '3 Years', 'Lifetime']"
+                        :key="'modal_w_preset_' + preset"
+                        type="button"
+                        class="btn btn-xs py-0 px-1.5 font-monospace border"
+                        :class="modalSelection.warranty_period === preset ? 'btn-primary text-white fw-bold shadow-sm' : 'btn-outline-secondary bg-white text-dark'"
+                        style="font-size: 10.5px;"
+                        @click="setModalWarrantyPreset(preset, modalSelection.warranty_type === 'none' ? 'warranty' : modalSelection.warranty_type)"
+                      >
+                        {{ preset }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -769,6 +876,121 @@
                 <i class="fas fa-cart-plus me-1"></i> {{ $t('Add to Cart') }} (Enter)
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🛡️ Cart Item Warranty Editor Modal -->
+    <div
+      v-if="showCartWarrantyModal"
+      class="modal fade show d-block tab-modal-backdrop"
+      tabindex="-1"
+      style="background: rgba(0,0,0,0.55); z-index: 10050;"
+      @keydown.esc="closeCartWarrantyModal"
+      @keydown.enter.prevent="applyCartWarranty"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 440px;">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header bg-dark text-white py-2">
+            <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2">
+              <i class="fas fa-shield-alt text-warning"></i>
+              <span>{{ $t('Item Warranty & Guarantee') }}</span>
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="closeCartWarrantyModal"></button>
+          </div>
+          <div class="modal-body p-3">
+            <!-- Product Info -->
+            <div class="p-2 border rounded bg-light mb-3">
+              <div class="fw-bold text-dark text-truncate" :title="cartWarrantyForm.itemTitle">{{ cartWarrantyForm.itemTitle }}</div>
+              <small v-if="cartWarrantyForm.serialNo" class="text-primary font-monospace d-block" style="font-size: 11px;">
+                <i class="fas fa-hashtag me-1"></i>S/N: {{ cartWarrantyForm.serialNo }}
+              </small>
+              <div class="d-flex align-items-center justify-content-between mt-1 pt-1 border-top">
+                <span class="small text-muted font-monospace" style="font-size: 11px;">{{ $t('Default from GRN:') }}</span>
+                <span class="badge" :class="cartWarrantyForm.grnWarrantyPeriod ? 'bg-secondary' : 'bg-light text-muted border'" style="font-size: 10.5px;">
+                  {{ cartWarrantyForm.grnWarrantyPeriod ? `${cartWarrantyForm.grnWarrantyPeriod} (${cartWarrantyForm.grnWarrantyType === 'guarantee' ? 'Guarantee' : 'Warranty'})` : $t('None recorded in GRN') }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Policy Type Radio Options -->
+            <label class="form-label fw-bold small text-muted mb-1">{{ $t('Policy Type') }}</label>
+            <div class="d-flex align-items-center gap-3 mb-3 p-2 bg-white border rounded">
+              <div class="form-check mb-0">
+                <input class="form-check-input cursor-pointer" type="radio" id="cartWTypeNone" value="none" v-model="cartWarrantyForm.warranty_type">
+                <label class="form-check-label small fw-bold cursor-pointer" for="cartWTypeNone">{{ $t('None') }}</label>
+              </div>
+              <div class="form-check mb-0">
+                <input class="form-check-input cursor-pointer" type="radio" id="cartWTypeWarranty" value="warranty" v-model="cartWarrantyForm.warranty_type">
+                <label class="form-check-label small fw-bold text-primary cursor-pointer" for="cartWTypeWarranty">
+                  <i class="fas fa-shield-alt me-0.5"></i>{{ $t('Warranty') }}
+                </label>
+              </div>
+              <div class="form-check mb-0">
+                <input class="form-check-input cursor-pointer" type="radio" id="cartWTypeGuarantee" value="guarantee" v-model="cartWarrantyForm.warranty_type">
+                <label class="form-check-label small fw-bold text-success cursor-pointer" for="cartWTypeGuarantee">
+                  <i class="fas fa-award me-0.5"></i>{{ $t('Guarantee') }}
+                </label>
+              </div>
+            </div>
+
+            <!-- Custom Duration / Period -->
+            <div v-if="cartWarrantyForm.warranty_type !== 'none'" class="mb-3">
+              <label class="form-label fw-bold small text-muted mb-1">{{ $t('Warranty Duration / Period') }}</label>
+              <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text bg-light text-muted"><i class="fas fa-clock"></i></span>
+                <input
+                  type="text"
+                  class="form-control form-control-sm font-monospace fw-bold"
+                  :placeholder="$t('e.g. 1 Year, 6 Months, 7 Days Replacement')"
+                  v-model="cartWarrantyForm.warranty_period"
+                >
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  v-if="cartWarrantyForm.warranty_period"
+                  @click="cartWarrantyForm.warranty_period = ''"
+                  :title="$t('Clear')"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <!-- Quick Presets -->
+              <div class="d-flex flex-wrap gap-1 align-items-center">
+                <small class="text-muted fw-bold me-1" style="font-size: 10px;">{{ $t('Quick Presets:') }}</small>
+                <button
+                  v-for="preset in ['7 Days Replacement', '1 Month', '3 Months', '6 Months', '1 Year', '2 Years', '3 Years', 'Lifetime']"
+                  :key="'cart_w_preset_' + preset"
+                  type="button"
+                  class="btn btn-xs py-0 px-1.5 font-monospace border"
+                  :class="cartWarrantyForm.warranty_period === preset ? 'btn-primary text-white fw-bold shadow-sm' : 'btn-outline-secondary bg-light text-dark'"
+                  style="font-size: 10.5px;"
+                  @click="setCartWarrantyPreset(preset, cartWarrantyForm.warranty_type === 'none' ? 'warranty' : cartWarrantyForm.warranty_type)"
+                >
+                  {{ preset }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Reset to GRN button if changed -->
+            <div v-if="cartWarrantyForm.grnWarrantyPeriod && (cartWarrantyForm.warranty_period !== cartWarrantyForm.grnWarrantyPeriod || cartWarrantyForm.warranty_type !== cartWarrantyForm.grnWarrantyType)" class="mt-2 text-end">
+              <button
+                type="button"
+                class="btn btn-xs btn-link p-0 text-primary text-decoration-none fw-bold font-monospace"
+                style="font-size: 11px;"
+                @click="resetCartWarrantyToDefault"
+              >
+                <i class="fas fa-undo me-1"></i>{{ $t('Reset to GRN Default') }} ({{ cartWarrantyForm.grnWarrantyPeriod }})
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer py-2 d-flex justify-content-between align-items-center bg-light">
+            <button type="button" class="btn btn-sm btn-secondary" @click="closeCartWarrantyModal">{{ $t('Cancel') }} (Esc)</button>
+            <button type="button" class="btn btn-sm btn-primary px-3 fw-bold shadow-sm" @click="applyCartWarranty">
+              <i class="fas fa-check me-1"></i> {{ $t('Apply Warranty') }} (Enter)
+            </button>
           </div>
         </div>
       </div>
@@ -817,8 +1039,8 @@
                 <div style="font-size: 9px; color: #222; font-family: monospace;" v-if="d.serial_no">
                   S/N: {{ d.serial_no }}
                 </div>
-                <div style="font-size: 9px; color: #000; font-weight: bold;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
-                  [{{ d.item.warranty_type === 'guarantee' ? 'Guarantee' : 'Warranty' }}: {{ d.item.warranty_period }}]
+                <div style="font-size: 9px; color: #000; font-weight: bold;" v-if="(d.warranty_type && d.warranty_type !== 'none') || (d.item && d.item.warranty_type && d.item.warranty_type !== 'none')">
+                  [{{ (d.warranty_type || d.item.warranty_type) === 'guarantee' ? 'Guarantee' : 'Warranty' }}: {{ d.warranty_period || d.item.warranty_period }}]
                 </div>
               </td>
               <td style="text-align: center; padding: 3px 0; vertical-align: top;">{{ d.qty }}</td>
@@ -937,8 +1159,8 @@
                 <div style="font-size: 8px; color: #222;" v-if="d.serial_no">
                   S/N: {{ d.serial_no }}
                 </div>
-                <div style="font-size: 8px;" v-if="d.item && d.item.warranty_type && d.item.warranty_type !== 'none'">
-                  W: {{ d.item.warranty_period }}
+                <div style="font-size: 8px;" v-if="(d.warranty_type && d.warranty_type !== 'none') || (d.item && d.item.warranty_type && d.item.warranty_type !== 'none')">
+                  {{ (d.warranty_type || d.item.warranty_type) === 'guarantee' ? 'G' : 'W' }}: {{ d.warranty_period || d.item.warranty_period }}
                 </div>
               </td>
               <td style="text-align: center; padding: 2px 0; vertical-align: top;">{{ d.qty }}</td>
@@ -1098,7 +1320,26 @@ export default {
         discount_title: '',
         discount_display: '',
         rate: 0,
-        available_stock: 0
+        available_stock: 0,
+        has_warranty: false,
+        grn_warranty_type: 'none',
+        grn_warranty_period: '',
+        warranty_type: 'none',
+        warranty_period: '',
+        warranty_duration: null
+      },
+
+      // 🛡️ Cart Item Warranty Editor Modal State
+      showCartWarrantyModal: false,
+      activeWarrantyCartIndex: null,
+      cartWarrantyForm: {
+        itemTitle: '',
+        serialNo: '',
+        grnWarrantyType: 'none',
+        grnWarrantyPeriod: '',
+        warranty_type: 'none',
+        warranty_period: '',
+        warranty_duration: null
       },
 
       showDuplicateBarcodeModal: false,
@@ -1891,6 +2132,11 @@ export default {
         }
         this.cart[existingCartIndex].qty = currentQty + 1;
       } else {
+        const hasWarranty = !!(item.has_warranty || (item.warranty_type && item.warranty_type !== 'none'));
+        const defaultWarrantyType = item.warranty_type || 'none';
+        const defaultWarrantyPeriod = item.warranty_period || '';
+        const defaultWarrantyDuration = item.warranty_duration || null;
+
         this.cart.push({
           item_id: item.id,
           item_object: item,
@@ -1909,6 +2155,12 @@ export default {
           discount_display: discountDisplay || '',
           rate: finalRate,
           available_stock: availableStock,
+          has_warranty: hasWarranty,
+          default_warranty_type: defaultWarrantyType,
+          default_warranty_period: defaultWarrantyPeriod,
+          warranty_type: defaultWarrantyType,
+          warranty_period: defaultWarrantyPeriod,
+          warranty_duration: defaultWarrantyDuration,
         });
       }
 
@@ -2074,8 +2326,16 @@ export default {
         this.syncSerialTagsToModal();
       }
     },
-    removeSerialTag(index) {
-      this.serialTags.splice(index, 1);
+    removeSerialTag(target) {
+      if (typeof target === 'number') {
+        this.serialTags.splice(target, 1);
+      } else if (typeof target === 'string') {
+        const clean = target.trim().toLowerCase();
+        const idx = this.serialTags.findIndex(s => s.toLowerCase() === clean);
+        if (idx > -1) {
+          this.serialTags.splice(idx, 1);
+        }
+      }
       this.syncSerialTagsToModal();
     },
     clearAllSerialTags() {
@@ -2111,6 +2371,23 @@ export default {
         this.modalSelection.qty = this.serialTags.length;
       } else if (!this.modalSelection.qty || this.modalSelection.qty < 1) {
         this.modalSelection.qty = 1;
+      }
+
+      if (this.isElectronicsShop && this.activeItem && this.activeItem.serial_warranty_map && this.serialTags.length > 0) {
+        for (const st of this.serialTags) {
+          const sw = this.activeItem.serial_warranty_map[st];
+          if (sw && sw.warranty_type && sw.warranty_type !== 'none') {
+            this.modalSelection.grn_warranty_type = sw.warranty_type;
+            this.modalSelection.grn_warranty_period = sw.warranty_period || '';
+            if (this.modalSelection.warranty_type === 'none' || !this.modalSelection.warranty_period || this.modalSelection.warranty_period === this.activeItem.warranty_period) {
+              this.modalSelection.warranty_type = sw.warranty_type;
+              this.modalSelection.warranty_period = sw.warranty_period || '';
+              this.modalSelection.warranty_duration = sw.warranty_duration || null;
+            }
+            this.modalSelection.has_warranty = true;
+            break;
+          }
+        }
       }
     },
     openItemModal(item, scannedSerial = '') {
@@ -2154,6 +2431,27 @@ export default {
       const initialQty = this.serialTags.length > 0 ? this.serialTags.length : 1;
       const initialSerialNo = this.serialTags.join(', ');
 
+      // Determine default warranty from GRN (or item master fallback)
+      let defaultWarrantyType = item.warranty_type || 'none';
+      let defaultWarrantyPeriod = item.warranty_period || '';
+      let defaultWarrantyDuration = item.warranty_duration || null;
+      let hasWarranty = !!(item.has_warranty || (defaultWarrantyType && defaultWarrantyType !== 'none'));
+
+      if (item.serial_warranty_map && this.serialTags.length > 0) {
+        for (const st of this.serialTags) {
+          if (item.serial_warranty_map[st]) {
+            const sw = item.serial_warranty_map[st];
+            if (sw.warranty_type && sw.warranty_type !== 'none') {
+              defaultWarrantyType = sw.warranty_type;
+              defaultWarrantyPeriod = sw.warranty_period || '';
+              defaultWarrantyDuration = sw.warranty_duration || null;
+              hasWarranty = true;
+              break;
+            }
+          }
+        }
+      }
+
       this.modalSelection = {
         color_id: defaultColorId,
         size_id: defaultSizeId,
@@ -2164,7 +2462,13 @@ export default {
         discount_title: discountTitle || '',
         discount_display: discountDisplay || '',
         rate: finalRate,
-        available_stock: defaultStock
+        available_stock: defaultStock,
+        has_warranty: hasWarranty,
+        grn_warranty_type: defaultWarrantyType,
+        grn_warranty_period: defaultWarrantyPeriod,
+        warranty_type: defaultWarrantyType,
+        warranty_period: defaultWarrantyPeriod,
+        warranty_duration: defaultWarrantyDuration
       };
 
       this.onVariantChange();
@@ -2331,6 +2635,12 @@ export default {
           }
           existing.qty = newQty;
         }
+        if (this.modalSelection.warranty_type && this.modalSelection.warranty_type !== 'none') {
+          existing.warranty_type = this.modalSelection.warranty_type;
+          existing.warranty_period = this.modalSelection.warranty_period;
+          existing.warranty_duration = this.modalSelection.warranty_duration;
+          existing.has_warranty = true;
+        }
       } else {
         const finalQty = this.serialTags.length > 0 ? this.serialTags.length : (this.modalSelection.qty || 1);
         this.cart.push({
@@ -2351,6 +2661,12 @@ export default {
           discount_display: this.modalSelection.discount_display || '',
           rate: this.modalSelection.rate || 0,
           available_stock: this.modalSelection.available_stock,
+          has_warranty: !!(this.modalSelection.has_warranty || (this.modalSelection.warranty_type && this.modalSelection.warranty_type !== 'none')),
+          default_warranty_type: this.modalSelection.grn_warranty_type || 'none',
+          default_warranty_period: this.modalSelection.grn_warranty_period || '',
+          warranty_type: this.modalSelection.warranty_type || 'none',
+          warranty_period: this.modalSelection.warranty_period || '',
+          warranty_duration: this.modalSelection.warranty_duration || null,
         });
       }
 
@@ -2518,6 +2834,14 @@ export default {
         return;
       }
 
+      if (this.showCartWarrantyModal) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          this.closeCartWarrantyModal();
+        }
+        return;
+      }
+
       if (this.showItemModal) {
         if (e.key === 'Escape') {
           e.preventDefault();
@@ -2590,12 +2914,70 @@ export default {
       const calculated = (taxableBase * floatval(this.vat_percent)) / 100;
       this.vat = Number(calculated.toFixed(2));
     },
+
+    // 🛡️ Cart & Modal Item Warranty Methods
+    openCartWarrantyModal(cItem, index) {
+      this.activeWarrantyCartIndex = index;
+      const grnType = cItem.default_warranty_type || cItem.item_object?.warranty_type || 'none';
+      const grnPeriod = cItem.default_warranty_period || cItem.item_object?.warranty_period || '';
+
+      this.cartWarrantyForm = {
+        itemTitle: cItem.title,
+        serialNo: cItem.serial_no || '',
+        grnWarrantyType: grnType,
+        grnWarrantyPeriod: grnPeriod,
+        warranty_type: (cItem.warranty_type && cItem.warranty_type !== 'none') ? cItem.warranty_type : (grnType !== 'none' ? grnType : 'warranty'),
+        warranty_period: cItem.warranty_period || grnPeriod || '',
+        warranty_duration: cItem.warranty_duration || null
+      };
+      this.showCartWarrantyModal = true;
+    },
+    closeCartWarrantyModal() {
+      this.showCartWarrantyModal = false;
+      this.activeWarrantyCartIndex = null;
+    },
+    setCartWarrantyPreset(presetText, type = 'warranty') {
+      this.cartWarrantyForm.warranty_type = type;
+      this.cartWarrantyForm.warranty_period = presetText;
+    },
+    resetCartWarrantyToDefault() {
+      this.cartWarrantyForm.warranty_type = this.cartWarrantyForm.grnWarrantyType || 'none';
+      this.cartWarrantyForm.warranty_period = this.cartWarrantyForm.grnWarrantyPeriod || '';
+      this.cartWarrantyForm.warranty_duration = null;
+    },
+    applyCartWarranty() {
+      if (this.activeWarrantyCartIndex !== null && this.cart[this.activeWarrantyCartIndex]) {
+        const item = this.cart[this.activeWarrantyCartIndex];
+        item.warranty_type = this.cartWarrantyForm.warranty_type;
+        item.warranty_period = this.cartWarrantyForm.warranty_type === 'none' ? '' : (this.cartWarrantyForm.warranty_period || '').trim();
+        item.warranty_duration = this.cartWarrantyForm.warranty_duration;
+        item.has_warranty = item.warranty_type !== 'none' && item.warranty_period !== '';
+        this.$toast(`"${item.title}" এর ওয়ারেন্টি পলিসি আপডেট করা হয়েছে`, 'success');
+      }
+      this.closeCartWarrantyModal();
+    },
+    setModalWarrantyPreset(presetText, type = 'warranty') {
+      this.modalSelection.warranty_type = type;
+      this.modalSelection.warranty_period = presetText;
+    },
+    resetModalWarrantyToDefault() {
+      this.modalSelection.warranty_type = this.modalSelection.grn_warranty_type || 'none';
+      this.modalSelection.warranty_period = this.modalSelection.grn_warranty_period || '';
+      this.modalSelection.warranty_duration = null;
+    },
   },
   mounted() {
     window.addEventListener('keydown', this.handleKeydown);
     this.initVatFromSettings();
     this.loadInvoiceTerms();
     this.loadActiveDiscounts();
+    if (this.$route.query.client_id) {
+      axios.get(`client/${this.$route.query.client_id}`).then(res => {
+        if (res.data && res.data.id) {
+          this.selectCustomer(res.data);
+        }
+      });
+    }
   },
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleKeydown);

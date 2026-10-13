@@ -15,6 +15,15 @@ class Account extends BaseModel
     protected $guarded = ['id'];
     protected $logName = "Account";
 
+    protected $appends = ['name'];
+
+    public function getNameAttribute()
+    {
+        $code = trim($this->attributes['account_code'] ?? '');
+        $name = $this->attributes['account_name'] ?? '';
+        return $code !== '' ? "{$code} - {$name}" : $name;
+    }
+
     public function parent()
     {
         return $this->belongsTo(Account::class, 'parent_id');

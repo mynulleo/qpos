@@ -6,7 +6,7 @@
                 <div class="card-body py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="d-flex align-items-center gap-2">
-                            <span class="small fw-bold text-dark"><i class="fas fa-layer-group me-1 text-primary"></i>Layout:</span>
+                            <span class="small fw-bold text-dark"><i class="fas fa-layer-group me-1 text-primary"></i>{{ $t('Layout:') }}</span>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button 
                                     type="button" 
@@ -15,7 +15,7 @@
                                     @click="setLayout('layout1')"
                                     title="Layout 1: Classic Corporate Invoice"
                                 >
-                                    <i class="fas fa-file-alt me-1"></i> Layout 1 (Classic)
+                                    <i class="fas fa-file-alt me-1"></i> {{ $t('Layout 1 (Classic)') }}
                                 </button>
                                 <button 
                                     type="button" 
@@ -24,7 +24,7 @@
                                     @click="setLayout('layout2')"
                                     title="Layout 2: Modern Minimal Invoice"
                                 >
-                                    <i class="fas fa-file-invoice me-1"></i> Layout 2 (Modern)
+                                    <i class="fas fa-file-invoice me-1"></i> {{ $t('Layout 2 (Modern)') }}
                                 </button>
                                 <button 
                                     type="button" 
@@ -33,7 +33,7 @@
                                     @click="setLayout('layout3')"
                                     title="Layout 3: Compact Executive Invoice"
                                 >
-                                    <i class="fas fa-file-lines me-1"></i> Layout 3 (Compact)
+                                    <i class="fas fa-file-lines me-1"></i> {{ $t('Layout 3 (Compact)') }}
                                 </button>
                             </div>
                         </div>
@@ -50,15 +50,25 @@
                                     @change="toggleHeaderSetting"
                                 >
                                 <label class="form-check-label small fw-bold text-dark cursor-pointer mb-0" for="toggleHeaderBill" style="font-size: 12px;">
-                                    <i class="fas fa-store me-1 text-primary"></i>Header Info (প্যাড প্রিন্ট): 
-                                    <span :class="showHeaderInfo ? 'text-success' : 'text-danger'">{{ showHeaderInfo ? 'ON' : 'OFF' }}</span>
+                                    <i class="fas fa-store me-1 text-primary"></i>{{ $t('Header Info (Pad Print):') }} 
+                                    <span :class="showHeaderInfo ? 'text-success' : 'text-danger'">{{ showHeaderInfo ? $t('ON') : $t('OFF') }}</span>
                                 </label>
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Quick Language Switcher Button -->
+                        <button 
+                            type="button" 
+                            class="btn btn-sm btn-outline-primary py-1 px-2 d-flex align-items-center gap-1 font-monospace shadow-sm"
+                            @click="$toggleLocale()"
+                            :title="$locale === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'"
+                        >
+                            <i class="fas fa-language"></i>
+                            <span class="fw-bold">{{ $locale === 'bn' ? 'বাংলা' : 'EN' }}</span>
+                        </button>
                         <span class="badge bg-light text-muted border font-monospace">
-                            Printer: Normal Printer ({{ normalPaperSize }})
+                            {{ $t('Printer: Normal Printer') }} ({{ normalPaperSize }})
                         </span>
                     </div>
                 </div>

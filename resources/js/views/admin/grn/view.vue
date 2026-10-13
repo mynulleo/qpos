@@ -218,6 +218,7 @@
                       <th class="text-center" style="width: 110px;">{{ $t('Received Qty') }}</th>
                       <th class="text-end" style="width: 110px;">{{ $t('Unit Cost') }}</th>
                       <th class="text-center" style="width: 110px;" v-if="hasAnySerials">{{ $t('Serial Numbers') }}</th>
+                      <th class="text-center" style="width: 130px;" v-if="isElectronicsShop">{{ $t('Warranty') }}</th>
                       <th class="text-end" style="width: 140px;">{{ $t('Total Value') }}</th>
                     </tr>
                   </thead>
@@ -270,13 +271,26 @@
                         </template>
                       </td>
 
+                      <!-- Warranty Badge (Electronics Shop) -->
+                      <td class="text-center" v-if="isElectronicsShop">
+                        <span
+                          v-if="gdetail.warranty_type && gdetail.warranty_type !== 'none'"
+                          class="badge font-monospace"
+                          :class="gdetail.warranty_type === 'guarantee' ? 'bg-success text-white' : 'bg-primary text-white'"
+                        >
+                          <i class="fas fa-shield-alt me-1"></i>
+                          {{ gdetail.warranty_period || (gdetail.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty')) }}
+                        </span>
+                        <span v-else class="text-muted small">-</span>
+                      </td>
+
                       <td class="text-end font-monospace fw-bold text-theme text-nowrap">
                         ৳ {{ formatNum(gdetail.total_amount) }}
                       </td>
                     </tr>
 
                     <tr v-if="!data.grn_details || data.grn_details.length === 0">
-                      <td :colspan="hasAnySerials ? (hasAnyVariants ? 7 : 6) : (hasAnyVariants ? 6 : 5)" class="text-center py-4 text-muted">
+                      <td :colspan="5 + (hasAnyVariants ? 1 : 0) + (hasAnySerials ? 1 : 0) + (isElectronicsShop ? 1 : 0)" class="text-center py-4 text-muted">
                         {{ $t('No goods receive items found.') }}
                       </td>
                     </tr>
@@ -285,8 +299,9 @@
                     <tr>
                       <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">{{ $t('Summary Totals:') }}</td>
                       <td class="text-center font-monospace text-primary fs-6">{{ data.total_qty }}</td>
-                      <td v-if="!hasAnySerials"></td>
-                      <td colspan="2" v-else></td>
+                      <td class="text-muted small" v-if="hasAnySerials">-</td>
+                      <td class="text-muted small" v-if="isElectronicsShop">-</td>
+                      <td></td>
                       <td class="text-end font-monospace text-theme fs-6 fw-bold text-nowrap">
                         ৳ {{ formatNum(data.total_amount) }}
                       </td>
@@ -408,6 +423,7 @@
               <th class="text-center" style="width: 90px;">{{ $t('Received') }}</th>
               <th class="text-end" style="width: 95px;">{{ $t('Unit Rate') }}</th>
               <th class="text-center" style="width: 110px;" v-if="hasAnySerials">{{ $t('Serial Numbers') }}</th>
+              <th class="text-center" style="width: 100px;" v-if="isElectronicsShop">{{ $t('Warranty') }}</th>
               <th class="text-end" style="width: 115px;">{{ $t('Total') }}</th>
             </tr>
           </thead>
@@ -418,7 +434,7 @@
                 <div class="fw-bold text-dark">{{ gdetail.item?.title || $t('Item #') + gdetail.item_id }}</div>
                 <div class="small text-muted mt-1">
                   <span class="badge bg-light text-dark border me-1">{{ gdetail.category?.title || gdetail.item?.category?.title || $t('General') }}</span>
-                  <span v-if="gdetail.item?.barcode" class="font-monospace">{{ $t('Barcode') }}: {{ gdetail.item?.barcode }}</span>
+                  <span v-if="gdetail.item?.barcode" class="font-monospace">{{ $t('Barcode') }}: {{ gdetail.item.barcode }}</span>
                 </div>
               </td>
               <td v-if="hasAnyVariants">
@@ -432,6 +448,9 @@
               <td class="text-center small font-monospace" v-if="hasAnySerials">
                 {{ gdetail.serial_no || '-' }}
               </td>
+              <td class="text-center small font-monospace" v-if="isElectronicsShop">
+                {{ gdetail.warranty_type && gdetail.warranty_type !== 'none' ? (gdetail.warranty_period || (gdetail.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty'))) : '-' }}
+              </td>
               <td class="text-end font-monospace fw-bold text-nowrap">৳ {{ formatNum(gdetail.total_amount) }}</td>
             </tr>
           </tbody>
@@ -439,8 +458,9 @@
             <tr>
               <td :colspan="hasAnyVariants ? 4 : 3" class="text-end">{{ $t('Summary Totals:') }}</td>
               <td class="text-center font-monospace fs-6">{{ data.total_qty }}</td>
-              <td v-if="!hasAnySerials"></td>
-              <td colspan="2" v-else></td>
+              <td v-if="hasAnySerials">-</td>
+              <td v-if="isElectronicsShop">-</td>
+              <td></td>
               <td class="text-end font-monospace fs-6 text-nowrap">৳ {{ formatNum(data.total_amount) }}</td>
             </tr>
           </tfoot>
@@ -503,10 +523,20 @@
             <button type="button" class="btn-close btn-close-white" @click="activeSerialItem = null"></button>
           </div>
           <div class="modal-body p-4">
-            <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border">
-              <span class="small fw-semibold text-dark">
-                {{ $t('Total Serials Received:') }} <strong class="theme-text font-monospace fs-6">{{ modalSerialsList.length }}</strong>
-              </span>
+            <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="small fw-semibold text-dark">
+                  {{ $t('Total Serials Received:') }} <strong class="theme-text font-monospace fs-6">{{ modalSerialsList.length }}</strong>
+                </span>
+                <span
+                  v-if="isElectronicsShop && activeSerialItem.warranty_type && activeSerialItem.warranty_type !== 'none'"
+                  class="badge"
+                  :class="activeSerialItem.warranty_type === 'guarantee' ? 'bg-success text-white' : 'bg-primary text-white'"
+                >
+                  <i class="fas fa-shield-alt me-1"></i>
+                  {{ activeSerialItem.warranty_period || (activeSerialItem.warranty_type === 'guarantee' ? $t('Guarantee') : $t('Warranty')) }}
+                </span>
+              </div>
               <button type="button" class="btn btn-xs btn-outline-secondary" @click="copyAllSerials">
                 <i class="fas fa-copy me-1"></i> {{ $t('Copy All') }}
               </button>

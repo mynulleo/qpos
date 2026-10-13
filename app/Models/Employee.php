@@ -14,6 +14,18 @@ class Employee extends BaseModel
 
 	protected $logName = "Employee";
 
+	protected $appends = ['name', 'phone'];
+
+	public function getNameAttribute()
+	{
+		return $this->attributes['full_name'] ?? '';
+	}
+
+	public function getPhoneAttribute()
+	{
+		return $this->attributes['mobile'] ?? '';
+	}
+
 	public static function generateEmpID()
 	{
 		$empid = 111;

@@ -1,11 +1,29 @@
 let _userInfo = localStorage.getItem('user');
 let _role = localStorage.getItem('role');
 
+let parsedUser = null;
+try {
+    if (_userInfo && _userInfo !== 'undefined' && _userInfo !== 'null') {
+        parsedUser = JSON.parse(_userInfo);
+    }
+} catch (e) {
+    parsedUser = null;
+}
+
+if (!parsedUser && typeof window !== 'undefined' && window.laravel && window.laravel.user) {
+    parsedUser = window.laravel.user;
+    _role = window.laravel.role || _role || 'Administrator';
+    try {
+        localStorage.setItem('user', JSON.stringify(parsedUser));
+        localStorage.setItem('role', _role);
+    } catch (e) {}
+}
+
 export default {
     namespaced: true,
 
     state: () => ({
-        user: JSON.parse(_userInfo) || null,
+        user: parsedUser || null,
         role: _role || null,
     }),
 

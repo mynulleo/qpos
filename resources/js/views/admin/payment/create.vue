@@ -1008,6 +1008,14 @@ export default {
             this.page_title = this.headline(this.model) + ' Create';
             this.data.fund_account_id = 24;
             this.getFundBalance();
+            if (this.$route.query.client_id) {
+                this.entity_type = 'client';
+                this.data.payment_type = 'Receive';
+                this.data.client_id = Number(this.$route.query.client_id);
+                this.$nextTick(() => {
+                    this.onClientChange();
+                });
+            }
         }
         this.getClients();
         this.getFundAccounts();
