@@ -487,8 +487,8 @@
         <!-- 1.1 Company Information (Left) -->
         <div class="d-flex align-items-center gap-3">
           <img
-            v-if="$root.site && $root.site.logo"
-            :src="$root.site.logo"
+            v-if="$root.site && ($root.site.logo_two || $root.site.logo_one || $root.site.original_logo)"
+            :src="$root.site.logo_two || $root.site.logo_one || $root.site.original_logo"
             alt="Logo"
             class="print-company-logo"
           />

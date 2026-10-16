@@ -231,6 +231,8 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
         Route::resource('withdrawl', App\Http\Controllers\Admin\WithdrawlController::class);
         Route::resource('workorder', App\Http\Controllers\Admin\WorkorderController::class);
         Route::resource('currency', App\Http\Controllers\Admin\CurrencyController::class);
+        Route::post('challan/{id}/accept', [App\Http\Controllers\Admin\ChallanController::class, 'accept'])->name('challan.accept');
+        Route::post('challan/{id}/create-invoice', [App\Http\Controllers\Admin\ChallanController::class, 'createInvoice'])->name('challan.createInvoice');
         Route::resource('challan', App\Http\Controllers\Admin\ChallanController::class);
         Route::resource('color', App\Http\Controllers\Admin\ColorController::class);
         Route::resource('size', App\Http\Controllers\Admin\SizeController::class);

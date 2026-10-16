@@ -25,6 +25,11 @@ class ChallanDetail extends BaseModel
     {
         return $this->belongsTo(Item::class, 'item_id', 'id');
     }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id', 'id');
+    }
     // date format
 
     // boot function
@@ -34,17 +39,23 @@ class ChallanDetail extends BaseModel
 
         // CREATE
         static::created(function ($model) {
-            self::updateWorkorderDetail($model->workorder_detail_id);
+            if (!empty($model->workorder_detail_id)) {
+                self::updateWorkorderDetail($model->workorder_detail_id);
+            }
         });
 
         // UPDATE
         static::updated(function ($model) {
-            self::updateWorkorderDetail($model->workorder_detail_id);
+            if (!empty($model->workorder_detail_id)) {
+                self::updateWorkorderDetail($model->workorder_detail_id);
+            }
         });
 
         // DELETE
         static::deleted(function ($model) {
-            self::updateWorkorderDetail($model->workorder_detail_id);
+            if (!empty($model->workorder_detail_id)) {
+                self::updateWorkorderDetail($model->workorder_detail_id);
+            }
         });
     }
 
