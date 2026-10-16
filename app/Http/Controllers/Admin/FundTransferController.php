@@ -113,7 +113,19 @@ class FundTransferController extends BaseController
         if ($request->format() == 'html') {
             return view('layouts.backend_app');
         }
-        $fundTransfer = FundTransfer::find($id);
+        $fundTransfer = FundTransfer::with([
+            'from_account:id,account_code,account_name',
+            'to_account:id,account_code,account_name'
+        ])->find($id);
+
+        if ($fundTransfer) {
+            $voucher = \App\Models\Voucher::where('source', 'FundTransfer')
+                ->where('source_id', $fundTransfer->id)
+                ->with(['voucher_details.account:id,account_code,account_name', 'financial_year:id,title'])
+                ->first();
+            $fundTransfer->voucher = $voucher;
+        }
+
         return $fundTransfer;
     }
 

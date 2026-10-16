@@ -162,10 +162,7 @@ class AccountController extends BaseController
     {
         return Account::where('is_fund_account', 1)
             ->where('status', 'active')
-            ->select(
-                'id',
-                DB::raw("CONCAT(account_code, ' - ', account_name) as name")
-            )
+            ->select('id', 'account_code', 'account_name')
             ->get();
     }
 
