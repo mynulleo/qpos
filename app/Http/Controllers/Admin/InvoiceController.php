@@ -564,11 +564,6 @@ class InvoiceController extends BaseController
         return $invoice;
     }
 
-    public function generateInvoice()
-    {
-        return true;
-    }
-
 
 
     /**

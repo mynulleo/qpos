@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use App\Traits\Auth\HardResetTrait;
 
-class LibController extends Controller
+class TmpController extends Controller
 {
     use HardResetTrait;
 
