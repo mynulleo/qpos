@@ -28,52 +28,6 @@ class LibController extends Controller
 {
     private $variable = [];
 
-    private function setTenantDb()
-    {
-        $user = Auth::guard('admin')->user() ?? Auth::user();
-        if (!$user) return;
-
-        $orgId = $user->organization_id ?? null;
-        if (!$orgId) return;
-
-        try {
-            $residence = Organization::select('db_host', 'db_name', 'db_user', 'db_password')
-                ->where('id', $orgId)
-                ->first();
-
-            if (!$residence || !$residence->db_name) return;
-
-            $host = !empty($residence->db_host) ? $residence->db_host : env('DB_HOST', '127.0.0.1');
-            if ($host === 'localhost') {
-                $host = '127.0.0.1';
-            }
-
-            Config::set('database.connections.tenant', [
-                'driver' => 'mysql',
-                'host' => $host,
-                'port' => env('DB_PORT', '3306'),
-                'database' => $residence->db_name,
-                'username' => $residence->db_user ?? env('DB_USERNAME', 'root'),
-                'password' => $residence->db_password ?? env('DB_PASSWORD', ''),
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-                'prefix' => '',
-                'prefix_indexes' => true,
-                'strict' => true,
-                'engine' => 'InnoDB',
-                'options' => extension_loaded('pdo_mysql') ? array_filter([
-                    PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-                ]) : [],
-            ]);
-
-            DB::purge('tenant');
-            DB::reconnect('tenant');
-            DB::setDefaultConnection('tenant');
-        } catch (\Exception $e) {
-            DB::setDefaultConnection(config('database.default', 'mysql'));
-        }
-    }
-
     private function index()
     {
         return [
@@ -445,7 +399,39 @@ class LibController extends Controller
         if (!empty($categoryid)) {
             $query->where('category_id', $categoryid);
         }
-        return $query->select('id', 'title', 'category_id', 'barcode', 'model_no', 'unit_id', 'warranty_type', 'is_serialized', 'opening_rate', 'retail_price', 'wholesale_price')->get();
+        $baseColumns = ['id', 'title', 'category_id', 'barcode', 'unit_id', 'opening_rate'];
+        $optionalColumns = ['model_no', 'warranty_type', 'is_serialized', 'retail_price', 'wholesale_price'];
+        foreach ($optionalColumns as $col) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('items', $col)) {
+                $baseColumns[] = $col;
+            }
+        }
+        $items = $query->select($baseColumns)->get();
+
+        $itemIds = $items->pluck('id')->toArray();
+        if (!empty($itemIds)) {
+            $stockInMap = DB::table('stock_transactions')
+                ->whereIn('item_id', $itemIds)
+                ->where('status', 'active')
+                ->groupBy('item_id')
+                ->selectRaw('item_id, SUM(qty_in) as total_in')
+                ->pluck('total_in', 'item_id');
+
+            $stockOutMap = DB::table('stock_transactions')
+                ->whereIn('item_id', $itemIds)
+                ->where('status', 'active')
+                ->groupBy('item_id')
+                ->selectRaw('item_id, SUM(qty_out) as total_out')
+                ->pluck('total_out', 'item_id');
+
+            foreach ($items as $item) {
+                $in = floatval($stockInMap[$item->id] ?? 0);
+                $out = floatval($stockOutMap[$item->id] ?? 0);
+                $item->current_stock = max(0, $in - $out);
+            }
+        }
+
+        return $items;
     }
 
     public function getGroupAccounts()

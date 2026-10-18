@@ -75,7 +75,7 @@ class AreaController extends BaseController
         if ($request->format() == 'html') {
             return view('layouts.backend_app');
         }
-        $area = Area::find($id);
+        $area = Area::with('district')->find($id);
         return $area;
     }
 

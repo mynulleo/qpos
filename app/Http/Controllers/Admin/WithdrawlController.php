@@ -35,7 +35,7 @@ class WithdrawlController extends BaseController
         }
 
         // Filter by From withdraw Date
-        if (!empty($request->from_withdraw_date)) {
+        if (!empty($request->from_withdraw_date) && empty($request->to_withdraw_date)) {
             $from_date = vue_to_server_date($request->from_withdraw_date);
             $query->whereDate('withdrwal_date', '>=', $from_date);
         }
@@ -114,7 +114,14 @@ class WithdrawlController extends BaseController
         if ($request->format() == 'html') {
             return view('layouts.backend_app');
         }
-        $withdrawl = Withdrawl::find($id);
+        $withdrawl = Withdrawl::with('account:id,account_code,account_name')->find($id);
+        if ($withdrawl) {
+            $voucher = \App\Models\Voucher::where('source', 'Withdrawl')
+                ->where('source_id', $withdrawl->id)
+                ->with(['voucher_details.account:id,account_code,account_name', 'financial_year:id,title'])
+                ->first();
+            $withdrawl->voucher = $voucher;
+        }
         return $withdrawl;
     }
 

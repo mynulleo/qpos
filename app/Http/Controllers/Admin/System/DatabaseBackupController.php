@@ -220,10 +220,5 @@ class DatabaseBackupController extends Controller
             }
         }
     }
-
-    /* Aliases for backwards compatibility */
-    public function downloadBackup(Request $request) { return $this->download($request); }
-    public function createStoredBackup(Request $request) { return $this->create($request); }
-    public function downloadStoredBackup(string $filename) { return $this->downloadfile($filename); }
-    public function deleteStoredBackup(string $filename) { return $this->deletefile($filename); }
 }
+

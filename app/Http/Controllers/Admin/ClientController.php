@@ -31,7 +31,7 @@ class ClientController extends BaseController
      */
     public function index(Request $request)
     {
-        $query  = Client::with(['area:id,area_name'])->latest();
+        $query  = Client::with(['area:id,area_name', 'district:id,district_name'])->latest();
 
         if (!empty($request->district_id)) {
             $query->where('district_id', $request->district_id);
@@ -41,18 +41,41 @@ class ClientController extends BaseController
             $query->where('area_id', $request->area_id);
         }
 
-        if (!empty($request->field_name) && !empty($request->value)) {
-            $query->whereLike($request->field_name, $request->value);
+        if (!empty($request->customer_type)) {
+            $query->where('customer_type', $request->customer_type);
         }
 
-        // dd($request->from_reg_date);
+        if (!empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        if (!empty($request->value)) {
+            if (!empty($request->field_name) && $request->field_name !== 'default') {
+                $query->whereLike($request->field_name, $request->value);
+            } else {
+                $val = trim($request->value);
+                $query->where(function ($q) use ($val) {
+                    $q->where('name', 'like', "%{$val}%")
+                        ->orWhere('clientid', 'like', "%{$val}%")
+                        ->orWhere('org_name', 'like', "%{$val}%")
+                        ->orWhere('mobile', 'like', "%{$val}%")
+                        ->orWhere('email', 'like', "%{$val}%")
+                        ->orWhere('address', 'like', "%{$val}%");
+                });
+            }
+        }
+
         if (!empty($request->from_reg_date) && empty($request->to_reg_date)) {
             $fromdate = vue_to_server_date($request->from_reg_date);
-            $query->whereDate('reg_date', $fromdate);
+            $query->whereDate('reg_date', '>=', $fromdate);
+        }
+
+        if (empty($request->from_reg_date) && !empty($request->to_reg_date)) {
+            $todate = vue_to_server_date($request->to_reg_date);
+            $query->whereDate('reg_date', '<=', $todate);
         }
 
         if (!empty($request->from_reg_date) && !empty($request->to_reg_date)) {
-
             $fromdate = vue_to_server_date($request->from_reg_date);
             $todate = vue_to_server_date($request->to_reg_date);
             $query->whereBetween('reg_date', [$fromdate, $todate]);
@@ -61,8 +84,29 @@ class ClientController extends BaseController
         if ($request->allData) {
             return $query->get();
         } else {
-            $datas = $query->paginate($request->pagination);
-            return new Resource($datas);
+            $summaryQuery = clone $query;
+            $total_clients = (clone $summaryQuery)->count();
+            $active_clients = (clone $summaryQuery)->where('status', 'active')->count();
+            $deactive_clients = (clone $summaryQuery)->where('status', 'deactive')->count();
+            $retail_clients = (clone $summaryQuery)->where(function ($q) {
+                $q->where('customer_type', 'retail')->orWhereNull('customer_type')->orWhere('customer_type', '');
+            })->count();
+            $wholesale_clients = (clone $summaryQuery)->where('customer_type', 'wholesale')->count();
+            $total_due = (float)(clone $summaryQuery)->sum('previous_due');
+
+            $summary = [
+                'total_clients' => $total_clients,
+                'active_clients' => $active_clients,
+                'deactive_clients' => $deactive_clients,
+                'retail_clients' => $retail_clients,
+                'wholesale_clients' => $wholesale_clients,
+                'total_due' => $total_due,
+            ];
+
+            $datas = $query->paginate($request->pagination ?? 10);
+            $resource = new Resource($datas);
+            $resource->additional(['summary' => $summary]);
+            return $resource;
         }
     }
 

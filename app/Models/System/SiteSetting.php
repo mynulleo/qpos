@@ -16,6 +16,7 @@ class SiteSetting extends BaseModel
 
     protected $casts = [
         'show_pos_terms' => 'boolean',
+        'show_invoice_terms' => 'boolean',
         'memberships' => 'array',
         'coupon_enabled' => 'integer',
         'default_vat' => 'float',

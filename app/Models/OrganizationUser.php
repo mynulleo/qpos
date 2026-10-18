@@ -26,7 +26,12 @@ class OrganizationUser extends Authenticatable
         'remember_token',
     ];
 
-    protected $appends = ['is_delete', 'original_profile', 'profile_one', 'profile_two', 'profile_three'];
+    protected $appends = ['name', 'is_delete', 'original_profile', 'profile_one', 'profile_two', 'profile_three'];
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['full_name'] ?? '';
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

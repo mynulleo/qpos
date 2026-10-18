@@ -49,7 +49,7 @@ class ItemImport implements ToCollection, WithHeadingRow
             $barcode = isset($rowData['barcode']) ? trim($rowData['barcode']) : '';
             $unitVal = isset($rowData['unit']) ? trim($rowData['unit']) : (isset($rowData['unit_id']) ? trim($rowData['unit_id']) : '');
             $openingRate = isset($rowData['opening_rate']) ? floatval($rowData['opening_rate']) : (isset($rowData['rate']) ? floatval($rowData['rate']) : (isset($rowData['purchase_price']) ? floatval($rowData['purchase_price']) : 0));
-            $openingQty = isset($rowData['opening_qty']) ? intval($rowData['opening_qty']) : (isset($rowData['qty']) ? intval($rowData['qty']) : 0));
+            $openingQty = isset($rowData['opening_qty']) ? intval($rowData['opening_qty']) : (isset($rowData['qty']) ? intval($rowData['qty']) : 0);
             $warrantyType = isset($rowData['warranty_type']) ? strtolower(trim($rowData['warranty_type'])) : 'none';
             $warrantyPeriod = isset($rowData['warranty_period']) ? trim($rowData['warranty_period']) : '';
             $description = isset($rowData['description']) ? trim($rowData['description']) : '';

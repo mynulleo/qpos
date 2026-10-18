@@ -121,6 +121,11 @@ class Invoice extends BaseModel
         return $this->belongsTo(Client::class);
     }
 
+    public function challan()
+    {
+        return $this->belongsTo(Challan::class, 'challan_id', 'id');
+    }
+
     public function payment_details()
     {
         return $this->hasMany(PaymentDetail::class, 'reference_id', 'id')

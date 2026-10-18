@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\Admin\System\LibController;
+use App\Http\Controllers\Admin\System\TmpController;
 
 // Get Current Environment Route...
 Route::get('app/environment', [LibController::class, 'environment']);
@@ -23,7 +24,7 @@ Route::get('/sym', function () {
     return response()->json('Link Create Successfully!');
 });
 
-Route::get('/clear-tmp', [LibController::class, 'tmpClear']);
+Route::get('/clear-tmp', [TmpController::class, 'tmpClear']);
 
 // Application Cache Clear Route...
 Route::get('/clear', function (Request $request) {

@@ -12,10 +12,9 @@
     <!-- Favicon Icon -->
     <link rel='icon' type='image/png' sizes='32x32' href="{{ $siteSetting->favicon ?? '/images/favicon.png' }}">
 
-    <!-- Cache Invalidation -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    <!-- Preload Critical Assets -->
+    <link rel="preload" href="{{ without_cache('build/js/login_app.js') }}" as="script">
+    <link rel="preload" href="{{ asset('images/hero-bg.webp') }}" as="image" type="image/webp">
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -35,11 +34,20 @@
 
     <!-- Css -->
     <link href="{{ without_cache('admin/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ without_cache('admin/css/magnific-popup.css') }}" rel="stylesheet">
     <link href="{{ without_cache('admin/fontawesome/css/all.min.css') }}" rel="stylesheet">
     <link href="{{ without_cache('build/admin/css/style.css') }}" rel="stylesheet">
     <link href="{{ without_cache('admin/css/custom.css') }}" rel="stylesheet">
 
+    <style>
+        body, .qcms {
+            background-color: #f8fafc;
+            background-image: url('{{ asset('images/hero-bg.webp') }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+        }
+    </style>
 </head>
 
 <body>
@@ -50,11 +58,8 @@
     </div>
 
     <!-- Script -->
-    <script src="{{ without_cache('admin/js/jquery-3.6.0.min.js') }}"></script>
-    <script src="{{ without_cache('admin/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ without_cache('admin/js/script.js') }}"></script>
-    <script src="{{ without_cache('admin/js/custom.js') }}"></script>
     <script src="{{ without_cache('build/js/login_app.js') }}" defer></script>
 </body>
 
 </html>
+

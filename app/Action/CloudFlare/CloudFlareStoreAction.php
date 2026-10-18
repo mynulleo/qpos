@@ -224,28 +224,5 @@ class CloudFlareStoreAction
 
 		return array_search($keyCheck, $resizeArr);
 	}
-
-	/**
-	 * Remove the specified resource from storage.
-	 *
-	 * @return \Illuminate\Http\Response
-	 */
-	public function destroyImage($paths)
-	{
-		if (empty($paths['resize1'])) {
-			return false;
-		}
-
-		$path  = $paths['resize1'];
-		$array = explode('/', $path);
-		$imageId = prev($array);
-		dd($imageId);
-
-		$result = $this->httpClient->delete("v1/$imageId")->json();
-		if (!empty($result['success'])) {
-			return true;
-		}
-
-		return false;
-	}
 }
+

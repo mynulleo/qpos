@@ -54,5 +54,10 @@ class Challan extends BaseModel
         return $this->hasMany(ChallanDetail::class, 'challan_id', 'id')->oldest('id');
     }
 
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class, 'invoice_id', 'id');
+    }
+
     // date format
 }
