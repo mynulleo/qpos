@@ -35,31 +35,31 @@
       <!-- Module / Source Filter -->
       <v-select-container title="Module / Source" field="search_data.module_type" col="3 mb-3">
         <v-select v-model="search_data.module_type" label="label" :reduce="obj => obj.value"
-          :options="moduleOptions" placeholder="-- All Sources --" :closeOnSelect="true" />
+          :options="moduleOptions" :placeholder="$t('-- All Sources --')" :closeOnSelect="true" />
       </v-select-container>
 
       <!-- Branch Filter -->
       <v-select-container title="Branch" field="search_data.branch_id" col="3 mb-3">
         <v-select v-model="search_data.branch_id" label="branch_name" :reduce="obj => obj.id"
-          :options="$root.global.branches" placeholder="-- All Branches --" :closeOnSelect="true" />
+          :options="$root.global.branches" :placeholder="$t('-- All Branches --')" :closeOnSelect="true" />
       </v-select-container>
 
       <!-- Employee Filter -->
       <v-select-container title="Employee" field="search_data.employee_id" col="3 mb-3">
         <v-select v-model="search_data.employee_id" label="full_name" :reduce="obj => obj.id"
-          :options="$root.global.employees" placeholder="-- Select Employee --" :closeOnSelect="true" />
+          :options="$root.global.employees" :placeholder="$t('-- Select Employee --')" :closeOnSelect="true" />
       </v-select-container>
 
       <!-- Supplier Filter (for GRN) -->
       <v-select-container title="Supplier (GRN)" field="search_data.supplier_id" col="3 mb-3">
         <v-select v-model="search_data.supplier_id" label="org_name" :reduce="obj => obj.id"
-          :options="$root.global.suppliers" placeholder="-- Select Supplier --" :closeOnSelect="true" />
+          :options="$root.global.suppliers" :placeholder="$t('-- Select Supplier --')" :closeOnSelect="true" />
       </v-select-container>
 
       <!-- Payment Method Filter -->
       <v-select-container title="Payment Method" field="search_data.payment_method" col="3 mb-3">
         <v-select v-model="search_data.payment_method" label="name" :reduce="obj => obj.value"
-          :options="$root.global.paymentmethods" placeholder="-- Select Method --" :closeOnSelect="true" />
+          :options="$root.global.paymentmethods" :placeholder="$t('-- Select Method --')" :closeOnSelect="true" />
       </v-select-container>
 
       <!-- Datepickers -->
@@ -162,10 +162,10 @@
                   </div>
                   <div class="d-flex align-items-center gap-3 mt-2 text-white-50 small flex-wrap font-monospace">
                     <span>
-                      <i class="far fa-calendar-alt me-1"></i> Period: {{ search_data.from_date && search_data.to_date ? search_data.from_date + ' to ' + search_data.to_date : 'All Time' }}
+                      <i class="far fa-calendar-alt me-1"></i> {{ $t('Period') }}: {{ search_data.from_date && search_data.to_date ? search_data.from_date + ' ' + $t('to') + ' ' + search_data.to_date : $t('All Time') }}
                     </span>
                     <span>
-                      <i class="fas fa-clock me-1"></i> As of: {{ reportDate }}
+                      <i class="fas fa-clock me-1"></i> {{ $t('As of') }}: {{ reportDate }}
                     </span>
                   </div>
                 </div>
@@ -178,7 +178,7 @@
                   {{ $filter.formatBDT(datas.total_expense || 0) }}
                 </div>
                 <small class="text-white-50" style="font-size: 11px;">
-                  Paid: {{ paidPercentage }}% | Due: {{ $filter.formatBDT(datas.total_due || 0) }}
+                  {{ $t('Paid') }}: {{ paidPercentage }}% | {{ $t('Due') }}: {{ $filter.formatBDT(datas.total_due || 0) }}
                 </small>
               </div>
             </div>
@@ -257,7 +257,7 @@
                   {{ datas.details?.length || 0 }}
                 </h5>
                 <small class="text-muted font-monospace" style="font-size: 11px;">
-                  Source: {{ getActiveModuleName() }}
+                  {{ $t('Source') }}: {{ getActiveModuleName() }}
                 </small>
               </div>
             </div>
@@ -272,18 +272,18 @@
               <h3 class="fw-bold mb-0 text-dark">{{ $root.site?.title || 'QPOS' }}</h3>
               <p class="mb-1 text-muted small">{{ $root.site?.address }}</p>
               <p class="mb-0 text-muted small">
-                Email: {{ $root.site?.contact_email }} | Phone: {{ $root.site?.mobile1 }}
+                {{ $t('Email') }}: {{ $root.site?.contact_email }} | {{ $t('Phone') }}: {{ $root.site?.mobile1 }}
               </p>
             </div>
             <div class="d-flex justify-content-between align-items-center pt-2 border-top">
               <div>
                 <h5 class="fw-bold mb-1 text-dark">{{ $t('Expense & Outflow Statement') }}</h5>
                 <div class="small text-dark font-monospace">
-                  Source: <strong>{{ getActiveModuleName() }}</strong> | Period: <strong>{{ search_data.from_date && search_data.to_date ? search_data.from_date + ' to ' + search_data.to_date : 'All Time' }}</strong>
+                  {{ $t('Source') }}: <strong>{{ getActiveModuleName() }}</strong> | {{ $t('Period') }}: <strong>{{ search_data.from_date && search_data.to_date ? search_data.from_date + ' ' + $t('to') + ' ' + search_data.to_date : $t('All Time') }}</strong>
                 </div>
               </div>
               <div class="text-end font-monospace small">
-                <div>Generated: <strong>{{ reportDate }}</strong></div>
+                <div>{{ $t('Generated') }}: <strong>{{ reportDate }}</strong></div>
               </div>
             </div>
           </div>
@@ -409,14 +409,6 @@ export default {
       reportDate: moment().format("D MMMM, YYYY"),
       json_fields: json_fields,
       activePreset: "all",
-      moduleOptions: [
-        { label: "All Modules (Expense, Loan, GRN, Salary, Commission)", value: "all" },
-        { label: "Expense", value: "expense" },
-        { label: "GRN (Supplier Purchases)", value: "grn" },
-        { label: "Loan & Advance", value: "loan" },
-        { label: "Salary & Allowance", value: "salary" },
-        { label: "Commission", value: "commission" },
-      ],
       search_data: {
         module_type: "all",
         branch_id: null,
@@ -466,6 +458,16 @@ export default {
   },
 
   computed: {
+    moduleOptions() {
+      return [
+        { label: this.$t("All Modules (Expense, Loan, GRN, Salary, Commission)"), value: "all" },
+        { label: this.$t("Expense"), value: "expense" },
+        { label: this.$t("GRN (Supplier Purchases)"), value: "grn" },
+        { label: this.$t("Loan & Advance"), value: "loan" },
+        { label: this.$t("Salary & Allowance"), value: "salary" },
+        { label: this.$t("Commission"), value: "commission" },
+      ];
+    },
     paidPercentage() {
       const exp = Number(this.datas.total_expense || 0);
       const paid = Number(this.datas.total_paid || 0);
@@ -570,7 +572,7 @@ export default {
 
     getActiveModuleName() {
       const opt = this.moduleOptions.find((o) => o.value === this.search_data.module_type);
-      return opt ? opt.label : "All Modules";
+      return opt ? this.$t(opt.label) : this.$t("All Modules");
     },
 
     getSourceBadgeClass(type) {

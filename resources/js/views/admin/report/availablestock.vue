@@ -152,7 +152,7 @@
             <!-- 🌟 EXECUTIVE STOCK VALUATION & KPI SUMMARY CARDS -->
             <div class="col-12 mb-3 d-print-none">
                 <div class="row g-3">
-                    <!-- 1. Total Stock Purchase Value (দোকানের মোট মালের ক্রয়মূল্য) -->
+                    <!-- 1. Total Stock Purchase Value -->
                     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-navy text-white h-100 position-relative overflow-hidden">
                             <div class="d-flex justify-content-between align-items-start">
@@ -173,7 +173,7 @@
                         </div>
                     </div>
 
-                    <!-- 2. Total Retail Selling Value (মোট বিক্রয়মূল্য) -->
+                    <!-- 2. Total Retail Selling Value -->
                     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-blue text-white h-100 position-relative overflow-hidden">
                             <div class="d-flex justify-content-between align-items-start">
@@ -194,7 +194,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. Potential Gross Profit (সম্ভাব্য মুনাফা) -->
+                    <!-- 3. Potential Gross Profit -->
                     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-emerald text-white h-100 position-relative overflow-hidden">
                             <div class="d-flex justify-content-between align-items-start">
@@ -328,7 +328,7 @@
                     </div>
                     <div class="text-end">
                         <div class="badge bg-dark text-white p-2 font-monospace">
-                            দোকানে মোট মালের ক্রয়মূল্য: <strong>{{ formatCurrency(summaryData.global_total_purchase_value) }}</strong>
+                            {{ $t('Total Stock Purchase Value') }}: <strong>{{ formatCurrency(summaryData.global_total_purchase_value) }}</strong>
                         </div>
                     </div>
                 </div>
@@ -444,7 +444,7 @@
                         <!-- 📊 Table Footer Totals -->
                         <tfoot class="table-dark font-monospace fw-bold" v-if="datas.length > 0">
                             <tr>
-                                <td colspan="4" class="text-end text-uppercase">Total (সর্বমোট মজুদ ও ভ্যালু):</td>
+                                <td colspan="4" class="text-end text-uppercase">{{ $t('Total Stock & Valuation') }}:</td>
                                 <td class="text-center text-warning">{{ formatNumber(displayedTotals.total_current_stock) }}</td>
                                 <td class="text-center">-</td>
                                 <td class="text-end text-warning">{{ formatCurrency(displayedTotals.total_purchase_value) }}</td>
@@ -579,11 +579,11 @@ export default {
                 "Size": "size",
                 "Unit": "unit",
                 "Current Stock": "current_stock",
-                "Unit Cost (ক্রয়মূল্য)": "purchase_price",
-                "Total Cost (মোট ক্রয়মূল্য)": "total_purchase_value",
-                "Unit MRP (বিক্রয়মূল্য)": "selling_price",
-                "Total MRP (মোট বিক্রয়মূল্য)": "total_selling_value",
-                "Potential Profit (সম্ভাব্য লাভ)": "potential_profit",
+                [this.$t("Unit Cost")]: "purchase_price",
+                [this.$t("Total Cost")]: "total_purchase_value",
+                [this.$t("Unit MRP")]: "selling_price",
+                [this.$t("Total MRP")]: "total_selling_value",
+                [this.$t("Potential Profit")]: "potential_profit",
                 "Profit Margin (%)": "margin_percent",
                 "Status": "status"
             },
@@ -657,9 +657,9 @@ export default {
 
         activeFilterTitle() {
             const titles = {
-                'low_stock': 'Low Stock Alert (কম স্টক)',
-                'out_of_stock': 'Out of Stock (শূন্য মজুদ)',
-                'all': 'All Stock (সকল পণ্য)',
+                'low_stock': this.$t('Low Stock Alert'),
+                'out_of_stock': this.$t('Out of Stock'),
+                'all': this.$t('All Stock'),
             };
             return titles[this.activeTab] || (this.activeTab ? this.activeTab.replace(/_/g, ' ') : 'All Stock');
         },

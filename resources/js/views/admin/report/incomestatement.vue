@@ -143,12 +143,12 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Net Sales') }}</div>
-                  <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.net_sales) }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ $t('Tk.') }} {{ formatMoney(summary.net_sales) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-shopping-cart"></i></div>
               </div>
               <small class="text-white-50 mt-2 d-block text-truncate">
-                Gross: ৳{{ formatMoney(summary.gross_sales) }} | Disc: ৳{{ formatMoney(summary.total_discount) }}
+                Gross: {{ $t('Tk.') }} {{ formatMoney(summary.gross_sales) }} | Disc: {{ $t('Tk.') }} {{ formatMoney(summary.total_discount) }}
               </small>
             </div>
           </div>
@@ -159,7 +159,7 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t('COGS') }}</div>
-                  <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.total_cogs) }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ $t('Tk.') }} {{ formatMoney(summary.total_cogs) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-boxes"></i></div>
               </div>
@@ -175,13 +175,13 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Gross Profit') }}</div>
-                  <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.gross_profit) }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ $t('Tk.') }} {{ formatMoney(summary.gross_profit) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-coins"></i></div>
               </div>
               <div class="mt-2 d-flex align-items-center gap-2">
                 <span class="badge bg-light text-dark fw-bold">Margin: {{ summary.gross_profit_margin }}%</span>
-                <small class="text-white-50 text-truncate">Sales − Purchase Cost</small>
+                <small class="text-white-50 text-truncate">{{ $t('Sales − Purchase Cost') }}</small>
               </div>
             </div>
           </div>
@@ -192,12 +192,12 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Expenses') }}</div>
-                  <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.total_deductions) }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ $t('Tk.') }} {{ formatMoney(summary.total_deductions) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-wallet"></i></div>
               </div>
               <small class="text-white-50 mt-2 d-block text-truncate" title="Exp + Salary + Loan + Commission">
-                Exp: ৳{{ formatMoney(summary.total_expenses) }} | Sal: ৳{{ formatMoney(summary.total_salaries) }}
+                Exp: {{ $t('Tk.') }} {{ formatMoney(summary.total_expenses) }} | Sal: {{ $t('Tk.') }} {{ formatMoney(summary.total_salaries) }}
               </small>
             </div>
           </div>
@@ -209,9 +209,9 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">
-                    {{ summary.is_profitable ? 'Net Profit (নিট লাভ)' : 'Net Loss (নিট ক্ষতি)' }}
+                    {{ summary.is_profitable ? $t('Net Profit') : $t('Net Loss') }}
                   </div>
-                  <div class="fs-4 fw-bold mt-1">৳ {{ formatMoney(summary.net_profit) }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ $t('Tk.') }} {{ formatMoney(summary.net_profit) }}</div>
                 </div>
                 <div class="metric-icon">
                   <i :class="summary.is_profitable ? 'fas fa-trophy' : 'fas fa-exclamation-triangle'"></i>
@@ -219,7 +219,7 @@
               </div>
               <div class="mt-2 d-flex align-items-center gap-2">
                 <span class="badge bg-light text-dark fw-bold">Net Margin: {{ summary.net_profit_margin }}%</span>
-                <small class="text-white-50">Gross Profit − Deductions</small>
+                <small class="text-white-50">{{ $t('Gross Profit − Deductions') }}</small>
               </div>
             </div>
           </div>
@@ -270,45 +270,45 @@
                       </tr>
                       <tr>
                         <td class="ps-4">{{ $t('Gross Sales') }}</td>
-                        <td class="text-end">৳ {{ formatMoney(summary.gross_sales) }}</td>
+                        <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(summary.gross_sales) }}</td>
                         <td></td>
                       </tr>
                       <tr v-if="summary.total_discount > 0">
-                        <td class="ps-4 text-danger">Less: Sales Discounts (বাদ: বিক্রয় ছাড়)</td>
-                        <td class="text-end text-danger">(৳ {{ formatMoney(summary.total_discount) }})</td>
+                        <td class="ps-4 text-danger">{{ $t('Less: Sales Discounts') }}</td>
+                        <td class="text-end text-danger">({{ $t('Tk.') }} {{ formatMoney(summary.total_discount) }})</td>
                         <td></td>
                       </tr>
                       <tr v-if="summary.total_vat > 0">
-                        <td class="ps-4 text-muted">Add: VAT / Tax (যোগ: ভ্যাট)</td>
-                        <td class="text-end">৳ {{ formatMoney(summary.total_vat) }}</td>
+                        <td class="ps-4 text-muted">{{ $t('Add: VAT / Tax') }}</td>
+                        <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(summary.total_vat) }}</td>
                         <td></td>
                       </tr>
                       <tr class="fw-bold bg-light">
                         <td class="ps-4">{{ $t('Total Net Sales Revenue') }}</td>
                         <td></td>
-                        <td class="text-end text-primary">৳ {{ formatMoney(summary.net_sales) }}</td>
+                        <td class="text-end text-primary">{{ $t('Tk.') }} {{ formatMoney(summary.net_sales) }}</td>
                       </tr>
 
                       <!-- 2. Cost of Goods Sold (COGS) -->
                       <tr class="table-secondary fw-bold">
-                        <td colspan="3"><i class="fas fa-arrow-circle-right me-1 text-secondary"></i> 2. Cost of Goods Sold (পণ্য ক্রয় খরচ / COGS)</td>
+                        <td colspan="3"><i class="fas fa-arrow-circle-right me-1 text-secondary"></i> 2. {{ $t('Cost of Goods Sold (COGS)') }}</td>
                       </tr>
                       <tr>
                         <td class="ps-4">{{ $t('Total Purchase Cost of Sold Inventory') }}</td>
-                        <td class="text-end text-danger">৳ {{ formatMoney(summary.total_cogs) }}</td>
+                        <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_cogs) }}</td>
                         <td></td>
                       </tr>
                       <tr class="fw-bold bg-light">
                         <td class="ps-4">Total COGS</td>
                         <td></td>
-                        <td class="text-end text-danger">(৳ {{ formatMoney(summary.total_cogs) }})</td>
+                        <td class="text-end text-danger">({{ $t('Tk.') }} {{ formatMoney(summary.total_cogs) }})</td>
                       </tr>
 
                       <!-- 3. Gross Profit -->
                       <tr class="table-success fw-bold fs-6">
                         <td><i class="fas fa-plus-circle me-1 text-success"></i>{{ $t('3. Gross Profit') }}</td>
                         <td class="text-center"><span class="badge bg-success">Margin: {{ summary.gross_profit_margin }}%</span></td>
-                        <td class="text-end text-success">৳ {{ formatMoney(summary.gross_profit) }}</td>
+                        <td class="text-end text-success">{{ $t('Tk.') }} {{ formatMoney(summary.gross_profit) }}</td>
                       </tr>
 
                       <!-- 4. Operating Expenses & Deductions -->
@@ -320,7 +320,7 @@
                           <a href="javascript:void(0)" @click="activeTab = 'expenses'" class="text-decoration-none text-dark">
                             <i class="fas fa-receipt me-1 text-muted"></i>{{ $t('General & Office Expenses') }}</a>
                         </td>
-                        <td class="text-end">৳ {{ formatMoney(summary.total_expenses) }}</td>
+                        <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(summary.total_expenses) }}</td>
                         <td></td>
                       </tr>
                       <tr>
@@ -328,7 +328,7 @@
                           <a href="javascript:void(0)" @click="activeTab = 'salaries'" class="text-decoration-none text-dark">
                             <i class="fas fa-user-tie me-1 text-muted"></i>{{ $t('Employee Salary Sheets') }}</a>
                         </td>
-                        <td class="text-end">৳ {{ formatMoney(summary.total_salaries) }}</td>
+                        <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(summary.total_salaries) }}</td>
                         <td></td>
                       </tr>
                       <tr>
@@ -336,7 +336,7 @@
                           <a href="javascript:void(0)" @click="activeTab = 'loans'" class="text-decoration-none text-dark">
                             <i class="fas fa-hand-holding-usd me-1 text-muted"></i>{{ $t('Disbursed Loans & Advances') }}</a>
                         </td>
-                        <td class="text-end">৳ {{ formatMoney(summary.total_loans) }}</td>
+                        <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(summary.total_loans) }}</td>
                         <td></td>
                       </tr>
                       <tr>
@@ -344,27 +344,27 @@
                           <a href="javascript:void(0)" @click="activeTab = 'commissions'" class="text-decoration-none text-dark">
                             <i class="fas fa-percentage me-1 text-muted"></i>{{ $t('Agent & Staff Commissions') }}</a>
                         </td>
-                        <td class="text-end">৳ {{ formatMoney(summary.total_commissions) }}</td>
+                        <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(summary.total_commissions) }}</td>
                         <td></td>
                       </tr>
                       <tr class="fw-bold bg-light">
                         <td class="ps-4">{{ $t('Total Operating Deductions') }}</td>
                         <td></td>
-                        <td class="text-end text-warning text-dark">(৳ {{ formatMoney(summary.total_deductions) }})</td>
+                        <td class="text-end text-warning text-dark">({{ $t('Tk.') }} {{ formatMoney(summary.total_deductions) }})</td>
                       </tr>
 
                       <!-- 5. Net Profit / (Loss) -->
                       <tr class="fw-bold fs-5" :class="summary.is_profitable ? 'table-success text-success' : 'table-danger text-danger'">
                         <td>
                           <i :class="summary.is_profitable ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'" class="me-1"></i>
-                          5. Net Profit / (Net Loss) (চূড়ান্ত নিট লাভ / ক্ষতি)
+                          5. {{ $t('Net Profit / (Net Loss)') }}
                         </td>
                         <td class="text-center">
                           <span class="badge" :class="summary.is_profitable ? 'bg-success' : 'bg-danger'">
                             Net Margin: {{ summary.net_profit_margin }}%
                           </span>
                         </td>
-                        <td class="text-end fw-bolder">৳ {{ formatMoney(summary.net_profit) }}</td>
+                        <td class="text-end fw-bolder">{{ $t('Tk.') }} {{ formatMoney(summary.net_profit) }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -381,7 +381,7 @@
                 <div class="card-body p-3">
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="small"><i class="fas fa-circle text-primary me-1"></i> General Expenses:</span>
-                    <strong class="small">৳ {{ formatMoney(summary.total_expenses) }}</strong>
+                    <strong class="small">{{ $t('Tk.') }} {{ formatMoney(summary.total_expenses) }}</strong>
                   </div>
                   <div class="progress mb-3" style="height: 6px;">
                     <div class="progress-bar bg-primary" :style="{ width: getDeductionPercent(summary.total_expenses) + '%' }"></div>
@@ -389,7 +389,7 @@
 
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="small"><i class="fas fa-circle text-success me-1"></i> Salaries:</span>
-                    <strong class="small">৳ {{ formatMoney(summary.total_salaries) }}</strong>
+                    <strong class="small">{{ $t('Tk.') }} {{ formatMoney(summary.total_salaries) }}</strong>
                   </div>
                   <div class="progress mb-3" style="height: 6px;">
                     <div class="progress-bar bg-success" :style="{ width: getDeductionPercent(summary.total_salaries) + '%' }"></div>
@@ -397,7 +397,7 @@
 
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="small"><i class="fas fa-circle text-warning me-1"></i> Loans / Advances:</span>
-                    <strong class="small">৳ {{ formatMoney(summary.total_loans) }}</strong>
+                    <strong class="small">{{ $t('Tk.') }} {{ formatMoney(summary.total_loans) }}</strong>
                   </div>
                   <div class="progress mb-3" style="height: 6px;">
                     <div class="progress-bar bg-warning" :style="{ width: getDeductionPercent(summary.total_loans) + '%' }"></div>
@@ -405,7 +405,7 @@
 
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="small"><i class="fas fa-circle text-info me-1"></i> Commissions:</span>
-                    <strong class="small">৳ {{ formatMoney(summary.total_commissions) }}</strong>
+                    <strong class="small">{{ $t('Tk.') }} {{ formatMoney(summary.total_commissions) }}</strong>
                   </div>
                   <div class="progress" style="height: 6px;">
                     <div class="progress-bar bg-info" :style="{ width: getDeductionPercent(summary.total_commissions) + '%' }"></div>
@@ -430,11 +430,11 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between px-0 py-2">
                       <span class="text-muted">Cash / Paid Collected:</span>
-                      <strong class="text-success">৳ {{ formatMoney(summary.total_paid) }}</strong>
+                      <strong class="text-success">{{ $t('Tk.') }} {{ formatMoney(summary.total_paid) }}</strong>
                     </li>
                     <li class="list-group-item d-flex justify-content-between px-0 py-2">
                       <span class="text-muted">Outstanding Sales Due:</span>
-                      <strong class="text-danger">৳ {{ formatMoney(summary.total_due) }}</strong>
+                      <strong class="text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_due) }}</strong>
                     </li>
                     <li class="list-group-item d-flex justify-content-between px-0 py-2">
                       <span class="text-muted">Gross Profit Margin:</span>
@@ -490,12 +490,12 @@
                         <small class="text-muted d-block" v-if="inv.client_mobile !== 'N/A'">{{ inv.client_mobile }}</small>
                       </td>
                       <td class="text-center fw-bold">{{ inv.total_qty }}</td>
-                      <td class="text-end">৳ {{ formatMoney(inv.gross_amount) }}</td>
-                      <td class="text-end text-danger">{{ inv.discount > 0 ? '৳ ' + formatMoney(inv.discount) : '-' }}</td>
-                      <td class="text-end fw-bold">৳ {{ formatMoney(inv.net_amount) }}</td>
-                      <td class="text-end text-muted">৳ {{ formatMoney(inv.total_cogs) }}</td>
+                      <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(inv.gross_amount) }}</td>
+                      <td class="text-end text-danger">{{ inv.discount > 0 ? $t('Tk.') + ' ' + formatMoney(inv.discount) : '-' }}</td>
+                      <td class="text-end fw-bold">{{ $t('Tk.') }} {{ formatMoney(inv.net_amount) }}</td>
+                      <td class="text-end text-muted">{{ $t('Tk.') }} {{ formatMoney(inv.total_cogs) }}</td>
                       <td class="text-end fw-bold" :class="inv.profit >= 0 ? 'text-success' : 'text-danger'">
-                        ৳ {{ formatMoney(inv.profit) }}
+                        {{ $t('Tk.') }} {{ formatMoney(inv.profit) }}
                       </td>
                       <td class="text-center">
                         <span class="badge" :class="inv.margin_percent >= 0 ? 'bg-success' : 'bg-danger'">
@@ -516,7 +516,7 @@
                       <td colspan="12" class="p-3">
                         <div class="card border shadow-sm">
                           <div class="card-header bg-white py-1 px-3 fw-bold small text-primary d-flex justify-content-between">
-                            <span><i class="fas fa-boxes me-1"></i> Invoice Line Items (পণ্যসমূহ) - {{ inv.invoice_no }}</span>
+                            <span><i class="fas fa-boxes me-1"></i> {{ $t('Invoice Line Items') }} - {{ inv.invoice_no }}</span>
                             <span class="text-muted">Customer: {{ inv.client_name }}</span>
                           </div>
                           <div class="table-responsive">
@@ -550,12 +550,12 @@
                                     <span v-if="!detail.color_title && !detail.size_title" class="text-muted">-</span>
                                   </td>
                                   <td class="text-center fw-bold">{{ detail.qty }}</td>
-                                  <td class="text-end text-muted">৳ {{ formatMoney(detail.unit_purchase_cost) }}</td>
-                                  <td class="text-end">৳ {{ formatMoney(detail.unit_sale_price) }}</td>
-                                  <td class="text-end text-danger">৳ {{ formatMoney(detail.line_purchase_cost) }}</td>
-                                  <td class="text-end text-primary fw-bold">৳ {{ formatMoney(detail.line_sale_amount) }}</td>
+                                  <td class="text-end text-muted">{{ $t('Tk.') }} {{ formatMoney(detail.unit_purchase_cost) }}</td>
+                                  <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(detail.unit_sale_price) }}</td>
+                                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(detail.line_purchase_cost) }}</td>
+                                  <td class="text-end text-primary fw-bold">{{ $t('Tk.') }} {{ formatMoney(detail.line_sale_amount) }}</td>
                                   <td class="text-end fw-bold" :class="detail.line_profit >= 0 ? 'text-success' : 'text-danger'">
-                                    ৳ {{ formatMoney(detail.line_profit) }}
+                                    {{ $t('Tk.') }} {{ formatMoney(detail.line_profit) }}
                                   </td>
                                   <td class="text-center">
                                     <span class="badge" :class="detail.line_margin_percent >= 0 ? 'bg-success' : 'bg-danger'">
@@ -579,13 +579,13 @@
               </tbody>
               <tfoot class="table-light fw-bold" v-if="invoices.length > 0">
                 <tr>
-                  <td colspan="4" class="text-end">Total (সর্বমোট):</td>
+                  <td colspan="4" class="text-end">{{ $t('Total') }}:</td>
                   <td class="text-center">{{ summary.total_qty_sold }}</td>
-                  <td class="text-end">৳ {{ formatMoney(summary.gross_sales) }}</td>
-                  <td class="text-end text-danger">৳ {{ formatMoney(summary.total_discount) }}</td>
-                  <td class="text-end text-primary">৳ {{ formatMoney(summary.net_sales) }}</td>
-                  <td class="text-end text-muted">৳ {{ formatMoney(summary.total_cogs) }}</td>
-                  <td class="text-end text-success">৳ {{ formatMoney(summary.gross_profit) }}</td>
+                  <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(summary.gross_sales) }}</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_discount) }}</td>
+                  <td class="text-end text-primary">{{ $t('Tk.') }} {{ formatMoney(summary.net_sales) }}</td>
+                  <td class="text-end text-muted">{{ $t('Tk.') }} {{ formatMoney(summary.total_cogs) }}</td>
+                  <td class="text-end text-success">{{ $t('Tk.') }} {{ formatMoney(summary.gross_profit) }}</td>
                   <td class="text-center">{{ summary.gross_profit_margin }}%</td>
                   <td class="d-print-none"></td>
                 </tr>
@@ -632,12 +632,12 @@
                       <span v-if="!item.color_title && !item.size_title" class="text-muted">-</span>
                     </td>
                     <td class="text-center fw-bold">{{ item.total_qty }} {{ item.unit_title }}</td>
-                    <td class="text-end text-muted">৳ {{ formatMoney(item.unit_purchase_cost) }}</td>
-                    <td class="text-end">৳ {{ formatMoney(item.avg_sale_price) }}</td>
-                    <td class="text-end text-danger">৳ {{ formatMoney(item.total_cost_amount) }}</td>
-                    <td class="text-end text-primary fw-bold">৳ {{ formatMoney(item.total_sales_amount) }}</td>
+                    <td class="text-end text-muted">{{ $t('Tk.') }} {{ formatMoney(item.unit_purchase_cost) }}</td>
+                    <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(item.avg_sale_price) }}</td>
+                    <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(item.total_cost_amount) }}</td>
+                    <td class="text-end text-primary fw-bold">{{ $t('Tk.') }} {{ formatMoney(item.total_sales_amount) }}</td>
                     <td class="text-end fw-bold" :class="item.total_profit >= 0 ? 'text-success' : 'text-danger'">
-                      ৳ {{ formatMoney(item.total_profit) }}
+                      {{ $t('Tk.') }} {{ formatMoney(item.total_profit) }}
                     </td>
                     <td class="text-center">
                       <span class="badge" :class="item.margin_percent >= 0 ? 'bg-success' : 'bg-danger'">
@@ -654,13 +654,13 @@
               </tbody>
               <tfoot class="table-light fw-bold" v-if="item_breakdown.length > 0">
                 <tr>
-                  <td colspan="5" class="text-end">Total (সর্বমোট):</td>
+                  <td colspan="5" class="text-end">{{ $t('Total') }}:</td>
                   <td class="text-center">{{ summary.total_qty_sold }}</td>
                   <td></td>
                   <td></td>
-                  <td class="text-end text-danger">৳ {{ formatMoney(summary.total_cogs) }}</td>
-                  <td class="text-end text-primary">৳ {{ formatMoney(summary.gross_sales) }}</td>
-                  <td class="text-end text-success">৳ {{ formatMoney(summary.gross_profit) }}</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_cogs) }}</td>
+                  <td class="text-end text-primary">{{ $t('Tk.') }} {{ formatMoney(summary.gross_sales) }}</td>
+                  <td class="text-end text-success">{{ $t('Tk.') }} {{ formatMoney(summary.gross_profit) }}</td>
                   <td class="text-center">{{ summary.gross_profit_margin }}%</td>
                 </tr>
               </tfoot>
@@ -697,7 +697,7 @@
                     <td><strong>{{ exp.account_name }}</strong></td>
                     <td>{{ exp.employee_name }}</td>
                     <td class="text-muted">{{ exp.narration }}</td>
-                    <td class="text-end fw-bold text-danger">৳ {{ formatMoney(exp.amount) }}</td>
+                    <td class="text-end fw-bold text-danger">{{ $t('Tk.') }} {{ formatMoney(exp.amount) }}</td>
                   </tr>
                 </template>
                 <tr v-else>
@@ -708,8 +708,8 @@
               </tbody>
               <tfoot class="table-light fw-bold" v-if="expenses.length > 0">
                 <tr>
-                  <td colspan="6" class="text-end">Total Expenses (সর্বমোট খরচ):</td>
-                  <td class="text-end text-danger">৳ {{ formatMoney(summary.total_expenses) }}</td>
+                  <td colspan="6" class="text-end">{{ $t('Total Expenses') }}:</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_expenses) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -746,10 +746,10 @@
                     <td class="text-center fw-bold">{{ sal.month }} {{ sal.year }}</td>
                     <td><strong>{{ sal.employee_name }}</strong></td>
                     <td>{{ sal.designation }}</td>
-                    <td class="text-end">৳ {{ formatMoney(sal.basic_salary) }}</td>
-                    <td class="text-end text-success">+৳ {{ formatMoney(sal.additions) }}</td>
-                    <td class="text-end text-danger">-৳ {{ formatMoney(sal.deductions) }}</td>
-                    <td class="text-end fw-bold text-danger">৳ {{ formatMoney(sal.amount) }}</td>
+                    <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(sal.basic_salary) }}</td>
+                    <td class="text-end text-success">+{{ $t('Tk.') }} {{ formatMoney(sal.additions) }}</td>
+                    <td class="text-end text-danger">-{{ $t('Tk.') }} {{ formatMoney(sal.deductions) }}</td>
+                    <td class="text-end fw-bold text-danger">{{ $t('Tk.') }} {{ formatMoney(sal.amount) }}</td>
                   </tr>
                 </template>
                 <tr v-else>
@@ -760,8 +760,8 @@
               </tbody>
               <tfoot class="table-light fw-bold" v-if="salaries.length > 0">
                 <tr>
-                  <td colspan="8" class="text-end">Total Salaries (সর্বমোট বেতন):</td>
-                  <td class="text-end text-danger">৳ {{ formatMoney(summary.total_salaries) }}</td>
+                  <td colspan="8" class="text-end">{{ $t('Total Salaries') }}:</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_salaries) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -802,8 +802,8 @@
                       </span>
                     </td>
                     <td class="text-center">{{ loan.total_installment }}</td>
-                    <td class="text-end">৳ {{ formatMoney(loan.installment_amount) }}</td>
-                    <td class="text-end fw-bold text-danger">৳ {{ formatMoney(loan.amount) }}</td>
+                    <td class="text-end">{{ $t('Tk.') }} {{ formatMoney(loan.installment_amount) }}</td>
+                    <td class="text-end fw-bold text-danger">{{ $t('Tk.') }} {{ formatMoney(loan.amount) }}</td>
                   </tr>
                 </template>
                 <tr v-else>
@@ -814,8 +814,8 @@
               </tbody>
               <tfoot class="table-light fw-bold" v-if="loans.length > 0">
                 <tr>
-                  <td colspan="7" class="text-end">Total Loans / Advances (সর্বমোট ঋণ/অগ্রিম):</td>
-                  <td class="text-end text-danger">৳ {{ formatMoney(summary.total_loans) }}</td>
+                  <td colspan="7" class="text-end">{{ $t('Total Loans / Advances') }}:</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_loans) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -851,7 +851,7 @@
                     <td>{{ comm.client_name }}</td>
                     <td>{{ comm.workorder_no }}</td>
                     <td class="text-center">{{ comm.percentage ? comm.percentage + '%' : '-' }}</td>
-                    <td class="text-end fw-bold text-danger">৳ {{ formatMoney(comm.amount) }}</td>
+                    <td class="text-end fw-bold text-danger">{{ $t('Tk.') }} {{ formatMoney(comm.amount) }}</td>
                   </tr>
                 </template>
                 <tr v-else>
@@ -862,8 +862,8 @@
               </tbody>
               <tfoot class="table-light fw-bold" v-if="commissions.length > 0">
                 <tr>
-                  <td colspan="6" class="text-end">Total Commissions (সর্বমোট কমিশন):</td>
-                  <td class="text-end text-danger">৳ {{ formatMoney(summary.total_commissions) }}</td>
+                  <td colspan="6" class="text-end">{{ $t('Total Commissions') }}:</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_commissions) }}</td>
                 </tr>
               </tfoot>
             </table>

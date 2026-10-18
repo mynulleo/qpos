@@ -320,8 +320,19 @@
                     </div>
                     <!-- Rate input with wholesale/retail indicator badge underneath -->
                     <div class="d-flex flex-column align-items-end">
-                      <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace p-1" style="max-width: 80px; font-size: 13px;" v-model.number="cItem.rate" @input="onCartItemRateChange(cItem)">
-                      <span class="badge mt-0.5" :class="effectivePriceNature === 'wholesale' ? 'bg-primary bg-opacity-10 text-primary border border-primary' : 'bg-secondary bg-opacity-10 text-secondary border border-secondary'" style="font-size: 9px;" :title="effectivePriceNature === 'wholesale' ? 'Wholesale Price applied' : 'Retail Price applied'">
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        class="form-control form-control-sm text-end font-monospace p-1" 
+                        :class="{ 'is-invalid border-danger bg-danger bg-opacity-10 text-danger fw-bold': !cItem.rate || Number(cItem.rate) <= 0 }"
+                        style="max-width: 80px; font-size: 13px;" 
+                        v-model.number="cItem.rate" 
+                        @input="onCartItemRateChange(cItem)"
+                      >
+                      <div v-if="!cItem.rate || Number(cItem.rate) <= 0" class="text-danger fw-bold mt-0.5 text-nowrap" style="font-size: 9.5px;">
+                        <i class="fas fa-exclamation-circle me-0.5"></i>{{ $locale === 'bn' ? 'মূল্য নির্ধারণ করুন' : 'Set Price' }}
+                      </div>
+                      <span v-else class="badge mt-0.5" :class="effectivePriceNature === 'wholesale' ? 'bg-primary bg-opacity-10 text-primary border border-primary' : 'bg-secondary bg-opacity-10 text-secondary border border-secondary'" style="font-size: 9px;" :title="effectivePriceNature === 'wholesale' ? 'Wholesale Price applied' : 'Retail Price applied'">
                         {{ effectivePriceNature === 'wholesale' ? $t('Wholesale') : $t('Retail') }}
                       </span>
                     </div>
@@ -2117,6 +2128,17 @@ export default {
       const { basePrice, priceNature } = this.resolveItemPrice(item, colorId, sizeId);
       const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(item, basePrice, priceNature);
 
+      if (finalRate <= 0) {
+        this.openItemModal(item);
+        this.$toast(
+          this.$locale === 'bn'
+            ? `"${item.title}" এর মূল্য ০! অনুগ্রহ করে মূল্য নির্ধারণ করে কার্টে যোগ করুন।`
+            : `Price for "${item.title}" is 0! Please set the price to add to cart.`,
+          'warning'
+        );
+        return;
+      }
+
       const existingCartIndex = this.cart.findIndex(c =>
         c.item_id === item.id &&
         (c.color_id || null) == (colorId || null) &&
@@ -2580,6 +2602,21 @@ export default {
         return;
       }
 
+      // Price Validation: Unit Rate cannot be 0
+      if (!this.modalSelection.rate || floatval(this.modalSelection.rate) <= 0) {
+        this.$toast(
+          this.$locale === 'bn'
+            ? 'পণ্যের মূল্য ০ রাখা যাবে না! অনুগ্রহ করে সঠিক মূল্য নির্ধারণ করুন।'
+            : 'Item price cannot be 0! Please enter a valid price.',
+          'warning'
+        );
+        this.$nextTick(() => {
+          this.$refs.modalRateInput?.focus();
+          this.$refs.modalRateInput?.select();
+        });
+        return;
+      }
+
       // 2. Serial Number Validation (Purchase existence & Prior sales check)
       if (this.modalSelection.serial_no && this.modalSelection.serial_no.trim() !== '') {
         const serialNo = this.modalSelection.serial_no.trim();
@@ -2700,7 +2737,22 @@ export default {
         return;
       }
 
-      // 1. Walk-in customer validation: Paid amount cannot be 0
+      // 1. Item Price Validation: No item in cart can have price <= 0
+      const zeroPriceItems = this.cart.filter(item => !item.rate || floatval(item.rate) <= 0);
+      if (zeroPriceItems.length > 0) {
+        const itemNames = zeroPriceItems.map(i => `"${i.title || 'পণ্য'}"`).join(', ');
+        const message = this.$locale === 'bn'
+          ? (zeroPriceItems.length === 1
+              ? `${itemNames} এর মূল্য নির্ধারণ করা হয়নি বা ০! বিক্রয় সম্পন্ন করার জন্য অনুগ্রহ করে মূল্য নির্ধারণ করুন।`
+              : `${itemNames} এর মূল্য নির্ধারণ করা হয়নি বা ০! বিক্রয় সম্পন্ন করার জন্য অনুগ্রহ করে মূল্য নির্ধারণ করুন।`)
+          : (zeroPriceItems.length === 1
+              ? `Price for ${itemNames} cannot be 0! Please set a valid price before checkout.`
+              : `Price for ${itemNames} cannot be 0! Please set valid prices before checkout.`);
+        this.$toast(message, 'warning');
+        return;
+      }
+
+      // 2. Walk-in customer validation: Paid amount cannot be 0
       const isWalkIn = !this.client.id || this.client.mobile === '00000000000' || this.client.name === 'Walk-in Customer';
       const paidVal = floatval(this.paid_amount);
       if (isWalkIn && paidVal <= 0) {

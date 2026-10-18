@@ -44,7 +44,7 @@
       <div class="col-md-3">
         <div class="form-group">
           <label class="form-label fw-bold small text-muted">{{ $t('Invoice No') }}</label>
-          <input type="text" class="form-control form-control-sm font-monospace" v-model="search_data.invoice_no" placeholder="e.g. POS-2026...">
+          <input type="text" class="form-control form-control-sm font-monospace" v-model="search_data.invoice_no" :placeholder="$t('e.g. POS-2026...')">
         </div>
       </div>
 
@@ -72,10 +72,10 @@
               <span>{{ $t('VAT / Tax Collection & Audit Report') }}</span>
             </h6>
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace" v-if="siteSetting.vat_no">
-              <i class="fas fa-building me-1"></i>BIN / VAT Reg: {{ siteSetting.vat_no }}
+              <i class="fas fa-building me-1"></i>{{ $t('BIN / VAT Reg') }}: {{ siteSetting.vat_no }}
             </span>
             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-monospace">
-              <i class="fas fa-percent me-1"></i>Default Rate: {{ siteSetting.default_vat }}%
+              <i class="fas fa-percent me-1"></i>{{ $t('Default Rate') }}: {{ siteSetting.default_vat }}%
             </span>
           </div>
 
@@ -86,12 +86,12 @@
               class="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
               :data="exportData"
               :name="exportFileName">
-              <i class="fas fa-file-excel"></i> Export Excel
+              <i class="fas fa-file-excel"></i> {{ $t('Export Excel') }}
             </download-excel>
             <button class="p_btn btn btn-sm btn-dark d-inline-flex align-items-center gap-1"
               data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print Report"
               v-x-tooltip @click="printReport">
-              <i class="fas fa-print"></i> Print Report
+              <i class="fas fa-print"></i> {{ $t('Print Report') }}
             </button>
           </div>
         </div>
@@ -106,11 +106,11 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase text-nowrap">{{ $t('Total VAT Collected') }}</div>
-                  <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_vat_collected) }}</div>
+                  <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_vat_collected) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-file-invoice-dollar"></i></div>
               </div>
-              <small class="text-white-50 mt-2 d-block text-nowrap">From {{ summaryData.with_vat_invoices }} VAT Invoices</small>
+              <small class="text-white-50 mt-2 d-block text-nowrap">{{ $t('From') }} {{ summaryData.with_vat_invoices }} {{ $t('VAT Invoices') }}</small>
             </div>
           </div>
 
@@ -120,11 +120,11 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase text-nowrap">{{ $t('Taxable Sales') }}</div>
-                  <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_taxable_sales) }}</div>
+                  <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_taxable_sales) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-chart-line"></i></div>
               </div>
-              <small class="text-white-50 mt-2 d-block text-nowrap">Subtotal: <span class="text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_subtotal) }}</span> | Disc: <span class="text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_discount) }}</span></small>
+              <small class="text-white-50 mt-2 d-block text-nowrap">{{ $t('Subtotal') }}: <span class="text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_subtotal) }}</span> | {{ $t('Disc') }}: <span class="text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_discount) }}</span></small>
             </div>
           </div>
 
@@ -134,11 +134,11 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase text-nowrap">{{ $t('Total Gross Invoiced') }}</div>
-                  <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_gross_sales) }}</div>
+                  <div class="fs-4 fw-bold mt-1 font-monospace text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_gross_sales) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-cash-register"></i></div>
               </div>
-              <small class="text-white-50 mt-2 d-block text-nowrap">Paid: <span class="text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_paid) }}</span> | Due: <span class="text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_due) }}</span></small>
+              <small class="text-white-50 mt-2 d-block text-nowrap">{{ $t('Paid') }}: <span class="text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_paid) }}</span> | {{ $t('Due') }}: <span class="text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_due) }}</span></small>
             </div>
           </div>
 
@@ -152,7 +152,7 @@
                 </div>
                 <div class="metric-icon"><i class="fas fa-percentage text-dark"></i></div>
               </div>
-              <small class="text-muted mt-2 d-block text-nowrap">Configured Default Rate: {{ siteSetting.default_vat }}%</small>
+              <small class="text-muted mt-2 d-block text-nowrap">Configured {{ $t('Default Rate') }}: {{ siteSetting.default_vat }}%</small>
             </div>
           </div>
         </div>
@@ -163,17 +163,17 @@
         <ul class="nav nav-pills custom-report-tabs">
           <li class="nav-item">
             <button class="nav-link text-nowrap" :class="{ 'active': activeTab === 'vat_invoices' }" @click="activeTab = 'vat_invoices'">
-              <i class="fas fa-file-invoice-dollar me-1"></i> VAT Invoices (ভ্যাট ইনভয়েস সমূহ) ({{ vatInvoices.length }})
+              <i class="fas fa-file-invoice-dollar me-1"></i> {{ $t('VAT Invoices') }} ({{ $bnNum(vatInvoices.length) }})
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link text-nowrap" :class="{ 'active': activeTab === 'monthly' }" @click="activeTab = 'monthly'">
-              <i class="fas fa-calendar-alt me-1"></i> Monthly Breakdown (মাসিক বিবরণী) ({{ monthlyTrend.length }})
+              <i class="fas fa-calendar-alt me-1"></i> {{ $t('Monthly Breakdown') }} ({{ $bnNum(monthlyTrend.length) }})
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link text-nowrap" :class="{ 'active': activeTab === 'customers' }" @click="activeTab = 'customers'">
-              <i class="fas fa-users me-1"></i> Customer VAT Summary (গ্রাহকভিত্তিক ভ্যাট) ({{ clientVatSummary.length }})
+              <i class="fas fa-users me-1"></i> {{ $t('Customer VAT Summary') }} ({{ $bnNum(clientVatSummary.length) }})
             </button>
           </li>
         </ul>
@@ -185,11 +185,11 @@
         <div class="d-none d-print-block print-header mb-4 text-center">
           <h3 class="fw-bold mb-1">{{ $root.site?.title || 'QPOS Store' }}</h3>
           <p class="mb-1 small text-muted">{{ $root.site?.address || '' }}</p>
-          <p class="mb-1 small" v-if="$root.site?.vat_no"><strong>VAT / BIN Registration No:</strong> {{ $root.site?.vat_no }}</p>
-          <h5 class="fw-bold mt-2 text-decoration-underline">VAT & TAX COLLECTION STATEMENT</h5>
+          <p class="mb-1 small" v-if="$root.site?.vat_no"><strong>{{ $t('VAT / BIN Registration No') }}:</strong> {{ $root.site?.vat_no }}</p>
+          <h5 class="fw-bold mt-2 text-decoration-underline">{{ $t('VAT & TAX COLLECTION STATEMENT') }}</h5>
           <p class="small text-muted mb-0">
-            <strong>Statement Period:</strong> {{ search_data.from_date || 'Inception' }} to {{ search_data.to_date || 'Present' }}
-            | <strong>Generated:</strong> {{ new Date().toLocaleString() }}
+            <strong>{{ $t('Statement Period') }}:</strong> {{ search_data.from_date || 'Inception' }} to {{ search_data.to_date || 'Present' }}
+            | <strong>{{ $t('Generated') }}:</strong> {{ new Date().toLocaleString() }}
           </p>
         </div>
 
@@ -222,10 +222,10 @@
                         {{ inv.invoice_no }}
                       </router-link>
                       <span class="badge bg-light text-dark border py-0 px-1 font-monospace" style="font-size: 10px;" v-if="isPosSale(inv)">
-                        <i class="fas fa-desktop text-primary me-1"></i>POS
+                        <i class="fas fa-desktop text-primary me-1"></i>{{ $t('POS') }}
                       </span>
                       <span class="badge bg-light text-dark border py-0 px-1 font-monospace" style="font-size: 10px;" v-else>
-                        <i class="fas fa-file-invoice text-secondary me-1"></i>General
+                        <i class="fas fa-file-invoice text-secondary me-1"></i>{{ $t('General') }}
                       </span>
                     </div>
                     <small class="text-muted font-monospace d-block" style="font-size: 11px;">
@@ -233,7 +233,7 @@
                     </small>
                   </td>
                   <td class="text-nowrap">
-                    <div class="fw-semibold text-dark text-nowrap">{{ inv.client ? inv.client.name : 'Walk-in Customer' }}</div>
+                    <div class="fw-semibold text-dark text-nowrap">{{ inv.client ? inv.client.name : $t('Walk-in Customer') }}</div>
                     <small class="text-muted font-monospace text-nowrap" v-if="inv.client?.mobile">{{ inv.client.mobile }}</small>
                   </td>
                   <td class="text-end font-monospace text-nowrap">{{ formatMoney(inv.original_amount) }}</td>
@@ -257,7 +257,7 @@
                     {{ Number(inv.amount) - Number(inv.paid_amount) > 0 ? formatMoney(Number(inv.amount) - Number(inv.paid_amount)) : '0.00' }}
                   </td>
                   <td class="text-center d-print-none text-nowrap">
-                    <router-link :to="{ name: 'invoice.show', params: { id: inv.id } }" class="btn btn-xs btn-outline-primary py-0 px-2" title="View Invoice">
+                    <router-link :to="{ name: 'invoice.show', params: { id: inv.id } }" class="btn btn-xs btn-outline-primary py-0 px-2" :title="$t('View Invoice')">
                       <i class="fas fa-eye"></i>
                     </router-link>
                   </td>
@@ -266,21 +266,21 @@
                 <tr v-if="vatInvoices.length === 0">
                   <td colspan="12" class="text-center py-5 text-muted">
                     <i class="fas fa-file-invoice-dollar fs-1 text-muted mb-2 d-block"></i>
-                    No VAT invoices found for the selected period.
+                    {{ $t('No VAT invoices found for the selected period.') }}
                   </td>
                 </tr>
               </tbody>
               <tfoot class="table-dark fw-bold" v-if="vatInvoices.length > 0">
                 <tr>
-                  <td colspan="3" class="text-end text-uppercase text-nowrap">Total Summary (সর্বমোট):</td>
-                  <td class="text-end font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_subtotal) }}</td>
-                  <td class="text-end font-monospace text-danger text-nowrap">-৳&nbsp;{{ formatMoney(summaryData.total_discount) }}</td>
-                  <td class="text-end font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_taxable_sales) }}</td>
+                  <td colspan="3" class="text-end text-uppercase text-nowrap">{{ $t('Total Summary') }}:</td>
+                  <td class="text-end font-monospace text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_subtotal) }}</td>
+                  <td class="text-end font-monospace text-danger text-nowrap">-{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_discount) }}</td>
+                  <td class="text-end font-monospace text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_taxable_sales) }}</td>
                   <td class="text-center font-monospace text-white-50 text-nowrap">{{ summaryData.effective_vat_rate }}%</td>
-                  <td class="text-end font-monospace bg-primary text-white text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_vat_collected) }}</td>
-                  <td class="text-end font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_gross_sales) }}</td>
-                  <td class="text-end font-monospace text-success text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_paid) }}</td>
-                  <td class="text-end font-monospace text-danger text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_due) }}</td>
+                  <td class="text-end font-monospace bg-primary text-white text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_vat_collected) }}</td>
+                  <td class="text-end font-monospace text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_gross_sales) }}</td>
+                  <td class="text-end font-monospace text-success text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_paid) }}</td>
+                  <td class="text-end font-monospace text-danger text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_due) }}</td>
                   <td class="d-print-none"></td>
                 </tr>
               </tfoot>
@@ -301,7 +301,7 @@
                   <th class="text-end text-nowrap">{{ $t('Taxable Sales') }}</th>
                   <th class="text-end bg-primary bg-opacity-25 text-white text-nowrap">{{ $t('VAT Collected') }}</th>
                   <th class="text-end text-nowrap">{{ $t('Gross Sales') }}</th>
-                  <th class="text-end text-nowrap">Effective VAT %</th>
+                  <th class="text-end text-nowrap">{{ $t('Effective VAT %') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -322,15 +322,15 @@
                   </td>
                 </tr>
                 <tr v-if="monthlyTrend.length === 0">
-                  <td colspan="8" class="text-center py-5 text-muted">No monthly trend data available.</td>
+                  <td colspan="8" class="text-center py-5 text-muted">{{ $t('No monthly trend data available.') }}</td>
                 </tr>
               </tbody>
               <tfoot class="table-dark fw-bold" v-if="monthlyTrend.length > 0">
                 <tr>
-                  <td colspan="4" class="text-end text-uppercase text-nowrap">Total:</td>
-                  <td class="text-end font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_taxable_sales) }}</td>
-                  <td class="text-end font-monospace bg-primary text-white text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_vat_collected) }}</td>
-                  <td class="text-end font-monospace text-nowrap">৳&nbsp;{{ formatMoney(summaryData.total_gross_sales) }}</td>
+                  <td colspan="4" class="text-end text-uppercase text-nowrap">{{ $t('Total') }}:</td>
+                  <td class="text-end font-monospace text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_taxable_sales) }}</td>
+                  <td class="text-end font-monospace bg-primary text-white text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_vat_collected) }}</td>
+                  <td class="text-end font-monospace text-nowrap">{{ $t('Tk.') }}&nbsp;{{ formatMoney(summaryData.total_gross_sales) }}</td>
                   <td class="text-end font-monospace text-nowrap">{{ summaryData.effective_vat_rate }}%</td>
                 </tr>
               </tfoot>
@@ -368,20 +368,20 @@
                   <td class="text-end font-monospace fw-bold text-dark text-nowrap">{{ formatMoney(c.gross_amount) }}</td>
                 </tr>
                 <tr v-if="clientVatSummary.length === 0">
-                  <td colspan="7" class="text-center py-5 text-muted">No client-wise VAT data recorded.</td>
+                  <td colspan="7" class="text-center py-5 text-muted">{{ $t('No client-wise VAT data recorded.') }}</td>
                 </tr>
               </tbody>
               <tfoot class="table-dark fw-bold" v-if="clientVatSummary.length > 0">
                 <tr>
-                  <td colspan="4" class="text-end text-uppercase text-nowrap">Top Customers VAT Total:</td>
+                  <td colspan="4" class="text-end text-uppercase text-nowrap">{{ $t('Top Customers VAT Total:') }}</td>
                   <td class="text-end font-monospace text-nowrap">
-                    ৳&nbsp;{{ formatMoney(clientVatSummary.reduce((s, i) => s + (Number(i.taxable_amount) || 0), 0)) }}
+                    {{ $t('Tk.') }}&nbsp;{{ formatMoney(clientVatSummary.reduce((s, i) => s + (Number(i.taxable_amount) || 0), 0)) }}
                   </td>
                   <td class="text-end font-monospace bg-primary text-white text-nowrap">
-                    ৳&nbsp;{{ formatMoney(clientVatSummary.reduce((s, i) => s + (Number(i.vat_amount) || 0), 0)) }}
+                    {{ $t('Tk.') }}&nbsp;{{ formatMoney(clientVatSummary.reduce((s, i) => s + (Number(i.vat_amount) || 0), 0)) }}
                   </td>
                   <td class="text-end font-monospace text-nowrap">
-                    ৳&nbsp;{{ formatMoney(clientVatSummary.reduce((s, i) => s + (Number(i.gross_amount) || 0), 0)) }}
+                    {{ $t('Tk.') }}&nbsp;{{ formatMoney(clientVatSummary.reduce((s, i) => s + (Number(i.gross_amount) || 0), 0)) }}
                   </td>
                 </tr>
               </tfoot>
@@ -394,20 +394,20 @@
           <div class="row g-3">
             <div class="col-4 text-center">
               <div class="border-top border-dark pt-1 mt-5">
-                <p class="small mb-0 fw-bold">Prepared By</p>
-                <p class="text-muted" style="font-size: 10px;">Accounts / Cashier</p>
+                <p class="small mb-0 fw-bold">{{ $t('Prepared By') }}</p>
+                <p class="text-muted" style="font-size: 10px;">{{ $t('Accounts / Cashier') }}</p>
               </div>
             </div>
             <div class="col-4 text-center">
               <div class="border-top border-dark pt-1 mt-5">
-                <p class="small mb-0 fw-bold">Checked By</p>
-                <p class="text-muted" style="font-size: 10px;">Internal Auditor</p>
+                <p class="small mb-0 fw-bold">{{ $t('Checked By') }}</p>
+                <p class="text-muted" style="font-size: 10px;">{{ $t('Internal Auditor') }}</p>
               </div>
             </div>
             <div class="col-4 text-center">
               <div class="border-top border-dark pt-1 mt-5">
-                <p class="small mb-0 fw-bold">Authorized Signature</p>
-                <p class="text-muted" style="font-size: 10px;">Managing Director / Management</p>
+                <p class="small mb-0 fw-bold">{{ $t('Authorized Signature') }}</p>
+                <p class="text-muted" style="font-size: 10px;">{{ $t('Managing Director / Management') }}</p>
               </div>
             </div>
           </div>

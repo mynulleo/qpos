@@ -80,7 +80,7 @@
           label="title"
           :reduce="obj => obj.id"
           :options="categories"
-          placeholder="-- All Categories --"
+          :placeholder="$t('-- All Categories --')"
           :closeOnSelect="true"
         />
       </v-select-container>
@@ -92,13 +92,13 @@
           label="title"
           :reduce="obj => obj.id"
           :options="items"
-          placeholder="-- All Items --"
+          :placeholder="$t('-- All Items --')"
           :closeOnSelect="true"
         >
           <template #option="option">
             <div>
               <span>{{ option.title }}</span>
-              <small class="text-muted d-block" v-if="option.barcode">Barcode: {{ option.barcode }}</small>
+              <small class="text-muted d-block" v-if="option.barcode">{{ $t('Barcode') }}: {{ option.barcode }}</small>
             </div>
           </template>
         </v-select>
@@ -111,7 +111,7 @@
           label="full_name"
           :reduce="obj => obj.id"
           :options="auditors"
-          placeholder="-- All Auditors --"
+          :placeholder="$t('-- All Auditors --')"
           :closeOnSelect="true"
         >
           <template #option="option">
@@ -129,14 +129,14 @@
           <label class="form-label fw-bold small text-muted">
             <i class="fas fa-tag me-1 text-danger"></i>{{ $t('Disposal Reason') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.reason">
-            <option value="all">-- All Reasons (সকল কারণ) --</option>
+            <option value="all">-- {{ $t('All Reasons') }} --</option>
             <option value="Damaged / Broken">{{ $t('Damaged / Broken') }}</option>
             <option value="Date Expaired">{{ $t('Date Expaired') }}</option>
             <option value="Transit Damage / Defective">{{ $t('Transit Damage') }}</option>
             <option value="Quality Failure">{{ $t('Quality Failure') }}</option>
             <option value="POS Return">{{ $t('POS Return') }}</option>
             <option value="Expired Stock">{{ $t('Expired Stock') }}</option>
-            <option value="Other">Other / Miscellaneous</option>
+            <option value="Other">{{ $t('Other / Miscellaneous') }}</option>
           </select>
         </div>
       </div>
@@ -147,7 +147,7 @@
           <label class="form-label fw-bold small text-muted">
             <i class="fas fa-check-circle me-1 text-success"></i>{{ $t('Audit Status') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.status">
-            <option value="all">-- All Statuses (সকল স্ট্যাটাস) --</option>
+            <option value="all">-- {{ $t('All Statuses') }} --</option>
             <option value="approved">{{ $t('Approved') }}</option>
             <option value="pending">{{ $t('Pending') }}</option>
             <option value="rejected">{{ $t('Rejected') }}</option>
@@ -179,7 +179,7 @@
                 :class="{ 'active': activeTab === 'audits' }"
                 @click="activeTab = 'audits'"
               >
-                <i class="fas fa-clipboard-list me-1"></i> Audit Slips View (অডিট চালান সমূহ) ({{ wastages.length }})
+                <i class="fas fa-clipboard-list me-1"></i> {{ $t('Audit Slips View') }} ({{ $bnNum(wastages.length) }})
               </button>
             </li>
             <li class="nav-item">
@@ -188,7 +188,7 @@
                 :class="{ 'active': activeTab === 'items' }"
                 @click="activeTab = 'items'"
               >
-                <i class="fas fa-boxes me-1"></i> Item Breakdown (পণ্য ভিত্তিক ক্ষতি) ({{ item_breakdown.length }})
+                <i class="fas fa-boxes me-1"></i> {{ $t('Item Breakdown') }} ({{ $bnNum(item_breakdown.length) }})
               </button>
             </li>
             <li class="nav-item">
@@ -197,7 +197,7 @@
                 :class="{ 'active': activeTab === 'categories' }"
                 @click="activeTab = 'categories'"
               >
-                <i class="fas fa-chart-pie me-1"></i> Category Share (ক্যাটাগরি ভিত্তিক) ({{ category_breakdown.length }})
+                <i class="fas fa-chart-pie me-1"></i> {{ $t('Category Share') }} ({{ $bnNum(category_breakdown.length) }})
               </button>
             </li>
             <li class="nav-item">
@@ -206,7 +206,7 @@
                 :class="{ 'active': activeTab === 'daily' }"
                 @click="activeTab = 'daily'"
               >
-                <i class="fas fa-calendar-day me-1"></i> Daily Trend (দৈনিক সামারি) ({{ daily_breakdown.length }})
+                <i class="fas fa-calendar-day me-1"></i> {{ $t('Daily Trend') }} ({{ $bnNum(daily_breakdown.length) }})
               </button>
             </li>
           </ul>
@@ -224,7 +224,7 @@
               :name="exportFileName"
               title="Export to Excel"
             >
-              <i class="fas fa-file-excel"></i> Excel Export
+              <i class="fas fa-file-excel"></i> {{ $t('Export Excel') }}
             </download-excel>
 
             <!-- Print Button -->
@@ -234,7 +234,7 @@
               @click="triggerPrint"
               title="Print Report"
             >
-              <i class="fas fa-print"></i> Print
+              <i class="fas fa-print"></i> {{ $t('Print') }}
             </button>
           </div>
         </div>
@@ -253,7 +253,7 @@
                 </div>
               </div>
               <h4 class="mb-0 fw-bold font-monospace text-primary">{{ summary.total_audits || 0 }}</h4>
-              <small class="text-muted" style="font-size: 11px;">মোট অডিট রেকর্ড সংখ্যা</small>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Total Audit Records Count') }}</small>
             </div>
           </div>
 
@@ -266,8 +266,8 @@
                   <i class="fas fa-money-bill-wave"></i>
                 </div>
               </div>
-              <h4 class="mb-0 fw-bold font-monospace text-danger">Tk. {{ formatMoney(summary.total_loss) }}</h4>
-              <small class="text-muted" style="font-size: 11px;">নষ্ট/মেয়াদোত্তীর্ণ পণ্যের মোট ক্ষতি</small>
+              <h4 class="mb-0 fw-bold font-monospace text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_loss) }}</h4>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Total Damaged/Expired Loss') }}</small>
             </div>
           </div>
 
@@ -280,8 +280,8 @@
                   <i class="fas fa-trash-alt"></i>
                 </div>
               </div>
-              <h4 class="mb-0 fw-bold font-monospace text-dark">{{ summary.total_qty || 0 }} pcs</h4>
-              <small class="text-muted" style="font-size: 11px;">মোট বাতিলকৃত পণ্যের পরিমাণ</small>
+              <h4 class="mb-0 fw-bold font-monospace text-dark">{{ summary.total_qty || 0 }} {{ $t('pcs') }}</h4>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Total Disposed Quantity') }}</small>
             </div>
           </div>
 
@@ -290,10 +290,10 @@
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100 border-start border-3 border-success">
               <div class="d-flex align-items-center justify-content-between mb-1">
                 <span class="text-success small fw-bold"><i class="fas fa-check-double me-1"></i>{{ $t('Approved') }}</span>
-                <span class="badge bg-success font-monospace">{{ summary.approved_qty || 0 }} pcs</span>
+                <span class="badge bg-success font-monospace">{{ summary.approved_qty || 0 }} {{ $t('pcs') }}</span>
               </div>
-              <h5 class="mb-0 fw-bold font-monospace text-success">Tk. {{ formatMoney(summary.approved_loss) }}</h5>
-              <small class="text-muted" style="font-size: 11px;">অডিট যাচাইকৃত অনুমোদিত ক্ষতি</small>
+              <h5 class="mb-0 fw-bold font-monospace text-success">{{ $t('Tk.') }} {{ formatMoney(summary.approved_loss) }}</h5>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Audited & Approved Loss') }}</small>
             </div>
           </div>
 
@@ -302,10 +302,10 @@
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100 border-start border-3 border-secondary">
               <div class="d-flex align-items-center justify-content-between mb-1">
                 <span class="text-secondary small fw-bold"><i class="fas fa-hourglass-half me-1"></i>{{ $t('Pending') }}</span>
-                <span class="badge bg-secondary font-monospace">{{ summary.pending_qty || 0 }} pcs</span>
+                <span class="badge bg-secondary font-monospace">{{ summary.pending_qty || 0 }} {{ $t('pcs') }}</span>
               </div>
-              <h5 class="mb-0 fw-bold font-monospace text-secondary">Tk. {{ formatMoney(summary.pending_loss) }}</h5>
-              <small class="text-muted" style="font-size: 11px;">অনুমোদনের অপেক্ষায় থাকা চালান</small>
+              <h5 class="mb-0 fw-bold font-monospace text-secondary">{{ $t('Tk.') }} {{ formatMoney(summary.pending_loss) }}</h5>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Pending Approval Slips') }}</small>
             </div>
           </div>
         </div>
@@ -317,7 +317,7 @@
           <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <span class="small fw-bold text-dark">
-                <i class="fas fa-chart-pie me-1 text-danger"></i> Loss Reasons Breakdown (ক্ষতির কারণসমূহ):
+                <i class="fas fa-chart-pie me-1 text-danger"></i> {{ $t('Loss Reasons Breakdown') }}:
               </span>
               <span
                 v-for="(r, rIdx) in summary.reasons"
@@ -325,11 +325,11 @@
                 class="badge px-2 py-1 shadow-sm"
                 :class="getReasonBadgeClass(r.reason)"
               >
-                {{ r.reason }}: {{ r.count }} slips ({{ r.qty }} pcs - Tk. {{ formatMoney(r.amount) }})
+                {{ $t(r.reason) }}: {{ r.count }} {{ $t('slips') }} ({{ r.qty }} {{ $t('pcs') }} - {{ $t('Tk.') }} {{ formatMoney(r.amount) }})
               </span>
             </div>
             <div class="small text-muted font-monospace">
-              <span>Date: {{ dateRangeDisplay }}</span>
+              <span>{{ $t('Date') }}: {{ dateRangeDisplay }}</span>
             </div>
           </div>
         </div>
@@ -460,17 +460,17 @@
                   <tr>
                     <td colspan="10" class="text-center py-5 text-muted">
                       <i class="fas fa-trash-alt fa-3x text-muted mb-2 d-block opacity-50"></i>
-                      <h6>কোনো ওয়েস্টেজ বা ডিসপোজাল রেকর্ড পাওয়া যায়নি (No wastage records found)</h6>
-                      <small>তারিখ পরিবর্তন করে অথবা ফিল্টার রিসেট করে পুনরায় চেষ্টা করুন।</small>
+                      <h6>{{ $t('No wastage records found') }}</h6>
+                      <small>{{ $t('Try changing the date range or resetting filters.') }}</small>
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="wastages.length > 0">
                 <tr>
-                  <td colspan="5" class="text-end">Grand Total (সর্বমোট ক্ষতি):</td>
+                  <td colspan="5" class="text-end">{{ $t('Grand Total') }}:</td>
                   <td class="text-center text-warning">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end text-danger fs-6">Tk. {{ formatMoney(summary.total_loss) }}</td>
+                  <td class="text-end text-danger fs-6">{{ $t('Tk.') }} {{ formatMoney(summary.total_loss) }}</td>
                   <td colspan="3"></td>
                 </tr>
               </tfoot>
@@ -492,7 +492,7 @@
                   <th width="8%" class="text-center">{{ $t('Audits Count') }}</th>
                   <th width="8%" class="text-center">{{ $t('Disposed Qty') }}</th>
                   <th width="10%" class="text-end">{{ $t('Avg Loss Rate') }}</th>
-                  <th width="10%" class="text-end">Total Loss (Tk)</th>
+                  <th width="10%" class="text-end">{{ $t('Total Loss (Tk)') }}</th>
                   <th width="16%">{{ $t('Loss Reasons') }}</th>
                 </tr>
               </thead>
@@ -526,17 +526,17 @@
                 <template v-else>
                   <tr>
                     <td colspan="10" class="text-center py-4 text-muted">
-                      কোনো পণ্যভিত্তিক ক্ষতির ডাটা পাওয়া যায়নি।
+                      {{ $t('No item loss records found.') }}
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="item_breakdown.length > 0">
                 <tr>
-                  <td colspan="6" class="text-end">Total Loss Value (সর্বমোট ক্ষতি):</td>
+                  <td colspan="6" class="text-end">{{ $t('Total Loss Value') }}:</td>
                   <td class="text-center text-warning">{{ summary.total_qty }} pcs</td>
                   <td></td>
-                  <td class="text-end text-danger fs-6">Tk. {{ formatMoney(summary.total_loss) }}</td>
+                  <td class="text-end text-danger fs-6">{{ $t('Tk.') }} {{ formatMoney(summary.total_loss) }}</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -555,7 +555,7 @@
                   <th width="12%" class="text-center">{{ $t('Audits Count') }}</th>
                   <th width="15%" class="text-center">{{ $t('Total Disposed Qty') }}</th>
                   <th width="18%" class="text-end">Total Loss Value (Tk)</th>
-                  <th width="20%">Loss Share (% শতকরা হার)</th>
+                  <th width="20%">{{ $t('Loss Share (%)') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -588,7 +588,7 @@
                 <template v-else>
                   <tr>
                     <td colspan="6" class="text-center py-4 text-muted">
-                      কোনো ক্যাটাগরিভিত্তিক ক্ষতির ডাটা পাওয়া যায়নি।
+                      {{ $t('No category loss records found.') }}
                     </td>
                   </tr>
                 </template>
@@ -597,7 +597,7 @@
                 <tr>
                   <td colspan="3" class="text-end">Grand Total:</td>
                   <td class="text-center text-warning">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end text-danger fs-6">Tk. {{ formatMoney(summary.total_loss) }}</td>
+                  <td class="text-end text-danger fs-6">{{ $t('Tk.') }} {{ formatMoney(summary.total_loss) }}</td>
                   <td>100.0%</td>
                 </tr>
               </tfoot>
@@ -633,7 +633,7 @@
                 <template v-else>
                   <tr>
                     <td colspan="5" class="text-center py-4 text-muted">
-                      কোনো দৈনিক ক্ষতির ডাটা পাওয়া যায়নি।
+                      {{ $t('No daily loss records found.') }}
                     </td>
                   </tr>
                 </template>
@@ -643,7 +643,7 @@
                   <td colspan="2" class="text-end">Total Period Loss:</td>
                   <td class="text-center">{{ summary.total_audits }} slips</td>
                   <td class="text-center text-warning">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end text-danger fs-6">Tk. {{ formatMoney(summary.total_loss) }}</td>
+                  <td class="text-end text-danger fs-6">{{ $t('Tk.') }} {{ formatMoney(summary.total_loss) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -792,7 +792,7 @@
                   Close
                 </button>
                 <button type="button" class="btn btn-sm btn-dark d-flex align-items-center gap-1" @click="printModalSlip">
-                  <i class="fas fa-print"></i> Print Voucher
+                  <i class="fas fa-print"></i> {{ $t('Print') }} Voucher
                 </button>
               </div>
             </div>
@@ -823,9 +823,9 @@ export default {
       activeTab: "audits",
       activePreset: "thisMonth",
       fields_name: {
-        default: "All Fields (সকল ফিল্ড)",
-        audit_number: "Audit Slip No (অডিট চালান নং)",
-        note: "Note / Remarks (মন্তব্য)",
+        default: "All Fields",
+        audit_number: "Audit Slip No",
+        note: "Note / Remarks",
       },
       search_data: {
         pagination: 10,
@@ -895,7 +895,7 @@ export default {
       } else if (this.search_data.to_date) {
         return "Until " + moment(this.search_data.to_date).format("D MMM, YYYY");
       }
-      return "All Time";
+      return this.$t("All Time");
     },
 
     exportFileName() {
