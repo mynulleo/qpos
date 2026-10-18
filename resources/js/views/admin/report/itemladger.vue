@@ -45,7 +45,8 @@
                         <option value="Opening">{{ $t('Opening Balance') }}</option>
                         <option value="Purchase">{{ $t('Purchase') }}</option>
                         <option value="GRN">{{ $t('GRN') }}</option>
-                        <option value="Sale">{{ $t('Sale / Issue') }}</option>
+                        <option value="Sale">{{ $t('Sale') }}</option>
+                        <option value="Challan">{{ $t('Challan') }}</option>
                         <option value="SalesReturn">{{ $t('Sales Return') }}</option>
                         <option value="Wastage">{{ $t('Wastage') }}</option>
                     </select>
@@ -272,7 +273,6 @@
                                 <th v-if="showSizeColumn">{{ $t('Size') }}</th>
                                 <!-- Serial No Column (Based on Shop Type / Serial availability) -->
                                 <th v-if="showSerialColumn" style="width: 110px;">{{ $t('Serial No') }}</th>
-                                <th class="text-end" style="width: 100px;">{{ $t('Unit Rate') }}</th>
                                 <th class="text-end text-success" style="width: 100px;">{{ $t('Stock In') }} (+)</th>
                                 <th class="text-end text-danger" style="width: 100px;">{{ $t('Stock Out') }}</th>
                                 <th class="text-end text-primary" style="width: 110px;">{{ $t('Balance') }}</th>
@@ -301,9 +301,26 @@
 
                                     <!-- Reference No -->
                                     <td class="text-center">
-                                        <span v-if="ledger.reference_no && ledger.reference_no !== '-'" class="fw-bold text-dark font-monospace">
-                                            {{ ledger.reference_no }}
-                                        </span>
+                                        <template v-if="ledger.reference_no && ledger.reference_no !== '-'">
+                                            <router-link v-if="(ledger.reference_type === 'Challan' || ledger.reference_type === 'Challan Return') && ledger.reference_id"
+                                                :to="{ name: 'challan.show', params: { id: ledger.reference_id } }"
+                                                class="fw-bold text-primary font-monospace text-decoration-none">
+                                                <i class="fas fa-external-link-alt small me-1 d-print-none"></i>{{ ledger.reference_no }}
+                                            </router-link>
+                                            <router-link v-else-if="(ledger.reference_type === 'Issue' || ledger.reference_type === 'Sale') && ledger.reference_id"
+                                                :to="{ name: 'invoice.show', params: { id: ledger.reference_id } }"
+                                                class="fw-bold text-primary font-monospace text-decoration-none">
+                                                <i class="fas fa-external-link-alt small me-1 d-print-none"></i>{{ ledger.reference_no }}
+                                            </router-link>
+                                            <router-link v-else-if="ledger.reference_type === 'Purchase' && ledger.reference_id"
+                                                :to="{ name: 'purchase.show', params: { id: ledger.reference_id } }"
+                                                class="fw-bold text-primary font-monospace text-decoration-none">
+                                                <i class="fas fa-external-link-alt small me-1 d-print-none"></i>{{ ledger.reference_no }}
+                                            </router-link>
+                                            <span v-else class="fw-bold text-dark font-monospace">
+                                                {{ ledger.reference_no }}
+                                            </span>
+                                        </template>
                                         <span v-else class="text-muted">-</span>
                                     </td>
 
@@ -354,11 +371,6 @@
                                         <span v-else class="text-muted small">-</span>
                                     </td>
 
-                                    <!-- Rate -->
-                                    <td class="text-end font-monospace text-muted small">
-                                        {{ Number(ledger.rate) > 0 ? '৳' + formatNumber(ledger.rate) : '-' }}
-                                    </td>
-
                                     <!-- Inflow (+) -->
                                     <td class="text-end font-monospace text-success fw-bold">
                                         <span v-if="Number(ledger.qty_in) > 0">+{{ formatQty(ledger.qty_in) }}</span>
@@ -379,7 +391,7 @@
                             </template>
                             <template v-else>
                                 <tr>
-                                    <td :colspan="7 + (showSizeColumn ? 1 : 0) + (showSerialColumn ? 1 : 0) + 4" class="text-center py-5 text-muted">
+                                    <td :colspan="7 + (showSizeColumn ? 1 : 0) + (showSerialColumn ? 1 : 0) + 3" class="text-center py-5 text-muted">
                                         <i class="fas fa-box-open fs-1 d-block mb-3 text-secondary opacity-50"></i>
                                         <span v-if="search_data.item_id" class="fs-6">
                                             No stock transactions found for this item in the selected period.
@@ -396,7 +408,7 @@
                                 <td :colspan="7 + (showSizeColumn ? 1 : 0) + (showSerialColumn ? 1 : 0)" class="text-end text-uppercase text-secondary small">{{ $t('Period Summary Total:') }}</td>
                                 <td class="text-end text-success font-monospace">+{{ summaryData.totalIn }}</td>
                                 <td class="text-end text-danger font-monospace">-{{ summaryData.totalOut }}</td>
-                                <td class="text-end text-primary font-monospace fs-6">{{ summaryData.closing }}</td>
+                                <td class="text-end font-monospace fs-6" :class="Number(summaryData.closing) >= 0 ? 'text-primary' : 'text-danger'">{{ summaryData.closing }}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -825,6 +837,10 @@ export default {
                 case 'Sale':
                 case 'Sales':
                     return 'bg-primary text-white';
+                case 'Challan':
+                    return 'bg-dark text-white';
+                case 'Challan Return':
+                    return 'bg-warning text-dark border border-dark';
                 case 'SalesReturn':
                 case 'Return':
                     return 'bg-warning text-dark';
@@ -853,6 +869,10 @@ export default {
                 case 'Sale':
                 case 'Sales':
                     return 'fas fa-receipt';
+                case 'Challan':
+                    return 'fas fa-truck';
+                case 'Challan Return':
+                    return 'fas fa-undo';
                 case 'SalesReturn':
                 case 'Return':
                     return 'fas fa-undo-alt';

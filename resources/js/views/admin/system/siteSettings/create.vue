@@ -237,7 +237,7 @@
                             <div class="col-12 border-top pt-3">
                                 <div class="row g-3">
                                     <!-- 1. Invoice Prefix -->
-                                    <div class="col-md-6">
+                                    <div class="col-lg-4 col-md-6">
                                         <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
                                             <i class="fas fa-receipt text-theme"></i> {{ $t('Invoice Prefix') }}:
                                         </label>
@@ -255,7 +255,7 @@
                                     </div>
 
                                     <!-- 2. POS Terminal Terms & Condition Toggle Switch -->
-                                    <div class="col-md-6">
+                                    <div class="col-lg-4 col-md-6">
                                         <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
                                             <i class="fas fa-file-contract text-theme"></i> {{ $t('POS Terms & Conditions') }}:
                                         </label>
@@ -273,6 +273,28 @@
                                         <small class="text-muted d-block mt-1" style="font-size: 11px;">
                                             <i class="fas fa-info-circle text-primary me-1"></i>
                                             {{ $t('When enabled, terms checkboxes and inputs appear during checkout in POS terminal.') }}
+                                        </small>
+                                    </div>
+
+                                    <!-- 3. Invoice Terms & Condition Toggle Switch -->
+                                    <div class="col-lg-4 col-md-12">
+                                        <label class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
+                                            <i class="fas fa-file-invoice text-theme"></i> {{ $t('Invoice Terms & Conditions') }}:
+                                        </label>
+                                        <div class="p-2 px-3 border rounded bg-light d-flex align-items-center justify-content-between h-auto">
+                                            <div>
+                                                <span class="small fw-bold text-dark d-block">{{ $t('Show in Invoice Generation') }}</span>
+                                                <small class="text-muted" style="font-size: 10.5px;">{{ $t('Terms inputs & checkboxes in invoice modal') }}</small>
+                                            </div>
+                                            <div class="form-check form-switch m-0 p-0">
+                                                <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch"
+                                                    id="siteShowInvoiceTermsSwitch" v-model="data.show_invoice_terms" :true-value="1" :false-value="0"
+                                                    style="transform: scale(1.3); cursor: pointer;">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                            <i class="fas fa-info-circle text-primary me-1"></i>
+                                            {{ $t('When enabled, terms checkboxes and inputs appear when generating invoice from challan.') }}
                                         </small>
                                     </div>
                                 </div>
@@ -879,6 +901,7 @@ export default {
                 default_vat: 0,
                 invoice_prefix: "POS",
                 show_pos_terms: 0,
+                show_invoice_terms: 1,
                 printer_type: "thermal",
                 normal_paper_size: "A4",
                 invoice_layout: "layout1",
@@ -1103,6 +1126,7 @@ export default {
                     formData.set("default_vat", this.data.default_vat ?? 0);
                     formData.set("invoice_prefix", this.data.invoice_prefix || "POS");
                     formData.set("show_pos_terms", this.data.show_pos_terms ? 1 : 0);
+                    formData.set("show_invoice_terms", this.data.show_invoice_terms ? 1 : 0);
                     formData.set("memberships", JSON.stringify(this.memberships || []));
                     formData.set("printer_type", this.data.printer_type || "thermal");
                     formData.set("normal_paper_size", this.data.normal_paper_size || "A4");
@@ -1142,6 +1166,7 @@ export default {
                     if (this.data.default_vat === undefined || this.data.default_vat === null) this.data.default_vat = 0;
                     if (!this.data.invoice_prefix) this.data.invoice_prefix = "POS";
                     if (this.data.show_pos_terms === undefined || this.data.show_pos_terms === null) this.data.show_pos_terms = 0;
+                    if (this.data.show_invoice_terms === undefined || this.data.show_invoice_terms === null) this.data.show_invoice_terms = 1;
                     if (!this.data.printer_type) this.data.printer_type = "thermal";
                     if (!this.data.normal_paper_size) this.data.normal_paper_size = "A4";
                     if (!this.data.invoice_layout) this.data.invoice_layout = "layout1";

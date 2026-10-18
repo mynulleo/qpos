@@ -25,9 +25,27 @@ class WastageController extends BaseController
      */
     public function index(Request $request)
     {
-        $query = Wastage::with(['auditor:id,full_name'])->latest('id');
+        $query = Wastage::with([
+            'auditor',
+            'branch',
+            'approved_admin',
+            'creator'
+        ])->withCount('wastage_details')->latest('id');
+
         $query->whereLike($request->field_name, $request->value);
-        $query->whereAny('status', $request->status);
+        if (!empty($request->status)) {
+            if ($request->status === 'approved') {
+                $query->where(function($q) {
+                    $q->where('status', 'approved')->orWhereNotNull('approved_by');
+                });
+            } elseif ($request->status === 'pending') {
+                $query->where(function($q) {
+                    $q->whereNull('status')->orWhere('status', 'pending');
+                })->whereNull('approved_by');
+            } else {
+                $query->where('status', $request->status);
+            }
+        }
         $query->whereLike('audit_number', $request->audit_number);
         $query->whereAny('auditor_id', $request->auditor_id);
 
@@ -42,8 +60,31 @@ class WastageController extends BaseController
         if ($request->allData) {
             return $query->get();
         } else {
-            $datas = $query->paginate($request->pagination);
-            return new Resource($datas);
+            $datas = $query->paginate($request->pagination ?? 10);
+
+            $totalAudits = Wastage::count();
+            $approvedCount = Wastage::where(function($q) {
+                $q->where('status', 'approved')->orWhereNotNull('approved_by');
+            })->count();
+            $pendingCount = Wastage::where(function($q) {
+                $q->whereNull('status')->orWhere('status', 'pending');
+            })->whereNull('approved_by')->count();
+            $totalQtyWasted = (float) Wastage::sum('total_qty');
+            $totalFinancialLoss = (float) Wastage::sum('total_loss_amount');
+            $thisMonthLoss = (float) Wastage::whereMonth('audit_date', now()->month)
+                                            ->whereYear('audit_date', now()->year)
+                                            ->sum('total_loss_amount');
+
+            return (new Resource($datas))->additional([
+                'summary' => [
+                    'total_audits' => $totalAudits,
+                    'approved_count' => $approvedCount,
+                    'pending_count' => $pendingCount,
+                    'total_qty' => $totalQtyWasted,
+                    'total_loss' => $totalFinancialLoss,
+                    'this_month_loss' => $thisMonthLoss,
+                ]
+            ]);
         }
     }
 

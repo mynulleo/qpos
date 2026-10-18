@@ -132,7 +132,7 @@ trait ReportTrait
             ->where('item_id', $itemid)
             ->where('status', 'active')
             ->where(function($q) {
-                $q->where('transaction_type', 'Issue')->orWhere('reference_type', 'Issue');
+                $q->whereIn('transaction_type', ['Issue', 'Sale'])->orWhereIn('reference_type', ['Issue', 'Sale']);
             })
             ->sum('qty_out');
 
@@ -148,7 +148,8 @@ trait ReportTrait
             ->where('item_id', $itemid)
             ->where('status', 'active')
             ->where(function($q) {
-                $q->whereIn('transaction_type', ['SalesReturn', 'Return'])->orWhereIn('reference_type', ['SalesReturn', 'Return']);
+                $q->whereIn('transaction_type', ['SalesReturn', 'Return', 'Challan Return'])
+                  ->orWhereIn('reference_type', ['SalesReturn', 'Return', 'Challan Return']);
             })
             ->sum('qty_in');
 
@@ -256,9 +257,20 @@ trait ReportTrait
             ->leftJoin('suppliers as p_sup', 'p_sup.id', '=', 'p.supplier_id')
             ->leftJoin('invoices as inv', function ($join) {
                 $join->on('inv.id', '=', 'st.reference_id')
-                    ->where('st.reference_type', 'Issue');
+                    ->where(function($sq) {
+                        $sq->where('st.reference_type', 'Issue')
+                           ->orWhere('st.reference_type', 'Sale');
+                    });
             })
             ->leftJoin('clients as cust', 'cust.id', '=', 'inv.client_id')
+            ->leftJoin('challans as ch', function ($join) {
+                $join->on('ch.id', '=', 'st.reference_id')
+                    ->where(function($sq) {
+                        $sq->where('st.reference_type', 'Challan')
+                           ->orWhere('st.reference_type', 'Challan Return');
+                    });
+            })
+            ->leftJoin('clients as ch_cust', 'ch_cust.id', '=', 'ch.client_id')
             ->leftJoin('grns as g', function ($join) {
                 $join->on('g.id', '=', 'st.reference_id')
                     ->where('st.reference_type', 'GRN');
@@ -291,7 +303,14 @@ trait ReportTrait
             ->select(
                 'st.id',
                 'st.transaction_date',
-                'st.transaction_type',
+                DB::raw("
+                    CASE
+                        WHEN st.reference_type = 'Challan' OR st.transaction_type = 'Challan' THEN 'Challan'
+                        WHEN st.reference_type = 'Challan Return' OR st.transaction_type = 'Challan Return' THEN 'Challan Return'
+                        WHEN st.reference_type = 'Issue' OR st.transaction_type = 'Issue' OR st.reference_type = 'Sale' OR st.transaction_type = 'Sale' THEN 'Sale'
+                        ELSE st.transaction_type
+                    END AS transaction_type
+                "),
                 'st.reference_type',
                 'st.reference_id',
                 'st.color_id',
@@ -304,7 +323,8 @@ trait ReportTrait
                 DB::raw("
                     CASE
                         WHEN st.reference_type = 'Purchase' THEN p.invoiceno
-                        WHEN st.reference_type = 'Issue' THEN inv.invoice_no
+                        WHEN st.reference_type = 'Issue' OR st.reference_type = 'Sale' THEN inv.invoice_no
+                        WHEN st.reference_type = 'Challan' OR st.reference_type = 'Challan Return' THEN COALESCE(ch.challan_no, CONCAT('CH-', ch.id))
                         WHEN st.reference_type = 'GRN' THEN g.grn_no
                         WHEN st.reference_type = 'SalesReturn' OR st.reference_type = 'Return' THEN sr.return_no
                         WHEN st.reference_type = 'Wastage' THEN w.audit_number
@@ -316,9 +336,10 @@ trait ReportTrait
                 DB::raw("
                     CASE
                         WHEN st.reference_type = 'Purchase' THEN COALESCE(p_sup.org_name, p_sup.name)
-                        WHEN st.reference_type = 'Issue' THEN cust.name
+                        WHEN st.reference_type = 'Issue' OR st.reference_type = 'Sale' THEN COALESCE(cust.name, cust.org_name)
+                        WHEN st.reference_type = 'Challan' OR st.reference_type = 'Challan Return' THEN COALESCE(ch_cust.name, ch_cust.org_name, ch.receive_by)
                         WHEN st.reference_type = 'GRN' THEN COALESCE(g_sup.org_name, g_sup.name)
-                        WHEN st.reference_type = 'SalesReturn' OR st.reference_type = 'Return' THEN sr_cust.name
+                        WHEN st.reference_type = 'SalesReturn' OR st.reference_type = 'Return' THEN COALESCE(sr_cust.name, sr_cust.org_name)
                         WHEN st.reference_type = 'Wastage' THEN COALESCE(w_emp.full_name, w.audited_by, 'N/A')
                         WHEN st.reference_type = 'StockAdjustment' OR st.reference_type = 'Adjustment' OR st.transaction_type = 'Adjustment' THEN CONCAT('Conducted: ', COALESCE(sa_emp.full_name, 'N/A'))
                         WHEN st.reference_type = 'Production' OR st.transaction_type = 'Production' THEN 'In-House Production'
@@ -349,9 +370,15 @@ trait ReportTrait
             $query->where('st.warehouse_id', $warehouseId);
         }
         if ($trxType) {
-            if ($trxType === 'Sale') {
+            if ($trxType === 'Sale' || $trxType === 'Issue') {
                 $query->where(function($q) {
-                    $q->where('st.transaction_type', 'Issue')->orWhere('st.reference_type', 'Issue');
+                    $q->whereIn('st.transaction_type', ['Sale', 'Issue'])
+                      ->orWhereIn('st.reference_type', ['Sale', 'Issue']);
+                });
+            } elseif ($trxType === 'Challan') {
+                $query->where(function($q) {
+                    $q->whereIn('st.transaction_type', ['Challan', 'Challan Return'])
+                      ->orWhereIn('st.reference_type', ['Challan', 'Challan Return']);
                 });
             } else {
                 $query->where(function($q) use ($trxType) {
@@ -367,7 +394,7 @@ trait ReportTrait
         // 6. Fetch details in batch
         $grnIds = $rows->where('reference_type', 'GRN')->pluck('reference_id')->filter()->unique()->toArray();
         $purchaseIds = $rows->where('reference_type', 'Purchase')->pluck('reference_id')->filter()->unique()->toArray();
-        $invoiceIds = $rows->where('reference_type', 'Issue')->pluck('reference_id')->filter()->unique()->toArray();
+        $invoiceIds = $rows->whereIn('reference_type', ['Issue', 'Sale'])->pluck('reference_id')->filter()->unique()->toArray();
         $returnIds = $rows->whereIn('reference_type', ['SalesReturn', 'Return'])->pluck('reference_id')->filter()->unique()->toArray();
         $wastageIds = $rows->where('reference_type', 'Wastage')->pluck('reference_id')->filter()->unique()->toArray();
 
@@ -438,6 +465,20 @@ trait ReportTrait
             }
         }
 
+        $challanIds = $rows->whereIn('reference_type', ['Challan', 'Challan Return'])->pluck('reference_id')->filter()->unique()->toArray();
+        $challanDetailsMap = [];
+        if (!empty($challanIds)) {
+            $cds = DB::table('challan_details')->whereIn('challan_id', $challanIds)->where('item_id', $itemid)->get();
+            foreach ($cds as $cd) {
+                $k = $cd->challan_id . '_' . ($cd->color_id ?? 0) . '_' . ($cd->size_id ?? 0);
+                $challanDetailsMap[$k] = ['serial_no' => $cd->serial_no ?? null, 'rate' => 0, 'total' => 0];
+                $kFallback = $cd->challan_id . '_0_0';
+                if (!isset($challanDetailsMap[$kFallback])) {
+                    $challanDetailsMap[$kFallback] = ['serial_no' => $cd->serial_no ?? null, 'rate' => 0, 'total' => 0];
+                }
+            }
+        }
+
         $periodQtyIn = 0;
         $periodQtyOut = 0;
         $runningBalance = $periodOpeningBalance;
@@ -454,10 +495,11 @@ trait ReportTrait
             $detail = null;
             if ($row->reference_type === 'GRN') $detail = $grnDetailsMap[$key] ?? null;
             elseif ($row->reference_type === 'Purchase') $detail = $purchaseDetailsMap[$key] ?? null;
-            elseif ($row->reference_type === 'Issue') $detail = $invoiceDetailsMap[$key] ?? null;
+            elseif ($row->reference_type === 'Issue' || $row->reference_type === 'Sale') $detail = $invoiceDetailsMap[$key] ?? null;
             elseif (in_array($row->reference_type, ['SalesReturn', 'Return'])) $detail = $returnDetailsMap[$key] ?? null;
             elseif ($row->reference_type === 'Wastage') $detail = $wastageDetailsMap[$key] ?? null;
             elseif (in_array($row->reference_type, ['StockAdjustment', 'Adjustment'])) $detail = $adjustmentDetailsMap[$key] ?? null;
+            elseif (in_array($row->reference_type, ['Challan', 'Challan Return'])) $detail = $challanDetailsMap[$key] ?? ($challanDetailsMap[$row->reference_id . '_0_0'] ?? null);
 
             $rawSerial = $detail['serial_no'] ?? null;
             $serials = [];

@@ -73,6 +73,11 @@ class SiteSettingController extends BaseController
                         $table->boolean('show_pos_terms')->default(1)->nullable();
                     });
                 }
+                if (!Schema::hasColumn('site_settings', 'show_invoice_terms')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->boolean('show_invoice_terms')->default(1)->nullable();
+                    });
+                }
                 if (!Schema::hasColumn('site_settings', 'memberships')) {
                     Schema::table('site_settings', function (Blueprint $table) {
                         $table->longText('memberships')->nullable();
@@ -361,6 +366,7 @@ class SiteSettingController extends BaseController
             'sale_nature' => ['nullable', 'string'],
             'invoice_prefix' => ['nullable', 'string', 'max:50'],
             'show_pos_terms' => ['nullable'],
+            'show_invoice_terms' => ['nullable'],
             'memberships' => ['nullable'],
             'logo_base64' => ['nullable'],
             'logo_resize_value' => ['nullable', 'string'],

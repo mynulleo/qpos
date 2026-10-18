@@ -1,11 +1,11 @@
 <template>
     <div>
         <!-- full page loading -->
-        <div class="fullpage_loader" v-if="$root.initialLoader || recaptcha_spinner">
+        <div class="fullpage_loader" v-if="$root.initialLoader">
             <div class="loader"></div>
         </div>
 
-        <main class="qcms" :style="{ backgroundImage: `url(${$root.baseurl}/images/hero-bg.jpg)` }">
+        <main class="qcms" :style="{ backgroundImage: `url(${$root.baseurl}/images/hero-bg.webp)` }">
             <!-- login area start -->
             <section class="login_area">
                 <div class="container d-flex justify-content-center align-items-center">
@@ -188,11 +188,10 @@ export default {
             forgetFlag: false,
             loadingTimeout: 60000, // 60 seconds,
             is_captcha_verify: false,
-            recaptcha_spinner: true,
+            recaptcha_spinner: false,
             login_error_message: "",
             captcha_verify_message: "",
             showCaptcha: this.appenv === 'production',
-            recaptcha_spinner: true,
         };
     },
     provide() {

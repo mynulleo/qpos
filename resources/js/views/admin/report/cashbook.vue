@@ -1,101 +1,295 @@
 <template>
-    <index-page :defaultTable="false" :show_status="false">
-        <template v-slot:search-field>
-            <date-picker id='searchfromexpensedate' v-model='search_data.from_date' field='search_data.from_date'
-                title='From Date' placeholder='From Date' col='3' :req='false'></date-picker>
-            <date-picker id='searchtoexpensedate' v-model='search_data.to_date' field='search_data.to_date'
-                title='To Date' placeholder='To Date' col='3' :req='false'
-                :disablePastDates="search_data.to_transaction_date"></date-picker>
-        </template>
-        <template v-slot:table-list>
-            <div class="col-md-12">
-                <div class="d-flex gap-3 align-items-center justify-content-end">
-                    <div class="print_action text-end">
-                        <button class="p_btn" data-bs-toggle="tooltip" data-bs-placement="top" :data-bs-title="$t('Print')"
-                            v-x-tooltip @click="print('printArea', model)">
-                            <i class="fas fa-print"></i>
-                        </button>
-                    </div>
+  <index-page :defaultTable="false" :show_status="false">
+    <template v-slot:search-field>
+      <date-picker
+        id="searchfromexpensedate"
+        v-model="search_data.from_date"
+        field="search_data.from_date"
+        title="From Date"
+        placeholder="From Date"
+        col="3"
+        :req="false"
+      ></date-picker>
+
+      <date-picker
+        id="searchtoexpensedate"
+        v-model="search_data.to_date"
+        field="search_data.to_date"
+        title="To Date"
+        placeholder="To Date"
+        col="3"
+        :req="false"
+        :disablePastDates="search_data.from_date"
+      ></date-picker>
+    </template>
+
+    <template v-slot:table-list>
+      <!-- Action Bar with Single Print Button -->
+      <div class="col-12 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge px-3 py-2 text-white font-monospace" style="background-color: #112C47; font-size: 12px;">
+            <i class="fas fa-book me-1"></i> {{ $t('Cash Book Statement') }}
+          </span>
+          <span class="text-muted small font-monospace">
+            Period: <strong>{{ dateRange }}</strong>
+          </span>
+        </div>
+        <div class="print_action text-end">
+          <button
+            class="btn btn-sm btn-outline-dark px-3 py-1.5 rounded-pill font-monospace fw-semibold shadow-sm d-flex align-items-center gap-1.5"
+            @click="print('printArea', model)"
+          >
+            <i class="fas fa-print text-primary"></i>
+            <span>{{ $t('Print Statement') }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Cashbook View -->
+      <div class="col-12">
+        <!-- 🌟 Top Hero Banner -->
+        <div class="card border-0 shadow-sm mb-4 cashbook-hero-banner text-white">
+          <div class="card-body p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="hero-icon-box bg-white bg-opacity-20 text-white rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
+                  <i class="fas fa-cash-register fs-3"></i>
                 </div>
+                <div>
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h4 class="fw-bold mb-0 text-white">
+                      {{ $t('General Cash Book') }}
+                    </h4>
+                    <span class="badge bg-white bg-opacity-25 text-white font-monospace border border-white border-opacity-25 px-2 py-1">
+                      {{ $t('Cash Account') }}
+                    </span>
+                  </div>
+                  <div class="d-flex align-items-center gap-3 mt-2 text-white-50 small flex-wrap font-monospace">
+                    <span>
+                      <i class="far fa-calendar-alt me-1"></i> Statement Period: {{ dateRange }}
+                    </span>
+                    <span>
+                      <i class="fas fa-clock me-1"></i> As of: {{ reportDate }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Balance Pill -->
+              <div class="text-md-end text-white font-monospace">
+                <div class="small text-white-50 text-uppercase">{{ $t('Closing Cash in Hand') }}</div>
+                <div class="fs-4 fw-bold" :class="Number(datas.closing_balance) >= 0 ? 'text-white' : 'text-danger'">
+                  {{ $filter.formatBDT(datas.closing_balance || 0) }}
+                </div>
+                <small class="text-white-50" style="font-size: 11px;">
+                  {{ Number(datas.closing_balance) >= 0 ? $t('Available Cash Balance') : $t('Overdraft / Negative') }}
+                </small>
+              </div>
             </div>
-            <div class="my-5" id="printArea">
-                <!-- 🧾 Report Header (Visible in Print) -->
-                <div class="text-center mb-2 report-title">
-                    <h3 class="fw-bold">{{ $root.site.title }}.</h3>
-                    <p class="mb-1">{{ $root.site.address }}</p>
-                    <p>Email: {{ $root.site.contact_email }} | Phone: {{ $root.site.mobile1 }}</p>
-                </div>
+          </div>
+        </div>
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h5 class="fw-bold mb-1">{{ $t("Cash Book") }}</h5>
-                        <small class="text-muted">{{ $t("Report Date") }}: <strong>{{ reportDate }}</strong></small>
-                    </div>
-                    <div class="text-end">
-                        <small class="text-muted">
-                            Period:
-                            <strong>{{ dateRange }}</strong>
-                        </small>
-                    </div>
+        <!-- 📊 4 KPI Stat Cards -->
+        <div class="row g-3 mb-4">
+          <!-- 1. Opening Balance -->
+          <div class="col-xl-3 col-md-6 col-12">
+            <div class="card stat-card border-0 shadow-sm h-100 bg-white">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <span class="text-muted fw-bold small text-uppercase">{{ $t('Opening Balance') }}</span>
+                  <div class="stat-icon bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="fas fa-history"></i>
+                  </div>
                 </div>
-                <!-- 📊 Income Table -->
-                <div clas="row g-3">
-                    <div class="col-md-12">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>{{ $t('Date') }}</th>
-                                        <th>{{ $t('Description') }}</th>
-                                        <th class="text-md-center">{{ $t('Cash In') }}</th>
-                                        <th class="text-md-center">{{ $t('Cash Out') }}</th>
-                                        <th class="text-md-center">{{ $t('Balance') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>{{ datas.opening_date }}</td>
-                                        <td>{{ $t("Opening Balance") }}</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td class="text-md-end">{{ Number(datas.opening_balance).toFixed(2) }}</td>
-                                    </tr>
-                                    <tr v-for="(record, index) in datas.records" :key="index">
-                                        <td>{{ record.date }}</td>
-                                        <td>
-                                            {{ record.description }}
-                                        </td>
-                                        <td class="text-md-end">{{ Number(record.cash_in).toFixed(2) }}</td>
-                                        <td class="text-md-end">{{ Number(record.cash_out).toFixed(2) }}</td>
-                                        <td class="text-md-end">{{ Number(record.balance).toFixed(2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" class="text-md-end"><strong>{{ $t("Total") }}</strong></td>
-                                        <td class="text-md-end">
-                                            <strong>{{ Number(datas.total_in).toFixed(2) }}</strong>
-                                        </td>
-                                        <td class="text-md-end">
-                                            <strong>{{ Number(datas.total_out).toFixed(2) }}</strong>
-                                        </td>
-                                        <td class="text-md-end">
-                                            <strong>{{ Number(datas.closing_balance).toFixed(2) }}</strong>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 📌 Footer Note -->
-                <div class="mt-4 small text-muted">
-                    <p>{{ $t("Generated by") }}: <strong>Admin</strong></p>
-                    <p>{{ $t("This report is system generated and does not require signature.") }}</p>
-                </div>
-
+                <h5 class="fw-bold mb-1 text-dark font-monospace text-nowrap">
+                  {{ $filter.formatBDT(datas.opening_balance || 0) }}
+                </h5>
+                <small class="text-muted font-monospace" style="font-size: 11px;">{{ $t('Balance at Start of Period') }}</small>
+              </div>
             </div>
-        </template>
-    </index-page>
+          </div>
+
+          <!-- 2. Total Inflow (Cash In) -->
+          <div class="col-xl-3 col-md-6 col-12">
+            <div class="card stat-card border-0 shadow-sm h-100 bg-white border-start border-success border-4">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <span class="text-muted fw-bold small text-uppercase">{{ $t('Total Inflow (Cash In)') }}</span>
+                  <div class="stat-icon bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="fas fa-arrow-down"></i>
+                  </div>
+                </div>
+                <h5 class="fw-bold mb-1 text-success font-monospace text-nowrap">
+                  {{ $filter.formatBDT(datas.total_in || 0) }}
+                </h5>
+                <small class="text-muted font-monospace" style="font-size: 11px;">{{ $t('Total Cash Receipts / Inflows') }}</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Total Outflow (Cash Out) -->
+          <div class="col-xl-3 col-md-6 col-12">
+            <div class="card stat-card border-0 shadow-sm h-100 bg-white border-start border-danger border-4">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <span class="text-muted fw-bold small text-uppercase">{{ $t('Total Outflow (Cash Out)') }}</span>
+                  <div class="stat-icon bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="fas fa-arrow-up"></i>
+                  </div>
+                </div>
+                <h5 class="fw-bold mb-1 text-danger font-monospace text-nowrap">
+                  {{ $filter.formatBDT(datas.total_out || 0) }}
+                </h5>
+                <small class="text-muted font-monospace" style="font-size: 11px;">{{ $t('Total Cash Payments / Outflows') }}</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Closing Balance -->
+          <div class="col-xl-3 col-md-6 col-12">
+            <div class="card stat-card border-0 shadow-sm h-100 bg-white border-start border-primary border-4">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <span class="text-muted fw-bold small text-uppercase">{{ $t('Closing Cash in Hand') }}</span>
+                  <div class="stat-icon bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="fas fa-wallet"></i>
+                  </div>
+                </div>
+                <h5 class="fw-bold mb-1 font-monospace text-nowrap" :class="Number(datas.closing_balance) >= 0 ? 'text-primary' : 'text-danger'">
+                  {{ $filter.formatBDT(datas.closing_balance || 0) }}
+                </h5>
+                <small class="text-muted font-monospace" style="font-size: 11px;">{{ $t('Net Cash Position at End') }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 📑 Tabular Statement Card & Print Area -->
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white" id="printArea">
+          <!-- Print Only Header -->
+          <div class="d-none print-only-header p-4 border-bottom">
+            <div class="text-center mb-3">
+              <h3 class="fw-bold mb-0 text-dark">{{ $root.site.title }}</h3>
+              <p class="mb-1 text-muted small">{{ $root.site.address }}</p>
+              <p class="mb-0 text-muted small">
+                Email: {{ $root.site.contact_email }} | Phone: {{ $root.site.mobile1 }}
+              </p>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+              <div>
+                <h5 class="fw-bold mb-1 text-dark">{{ $t('General Cash Book Statement') }}</h5>
+                <div class="small text-dark font-monospace">
+                  Period: <strong>{{ dateRange }}</strong>
+                </div>
+              </div>
+              <div class="text-end font-monospace small">
+                <div>Generated: <strong>{{ reportDate }}</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Content -->
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 cashbook-table">
+                <thead style="background-color: #F8FAFC;">
+                  <tr class="text-uppercase small text-muted border-bottom font-monospace">
+                    <th class="ps-4 py-3" style="width: 140px;">{{ $t('Date') }}</th>
+                    <th class="py-3">{{ $t('Description / Particulars') }}</th>
+                    <th class="py-3 text-end" style="width: 160px;">{{ $t('Cash In (Debit)') }}</th>
+                    <th class="py-3 text-end" style="width: 160px;">{{ $t('Cash Out (Credit)') }}</th>
+                    <th class="pe-4 py-3 text-end" style="width: 170px;">{{ $t('Balance') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Opening Balance Row -->
+                  <tr class="bg-light fw-semibold">
+                    <td class="ps-4 py-2.5 font-monospace small">
+                      {{ datas.opening_date || '-' }}
+                    </td>
+                    <td class="py-2.5">
+                      <span class="badge bg-secondary bg-opacity-10 text-dark border border-secondary border-opacity-25 px-2 py-1 font-monospace me-2">
+                        {{ $t('OPENING') }}
+                      </span>
+                      <span class="text-dark">{{ $t('Opening Cash Balance') }}</span>
+                    </td>
+                    <td class="py-2.5 text-end font-monospace text-muted">-</td>
+                    <td class="py-2.5 text-end font-monospace text-muted">-</td>
+                    <td class="pe-4 py-2.5 text-end font-monospace fw-bold text-dark">
+                      {{ $filter.formatBDT(datas.opening_balance || 0) }}
+                    </td>
+                  </tr>
+
+                  <!-- Transaction Rows -->
+                  <tr v-for="(record, index) in datas.records" :key="index">
+                    <td class="ps-4 py-2.5 font-monospace small">
+                      {{ record.date ? $filter.enFormat(record.date) : '-' }}
+                    </td>
+                    <td class="py-2.5">
+                      <div class="text-dark">{{ record.description || 'Cash Transaction' }}</div>
+                    </td>
+                    <td class="py-2.5 text-end font-monospace">
+                      <span v-if="Number(record.cash_in) > 0" class="text-success fw-semibold">
+                        {{ $filter.formatBDT(record.cash_in) }}
+                      </span>
+                      <span v-else class="text-muted">-</span>
+                    </td>
+                    <td class="py-2.5 text-end font-monospace">
+                      <span v-if="Number(record.cash_out) > 0" class="text-danger fw-semibold">
+                        {{ $filter.formatBDT(record.cash_out) }}
+                      </span>
+                      <span v-else class="text-muted">-</span>
+                    </td>
+                    <td class="pe-4 py-2.5 text-end font-monospace fw-bold" :class="Number(record.balance) >= 0 ? 'text-dark' : 'text-danger'">
+                      {{ $filter.formatBDT(record.balance) }}
+                    </td>
+                  </tr>
+
+                  <tr v-if="!datas.records || datas.records.length === 0">
+                    <td colspan="5" class="text-center py-5 text-muted">
+                      <i class="fas fa-receipt fa-3x mb-3 text-secondary opacity-50"></i>
+                      <div class="font-monospace">{{ $t('No cash transactions recorded for this period.') }}</div>
+                    </td>
+                  </tr>
+                </tbody>
+
+                <!-- Table Footer Totals strictly right aligned -->
+                <tfoot style="background-color: #F8FAFC;" class="border-top-2">
+                  <tr class="fw-bold font-monospace">
+                    <td colspan="2" class="ps-4 py-3 text-uppercase text-dark">
+                      {{ $t('Total Period Activity & Net Closing') }}
+                    </td>
+                    <td class="py-3 text-end text-success fs-6">
+                      {{ $filter.formatBDT(datas.total_in || 0) }}
+                    </td>
+                    <td class="py-3 text-end text-danger fs-6">
+                      {{ $filter.formatBDT(datas.total_out || 0) }}
+                    </td>
+                    <td class="pe-4 py-3 text-end fs-6" :class="Number(datas.closing_balance) >= 0 ? 'text-primary' : 'text-danger'">
+                      {{ $filter.formatBDT(datas.closing_balance || 0) }}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Print Footer -->
+          <div class="d-none print-only-header p-4 border-top">
+            <div class="row align-items-center text-muted small font-monospace">
+              <div class="col-6">
+                <div>Generated by: <strong>Admin</strong></div>
+                <div style="font-size: 10px;">This is a computer-generated statement and requires no signature.</div>
+              </div>
+              <div class="col-6 text-end">
+                <div>Page 1 of 1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </index-page>
 </template>
 
 <script>
@@ -104,92 +298,124 @@ import moment from "moment";
 
 const tableColumns = [{ field: "status", title: "Status", align: "center" }];
 const json_fields = {
-    Title: "Hello",
+  Title: "Cash Book",
 };
-const model = "incomeStatement";
+const model = "cashbook";
 
 export default {
-    data() {
-        return {
-            model: model,
-            page_title: "",
-            reportDate: moment().format('D MMMM, YYYY'),
-            json_fields: json_fields,
-            search_data: {
-                category_id: null,
-                is_zero: 0,
-                from_qty: null,
-                to_qty: null
-            },
-            table: {
-                columns: tableColumns,
-                routes: {},
-                datas: [],
-                meta: [],
-                links: [],
-            },
-            datas: [], // Store the daily report data
-            clients: [],  // Store account heads for the select dropdown
-        };
+  data() {
+    return {
+      model: model,
+      page_title: "",
+      reportDate: moment().format("D MMMM, YYYY"),
+      json_fields: json_fields,
+      search_data: {
+        from_date: null,
+        to_date: null,
+      },
+      table: {
+        columns: tableColumns,
+        routes: {},
+        datas: [],
+        meta: [],
+        links: [],
+      },
+      datas: {
+        opening_balance: 0,
+        closing_balance: 0,
+        total_in: 0,
+        total_out: 0,
+        records: [],
+      },
+    };
+  },
+
+  provide() {
+    return {
+      validate: this.validation,
+      model: this.model,
+      search_data: this.search_data,
+      table: this.table,
+      json_fields: this.json_fields,
+      search: this.search,
+      resetSearchData: this.resetSearchData,
+    };
+  },
+
+  computed: {
+    dateRange() {
+      if (this.search_data.from_date && this.search_data.to_date) {
+        return (
+          moment(this.search_data.from_date).format("D MMM, YYYY") +
+          " to " +
+          moment(this.search_data.to_date).format("D MMM, YYYY")
+        );
+      }
+      return "Current Month";
+    },
+  },
+
+  methods: {
+    search() {
+      this.getCashbook();
     },
 
-    provide() {
-        return {
-            validate: this.validation,
-            model: this.model,
-            search_data: this.search_data,
-            table: this.table,
-            json_fields: this.json_fields,
-            search: this.search,
-            resetSearchData: this.resetSearchData,
-        };
-    },
-    computed: {
-        dateRange() {
-            if (this.search_data.from_date && this.search_data.to_date) {
-                return moment(this.search_data.from_date).format("D MMM, YYYY") +
-                    " to " +
-                    moment(this.search_data.to_date).format("D MMM, YYYY");
-            }
-            return "Current Month";
-        }
-    },
-    methods: {
-        search() {
-            this.getCashbook();
-        },
-        getCashbook() {
-            axios
-                .get(`report/cashbook/`, { params: this.search_data })
-                .then((res) => {
-                    this.datas = res.data
-                    this.calculateRunningBalance();
-                })
-        },
-
-        // Capitalize the first letter of a string
-        ucfirst(str) {
-            if (!str) return "";
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        },
-        getClients() {
-            axios.get(
-                `clients/`
-            )
-                .then((response) => {
-                    this.clients = response.data;
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-        },
+    getCashbook() {
+      axios
+        .get(`report/cashbook/`, { params: this.search_data })
+        .then((res) => {
+          this.datas = res.data;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     },
 
-    created() {
-        this.getCashbook();
-        this.getClients();
+    resetSearchData() {
+      this.search_data.from_date = null;
+      this.search_data.to_date = null;
+      this.getCashbook();
     },
+  },
 
-    validators: {},
+  created() {
+    this.getCashbook();
+  },
+
+  validators: {},
 };
 </script>
+
+<style scoped>
+.cashbook-hero-banner {
+  background: linear-gradient(135deg, #112C47 0%, #1e3c72 100%);
+  border-radius: 12px;
+}
+.hero-icon-box {
+  width: 52px;
+  height: 52px;
+}
+.stat-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 10px;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  font-size: 16px;
+}
+.cashbook-table th {
+  font-size: 11.5px;
+  letter-spacing: 0.5px;
+}
+
+@media print {
+  .print-only-header {
+    display: block !important;
+  }
+}
+</style>

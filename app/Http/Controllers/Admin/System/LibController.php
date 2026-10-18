@@ -399,7 +399,39 @@ class LibController extends Controller
         if (!empty($categoryid)) {
             $query->where('category_id', $categoryid);
         }
-        return $query->select('id', 'title', 'category_id', 'barcode', 'model_no', 'unit_id', 'warranty_type', 'is_serialized', 'opening_rate', 'retail_price', 'wholesale_price')->get();
+        $baseColumns = ['id', 'title', 'category_id', 'barcode', 'unit_id', 'opening_rate'];
+        $optionalColumns = ['model_no', 'warranty_type', 'is_serialized', 'retail_price', 'wholesale_price'];
+        foreach ($optionalColumns as $col) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('items', $col)) {
+                $baseColumns[] = $col;
+            }
+        }
+        $items = $query->select($baseColumns)->get();
+
+        $itemIds = $items->pluck('id')->toArray();
+        if (!empty($itemIds)) {
+            $stockInMap = DB::table('stock_transactions')
+                ->whereIn('item_id', $itemIds)
+                ->where('status', 'active')
+                ->groupBy('item_id')
+                ->selectRaw('item_id, SUM(qty_in) as total_in')
+                ->pluck('total_in', 'item_id');
+
+            $stockOutMap = DB::table('stock_transactions')
+                ->whereIn('item_id', $itemIds)
+                ->where('status', 'active')
+                ->groupBy('item_id')
+                ->selectRaw('item_id, SUM(qty_out) as total_out')
+                ->pluck('total_out', 'item_id');
+
+            foreach ($items as $item) {
+                $in = floatval($stockInMap[$item->id] ?? 0);
+                $out = floatval($stockOutMap[$item->id] ?? 0);
+                $item->current_stock = max(0, $in - $out);
+            }
+        }
+
+        return $items;
     }
 
     public function getGroupAccounts()

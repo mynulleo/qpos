@@ -83,12 +83,17 @@
               <!-- Button 2: Generate Invoice from Accepted Items -->
               <button
                 type="button"
-                class="btn btn-sm btn-light text-primary d-inline-flex align-items-center gap-1.5 px-3 py-2 shadow-sm fw-bold"
-                @click="openInvoiceModal"
-                v-if="!isLocked && totalReceiveQty > 0"
+                class="btn btn-sm d-inline-flex align-items-center gap-1.5 px-3 py-2 shadow-sm fw-bold"
+                :class="isChallanAccepted ? 'btn-light text-primary' : 'btn-light text-muted border border-secondary-subtle opacity-75'"
+                @click="onGenerateInvoiceBtnClick"
+                v-if="!isLocked"
+                :title="!isChallanAccepted ? $t('Challan accept na hole invoice generate kora jabe na') : ''"
               >
-                <i class="fas fa-file-invoice-dollar"></i>
+                <i class="fas fa-file-invoice-dollar" :class="isChallanAccepted ? 'text-primary' : 'text-muted'"></i>
                 <span>{{ $t('Generate Invoice') }}</span>
+                <span v-if="!isChallanAccepted" class="badge bg-warning text-dark font-monospace ms-1" style="font-size: 10px;">
+                  <i class="fas fa-lock me-0.5"></i>{{ $t('Accept First') }}
+                </span>
               </button>
 
               <!-- Button 3: View Invoiced Document -->
@@ -356,11 +361,14 @@
             </button>
             <button
               type="button"
-              class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1"
-              @click="openInvoiceModal"
-              v-if="totalReceiveQty > 0"
+              class="btn btn-sm d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 fw-semibold"
+              :class="isChallanAccepted ? 'btn-outline-primary' : 'btn-outline-secondary opacity-75'"
+              @click="onGenerateInvoiceBtnClick"
+              v-if="!isLocked"
+              :title="!isChallanAccepted ? $t('Challan accept na hole invoice generate kora jabe na') : ''"
             >
               <i class="fas fa-file-invoice-dollar"></i> {{ $t('Create Invoice') }}
+              <span v-if="!isChallanAccepted" class="badge bg-warning text-dark ms-1" style="font-size: 10px;">{{ $t('Accept First') }}</span>
             </button>
           </div>
         </div>
@@ -388,6 +396,17 @@
                   </div>
                   <div class="fw-bold text-dark fs-6" v-if="item.item">
                     {{ item.item.title }}
+                  </div>
+                  <div class="d-flex align-items-center gap-1 flex-wrap mt-0.5" v-if="(item.color || item.color_id) || (item.size || item.size_id)">
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-0.5 font-monospace small" v-if="item.color || item.color_id">
+                      <i class="fas fa-palette me-1"></i>{{ (item.color && item.color.title) || item.color_title || ('Color #' + item.color_id) }}
+                    </span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 px-2 py-0.5 font-monospace small" v-if="item.size || item.size_id">
+                      <i class="fas fa-ruler me-1"></i>{{ (item.size && item.size.title) || item.size_title || ('Size #' + item.size_id) }}
+                    </span>
+                  </div>
+                  <div class="small font-monospace text-primary mt-1" v-if="item.serial_no">
+                    <i class="fas fa-hashtag me-0.5"></i><span class="fw-semibold">S/N:</span> {{ item.serial_no }}
                   </div>
                   <div class="small text-muted" v-if="item.description" style="white-space: pre-line;">
                     {{ item.description }}
@@ -539,6 +558,17 @@
                       </span>
                       <span v-if="item.item">{{ item.item.title }}</span>
                     </div>
+                    <div class="d-flex align-items-center gap-1 flex-wrap mt-0.5" v-if="(item.color || item.color_id) || (item.size || item.size_id)">
+                      <span class="badge border px-1 py-0.5 text-dark bg-light" style="font-size: 10px;" v-if="item.color || item.color_id">
+                        Color: {{ (item.color && item.color.title) || item.color_title }}
+                      </span>
+                      <span class="badge border px-1 py-0.5 text-dark bg-light" style="font-size: 10px;" v-if="item.size || item.size_id">
+                        Size: {{ (item.size && item.size.title) || item.size_title }}
+                      </span>
+                    </div>
+                    <div class="small font-monospace text-dark mt-0.5" v-if="item.serial_no" style="font-size: 11px;">
+                      <strong>S/N:</strong> {{ item.serial_no }}
+                    </div>
                     <div class="text-muted item-desc" v-if="item.description" style="white-space: pre-line;">
                       {{ item.description }}
                     </div>
@@ -658,10 +688,11 @@
                 <thead class="text-uppercase small" style="background-color: #112C47; color: #ffffff;">
                   <tr>
                     <th style="width: 4%;">#</th>
-                    <th style="width: 42%;">{{ $t('Item Description') }}</th>
+                    <th style="width: 36%;">{{ $t('Item Description') }}</th>
                     <th style="width: 14%;" class="text-center">{{ $t('Dispatched Qty') }}</th>
-                    <th style="width: 18%;" class="text-center">{{ $t('Receive Qty') }}</th>
-                    <th style="width: 22%;">{{ $t('Remarks / Condition') }}</th>
+                    <th style="width: 15%;" class="text-center">{{ $t('Receive Qty') }}</th>
+                    <th style="width: 15%;" class="text-center">{{ $t('Restock / Return') }}</th>
+                    <th style="width: 16%;">{{ $t('Remarks / Condition') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -683,6 +714,19 @@
                         v-model.number="item.receive_qty"
                         placeholder="0.00"
                       />
+                    </td>
+                    <td class="text-center">
+                      <span
+                        v-if="Number(item.order_qty) > Number(item.receive_qty || 0)"
+                        class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle font-monospace px-2 py-1 small"
+                        :title="$t('This unreceived quantity will automatically return to warehouse stock')"
+                      >
+                        <i class="fas fa-rotate-left me-1"></i>
+                        +{{ (Number(item.order_qty) - Number(item.receive_qty || 0)).toFixed(2).replace(/\.00$/, '') }} {{ $t('Restock') }}
+                      </span>
+                      <span v-else class="badge bg-success bg-opacity-10 text-success border border-success-subtle font-monospace px-2 py-1 small">
+                        <i class="fas fa-check-double me-1"></i>{{ $t('Full') }}
+                      </span>
                     </td>
                     <td>
                       <input type="text" class="form-control form-control-sm" v-model="item.remark" placeholder="Notes / box intact" />
@@ -832,6 +876,22 @@
               </div>
             </div>
 
+            <!-- ERP Supply Chain Inventory Stock Notice -->
+            <div class="alert alert-success border-success border-opacity-25 bg-success bg-opacity-10 py-2.5 px-3 small mb-3 rounded-3 d-flex flex-wrap align-items-center justify-content-between gap-2 shadow-sm">
+              <div class="d-flex align-items-center gap-2.5">
+                <div class="bg-success bg-opacity-20 text-success p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                  <i class="fas fa-boxes-packing fs-5"></i>
+                </div>
+                <div>
+                  <h6 class="fw-bold text-success mb-0 fs-6">{{ $t('চালান মারফত পণ্য ইতিমধ্যে স্টক থেকে আউট করা হয়েছে') }}</h6>
+                  <span class="text-secondary small">{{ $t('চালান প্রেরণের সময় স্টক সমন্বয় সম্পন্ন হয়েছে। এখন কেবল গ্রাহকের গৃহীত পণ্যের বিলিং সম্পন্ন হচ্ছে।') }}</span>
+                </div>
+              </div>
+              <span class="badge bg-success text-white font-monospace px-2.5 py-1.5 shadow-sm">
+                <i class="fas fa-check-double me-1"></i>{{ $t('Stock Issued at Dispatch') }}
+              </span>
+            </div>
+
             <!-- Items Table Card -->
             <div class="card border-0 shadow-sm rounded-3 mb-3 bg-white overflow-hidden">
               <div class="table-responsive mb-0">
@@ -839,14 +899,18 @@
                   <thead class="text-uppercase small" style="background-color: #112C47; color: #ffffff;">
                     <tr>
                       <th style="width: 4%;" class="text-center">#</th>
-                      <th style="width: 40%;" class="ps-3">{{ $t('Product & Specifications') }}</th>
-                      <th style="width: 14%;" class="text-center">{{ $t('Invoiced Qty') }}</th>
+                      <th style="width: 38%;" class="ps-3">{{ $t('Product & Specifications') }}</th>
+                      <th style="width: 18%;" class="text-center">{{ $t('Invoiced / Accepted Qty') }}</th>
                       <th style="width: 22%;" class="text-center">{{ $t('Unit Rate (৳)') }}</th>
-                      <th style="width: 20%;" class="text-end pe-3">{{ $t('Line Total (৳)') }}</th>
+                      <th style="width: 18%;" class="text-end pe-3">{{ $t('Line Total (৳)') }}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(item, idx) in invoiceForm.items" :key="idx" class="border-bottom">
+                    <tr
+                      v-for="(item, idx) in invoiceForm.items"
+                      :key="idx"
+                      class="border-bottom"
+                    >
                       <!-- Index -->
                       <td class="text-center font-monospace text-muted fw-bold">{{ idx + 1 }}</td>
 
@@ -861,17 +925,41 @@
                         <small class="text-muted font-monospace d-block" v-if="item.barcode">
                           <i class="fas fa-barcode me-1"></i>{{ item.barcode }}
                         </small>
+                        <div class="d-flex align-items-center gap-1 flex-wrap mt-0.5" v-if="(item.color_title || item.color_id) || (item.size_title || item.size_id)">
+                          <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-1.5 py-0.5 font-monospace small" v-if="item.color_title || item.color_id">
+                            <i class="fas fa-palette me-1"></i>{{ item.color_title || ('Color #' + item.color_id) }}
+                          </span>
+                          <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 px-1.5 py-0.5 font-monospace small" v-if="item.size_title || item.size_id">
+                            <i class="fas fa-ruler me-1"></i>{{ item.size_title || ('Size #' + item.size_id) }}
+                          </span>
+                        </div>
+                        <div class="small font-monospace text-primary mt-0.5" v-if="item.serial_no" style="font-size: 11px;">
+                          <i class="fas fa-hashtag me-0.5"></i>S/N: {{ item.serial_no }}
+                        </div>
                         <div class="small text-muted" v-if="item.description && item.description !== item.title">
                           {{ item.description }}
                         </div>
                       </td>
 
-                      <!-- Invoiced Quantity -->
+                      <!-- Invoiced Quantity (Accepted from Challan) -->
                       <td class="text-center">
-                        <span class="font-monospace fw-bold text-dark fs-6">{{ item.qty }}</span>
-                        <span class="badge bg-light text-primary border font-monospace ms-1 small">
-                          {{ item.unit_title }}
-                        </span>
+                        <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                          <input
+                            type="number"
+                            min="1"
+                            class="form-control form-control-sm text-center font-monospace fw-bold"
+                            style="width: 85px;"
+                            v-model.number="item.qty"
+                          />
+                          <span class="badge bg-light text-primary border font-monospace small">
+                            {{ item.unit_title }}
+                          </span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-center gap-1 flex-wrap mt-1">
+                          <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle font-monospace" style="font-size: 11px;">
+                            <i class="fas fa-check-circle me-1"></i>{{ $t('Accepted Qty') }}
+                          </span>
+                        </div>
                       </td>
 
                       <!-- Unit Rate Input with Retail & Wholesale Quick Buttons -->
@@ -920,10 +1008,192 @@
               </div>
             </div>
 
-            <!-- Financial Calculation Summary Card -->
-            <div class="row justify-content-end">
-              <div class="col-lg-5 col-md-7 col-12">
-                <div class="card border-0 shadow-sm rounded-3 bg-white">
+            <!-- Financial Calculation & Options Deck (Terms & Conditions, Payment Settlement, Financial Summary) -->
+            <div class="row g-3">
+              <!-- Left Column: Terms & Conditions and Payment Switch Cards -->
+              <div class="col-lg-7 col-12 d-flex flex-column gap-3">
+                
+                <!-- 📜 Card 1: Terms & Conditions (Requirement 2) -->
+                <div class="card border-0 shadow-sm rounded-3 bg-white" v-if="isTermsEnabled">
+                  <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+                    <span class="fw-bold small text-dark d-flex align-items-center gap-1.5">
+                      <i class="fas fa-file-contract text-primary"></i>
+                      <span>{{ $t('Terms & Conditions (শর্তাবলী)') }}</span>
+                      <span class="badge bg-primary bg-opacity-10 text-primary ms-1 font-monospace" style="font-size: 11px;">
+                        {{ selectedTermsCount }} {{ $t('Selected') }}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      class="btn btn-xs btn-outline-primary py-0.5 px-2 rounded-pill small"
+                      style="font-size: 11px;"
+                      @click="addCustomTerm"
+                    >
+                      <i class="fas fa-plus me-1"></i>{{ $t('Add Condition') }}
+                    </button>
+                  </div>
+                  <div class="card-body p-3">
+                    <!-- Loading state -->
+                    <div v-if="termsLoading" class="text-center py-2 text-muted small">
+                      <span class="spinner-border spinner-border-sm me-1 text-primary"></span>
+                      {{ $t('Loading terms & conditions...') }}
+                    </div>
+
+                    <!-- Empty state -->
+                    <div v-else-if="termsList.length === 0" class="text-center py-2 text-muted small">
+                      <i class="fas fa-info-circle me-1"></i>
+                      {{ $t('No default terms found.') }}
+                      <a href="javascript:void(0)" class="text-primary fw-semibold ms-1" @click="addCustomTerm">{{ $t('Click here to add one') }}</a>
+                    </div>
+
+                    <!-- Terms Inputs with Front Checkbox -->
+                    <div v-else class="d-flex flex-column gap-2" style="max-height: 240px; overflow-y: auto;">
+                      <div
+                        v-for="(term, tIdx) in termsList"
+                        :key="term.id || tIdx"
+                        class="input-group input-group-sm align-items-center"
+                      >
+                        <!-- Checkbox in front of input box -->
+                        <div class="input-group-text bg-white pe-2 ps-2.5 border-end-0">
+                          <input
+                            class="form-check-input mt-0 cursor-pointer"
+                            type="checkbox"
+                            v-model="term.is_checked"
+                            :id="'term_chk_' + tIdx"
+                            style="width: 17px; height: 17px; cursor: pointer;"
+                            :title="$t('Check to include in invoice')"
+                          />
+                        </div>
+
+                        <!-- Input box for terms & conditions -->
+                        <input
+                          type="text"
+                          class="form-control form-control-sm border-start-0"
+                          :class="term.is_checked ? 'fw-medium text-dark bg-white' : 'text-muted bg-light'"
+                          v-model="term.condition_text"
+                          :placeholder="$t('Enter term or condition...')"
+                        />
+
+                        <!-- Default badge or Delete button -->
+                        <span class="input-group-text bg-light text-muted small px-2" v-if="term.is_default">
+                          <small class="badge bg-secondary bg-opacity-25 text-dark font-monospace" style="font-size: 10px;">{{ $t('Default') }}</small>
+                        </span>
+                        <button
+                          v-else
+                          type="button"
+                          class="btn btn-outline-danger btn-sm px-2"
+                          @click="removeTerm(tIdx)"
+                          :title="$t('Remove condition')"
+                        >
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 💳 Card 2: Payment Settlement Switch & Details (Requirement 3) -->
+                <div class="card border-0 shadow-sm rounded-3 bg-white overflow-hidden">
+                  <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+                    <span class="fw-bold small text-dark d-flex align-items-center gap-1.5">
+                      <i class="fas fa-money-bill-wave text-success"></i>
+                      <span>{{ $t('Payment Settlement (পেমেন্ট গ্রহণ)') }}</span>
+                    </span>
+
+                    <!-- Switch toggle: default OFF -->
+                    <div class="form-check form-switch m-0 d-flex align-items-center gap-2">
+                      <input
+                        class="form-check-input cursor-pointer"
+                        type="checkbox"
+                        role="switch"
+                        id="invoicePaymentSwitch"
+                        v-model="invoiceForm.is_paid"
+                        :true-value="1"
+                        :false-value="0"
+                        @change="handlePaymentSwitchChange"
+                        style="transform: scale(1.25); cursor: pointer;"
+                      />
+                      <label class="form-check-label small fw-bold cursor-pointer mb-0" :class="Number(invoiceForm.is_paid) === 1 ? 'text-success' : 'text-muted'" for="invoicePaymentSwitch">
+                        {{ Number(invoiceForm.is_paid) === 1 ? $t('Paid (পেইড)') : $t('Due / Unpaid (বকেয়া)') }}
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="card-body p-3">
+                    <!-- Switch OFF state message -->
+                    <div v-if="Number(invoiceForm.is_paid) !== 1" class="text-muted small py-1 d-flex align-items-center gap-2">
+                      <i class="fas fa-info-circle text-secondary"></i>
+                      <span>{{ $t('Payment switch is OFF. Invoice will be issued as Due/Unpaid. Turn ON to immediately record payment in the Payment module.') }}</span>
+                    </div>
+
+                    <!-- Switch ON state: Payment inputs -->
+                    <div v-else class="row g-2">
+                      <div class="col-12 mb-1">
+                        <div class="alert alert-success py-1.5 px-2.5 small mb-1 d-flex align-items-center justify-content-between">
+                          <span class="d-flex align-items-center gap-1.5 text-success fw-semibold">
+                            <i class="fas fa-check-circle"></i>
+                            {{ $t('Invoice will be marked as PAID and payment voucher will be inserted in Payment module.') }}
+                          </span>
+                          <span class="badge bg-success font-monospace">৳ {{ Number(invoiceForm.paid_amount || invoiceGrandTotal).toLocaleString() }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Paid Amount -->
+                      <div class="col-sm-6 col-12">
+                        <label class="form-label small fw-semibold text-muted mb-1">{{ $t('Paid Amount (৳)') }} *</label>
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text bg-light text-muted fw-bold">৳</span>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            :max="invoiceGrandTotal"
+                            class="form-control form-control-sm font-monospace fw-bold text-success"
+                            v-model.number="invoiceForm.paid_amount"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Payment Method -->
+                      <div class="col-sm-6 col-12">
+                        <label class="form-label small fw-semibold text-muted mb-1">{{ $t('Payment Method') }} *</label>
+                        <select class="form-select form-select-sm fw-semibold" v-model="invoiceForm.payment_method">
+                          <option value="Cash">{{ $t('Cash') }}</option>
+                          <option value="BankTransfer">{{ $t('Bank Transfer') }}</option>
+                          <option value="Cheque">{{ $t('Cheque') }}</option>
+                          <option value="MobileBanking">{{ $t('Mobile Banking') }}</option>
+                        </select>
+                      </div>
+
+                      <!-- Mobile Banking Providers & TrxID -->
+                      <div class="col-sm-6 col-12" v-if="invoiceForm.payment_method === 'MobileBanking'">
+                        <label class="form-label small fw-semibold text-muted mb-1">{{ $t('M-Banking Provider') }}</label>
+                        <select class="form-select form-select-sm" v-model="invoiceForm.mbanking_type">
+                          <option value="bkash">bKash</option>
+                          <option value="nagad">Nagad</option>
+                          <option value="rocket">Rocket</option>
+                          <option value="upay">Upay</option>
+                        </select>
+                      </div>
+                      <div class="col-sm-6 col-12" v-if="invoiceForm.payment_method === 'MobileBanking'">
+                        <label class="form-label small fw-semibold text-muted mb-1">{{ $t('Transaction ID (TrxID)') }}</label>
+                        <input type="text" class="form-control form-control-sm font-monospace" v-model="invoiceForm.trxid" placeholder="e.g. 9J4K2L1" />
+                      </div>
+
+                      <!-- Cheque / Ref -->
+                      <div class="col-sm-6 col-12" v-if="invoiceForm.payment_method === 'BankTransfer' || invoiceForm.payment_method === 'Cheque'">
+                        <label class="form-label small fw-semibold text-muted mb-1">{{ $t('Cheque / Ref No.') }}</label>
+                        <input type="text" class="form-control form-control-sm font-monospace" v-model="invoiceForm.chequeno" placeholder="e.g. CHQ-88992" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Financial Calculation Summary Card -->
+              <div class="col-lg-5 col-12">
+                <div class="card border-0 shadow-sm rounded-3 bg-white h-100">
                   <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
                     <span class="fw-bold small text-dark d-flex align-items-center gap-1.5">
                       <i class="fas fa-calculator text-primary"></i>
@@ -931,44 +1201,46 @@
                     </span>
                     <span class="badge bg-light text-muted border font-monospace small">BDT (৳)</span>
                   </div>
-                  <div class="card-body p-3">
-                    <!-- Subtotal -->
-                    <div class="d-flex justify-content-between align-items-center mb-2 small pb-1 border-bottom">
-                      <span class="text-muted fw-semibold">{{ $t('Subtotal') }}:</span>
-                      <span class="font-monospace fw-bold text-dark fs-6">
-                        ৳ {{ invoiceSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                      </span>
-                    </div>
-
-                    <!-- Discount -->
-                    <div class="d-flex justify-content-between align-items-center mb-2 small pb-1 border-bottom">
-                      <span class="text-muted fw-semibold">{{ $t('Discount (৳)') }}:</span>
-                      <div class="input-group input-group-sm" style="width: 140px;">
-                        <span class="input-group-text bg-light text-muted">৳</span>
-                        <input
-                          type="number"
-                          step="any"
-                          min="0"
-                          class="form-control form-control-sm text-end font-monospace"
-                          v-model.number="invoiceForm.discount"
-                          placeholder="0.00"
-                        />
+                  <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div>
+                      <!-- Subtotal -->
+                      <div class="d-flex justify-content-between align-items-center mb-2 small pb-1 border-bottom">
+                        <span class="text-muted fw-semibold">{{ $t('Subtotal') }}:</span>
+                        <span class="font-monospace fw-bold text-dark fs-6">
+                          ৳ {{ invoiceSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                        </span>
                       </div>
-                    </div>
 
-                    <!-- VAT / Tax -->
-                    <div class="d-flex justify-content-between align-items-center mb-2 small pb-1 border-bottom">
-                      <span class="text-muted fw-semibold">{{ $t('VAT / Tax (৳)') }}:</span>
-                      <div class="input-group input-group-sm" style="width: 140px;">
-                        <span class="input-group-text bg-light text-muted">৳</span>
-                        <input
-                          type="number"
-                          step="any"
-                          min="0"
-                          class="form-control form-control-sm text-end font-monospace"
-                          v-model.number="invoiceForm.vat"
-                          placeholder="0.00"
-                        />
+                      <!-- Discount -->
+                      <div class="d-flex justify-content-between align-items-center mb-2 small pb-1 border-bottom">
+                        <span class="text-muted fw-semibold">{{ $t('Discount (৳)') }}:</span>
+                        <div class="input-group input-group-sm" style="width: 140px;">
+                          <span class="input-group-text bg-light text-muted">৳</span>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            class="form-control form-control-sm text-end font-monospace"
+                            v-model.number="invoiceForm.discount"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- VAT / Tax -->
+                      <div class="d-flex justify-content-between align-items-center mb-2 small pb-1 border-bottom">
+                        <span class="text-muted fw-semibold">{{ $t('VAT / Tax (৳)') }}:</span>
+                        <div class="input-group input-group-sm" style="width: 140px;">
+                          <span class="input-group-text bg-light text-muted">৳</span>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            class="form-control form-control-sm text-end font-monospace"
+                            v-model.number="invoiceForm.vat"
+                            placeholder="0.00"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -995,16 +1267,18 @@
             <button type="button" class="btn btn-outline-secondary btn-sm px-3 fw-semibold" @click="showInvoiceModal = false" :disabled="invoiceLoading">
               <i class="fas fa-times me-1"></i> {{ $t('Cancel') }}
             </button>
-            <button
-              type="button"
-              class="btn btn-primary btn-sm px-4 fw-bold shadow-sm d-inline-flex align-items-center gap-2"
-              @click="generateInvoice"
-              :disabled="invoiceLoading || invoiceForm.items.length === 0"
-            >
-              <span v-if="invoiceLoading" class="spinner-border spinner-border-sm"></span>
-              <i v-else class="fas fa-check-circle"></i>
-              <span>{{ $t('Create & Issue Invoice') }}</span>
-            </button>
+            <div class="d-flex align-items-center gap-2">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm px-4 fw-bold shadow-sm d-inline-flex align-items-center gap-2"
+                @click="generateInvoice"
+                :disabled="invoiceLoading || invoiceForm.items.length === 0"
+              >
+                <span v-if="invoiceLoading" class="spinner-border spinner-border-sm"></span>
+                <i v-else class="fas fa-check-circle"></i>
+                <span>{{ $t('Create & Issue Invoice') }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1047,6 +1321,10 @@ export default {
         items: [],
       },
 
+      // Terms & Conditions
+      termsList: [],
+      termsLoading: false,
+
       showInvoiceModal: false,
       invoiceLoading: false,
       invoiceForm: {
@@ -1054,6 +1332,13 @@ export default {
         price_type: "retail",
         discount: 0,
         vat: 0,
+        is_paid: 0,
+        paid_amount: 0,
+        payment_method: "Cash",
+        mbanking_type: "bkash",
+        trxid: "",
+        chequeno: "",
+        fund_account_id: null,
         items: [],
       },
     };
@@ -1128,6 +1413,49 @@ export default {
       const vat = Number(this.invoiceForm.vat || 0);
       return Math.max(0, sub - disc + vat);
     },
+
+    isChallanAccepted() {
+      return Boolean(
+        this.data &&
+        this.data.accepted_at &&
+        (this.data.receive_status === 'received' || this.data.receive_status === 'partial') &&
+        this.totalReceiveQty > 0
+      );
+    },
+
+    isTermsEnabled() {
+      const s = this.site || this.$root.site;
+      if (!s) return true;
+      if (s.show_invoice_terms !== undefined && s.show_invoice_terms !== null) {
+        return Boolean(s.show_invoice_terms == 1 || s.show_invoice_terms === true || s.show_invoice_terms === '1');
+      }
+      if (s.show_pos_terms !== undefined && s.show_pos_terms !== null) {
+        return Boolean(s.show_pos_terms == 1 || s.show_pos_terms === true || s.show_pos_terms === '1');
+      }
+      return true;
+    },
+
+    selectedTermsCount() {
+      return (this.termsList || []).filter(
+        (t) => t.is_checked && t.condition_text && t.condition_text.trim() !== ''
+      ).length;
+    },
+
+    hasInsufficientStock() {
+      return false;
+    },
+
+    insufficientStockItems() {
+      return [];
+    },
+  },
+
+  watch: {
+    invoiceGrandTotal(newVal) {
+      if (Number(this.invoiceForm.is_paid) === 1) {
+        this.invoiceForm.paid_amount = newVal;
+      }
+    },
   },
 
   methods: {
@@ -1195,7 +1523,68 @@ export default {
     },
 
     // ---------------- Invoice Modal Methods ----------------
+    onGenerateInvoiceBtnClick() {
+      if (!this.isChallanAccepted) {
+        this.$toast(
+          "Challan accept na hole invoice generate kora jabe na. (Please accept challan first)",
+          "warning"
+        );
+        return;
+      }
+      this.openInvoiceModal();
+    },
+
+    fetchTermsConditions() {
+      this.termsLoading = true;
+      axios
+        .get("termsCondition/by-module/Invoice")
+        .then((res) => {
+          const list = res.data || [];
+          this.termsList = list.map((item) => ({
+            id: item.id,
+            condition_text: item.condition_text || item.condition || "",
+            is_checked: Boolean(item.is_default == 1 || item.is_default === true),
+            is_default: Boolean(item.is_default == 1 || item.is_default === true),
+          }));
+        })
+        .catch((err) => {
+          console.error("Error fetching terms:", err);
+        })
+        .finally(() => {
+          this.termsLoading = false;
+        });
+    },
+
+    addCustomTerm() {
+      this.termsList.push({
+        id: "new_" + Date.now(),
+        condition_text: "",
+        is_checked: true,
+        is_default: false,
+      });
+    },
+
+    removeTerm(index) {
+      this.termsList.splice(index, 1);
+    },
+
+    handlePaymentSwitchChange() {
+      if (Number(this.invoiceForm.is_paid) === 1) {
+        this.invoiceForm.paid_amount = this.invoiceGrandTotal;
+      } else {
+        this.invoiceForm.paid_amount = 0;
+      }
+    },
+
     openInvoiceModal() {
+      if (!this.isChallanAccepted) {
+        this.$toast(
+          "Challan accept na hole invoice generate kora jabe na. (Please accept challan first)",
+          "warning"
+        );
+        return;
+      }
+
       const acceptedItems = (this.data.challan_details || []).filter(
         (d) => Number(d.receive_qty || 0) > 0
       );
@@ -1214,15 +1603,26 @@ export default {
       this.invoiceForm.discount = 0;
       this.invoiceForm.vat = 0;
 
+      // Reset payment switch (default OFF)
+      this.invoiceForm.is_paid = 0;
+      this.invoiceForm.paid_amount = 0;
+      this.invoiceForm.payment_method = "Cash";
+      this.invoiceForm.mbanking_type = "bkash";
+      this.invoiceForm.trxid = "";
+      this.invoiceForm.chequeno = "";
+      this.invoiceForm.fund_account_id = null;
+
       this.invoiceForm.items = acceptedItems.map((d) => {
         const retailPrice = d.item ? Number(d.item.retail_price || 0) : 0;
         const wholesalePrice = d.item ? Number(d.item.wholesale_price || 0) : 0;
         const defaultRate = initialPriceType === "wholesale"
           ? (wholesalePrice > 0 ? wholesalePrice : retailPrice)
           : (retailPrice > 0 ? retailPrice : wholesalePrice);
+        const currStock = Number(d.current_stock !== undefined ? d.current_stock : (d.item?.current_stock ?? 0));
 
         return {
           id: d.id,
+          item_id: d.item_id || null,
           title: d.item ? d.item.title : (d.description || "Product Item"),
           description: d.description || "",
           category_title: (d.category?.title) || (d.item?.category?.title) || "",
@@ -1230,10 +1630,21 @@ export default {
           unit_title: (d.item?.unit?.title) || "Pcs",
           retail_price: retailPrice,
           wholesale_price: wholesalePrice,
+          current_stock: currStock,
+          color_id: d.color_id || null,
+          color_title: (d.color && d.color.title) || d.color_title || "",
+          size_id: d.size_id || null,
+          size_title: (d.size && d.size.title) || d.size_title || "",
+          serial_no: d.serial_no || "",
           qty: Number(d.receive_qty || 0),
           rate: defaultRate,
         };
       });
+
+      // Load terms & conditions if enabled (Requirement 2)
+      if (this.isTermsEnabled) {
+        this.fetchTermsConditions();
+      }
 
       this.showInvoiceModal = true;
     },
@@ -1257,9 +1668,31 @@ export default {
     },
 
     generateInvoice() {
+      if (!this.isChallanAccepted) {
+        this.$toast(
+          "Challan accept na hole invoice generate kora jabe na. (Please accept challan first)",
+          "warning"
+        );
+        return;
+      }
+
       if (!this.data.client_id) {
         this.$toast("Challan has no assigned client. Please assign a client first.", "error");
         return;
+      }
+
+
+      const selectedTerms = this.isTermsEnabled
+        ? (this.termsList || [])
+            .filter((t) => t.is_checked && t.condition_text && t.condition_text.trim() !== "")
+            .map((t) => t.condition_text.trim())
+        : [];
+
+      const isPaid = Number(this.invoiceForm.is_paid) === 1;
+      const grandTotal = Number(this.invoiceGrandTotal || 0);
+      let paidAmt = 0;
+      if (isPaid) {
+        paidAmt = Number(this.invoiceForm.paid_amount) > 0 ? Number(this.invoiceForm.paid_amount) : grandTotal;
       }
 
       this.invoiceLoading = true;
@@ -1269,6 +1702,14 @@ export default {
           price_type: this.invoiceForm.price_type,
           discount: Number(this.invoiceForm.discount || 0),
           vat: Number(this.invoiceForm.vat || 0),
+          terms_conditions: selectedTerms,
+          is_paid: isPaid ? 1 : 0,
+          paid_amount: paidAmt,
+          payment_method: this.invoiceForm.payment_method || "Cash",
+          mbanking_type: this.invoiceForm.mbanking_type || null,
+          trxid: this.invoiceForm.trxid || null,
+          chequeno: this.invoiceForm.chequeno || null,
+          fund_account_id: this.invoiceForm.fund_account_id || null,
           items: this.invoiceForm.items.map((i) => ({
             id: i.id,
             qty: Number(i.qty || 0),

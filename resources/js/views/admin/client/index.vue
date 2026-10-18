@@ -134,20 +134,20 @@
     <!-- Column 1: Client Profile (Avatar + Name + Org + Client ID) -->
     <template v-slot:client_profile="{ item }">
       <td class="client-profile-cell" @click="pushToViewRoute(item.id)">
-        <div class="d-flex align-items-center gap-2.5">
-          <div class="client-avatar rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm flex-shrink-0"
-            :style="{ background: getAvatarColor(item.name || item.org_name) }">
+        <div class="d-flex align-items-center gap-3">
+          <div class="client-avatar rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm flex-shrink-0 me-3"
+            :style="{ background: getAvatarColor(item.name || item.org_name), marginRight: '12px' }">
             {{ getInitials(item.name || item.org_name) }}
           </div>
           <div class="min-w-0">
-            <div class="fw-bold text-dark client-name d-flex align-items-center gap-1.5 flex-wrap">
+            <div class="fw-bold text-dark client-name d-flex align-items-center gap-2 flex-wrap">
               <span class="text-truncate">{{ item.name || $t('Unnamed Client') }}</span>
               <span class="badge bg-light text-secondary border font-monospace px-1.5 py-0.5" style="font-size: 10px;">
                 #{{ item.clientid || item.id }}
               </span>
             </div>
             <div class="text-muted small text-truncate mt-0.5" v-if="item.org_name && item.org_name !== item.name">
-              <i class="fas fa-building text-secondary me-1"></i>{{ item.org_name }}
+              <i class="fas fa-building text-secondary me-2"></i>{{ item.org_name }}
             </div>
           </div>
         </div>
@@ -159,7 +159,7 @@
       <td class="text-center" @click="pushToViewRoute(item.id)">
         <span class="badge px-2.5 py-1 text-uppercase fw-semibold"
           :class="item.customer_type === 'wholesale' ? 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25' : 'bg-info bg-opacity-10 text-dark border border-info border-opacity-25'">
-          <i :class="item.customer_type === 'wholesale' ? 'fas fa-boxes me-1' : 'fas fa-user me-1'"></i>
+          <i :class="item.customer_type === 'wholesale' ? 'fas fa-boxes me-1.5' : 'fas fa-user me-1.5'"></i>
           {{ item.customer_type === 'wholesale' ? $t('Wholesale') : $t('Retail') }}
         </span>
       </td>
@@ -169,13 +169,13 @@
     <template v-slot:contact_info="{ item }">
       <td @click="pushToViewRoute(item.id)">
         <div v-if="item.mobile">
-          <a :href="'tel:' + item.mobile" @click.stop class="text-decoration-none fw-semibold text-dark small d-inline-flex align-items-center gap-1.5 hover-underline">
-            <i class="fas fa-phone-alt text-success" style="font-size: 11px;"></i>
+          <a :href="'tel:' + item.mobile" @click.stop class="text-decoration-none fw-semibold text-dark small d-inline-flex align-items-center hover-underline">
+            <i class="fas fa-phone-alt text-success me-2" style="font-size: 11px;"></i>
             <span>{{ item.mobile }}</span>
           </a>
         </div>
-        <div v-if="item.email" class="text-muted small text-truncate d-inline-flex align-items-center gap-1.5 mt-0.5" style="max-width: 190px;" :title="item.email">
-          <i class="fas fa-envelope text-primary" style="font-size: 11px;"></i>
+        <div v-if="item.email" class="text-muted small text-truncate d-inline-flex align-items-center mt-0.5" style="max-width: 190px;" :title="item.email">
+          <i class="fas fa-envelope text-primary me-2" style="font-size: 11px;"></i>
           <span>{{ item.email }}</span>
         </div>
         <div v-if="!item.mobile && !item.email" class="text-muted small fst-italic">--</div>
@@ -185,8 +185,8 @@
     <!-- Column 4: Location / Area -->
     <template v-slot:location="{ item }">
       <td @click="pushToViewRoute(item.id)">
-        <div class="fw-semibold small text-dark d-flex align-items-center gap-1" v-if="(item.area && item.area.area_name) || (item.district && item.district.district_name)">
-          <i class="fas fa-map-marker-alt text-danger flex-shrink-0" style="font-size: 11px;"></i>
+        <div class="fw-semibold small text-dark d-flex align-items-center" v-if="(item.area && item.area.area_name) || (item.district && item.district.district_name)">
+          <i class="fas fa-map-marker-alt text-danger flex-shrink-0 me-2" style="font-size: 11px;"></i>
           <span class="text-truncate">{{ [item.area ? item.area.area_name : '', item.district ? item.district.district_name : ''].filter(Boolean).join(', ') }}</span>
         </div>
         <div class="text-muted small text-truncate mt-0.5" style="max-width: 220px;" v-if="item.address" :title="item.address">

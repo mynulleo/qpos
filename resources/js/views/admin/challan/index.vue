@@ -161,16 +161,16 @@
     <!-- Column 1: Challan No & Date -->
     <template v-slot:challan_info="{ item }">
       <td class="challan-info-cell" @click="pushToViewRoute(item.id)">
-        <div class="d-flex align-items-center gap-2">
-          <div class="challan-icon-badge rounded-2 d-flex align-items-center justify-content-center text-white" style="background-color: #112C47; width: 34px; height: 34px; font-size: 13px;">
+        <div class="d-flex align-items-center gap-3">
+          <div class="challan-icon-badge rounded-2 d-flex align-items-center justify-content-center text-white me-3" style="background-color: #112C47; width: 34px; height: 34px; font-size: 13px; margin-right: 12px;">
             <i class="fas fa-file-invoice"></i>
           </div>
           <div>
             <div class="fw-bold font-monospace text-dark" style="color: #112C47 !important;">
               {{ item.challan_no || ('CH-' + String(item.id).padStart(5, '0')) }}
             </div>
-            <div class="small text-muted d-flex align-items-center gap-1">
-              <i class="far fa-calendar-alt text-secondary" style="font-size: 11px;"></i>
+            <div class="small text-muted d-flex align-items-center gap-1.5">
+              <i class="far fa-calendar-alt text-secondary me-1" style="font-size: 11px;"></i>
               <span>{{ item.challan_date || 'N/A' }}</span>
             </div>
           </div>

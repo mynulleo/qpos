@@ -140,3 +140,55 @@ fieldset .table-squeeze> :not(caption)>*>* {
     color: #212529;
 
 }
+
+/* Ensure vue-select dropdown menus always appear above Bootstrap modals and backdrops */
+.vs__dropdown-menu {
+    z-index: 999999 !important;
+}
+
+/*==================================================
+=            Global Table & Badge Gap Spacing      =
+==================================================*/
+.gap-1\.5 {
+    gap: 0.5rem !important;
+}
+.gap-2\.5 {
+    gap: 0.75rem !important;
+}
+.gap-3 {
+    gap: 1rem !important;
+}
+
+/* Ensure clean, generous spacing between list table icon badges/avatars and adjacent text */
+.wh-icon-badge,
+.cat-icon-badge,
+.brand-icon-badge,
+.series-icon-badge,
+.unit-icon-badge,
+.color-icon-badge,
+.size-icon-badge,
+.bank-icon-badge,
+.fy-icon-badge,
+.curr-icon-badge,
+.district-icon-badge,
+.dist-icon-badge,
+.area-icon-badge,
+.model-icon-badge,
+.help-icon-badge,
+.emp-avatar,
+.avatar-box,
+.client-avatar,
+.acc-icon-badge,
+.vch-icon-badge,
+.transfer-icon-badge,
+.with-icon-badge,
+.wdl-icon-badge,
+.desig-icon-badge,
+.sp-icon-badge,
+.param-icon-badge,
+.sheet-icon-badge,
+.adj-icon-badge,
+.audit-icon-badge,
+.challan-icon-badge {
+    margin-right: 14px !important;
+}

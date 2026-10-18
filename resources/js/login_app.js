@@ -1,93 +1,50 @@
-require("./login_bootstrap");
+import "./login_bootstrap";
 import { createApp } from "vue";
+import { createStore } from "vuex";
+import auth from "./store/auth";
 
 // Import Validation...
 import validate from "simple-vue-validator";
 const Validator = validate.Validator;
 window.Validator = Validator;
 
-// Import Plugin...
+// Import Plugins...
 import toast_plugin from "./plugin/toast";
-import filters from "./plugin/filters";
-import i18n from "./plugin/i18n";
+import i18n from "./plugin/login_i18n";
 
-// Import Mixin...
-import crud_mixin from "./mixins/crud";
+// Import Components...
+import Input from "./components/Form/Input.vue";
+import login from "./views/auth/login.vue";
 
-// Import Vuex...
-import store from "./store";
-
-import { xTooltip, xZoomImage } from "./helpers/custom-directives";
+const store = createStore({
+    modules: {
+        auth,
+    },
+});
 
 // App Initialize...
 const app = createApp({
     data() {
         return {
-            baseurl: laravel.baseurl,
-            asset_url: laravel.asset_url,
-            storage_url: laravel.storage_url,
+            baseurl: window.laravel ? window.laravel.baseurl : "",
+            asset_url: window.laravel ? window.laravel.asset_url : "",
+            storage_url: window.laravel ? window.laravel.storage_url : "",
             spinner: false,
             site: "",
             initialLoader: false,
         };
     },
-    methods: {
-        async getInitializeSystems() {
-            this.initialLoader = false;
-            // await axios.get("app/initialize-systems").then((res) => {
-            //     this.site = res.data.site;
-            //     this.initialLoader = false;
-            // });
-            return this.site;
-        },
-    },
-    created() {
-        this.getInitializeSystems();
-    },
 });
 
-import loadCustomComponents from "./plugin/custom";
-loadCustomComponents(app);
-
-import login from "./views/auth/login.vue";
+app.component("Input", Input);
 app.component("login", login);
-app.mixin(crud_mixin);
+
 app.use(validate);
 app.use(toast_plugin);
-app.use(filters);
 app.use(i18n);
 app.use(store);
 
-app.directive("x-tooltip", xTooltip);
-app.directive("x-zoom-image", xZoomImage);
-
 app.config.productionTip = false;
 
-if (process.env.NODE_ENV !== "production") {
-    app.config.errorHandler = (error, instance, info) => {
-        console.log(
-            "%c!!------------ Error occurred -------------!!",
-            "color: red; font-size: 20px; font-weight: 800;",
-        );
-        console.log("----------------------------------------");
-
-        console.log("%cError Info:", "color: red;");
-        console.log(info);
-        console.log("---------------------------------------");
-
-        console.log("%cError Details:", "color: red;");
-        console.log(error);
-
-        console.log("%cError Instance:", "color: red;");
-        console.log(instance);
-        console.log("--------------------------------------");
-        console.log(
-            "%cError End! \n\n",
-            "color: red; font-size: 20px; font-weight: 800;",
-        );
-
-        alert("Error occurred! Please, check your console. Thank you!");
-    };
-}
-
 app.mount("#app");
+

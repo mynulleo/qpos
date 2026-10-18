@@ -30,6 +30,16 @@ class ChallanDetail extends BaseModel
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
     }
+
+    public function color()
+    {
+        return $this->belongsTo(Color::class, 'color_id', 'id');
+    }
+
+    public function size()
+    {
+        return $this->belongsTo(Size::class, 'size_id', 'id');
+    }
     // date format
 
     // boot function

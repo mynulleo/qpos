@@ -31,7 +31,7 @@ class FundTransferController extends BaseController
         ])->latest();
 
         // 📅 Filter: From Transfer Date
-        if (!empty($request->from_transfer_date)) {
+        if (!empty($request->from_transfer_date) && empty($request->to_transfer_date)) {
             $query->whereDate(
                 'transfer_date',
                 '>=',
@@ -39,12 +39,20 @@ class FundTransferController extends BaseController
             );
         }
 
-        // 📅 Filter: Between two dates (optional optimized version)
+        // 📅 Filter: Between two dates
         if (!empty($request->from_transfer_date) && !empty($request->to_transfer_date)) {
             $query->whereBetween('transfer_date', [
                 Carbon::parse($request->from_transfer_date)->format('Y-m-d'),
                 Carbon::parse($request->to_transfer_date)->format('Y-m-d')
             ]);
+        }
+
+        if (!empty($request->from_account_id)) {
+            $query->where('from_account_id', $request->from_account_id);
+        }
+
+        if (!empty($request->to_account_id)) {
+            $query->where('to_account_id', $request->to_account_id);
         }
 
         // 📦 Return all or paginated

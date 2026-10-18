@@ -326,9 +326,23 @@
                   <td class="text-start">
                     <div class="d-flex flex-column">
                       <span class="fw-bold text-dark fs-6">{{ getItemTitle(item) }}</span>
-                      <small class="text-muted font-monospace" v-if="getItemBarcode(item)">
-                        <i class="fas fa-barcode me-1"></i>Barcode: {{ getItemBarcode(item) }}
-                      </small>
+                      <div class="d-flex align-items-center gap-1 flex-wrap mt-0.5">
+                        <small class="text-muted font-monospace" v-if="getItemBarcode(item)">
+                          <i class="fas fa-barcode me-1"></i>Barcode: {{ getItemBarcode(item) }}
+                        </small>
+                        <!-- Color Badge -->
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-0.5 font-monospace small" v-if="getColorTitle(item)">
+                          <i class="fas fa-palette me-1"></i>{{ getColorTitle(item) }}
+                        </span>
+                        <!-- Size Badge -->
+                        <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 px-2 py-0.5 font-monospace small" v-if="getSizeTitle(item)">
+                          <i class="fas fa-ruler me-1"></i>{{ getSizeTitle(item) }}
+                        </span>
+                      </div>
+                      <!-- Serial Numbers -->
+                      <div class="small font-monospace text-primary mt-1" v-if="item.serial_no">
+                        <i class="fas fa-hashtag me-0.5"></i><span class="fw-semibold">S/N:</span> {{ item.serial_no }}
+                      </div>
                     </div>
                   </td>
 
@@ -474,6 +488,7 @@
                   placeholder="-- Select Category --"
                   :closeOnSelect="true"
                   :appendToBody="true"
+                  @option:selected="onModalCategoryChange"
                   @update:modelValue="onModalCategoryChange"
                   class="modal-vselect"
                 />
@@ -502,6 +517,36 @@
                 </small>
               </div>
 
+              <!-- 2.1 Color Selection (Dependent on shop_type) -->
+              <div :class="(showColorOption && showSizeOption) ? 'col-md-6' : 'col-md-12'" v-if="showColorOption">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  {{ $t('Color') }}
+                </label>
+                <select
+                  class="form-select form-select-sm"
+                  v-model="modalForm.color_id"
+                  @change="onModalVariantChange"
+                >
+                  <option :value="null">{{ $t('-- Standard / Any Color --') }}</option>
+                  <option v-for="c in availableColors" :key="c.id" :value="c.id">{{ c.title }}</option>
+                </select>
+              </div>
+
+              <!-- 2.2 Size Selection (Dependent on shop_type) -->
+              <div :class="(showColorOption && showSizeOption) ? 'col-md-6' : 'col-md-12'" v-if="showSizeOption">
+                <label class="form-label small fw-bold text-dark mb-1">
+                  {{ $t('Size') }}
+                </label>
+                <select
+                  class="form-select form-select-sm"
+                  v-model="modalForm.size_id"
+                  @change="onModalVariantChange"
+                >
+                  <option :value="null">{{ $t('-- Standard / Any Size --') }}</option>
+                  <option v-for="s in availableSizes" :key="s.id" :value="s.id">{{ s.title }}</option>
+                </select>
+              </div>
+
               <!-- 3. Auto-detected Unit Badge -->
               <div class="col-md-4">
                 <label class="form-label small fw-bold text-dark mb-1">{{ $t('Unit') }}</label>
@@ -518,8 +563,16 @@
 
               <!-- 4. Order / Dispatched Quantity -->
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-dark mb-1">
-                  {{ $t('Order / Dispatched Qty') }} <span class="text-danger">*</span>
+                <label class="form-label small fw-bold text-dark mb-1 d-flex justify-content-between align-items-center">
+                  <span>{{ $t('Order / Dispatched Qty') }} <span class="text-danger">*</span></span>
+                  <span
+                    v-if="modalForm.current_stock !== null && modalForm.current_stock !== undefined"
+                    class="badge font-monospace"
+                    :class="Number(modalForm.qty || 0) > Number(modalForm.current_stock) ? 'bg-danger text-white' : 'bg-success bg-opacity-10 text-success border border-success-subtle'"
+                    style="font-size: 10px;"
+                  >
+                    Stock: {{ modalForm.current_stock }}
+                  </span>
                 </label>
                 <div class="input-group input-group-sm">
                   <input
@@ -527,11 +580,15 @@
                     step="any"
                     min="1"
                     class="form-control form-control-sm text-center font-monospace fw-bold fs-6"
+                    :class="modalForm.current_stock !== null && Number(modalForm.qty || 0) > Number(modalForm.current_stock) ? 'border-danger text-danger' : ''"
                     placeholder="1"
                     v-model.number="modalForm.qty"
                   />
                   <span class="input-group-text bg-light text-muted">{{ modalForm.unit_title || 'Pcs' }}</span>
                 </div>
+                <small v-if="modalForm.current_stock !== null && Number(modalForm.qty || 0) > Number(modalForm.current_stock)" class="text-danger fw-semibold d-block mt-0.5" style="font-size: 11px;">
+                  <i class="fas fa-triangle-exclamation me-1"></i>স্টকে আছে মাত্র {{ modalForm.current_stock }}!
+                </small>
               </div>
 
               <!-- 5. Received Quantity (Disabled/Readonly on Create, active on Edit) -->
@@ -550,6 +607,80 @@
                     :readonly="!$route.params.id"
                   />
                   <span class="input-group-text bg-light text-muted">{{ modalForm.unit_title || 'Pcs' }}</span>
+                </div>
+              </div>
+
+              <!-- 5.1 Serial Number Section (Electronics & Serialized Products) -->
+              <div class="col-12" v-if="showSerialOption">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label small fw-bold text-dark mb-0">
+                    <i class="fas fa-barcode text-primary me-1"></i>{{ $t('Serial Number / IMEI') }}
+                    <span class="badge bg-primary text-white ms-1 font-monospace" v-if="modalForm.serialTags && modalForm.serialTags.length > 0">
+                      {{ modalForm.serialTags.length }} {{ $t('entered') }} (Qty: {{ modalForm.qty }})
+                    </span>
+                  </label>
+                  <span class="badge bg-info text-dark font-monospace" v-if="modalForm.available_serials && modalForm.available_serials.length > 0">
+                    {{ modalForm.available_serials.length }} {{ $t('in stock') }}
+                  </span>
+                </div>
+
+                <!-- Selected Serial Tags Container -->
+                <div class="d-flex flex-wrap gap-1 mb-1.5 p-2 bg-light border rounded align-items-center" v-if="modalForm.serialTags && modalForm.serialTags.length > 0" style="max-height: 90px; overflow-y: auto;">
+                  <span v-for="(stag, sIdx) in modalForm.serialTags" :key="'stag_' + stag + '_' + sIdx" class="badge bg-primary text-white font-monospace d-inline-flex align-items-center gap-1 py-1 px-2" style="font-size: 11px;">
+                    <span>{{ stag }}</span>
+                    <span role="button" class="cursor-pointer ms-1 text-white-50 hover-text-white d-inline-flex align-items-center" @click.stop="removeSerialTag(sIdx)" :title="$t('Remove')">
+                      <i class="fas fa-times"></i>
+                    </span>
+                  </span>
+                  <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 ms-auto font-monospace" style="font-size: 10px;" @click="clearAllSerialTags" :title="$t('Clear All')">
+                    <i class="fas fa-trash-alt me-1"></i>{{ $t('Clear') }}
+                  </button>
+                </div>
+
+                <!-- Tag Input & Scan Field -->
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light text-muted"><i class="fas fa-hashtag"></i></span>
+                  <input
+                    type="text"
+                    class="form-control form-control-sm font-monospace"
+                    :placeholder="$t('Type or scan serial (press Enter or Comma to add)')"
+                    v-model="currentSerialInput"
+                    @keydown.enter.prevent="addCurrentSerialTag"
+                    @keydown.comma.prevent="addCurrentSerialTag"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm px-3 fw-semibold"
+                    @click="addCurrentSerialTag"
+                    :disabled="!currentSerialInput || !currentSerialInput.trim()"
+                  >
+                    <i class="fas fa-plus me-1"></i>{{ $t('Add Serial') }}
+                  </button>
+                </div>
+                <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                  <i class="fas fa-info-circle me-1"></i>{{ $t('Enter serial numbers separated by commas or press Enter after each scan. You can also paste multiple serials.') }}
+                </small>
+
+                <!-- Available In-Stock Serials Quick-Chips -->
+                <div v-if="modalForm.available_serials && modalForm.available_serials.length > 0" class="mt-2 p-2 bg-light rounded border">
+                  <div class="small fw-semibold text-muted mb-1 d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-tags me-1 text-success"></i>{{ $t('Available In-Stock Serials (Click to toggle tag):') }}</span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-monospace">
+                      {{ modalForm.available_serials.length }} available
+                    </span>
+                  </div>
+                  <div class="d-flex flex-wrap gap-1" style="max-height: 100px; overflow-y: auto;">
+                    <span
+                      v-for="sn in modalForm.available_serials"
+                      :key="sn"
+                      class="badge border px-2 py-1 cursor-pointer transition-all"
+                      :class="(modalForm.serialTags && modalForm.serialTags.includes(sn)) ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-dark border-secondary-subtle'"
+                      style="cursor: pointer; font-size: 11px;"
+                      @click="toggleAvailableSerial(sn)"
+                    >
+                      <i class="fas" :class="(modalForm.serialTags && modalForm.serialTags.includes(sn)) ? 'fa-check-circle me-1' : 'fa-plus me-1 text-secondary'"></i>{{ sn }}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -623,6 +754,9 @@ export default {
       items: [],
       categories: [],
       selectedClient: null,
+      colors: [],
+      sizes: [],
+      currentSerialInput: "",
 
       // Modal State for Product Selection (Purchase-create style)
       showProductModal: false,
@@ -635,8 +769,16 @@ export default {
         items: [],
         unit_id: null,
         unit_title: "",
+        color_id: null,
+        size_id: null,
+        serial_no: "",
+        serialTags: [],
+        available_serials: [],
+        item_variants: [],
+        has_purchased_serials: false,
         qty: 1,
         receive_qty: 0,
+        current_stock: null,
         description: "",
         remark: "",
       },
@@ -646,6 +788,60 @@ export default {
   computed: {
     isLocked() {
       return Boolean(this.data.is_invoiced || this.data.invoice_id);
+    },
+
+    shopType() {
+      return (this.$root.site?.shop_type || this.$root.site_setting?.shop_type || "").toLowerCase();
+    },
+
+    isElectronicsShop() {
+      return this.shopType === "electronics";
+    },
+
+    isClothingShop() {
+      return this.shopType === "clothing" || this.shopType === "fashion";
+    },
+
+    isGroceryShop() {
+      return this.shopType === "grocery" || this.shopType === "departmental" || this.shopType === "departmental_store";
+    },
+
+    showColorOption() {
+      if (this.isGroceryShop) return false;
+      return true;
+    },
+
+    showSizeOption() {
+      if (this.isElectronicsShop || this.isGroceryShop) return false;
+      return true;
+    },
+
+    showSerialOption() {
+      if (this.isElectronicsShop) return true;
+      const itm = (this.modalForm.items || []).find((i) => i.id === this.modalForm.item_id);
+      if (itm && (itm.is_serialized || itm.has_purchase_serials || itm.has_serial)) return true;
+      if (this.modalForm.has_purchased_serials) return true;
+      return false;
+    },
+
+    availableColors() {
+      if (this.modalForm.item_variants && this.modalForm.item_variants.length > 0) {
+        const colorIds = this.modalForm.item_variants.map((v) => v.color_id).filter(Boolean);
+        if (colorIds.length > 0) {
+          return this.colors.filter((c) => colorIds.includes(c.id));
+        }
+      }
+      return this.colors;
+    },
+
+    availableSizes() {
+      if (this.modalForm.item_variants && this.modalForm.item_variants.length > 0) {
+        const sizeIds = this.modalForm.item_variants.map((v) => v.size_id).filter(Boolean);
+        if (sizeIds.length > 0) {
+          return this.sizes.filter((s) => sizeIds.includes(s.id));
+        }
+      }
+      return this.sizes;
     },
 
     totalOrderQty() {
@@ -692,15 +888,51 @@ export default {
       return "";
     },
 
+    getColorTitle(item) {
+      if (item?.color?.title) return item.color.title;
+      if (item?.color_title) return item.color_title;
+      if (item?.color_id) {
+        const found = this.colors.find((c) => c.id === item.color_id);
+        if (found) return found.title;
+      }
+      return "";
+    },
+
+    getSizeTitle(item) {
+      if (item?.size?.title) return item.size.title;
+      if (item?.size_title) return item.size_title;
+      if (item?.size_id) {
+        const found = this.sizes.find((s) => s.id === item.size_id);
+        if (found) return found.title;
+      }
+      return "";
+    },
+
     getUnitTitle(item) {
       if (item?.item?.unit?.title) return item.item.unit.title;
       if (item?.unit_title) return item.unit_title;
       return "Pcs";
     },
 
+    getColorsAndSizes() {
+      axios
+        .get("color?allData=true")
+        .then((res) => {
+          this.colors = res.data || [];
+        })
+        .catch(() => {});
+      axios
+        .get("size?allData=true")
+        .then((res) => {
+          this.sizes = res.data || [];
+        })
+        .catch(() => {});
+    },
+
     openAddProductModal() {
       if (this.isLocked) return;
       this.isEditingModal = false;
+      this.currentSerialInput = "";
       this.modalForm = {
         rowIndex: null,
         category_id: this.categories.length === 1 ? this.categories[0].id : null,
@@ -709,11 +941,23 @@ export default {
         items: [],
         unit_id: null,
         unit_title: "",
+        color_id: null,
+        size_id: null,
+        serial_no: "",
+        serialTags: [],
+        available_serials: [],
+        item_variants: [],
+        has_purchased_serials: false,
         qty: 1,
         receive_qty: 0,
+        current_stock: null,
         description: "",
         remark: "",
       };
+
+      if (!this.categories || this.categories.length === 0) {
+        this.getCategories();
+      }
 
       if (this.modalForm.category_id) {
         this.onModalCategoryChange();
@@ -725,7 +969,16 @@ export default {
     openEditProductModal(index, item) {
       if (this.isLocked) return;
       this.isEditingModal = true;
+      this.currentSerialInput = "";
       const catId = item.category_id || (item.item ? item.item.category_id : null);
+
+      if (!this.categories || this.categories.length === 0) {
+        this.getCategories();
+      }
+
+      const sTags = item.serial_no
+        ? item.serial_no.split(/[\r\n,]+/).map((s) => s.trim()).filter(Boolean)
+        : [];
 
       this.modalForm = {
         rowIndex: index,
@@ -735,8 +988,16 @@ export default {
         items: item.items || [],
         unit_id: item.unit_id || (item.item ? item.item.unit_id : null),
         unit_title: this.getUnitTitle(item),
+        color_id: item.color_id || null,
+        size_id: item.size_id || null,
+        serial_no: item.serial_no || "",
+        serialTags: sTags,
+        available_serials: [],
+        item_variants: [],
+        has_purchased_serials: false,
         qty: item.qty || 1,
         receive_qty: item.receive_qty || 0,
+        current_stock: item.current_stock !== undefined ? item.current_stock : (item.item?.current_stock ?? null),
         description: item.description || "",
         remark: item.remark || "",
       };
@@ -745,13 +1006,22 @@ export default {
         axios.get(`getitemsbycategory/${catId}`).then((res) => {
           this.modalForm.items = res.data || [];
           const found = this.modalForm.items.find((i) => i.id === item.item_id);
-          if (found && !this.modalForm.unit_title) {
-            this.modalForm.unit_id = found.unit_id;
-            this.modalForm.unit_title = found.unit?.title || "Pcs";
+          if (found) {
+            if (!this.modalForm.unit_title) {
+              this.modalForm.unit_id = found.unit_id;
+              this.modalForm.unit_title = found.unit?.title || "Pcs";
+            }
+            if (found.current_stock !== undefined) {
+              this.modalForm.current_stock = Number(found.current_stock);
+            }
           }
         });
       } else {
         this.modalForm.items = this.items || [];
+      }
+
+      if (item.item_id) {
+        this.fetchModalItemStockAndVariants(item.item_id);
       }
 
       this.showProductModal = true;
@@ -760,14 +1030,30 @@ export default {
     closeProductModal() {
       this.showProductModal = false;
       this.isEditingModal = false;
+      this.currentSerialInput = "";
     },
 
-    onModalCategoryChange() {
+    onModalCategoryChange(selectedCat = null) {
+      if (selectedCat && typeof selectedCat === "object" && selectedCat.id) {
+        this.modalForm.category_id = selectedCat.id;
+      } else if (selectedCat !== null && typeof selectedCat !== "undefined") {
+        this.modalForm.category_id = selectedCat;
+      }
+
       this.modalForm.item_id = null;
       this.modalForm.items = [];
       this.modalForm.unit_id = null;
       this.modalForm.unit_title = "";
+      this.modalForm.current_stock = null;
+      this.modalForm.color_id = null;
+      this.modalForm.size_id = null;
+      this.modalForm.serial_no = "";
+      this.modalForm.serialTags = [];
+      this.modalForm.available_serials = [];
+      this.modalForm.item_variants = [];
+      this.modalForm.has_purchased_serials = false;
       this.modalForm.description = "";
+      this.currentSerialInput = "";
 
       if (!this.modalForm.category_id) return;
 
@@ -782,14 +1068,22 @@ export default {
     },
 
     onModalItemChange(selectedObj = null) {
-      if (!selectedObj || typeof selectedObj !== "object") {
-        selectedObj = this.modalForm.items.find((i) => i.id === this.modalForm.item_id);
+      if (selectedObj && (typeof selectedObj === "number" || typeof selectedObj === "string")) {
+        selectedObj = this.modalForm.items.find((i) => i.id == selectedObj);
+      } else if (!selectedObj || typeof selectedObj !== "object") {
+        selectedObj = this.modalForm.items.find((i) => i.id == this.modalForm.item_id);
       }
       if (selectedObj) {
         this.modalForm.item_id = selectedObj.id;
         this.modalForm.item_title = selectedObj.title;
         this.modalForm.unit_id = selectedObj.unit_id || null;
         this.modalForm.unit_title = selectedObj.unit?.title || "Pcs";
+        this.modalForm.current_stock = selectedObj.current_stock !== undefined ? Number(selectedObj.current_stock) : null;
+        this.modalForm.color_id = null;
+        this.modalForm.size_id = null;
+        this.modalForm.serial_no = "";
+        this.modalForm.serialTags = [];
+        this.currentSerialInput = "";
 
         if (!this.modalForm.description) {
           let desc = selectedObj.title;
@@ -797,6 +1091,92 @@ export default {
             desc += " (Model: " + selectedObj.model_no + ")";
           }
           this.modalForm.description = desc;
+        }
+
+        this.fetchModalItemStockAndVariants(selectedObj.id);
+      }
+    },
+
+    fetchModalItemStockAndVariants(itemId) {
+      if (!itemId) return;
+      axios
+        .get(`getitemstock/${itemId}?details=1`)
+        .then((res) => {
+          if (typeof res.data === "object" && res.data !== null) {
+            this.modalForm.item_variants = res.data.variants || [];
+            this.modalForm.available_serials = res.data.available_serials || [];
+            this.modalForm.has_purchased_serials = Boolean(res.data.has_purchased_serials);
+
+            if (!this.isEditingModal) {
+              if (res.data.default_color_id !== undefined && res.data.default_color_id !== null) {
+                this.modalForm.color_id = res.data.default_color_id;
+              }
+              if (res.data.default_size_id !== undefined && res.data.default_size_id !== null) {
+                this.modalForm.size_id = res.data.default_size_id;
+              }
+              this.modalForm.current_stock = Number(res.data.stock ?? res.data.default_stock ?? 0);
+            }
+          }
+        })
+        .catch(() => {});
+    },
+
+    onModalVariantChange() {
+      if (!this.modalForm.item_id) return;
+      const params = {};
+      if (this.modalForm.color_id !== null && this.modalForm.color_id !== undefined) {
+        params.color_id = this.modalForm.color_id;
+      }
+      if (this.modalForm.size_id !== null && this.modalForm.size_id !== undefined) {
+        params.size_id = this.modalForm.size_id;
+      }
+      axios
+        .get(`getitemstock/${this.modalForm.item_id}`, { params })
+        .then((res) => {
+          if (typeof res.data === "object" && res.data !== null && res.data.stock !== undefined) {
+            this.modalForm.current_stock = Number(res.data.stock);
+          }
+        })
+        .catch(() => {});
+    },
+
+    addCurrentSerialTag() {
+      if (!this.currentSerialInput) return;
+      const rawSerials = this.currentSerialInput
+        .split(/[\r\n,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      rawSerials.forEach((sn) => {
+        if (!this.modalForm.serialTags.includes(sn)) {
+          this.modalForm.serialTags.push(sn);
+        }
+      });
+      this.modalForm.serial_no = this.modalForm.serialTags.join(", ");
+      if (this.modalForm.serialTags.length > 0 && Number(this.modalForm.qty || 0) < this.modalForm.serialTags.length) {
+        this.modalForm.qty = this.modalForm.serialTags.length;
+      }
+      this.currentSerialInput = "";
+    },
+
+    removeSerialTag(index) {
+      this.modalForm.serialTags.splice(index, 1);
+      this.modalForm.serial_no = this.modalForm.serialTags.join(", ");
+    },
+
+    clearAllSerialTags() {
+      this.modalForm.serialTags = [];
+      this.modalForm.serial_no = "";
+    },
+
+    toggleAvailableSerial(sn) {
+      const idx = this.modalForm.serialTags.indexOf(sn);
+      if (idx !== -1) {
+        this.removeSerialTag(idx);
+      } else {
+        this.modalForm.serialTags.push(sn);
+        this.modalForm.serial_no = this.modalForm.serialTags.join(", ");
+        if (this.modalForm.serialTags.length > 0 && Number(this.modalForm.qty || 0) < this.modalForm.serialTags.length) {
+          this.modalForm.qty = this.modalForm.serialTags.length;
         }
       }
     },
@@ -815,13 +1195,27 @@ export default {
         return;
       }
 
+      if (this.modalForm.current_stock !== null && Number(this.modalForm.qty) > Number(this.modalForm.current_stock)) {
+        this.$toast(
+          `স্টকে পর্যাপ্ত পণ্য নেই! '${this.modalForm.item_title}' পণ্যটির বর্তমান স্টক ${this.modalForm.current_stock}, কিন্তু চালানে চাওয়া হয়েছে ${this.modalForm.qty}।`,
+          "error"
+        );
+        return;
+      }
+
+      // If user typed serial but didn't hit Enter, add it automatically
+      if (this.currentSerialInput && this.currentSerialInput.trim()) {
+        this.addCurrentSerialTag();
+      }
+
       const selectedItem = this.modalForm.items.find((i) => i.id === this.modalForm.item_id);
       const selectedCat = this.categories.find((c) => c.id === this.modalForm.category_id);
 
       const row = {
-        id: (this.modalForm.rowIndex !== null && this.data.challan_details[this.modalForm.rowIndex]?.id) 
-              ? this.data.challan_details[this.modalForm.rowIndex].id 
-              : undefined,
+        id:
+          this.modalForm.rowIndex !== null && this.data.challan_details[this.modalForm.rowIndex]?.id
+            ? this.data.challan_details[this.modalForm.rowIndex].id
+            : undefined,
         category_id: this.modalForm.category_id,
         category: selectedCat || { id: this.modalForm.category_id, title: this.getCategoryTitle(this.modalForm.category_id) },
         item_id: this.modalForm.item_id,
@@ -829,6 +1223,13 @@ export default {
         items: this.modalForm.items,
         unit_id: this.modalForm.unit_id,
         unit_title: this.modalForm.unit_title || (selectedItem?.unit?.title || "Pcs"),
+        color_id: this.modalForm.color_id || null,
+        color: this.modalForm.color_id ? this.colors.find((c) => c.id === this.modalForm.color_id) : null,
+        color_title: this.getColorTitle({ color_id: this.modalForm.color_id }),
+        size_id: this.modalForm.size_id || null,
+        size: this.modalForm.size_id ? this.sizes.find((s) => s.id === this.modalForm.size_id) : null,
+        size_title: this.getSizeTitle({ size_id: this.modalForm.size_id }),
+        serial_no: this.modalForm.serial_no ? this.modalForm.serial_no.trim() : "",
         description: this.modalForm.description,
         qty: parseFloat(this.modalForm.qty) || 1,
         receive_qty: parseFloat(this.modalForm.receive_qty) || 0,
@@ -972,6 +1373,7 @@ export default {
     this.getClients();
     this.getCategories();
     this.getSalesItems();
+    this.getColorsAndSizes();
   },
 
   validators: {
@@ -1013,5 +1415,48 @@ export default {
   left: 0;
   width: 100vw;
   height: 100vh;
+}
+
+/* Product Modal Dropdown Styling */
+.modal-vselect :deep(.vs__dropdown-toggle) {
+  min-height: 38px !important;
+  border-radius: 6px !important;
+  border-color: #cbd5e1 !important;
+  font-size: 13px !important;
+  background-color: #ffffff !important;
+}
+
+.modal-vselect :deep(.vs__selected) {
+  font-size: 13px !important;
+  color: #1e293b !important;
+}
+
+/* Global vs dropdown menu styling when appended to body */
+:global(.vs__dropdown-menu) {
+  z-index: 999999 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18) !important;
+  border-radius: 6px !important;
+  border: 1px solid #cbd5e1 !important;
+  max-height: 260px !important;
+  background-color: #ffffff !important;
+  overflow-y: auto !important;
+}
+
+:global(.vs__dropdown-option) {
+  padding: 7px 12px !important;
+  font-size: 13px !important;
+  color: #1e293b !important;
+}
+
+:global(.vs__dropdown-option--highlight) {
+  background-color: #112C47 !important;
+  color: #ffffff !important;
+}
+</style>
+
+<style>
+/* Un-scoped guarantee that dropdown menus always appear on top of modal popups */
+.vs__dropdown-menu {
+  z-index: 999999 !important;
 }
 </style>

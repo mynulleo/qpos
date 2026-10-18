@@ -13,6 +13,11 @@ use App\Models\Invoice;
 use App\Models\InvoiceDetails;
 use App\Models\Item;
 use App\Models\StockTransaction;
+use App\Models\Payment;
+use App\Models\PaymentDetail;
+use App\Models\Account;
+use App\Models\System\SiteSetting;
+use App\Traits\VoucherTrait;
 use Illuminate\Http\Request;
 use App\Http\Resources\Resource;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +28,7 @@ use Storage;
 
 class ChallanController extends BaseController
 {
+    use VoucherTrait;
     /**
      * Display a listing of the resource.
      *
@@ -131,23 +137,76 @@ class ChallanController extends BaseController
                     $data['delivery_by'] = $data['delivery_by'] ?? '';
                     $data['delivery_by_mobile'] = $data['delivery_by_mobile'] ?? '';
 
-                    // Master insert
+                    $details = $request->challan_details;
+                    if (is_string($details)) {
+                        $details = json_decode($details, true) ?: [];
+                    }
+
+                    // 1. Stock Pre-dispatch Verification
+                    // Check warehouse inventory before issuing challan
+                    if (!empty($details)) {
+                        foreach ($details as $row) {
+                            $itemId = !empty($row['item_id']) ? intval($row['item_id']) : null;
+                            $qty = floatval($row['qty'] ?? 0);
+                            if ($itemId && $qty > 0) {
+                                $stockIn = StockTransaction::where('item_id', $itemId)
+                                    ->where('status', 'active')
+                                    ->sum('qty_in');
+                                $stockOut = StockTransaction::where('item_id', $itemId)
+                                    ->where('status', 'active')
+                                    ->sum('qty_out');
+                                $availableStock = floatval($stockIn - $stockOut);
+
+                                if ($qty > $availableStock) {
+                                    $itemObj = Item::find($itemId);
+                                    $title = $itemObj ? $itemObj->title : "Item #{$itemId}";
+                                    $availDisp = $availableStock > 0 ? $availableStock : 0;
+                                    $deficit = $qty - $availableStock;
+                                    throw new Exception("স্টকে পর্যাপ্ত পণ্য নেই! '{$title}' পণ্যটির বর্তমান স্টক {$availDisp}, কিন্তু চালানে প্রেরণের জন্য চাওয়া হয়েছে {$qty} (ঘাটতি: {$deficit})। পর্যাপ্ত স্টক না থাকলে চালান ইস্যু করা যাবে না।");
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Master insert
                     $challan = Challan::create($data);
 
-                    // Details insert
-                    if ($challan && !empty($request->challan_details)) {
-                        $details = is_string($request->challan_details) ? json_decode($request->challan_details, true) : $request->challan_details;
-
+                    // 3. Details insert & Immediate Stock Issue Transaction
+                    if ($challan && !empty($details)) {
                         foreach ($details as $row) {
+                            $colorId = !empty($row['color_id']) ? intval($row['color_id']) : null;
+                            $sizeId = !empty($row['size_id']) ? intval($row['size_id']) : null;
+                            $serialNo = !empty($row['serial_no']) ? trim($row['serial_no']) : null;
+
                             ChallanDetail::create([
                                 'challan_id' => $challan->id,
                                 'category_id' => !empty($row['category_id']) ? $row['category_id'] : null,
                                 'item_id' => !empty($row['item_id']) ? $row['item_id'] : null,
+                                'color_id' => $colorId,
+                                'size_id' => $sizeId,
+                                'serial_no' => $serialNo,
                                 'description' => $row['description'] ?? '',
                                 'qty' => floatval($row['qty'] ?? 0),
                                 'receive_qty' => floatval($row['receive_qty'] ?? 0),
                                 'remark' => $row['remark'] ?? '',
                             ]);
+
+                            // Immediately record stock out on dispatch so physical POS/sales cannot double-sell
+                            if (!empty($row['item_id']) && floatval($row['qty'] ?? 0) > 0) {
+                                StockTransaction::create([
+                                    'item_id' => $row['item_id'],
+                                    'color_id' => $colorId,
+                                    'size_id' => $sizeId,
+                                    'transaction_date' => $challan->getRawOriginal('challan_date') ?: date('Y-m-d'),
+                                    'transaction_type' => 'Challan',
+                                    'reference_type' => 'Challan',
+                                    'reference_id' => (string) $challan->id,
+                                    'qty_in' => 0,
+                                    'qty_out' => floatval($row['qty']),
+                                    'status' => 'active',
+                                    'created_by' => Auth::id() ?? auth('admin')->id() ?? auth()->id() ?? 1,
+                                ]);
+                            }
                         }
                     }
 
@@ -156,7 +215,10 @@ class ChallanController extends BaseController
 
                 return $this->responseReturn("create", $res);
             } catch (Exception $ex) {
-                return response()->json(['exception' => $ex->errorInfo ?? $ex->getMessage()], 422);
+                return response()->json([
+                    'message' => $ex->getMessage(),
+                    'exception' => $ex->errorInfo ?? $ex->getMessage()
+                ], 422);
             }
         }
     }
@@ -179,6 +241,8 @@ class ChallanController extends BaseController
             'challan_details' => function($q) {
                 $q->with([
                     'category:id,title',
+                    'color:id,title',
+                    'size:id,title',
                     'item:id,title,category_id,barcode,model_no,retail_price,wholesale_price,unit_id',
                     'item.category:id,title',
                     'item.unit:id,title'
@@ -188,6 +252,37 @@ class ChallanController extends BaseController
 
         if (!$challan) {
             return response()->json(['message' => 'Challan not found'], 404);
+        }
+
+        if ($challan->challan_details) {
+            $itemIds = $challan->challan_details->pluck('item_id')->filter()->unique();
+            if ($itemIds->isNotEmpty()) {
+                $stockInMap = StockTransaction::whereIn('item_id', $itemIds)
+                    ->where('status', 'active')
+                    ->groupBy('item_id')
+                    ->selectRaw('item_id, SUM(qty_in) as total_in')
+                    ->pluck('total_in', 'item_id');
+
+                $stockOutMap = StockTransaction::whereIn('item_id', $itemIds)
+                    ->where('status', 'active')
+                    ->groupBy('item_id')
+                    ->selectRaw('item_id, SUM(qty_out) as total_out')
+                    ->pluck('total_out', 'item_id');
+
+                foreach ($challan->challan_details as $detail) {
+                    if (!empty($detail->item_id)) {
+                        $in = floatval($stockInMap[$detail->item_id] ?? 0);
+                        $out = floatval($stockOutMap[$detail->item_id] ?? 0);
+                        $currStock = $in - $out;
+                        $detail->current_stock = $currStock;
+                        if ($detail->item) {
+                            $detail->item->current_stock = $currStock;
+                        }
+                    } else {
+                        $detail->current_stock = 999999;
+                    }
+                }
+            }
         }
 
         return $challan;
@@ -233,6 +328,41 @@ class ChallanController extends BaseController
 
                 $res = DB::transaction(function () use ($request, $challan) {
 
+                    // Temporarily release previous Challan stock reservation to verify new stock accurately
+                    StockTransaction::whereIn('reference_type', ['Challan', 'Challan Return'])
+                        ->where('reference_id', (string) $challan->id)
+                        ->delete();
+
+                    $details = $request->challan_details;
+                    if (is_string($details)) {
+                        $details = json_decode($details, true) ?: [];
+                    }
+
+                    // Stock verification for updated quantities
+                    if (!empty($details)) {
+                        foreach ($details as $row) {
+                            $itemId = !empty($row['item_id']) ? intval($row['item_id']) : null;
+                            $qty = floatval($row['qty'] ?? 0);
+                            if ($itemId && $qty > 0) {
+                                $stockIn = StockTransaction::where('item_id', $itemId)
+                                    ->where('status', 'active')
+                                    ->sum('qty_in');
+                                $stockOut = StockTransaction::where('item_id', $itemId)
+                                    ->where('status', 'active')
+                                    ->sum('qty_out');
+                                $availableStock = floatval($stockIn - $stockOut);
+
+                                if ($qty > $availableStock) {
+                                    $itemObj = Item::find($itemId);
+                                    $title = $itemObj ? $itemObj->title : "Item #{$itemId}";
+                                    $availDisp = $availableStock > 0 ? $availableStock : 0;
+                                    $deficit = $qty - $availableStock;
+                                    throw new Exception("স্টকে পর্যাপ্ত পণ্য নেই! '{$title}' পণ্যটির বর্তমান স্টক {$availDisp}, কিন্তু চালানে প্রেরণের জন্য চাওয়া হয়েছে {$qty} (ঘাটতি: {$deficit})। পর্যাপ্ত স্টক না থাকলে চালান আপডেট করা যাবে না।");
+                                }
+                            }
+                        }
+                    }
+
                     // Master update
                     $data = $request->except('challan_details', 'workorder', 'invoice', 'client');
                     if (!empty($data['challan_date'])) {
@@ -246,17 +376,10 @@ class ChallanController extends BaseController
 
                     $requestIds = [];
 
-                    $details = $request->challan_details;
-                    if (is_string($details)) {
-                        $details = json_decode($details, true);
-                    }
-
                     if (!empty($details)) {
                         foreach ($details as $row) {
-
                             // existing row update
                             if (array_key_exists('id', $row) && !empty($row['id'])) {
-
                                 $requestIds[] = $row['id'];
                                 $detail = ChallanDetail::find($row['id']);
 
@@ -264,6 +387,9 @@ class ChallanController extends BaseController
                                     $detail->update([
                                         'category_id' => !empty($row['category_id']) ? $row['category_id'] : null,
                                         'item_id'     => !empty($row['item_id']) ? $row['item_id'] : null,
+                                        'color_id'    => !empty($row['color_id']) ? intval($row['color_id']) : null,
+                                        'size_id'     => !empty($row['size_id']) ? intval($row['size_id']) : null,
+                                        'serial_no'   => !empty($row['serial_no']) ? trim($row['serial_no']) : null,
                                         'description' => $row['description'] ?? '',
                                         'qty'         => floatval($row['qty'] ?? 0),
                                         'receive_qty' => floatval($row['receive_qty'] ?? 0),
@@ -273,11 +399,13 @@ class ChallanController extends BaseController
                             }
                             // new row insert
                             else {
-
                                 $new = ChallanDetail::create([
                                     'challan_id'  => $challan->id,
                                     'category_id' => !empty($row['category_id']) ? $row['category_id'] : null,
                                     'item_id'     => !empty($row['item_id']) ? $row['item_id'] : null,
+                                    'color_id'    => !empty($row['color_id']) ? intval($row['color_id']) : null,
+                                    'size_id'     => !empty($row['size_id']) ? intval($row['size_id']) : null,
+                                    'serial_no'   => !empty($row['serial_no']) ? trim($row['serial_no']) : null,
                                     'description' => $row['description'] ?? '',
                                     'qty'         => floatval($row['qty'] ?? 0),
                                     'receive_qty' => floatval($row['receive_qty'] ?? 0),
@@ -291,9 +419,46 @@ class ChallanController extends BaseController
 
                     // removed row delete
                     $deleteIds = array_diff($existingIds, $requestIds);
-
                     if (!empty($deleteIds)) {
                         ChallanDetail::whereIn('id', $deleteIds)->delete();
+                    }
+
+                    // Re-record StockTransaction for current details
+                    $savedDetails = ChallanDetail::where('challan_id', $challan->id)->get();
+                    foreach ($savedDetails as $d) {
+                        if (!empty($d->item_id) && floatval($d->qty) > 0) {
+                            StockTransaction::create([
+                                'item_id' => $d->item_id,
+                                'color_id' => $d->color_id ?? null,
+                                'size_id' => $d->size_id ?? null,
+                                'transaction_date' => $challan->getRawOriginal('challan_date') ?: date('Y-m-d'),
+                                'transaction_type' => 'Challan',
+                                'reference_type' => 'Challan',
+                                'reference_id' => (string) $challan->id,
+                                'qty_in' => 0,
+                                'qty_out' => floatval($d->qty),
+                                'status' => 'active',
+                                'created_by' => Auth::id() ?? auth('admin')->id() ?? auth()->id() ?? 1,
+                            ]);
+
+                            // If already accepted/returned, record stock return for unreceived difference
+                            $returnQty = max(0, floatval($d->qty) - floatval($d->receive_qty));
+                            if ($challan->receive_status !== 'pending' && $returnQty > 0) {
+                                StockTransaction::create([
+                                    'item_id' => $d->item_id,
+                                    'color_id' => $d->color_id ?? null,
+                                    'size_id' => $d->size_id ?? null,
+                                    'transaction_date' => date('Y-m-d'),
+                                    'transaction_type' => 'Challan Return',
+                                    'reference_type' => 'Challan Return',
+                                    'reference_id' => (string) $challan->id,
+                                    'qty_in' => $returnQty,
+                                    'qty_out' => 0,
+                                    'status' => 'active',
+                                    'created_by' => Auth::id() ?? auth('admin')->id() ?? auth()->id() ?? 1,
+                                ]);
+                            }
+                        }
                     }
 
                     return $challan;
@@ -302,6 +467,7 @@ class ChallanController extends BaseController
                 return $this->responseReturn("update", $res);
             } catch (Exception $ex) {
                 return response()->json([
+                    'message' => $ex->getMessage(),
                     'exception' => $ex->errorInfo ?? $ex->getMessage()
                 ], 422);
             }
@@ -325,6 +491,11 @@ class ChallanController extends BaseController
         }
 
         DB::transaction(function () use ($challan) {
+            // Restore inventory by removing all stock transactions for this challan
+            StockTransaction::whereIn('reference_type', ['Challan', 'Challan Return'])
+                ->where('reference_id', (string) $challan->id)
+                ->delete();
+
             foreach ($challan->challan_details as $detail) {
                 $detail->delete();
             }
@@ -391,11 +562,67 @@ class ChallanController extends BaseController
                 $challan->accepted_at = now();
                 $challan->accepted_by = Auth::id() ?? auth('admin')->id();
                 $challan->save();
+
+                // Clean up previous Challan Return transactions for this challan
+                StockTransaction::where('reference_type', 'Challan Return')
+                    ->where('reference_id', (string) $challan->id)
+                    ->delete();
+
+                // Ensure base Challan dispatch StockTransaction exists
+                $hasChallanTx = StockTransaction::where('reference_type', 'Challan')
+                    ->where('reference_id', (string) $challan->id)
+                    ->exists();
+
+                if (!$hasChallanTx) {
+                    foreach ($allDetails as $detail) {
+                        if (!empty($detail->item_id) && floatval($detail->qty) > 0) {
+                            StockTransaction::create([
+                                'item_id' => $detail->item_id,
+                                'color_id' => $detail->color_id ?? null,
+                                'size_id' => $detail->size_id ?? null,
+                                'transaction_date' => $challan->getRawOriginal('challan_date') ?: date('Y-m-d'),
+                                'transaction_type' => 'Challan',
+                                'reference_type' => 'Challan',
+                                'reference_id' => (string) $challan->id,
+                                'qty_in' => 0,
+                                'qty_out' => floatval($detail->qty),
+                                'status' => 'active',
+                                'created_by' => Auth::id() ?? auth('admin')->id() ?? auth()->id() ?? 1,
+                            ]);
+                        }
+                    }
+                }
+
+                // Automatic Restock on Return / Partial Delivery
+                // Any unreceived quantity (qty - receive_qty) is physically returned to stock
+                foreach ($allDetails as $detail) {
+                    if (!empty($detail->item_id)) {
+                        $dispatchedQty = floatval($detail->qty);
+                        $receivedQty = floatval($detail->receive_qty);
+                        $returnQty = max(0, $dispatchedQty - $receivedQty);
+
+                        if ($returnQty > 0) {
+                            StockTransaction::create([
+                                'item_id' => $detail->item_id,
+                                'color_id' => $detail->color_id ?? null,
+                                'size_id' => $detail->size_id ?? null,
+                                'transaction_date' => date('Y-m-d'),
+                                'transaction_type' => 'Challan Return',
+                                'reference_type' => 'Challan Return',
+                                'reference_id' => (string) $challan->id,
+                                'qty_in' => $returnQty,
+                                'qty_out' => 0,
+                                'status' => 'active',
+                                'created_by' => Auth::id() ?? auth('admin')->id() ?? auth()->id() ?? 1,
+                            ]);
+                        }
+                    }
+                }
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Challan accepted successfully.',
+                'message' => 'Challan accepted successfully. Returned/unreceived items (if any) have been automatically credited back to stock.',
                 'challan' => Challan::with([
                     'client:id,org_name,name,mobile,email,address',
                     'invoice:id,invoice_no,invoice_date,amount,paid_amount,status',
@@ -424,6 +651,13 @@ class ChallanController extends BaseController
             ], 422);
         }
 
+        // Requirement 1: Challan accept na hole invoice generate kora jabe na
+        if (empty($challan->accepted_at) || $challan->receive_status === 'pending') {
+            return response()->json([
+                'message' => 'Challan must be accepted before generating an invoice. (চালান গ্রহণ না করা পর্যন্ত ইনভয়েস তৈরি করা যাবে না)'
+            ], 422);
+        }
+
         if (empty($challan->client_id)) {
             return response()->json([
                 'message' => 'Please assign a client to this challan before generating an invoice.'
@@ -440,8 +674,12 @@ class ChallanController extends BaseController
             ], 422);
         }
 
+        // NOTE: In standard ERP supply chain architecture, goods are physically deducted from warehouse stock
+        // upon Challan dispatch. Therefore, generating the invoice does NOT deduct stock again,
+        // and is never blocked by current warehouse stock availability.
+
         try {
-            $invoice = DB::transaction(function () use ($request, $challan, $acceptedDetails) {
+            $result = DB::transaction(function () use ($request, $challan, $acceptedDetails) {
                 $calculatedOriginalAmount = 0;
                 $lines = [];
 
@@ -468,6 +706,31 @@ class ChallanController extends BaseController
                     ? vue_to_server_date($request->invoice_date)
                     : date('Y-m-d');
 
+                // Requirement 2: Terms & Conditions handling
+                $siteSetting = SiteSetting::first();
+                $isTermsEnabled = boolval($siteSetting->show_invoice_terms ?? $siteSetting->show_pos_terms ?? 1);
+
+                $termsConditions = [];
+                if ($isTermsEnabled && !empty($request->terms_conditions)) {
+                    if (is_array($request->terms_conditions)) {
+                        $termsConditions = array_values(array_filter(array_map('trim', $request->terms_conditions)));
+                    } elseif (is_string($request->terms_conditions)) {
+                        $decoded = json_decode($request->terms_conditions, true);
+                        $termsConditions = is_array($decoded) ? $decoded : [$request->terms_conditions];
+                    }
+                }
+
+                // Requirement 3: Payment Switch handling (Default OFF, when ON records paid in Payment module)
+                $isPaid = $request->boolean('is_paid')
+                    || $request->input('is_paid') == 1
+                    || $request->input('is_paid') === '1'
+                    || $request->input('is_paid') === true
+                    || $request->input('is_paid') === 'true';
+
+                $paidAmount = $isPaid ? floatval($request->paid_amount ?: $totalAmount) : 0;
+                $paymentMethod = $isPaid ? ($request->payment_method ?: 'Cash') : null;
+                $isClosed = ($isPaid && $paidAmount >= $totalAmount) ? 1 : 0;
+
                 $invoiceData = [
                     'invoice_no' => Invoice::generateInvoiceNumber(),
                     'client_id' => $challan->client_id,
@@ -477,20 +740,18 @@ class ChallanController extends BaseController
                     'discount' => $discount,
                     'vat' => $vat,
                     'amount' => $totalAmount,
-                    'paid_amount' => 0,
+                    'paid_amount' => $paidAmount,
                     'is_previous_due' => 0,
-                    'is_closed' => 0,
+                    'is_closed' => $isClosed,
+                    'payment_method' => $paymentMethod,
                     'status' => 'active',
-                    'created_by' => Auth::id() ?? auth('admin')->id(),
+                    'terms_conditions' => $termsConditions,
+                    'created_by' => Auth::id() ?? auth('admin')->id() ?? auth()->id() ?? 1,
                 ];
-
-                if (Schema::hasColumn('invoices', 'terms_conditions') && !empty($request->terms_conditions)) {
-                    $invoiceData['terms_conditions'] = $request->terms_conditions;
-                }
 
                 $invoice = Invoice::create($invoiceData);
 
-                // Create invoice details
+                // Create invoice details (Stock already deducted at Challan dispatch - no duplicate stock out)
                 foreach ($lines as $line) {
                     $det = $line['detail'];
                     $desc = $det->item ? $det->item->title : ($det->description ?: 'Challan Item');
@@ -503,6 +764,9 @@ class ChallanController extends BaseController
                         'reference' => 'Challan #' . ($challan->challan_no ?: $challan->id),
                         'challan_detail_id' => $det->id,
                         'item_id' => $det->item_id ?? null,
+                        'color_id' => $det->color_id ?? null,
+                        'size_id' => $det->size_id ?? null,
+                        'serial_no' => $det->serial_no ?? null,
                         'workorder_id' => null,
                         'account_id' => 0,
                         'description' => $desc,
@@ -513,20 +777,6 @@ class ChallanController extends BaseController
                     ];
 
                     InvoiceDetails::create($detailData);
-
-                    // If item is from inventory and StockTransaction exists, record stock out
-                    if (!empty($det->item_id)) {
-                        StockTransaction::create([
-                            'item_id' => $det->item_id,
-                            'transaction_date' => $invoiceDate,
-                            'transaction_type' => 'Issue',
-                            'reference_type' => 'Invoice',
-                            'reference_id' => (string) $invoice->id,
-                            'qty_in' => 0,
-                            'qty_out' => $line['qty'],
-                            'status' => 'active',
-                        ]);
-                    }
                 }
 
                 // Lock the challan and link invoice
@@ -535,14 +785,84 @@ class ChallanController extends BaseController
                     'is_invoiced' => 1,
                 ]);
 
-                return $invoice;
+                // Create Payment record if Paid
+                $payment = null;
+                if ($isPaid && $totalAmount > 0 && $paidAmount > 0) {
+                    $fundAccountId = $request->fund_account_id ?: null;
+                    if (!$fundAccountId) {
+                        $cashAccount = Account::where('system_key_name', 'Cash')
+                            ->where('account_type', 'Asset')
+                            ->first()
+                            ?? Account::where('system_key_name', 'Cash')->first();
+                        $fundAccountId = $cashAccount ? $cashAccount->id : 1;
+                    }
+
+                    $receivableAccount = Account::where('system_key_name', 'accounts-receivable')->first();
+                    $receivableAccountId = $receivableAccount ? $receivableAccount->id : 26;
+
+                    $payslipNo = Payment::getPaySlipNo();
+
+                    $payment = Payment::create([
+                        'payslipno' => $payslipNo,
+                        'payment_type' => 'Receive',
+                        'client_id' => $challan->client_id,
+                        'payment_date' => $invoiceDate,
+                        'discount' => 0,
+                        'amount' => $paidAmount,
+                        'fund_account_id' => $fundAccountId,
+                        'payment_method' => $paymentMethod,
+                        'mbanking_type' => $request->mbanking_type ?? null,
+                        'trxid' => $request->trxid ?? null,
+                        'chequeno' => $request->chequeno ?? null,
+                        'bank_id' => $request->bank_id ?? null,
+                        'status' => 'active',
+                        'created_by' => Auth::id() ?? auth('admin')->id() ?? auth()->id() ?? 1,
+                    ]);
+
+                    PaymentDetail::create([
+                        'payment_id' => $payment->id,
+                        'reference_type' => 'Invoice',
+                        'reference_id' => $invoice->id,
+                        'account_id' => $receivableAccountId,
+                        'amount' => $paidAmount,
+                        'is_closed' => $isClosed,
+                        'status' => 'active',
+                    ]);
+
+                    $invoice->update([
+                        'payment_id' => $payment->id,
+                        'paid_amount' => $paidAmount,
+                        'is_closed' => $isClosed,
+                        'payment_method' => $paymentMethod,
+                    ]);
+
+                    try {
+                        $this->createVoucherFromPayment($payment, $payment->id);
+                    } catch (\Throwable $ve) {
+                        Log::error('Voucher creation failed in ChallanController: ' . $ve->getMessage());
+                    }
+                }
+
+                return [
+                    'invoice' => $invoice,
+                    'payment' => $payment,
+                ];
             });
+
+            $invoice = $result['invoice'];
+            $payment = $result['payment'];
+
+            $message = 'Invoice generated successfully.';
+            if ($payment) {
+                $message .= ' Payment of ৳' . number_format($payment->amount, 2) . ' recorded as Paid in Payment Module.';
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Invoice generated successfully.',
+                'message' => $message,
                 'invoice_id' => $invoice->id,
                 'invoice_no' => $invoice->invoice_no,
+                'payment_id' => $payment ? $payment->id : null,
                 'challan' => Challan::with([
                     'client:id,org_name,name,mobile,email,address,customer_type',
                     'invoice:id,invoice_no,invoice_date,amount,paid_amount,status',
