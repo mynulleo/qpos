@@ -11,6 +11,8 @@ use App\Models\Payment;
 use App\Models\Voucher;
 use App\Models\PaymentDetail;
 use App\Models\VoucherDetail;
+use App\Models\SalesReturn;
+use App\Models\WarrantyClaim;
 use App\Traits\PaymentTrait;
 use App\Traits\VoucherTrait;
 use Illuminate\Http\Request;
@@ -35,7 +37,10 @@ class PaymentController extends BaseController
             'employee:id,full_name,mobile',
             'agent:id,full_name,mobile',
             'fund_account:id,account_name,account_code',
-            'bank:id,bank_name'
+            'bank:id,bank_name',
+            'payment_details:id,payment_id,reference_type,reference_id',
+            'sales_return:id,payment_id,return_no',
+            'warranty_claim:id,payment_id,claim_no'
         ])->latest();
 
         // 1. Text / Keyword Search (Global or Specific Field)
@@ -202,14 +207,14 @@ class PaymentController extends BaseController
                 if ($res && !empty($payment_details)) {
                     foreach ($payment_details as $detail) {
                         $res->payment_details()->create([
-                            'payment_id' => $res->id,
+                            'payment_id'     => $res->id,
                             'reference_type' => $detail['reference_type'],
-                            'reference_id' => $detail['reference_id'],
-                            'account_id' => $detail['account_id'],
-                            'amount' => $detail['amount'],
-                            'is_closed' => $detail['is_closed'],
+                            'reference_id'   => $detail['reference_id'],
+                            'account_id'     => $detail['account_id'] ?? 0,
+                            'amount'         => $detail['amount'],
+                            'is_closed'      => !empty($detail['is_closed']) ? 1 : 0,
                         ]);
-                        $this->updateRefValue($detail, $data['payment_type']);
+                        $this->recalculateReference($detail['reference_type'], $detail['reference_id'], !empty($detail['is_closed']));
                     }
                 }
 
@@ -272,6 +277,9 @@ class PaymentController extends BaseController
             'account_name'          => $payment->account_name,
             'accountno'             => $payment->accountno,
             'trxid'                 => $payment->trxid,
+            'can_edit'              => $payment->can_edit,
+            'can_delete'            => $payment->can_delete,
+            'lock_reason'           => $payment->lock_reason,
 
             // payto section
             'payto' => [
@@ -343,6 +351,17 @@ class PaymentController extends BaseController
     public function update(Request $request, $id)
     {
         $payment  = Payment::find($id);
+        if (!$payment) {
+            return response()->json(['message' => 'Payment not found'], 404);
+        }
+
+        if ($payment->isSystemLocked()) {
+            return response()->json([
+                'message'   => $payment->lock_reason ?: 'This payment is linked to a system module and cannot be modified directly.',
+                'exception' => $payment->lock_reason ?: 'This payment is linked to a system module and cannot be modified directly.'
+            ], 422);
+        }
+
         if ($this->validateCheck($request, $payment->id)) {
 
             DB::beginTransaction();
@@ -369,33 +388,56 @@ class PaymentController extends BaseController
                     $data['payment_id']      // IMPORTANT
                 );
 
-                // reload model from DB
-                $payment = Payment::find($payment->id);
+                // Collect old references before deleting old details
+                $oldReferences = $payment->payment_details->map(function ($d) {
+                    return [
+                        'reference_type' => $d->reference_type,
+                        'reference_id'   => $d->reference_id,
+                    ];
+                })->toArray();
+
                 // update payment master
                 $payment->update($data);
 
-                // delete old details
+                // delete old details (soft delete)
                 $payment->payment_details()->delete();
 
                 // insert new details
                 foreach ($payment_details as $detail) {
-
                     $payment->payment_details()->create([
                         'payment_id'     => $payment->id,
                         'reference_type' => $detail['reference_type'],
                         'reference_id'   => $detail['reference_id'],
-                        'account_id'     => $detail['account_id'],
+                        'account_id'     => $detail['account_id'] ?? 0,
                         'amount'         => $detail['amount'],
-                        'is_closed'      => $detail['is_closed'],
+                        'is_closed'      => !empty($detail['is_closed']) ? 1 : 0,
                     ]);
-
-                    $this->updateRefValue($detail);
                 }
 
-                // remove previous vouchers
-                $this->removeVoucherByPaymentID($payment->id);
+                // Merge old and new references to recalculate all affected items
+                $allReferences = collect($oldReferences)
+                    ->concat(collect($payment_details)->map(function ($d) {
+                        return [
+                            'reference_type' => $d['reference_type'] ?? null,
+                            'reference_id'   => $d['reference_id'] ?? null,
+                            'is_closed'      => !empty($d['is_closed']),
+                        ];
+                    }))
+                    ->filter(function ($item) {
+                        return !empty($item['reference_type']) && !empty($item['reference_id']);
+                    })
+                    ->unique(function ($item) {
+                        return $item['reference_type'] . '_' . $item['reference_id'];
+                    });
 
-                // recreate voucher
+                foreach ($allReferences as $ref) {
+                    $this->recalculateReference($ref['reference_type'], $ref['reference_id'], $ref['is_closed'] ?? false);
+                }
+
+                // Refresh relations for voucher recreation/update
+                $payment->load('payment_details');
+
+                // recreate / update voucher
                 if (!empty($payment->employee_id)) {
                     $this->createEmployeeVoucher($payment, $payment->id);
                 } else {
@@ -425,33 +467,54 @@ class PaymentController extends BaseController
     public function destroy($id)
     {
         $payment = Payment::find($id);
+        if (!$payment) {
+            return response()->json(['message' => 'Payment not found'], 404);
+        }
+
+        if ($payment->isSystemLocked()) {
+            return response()->json([
+                'message'   => $payment->lock_reason ?: 'This payment is linked to a system module and cannot be deleted directly.',
+                'exception' => $payment->lock_reason ?: 'This payment is linked to a system module and cannot be deleted directly.'
+            ], 422);
+        }
+
         DB::beginTransaction();
 
         try {
 
-            // 🔁 all related vouchers (just in case multiple exists)
-            $vouchers = Voucher::where('payment_id', $payment->id)
-                ->orWhere(function ($q) use ($payment) {
-                    $q->where('source', 'Payment')
-                        ->where('source_id', $payment->id);
-                })
-                ->get();
+            // 1. Collect all related references before deleting payment details
+            $references = $payment->payment_details->map(function ($d) {
+                return [
+                    'reference_type' => $d->reference_type,
+                    'reference_id'   => $d->reference_id,
+                ];
+            })->filter(function ($item) {
+                return !empty($item['reference_type']) && !empty($item['reference_id']);
+            })->unique(function ($item) {
+                return $item['reference_type'] . '_' . $item['reference_id'];
+            })->values()->all();
 
+            // 2. Soft-delete all related vouchers and voucher details
+            $this->removeVoucherByPaymentID($payment->id);
 
-            foreach ($vouchers as $voucher) {
-                VoucherDetail::where('voucher_id', $voucher->id)->delete(); // soft delete
-                $voucher->delete(); // soft delete
-            }
+            // 3. Clear payment_id from SalesReturn / WarrantyClaim if attached
+            SalesReturn::where('payment_id', $payment->id)->update(['payment_id' => null]);
+            WarrantyClaim::where('payment_id', $payment->id)->update(['payment_id' => null]);
 
-            // Payment details (soft delete)
+            // 4. Payment details (soft delete)
             $payment->payment_details()->delete();
 
-            // Payment (soft delete)
+            // 5. Payment (soft delete)
             $payment->delete();
+
+            // 6. Recalculate reference tables after payment and details are soft-deleted
+            foreach ($references as $ref) {
+                $this->recalculateReference($ref['reference_type'], $ref['reference_id'], false);
+            }
 
             DB::commit();
             return $this->responseReturn("delete", true);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['exception' => $e->getMessage()], 422);
         }

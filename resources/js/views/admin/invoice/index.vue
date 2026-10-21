@@ -229,6 +229,28 @@
                     >
                       <span style="font-size: 10px;">[৬.৩]</span>
                     </router-link>
+
+                    <!-- ✏️ Edit Invoice (Only when NOT Paid) -->
+                    <button
+                      v-if="canEditOrDelete(inv)"
+                      type="button"
+                      class="btn btn-xs btn-action-edit border-0"
+                      @click.stop="openEditModal(inv)"
+                      :title="$t('Edit Invoice (ইনভয়েস এডিট করুন)')"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+
+                    <!-- 🗑️ Delete Invoice (Only when NOT Paid) -->
+                    <button
+                      v-if="canEditOrDelete(inv)"
+                      type="button"
+                      class="btn btn-xs btn-action-delete border-0"
+                      @click.stop="confirmDeleteInvoice(inv)"
+                      :title="$t('Delete Invoice (ইনভয়েস ডিলিট করুন)')"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
                   </div>
                 </div>
               </td>
@@ -514,17 +536,91 @@
         </div>
       </div>
     </div>
+
+    <!-- ✏️ In-Place Invoice Edit Modal -->
+    <InvoiceEditModal
+      :visible="showEditModal"
+      :invoice-id="editingInvoiceId"
+      :clients="clients"
+      @close="closeEditModal"
+      @updated="onInvoiceUpdated"
+    />
+
+    <!-- 🗑️ Delete Confirmation Modal -->
+    <div
+      class="modal fade show d-block"
+      tabindex="-1"
+      style="background: rgba(0, 0, 0, 0.65); z-index: 1075; backdrop-filter: blur(2px);"
+      v-if="showDeleteModal && deletingInvoice"
+    >
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+          <div class="modal-header py-2.5 px-3 bg-danger text-white">
+            <h6 class="modal-title mb-0 fw-bold d-flex align-items-center gap-2">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>{{ $t('Confirm Delete Invoice') }}</span>
+              <span class="badge bg-white text-danger font-monospace">#{{ deletingInvoice.invoice_no }}</span>
+            </h6>
+            <button type="button" class="btn-close btn-close-white" @click="closeDeleteModal" :disabled="deleting"></button>
+          </div>
+          <div class="modal-body p-3 bg-white">
+            <div class="text-center py-2">
+              <div class="text-danger mb-2">
+                <i class="fas fa-trash-alt fa-3x"></i>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">
+                {{ $t('Are you sure you want to delete this invoice?') }}
+              </h6>
+              <p class="text-muted small mb-3">
+                {{ $t('Invoice No:') }} <strong class="font-monospace text-primary">#{{ deletingInvoice.invoice_no }}</strong> | 
+                {{ $t('Customer:') }} <strong>{{ deletingInvoice.client ? deletingInvoice.client.name : 'Walk-in Customer' }}</strong> | 
+                {{ $t('Amount:') }} <strong class="font-monospace text-dark">Tk. {{ formatPrice(deletingInvoice.amount) }}</strong>
+              </p>
+
+              <div class="alert alert-warning py-2 px-3 text-start small mb-0 rounded-3 border-warning">
+                <i class="fas fa-info-circle text-warning me-1"></i>
+                <span><strong>মনোযোগ দিন:</strong> এই ইনভয়েসটি ডিলিট করলে এর আইটেমসমূহ পুনরায় স্টকে যুক্ত হবে এবং এর রিসিভেবল ভাউচার হিসাব থেকে অপসারিত হবে।</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
+            <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="closeDeleteModal" :disabled="deleting">
+              {{ $t('Cancel') }}
+            </button>
+            <button type="button" class="btn btn-sm btn-danger px-4 fw-bold shadow-sm d-flex align-items-center gap-1.5" @click="executeDeleteInvoice" :disabled="deleting">
+              <span v-if="deleting" class="spinner-border spinner-border-sm" role="status"></span>
+              <i v-else class="fas fa-trash-alt"></i>
+              <span>{{ deleting ? $t('Deleting...') : $t('Yes, Delete Invoice') }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import InvoiceEditModal from './components/InvoiceEditModal.vue';
+
+function floatval(val) {
+  const f = parseFloat(val);
+  return isNaN(f) ? 0 : f;
+}
 
 export default {
+  components: {
+    InvoiceEditModal,
+  },
   data() {
     return {
       showHelpModal: false,
       helpContent: '',
+      showEditModal: false,
+      editingInvoiceId: null,
+      showDeleteModal: false,
+      deletingInvoice: null,
+      deleting: false,
       invoices: [],
       clients: [],
       loading: false,
@@ -654,6 +750,48 @@ export default {
       if (status === 'Paid') return 'bg-success';
       if (status === 'Partial') return 'bg-warning text-dark';
       return 'bg-danger';
+    },
+    canEditOrDelete(inv) {
+      return this.getPaymentStatusText(inv) !== 'Paid';
+    },
+    openEditModal(inv) {
+      this.editingInvoiceId = inv.id;
+      this.showEditModal = true;
+    },
+    closeEditModal() {
+      this.showEditModal = false;
+      this.editingInvoiceId = null;
+    },
+    onInvoiceUpdated() {
+      this.fetchInvoices(this.pagination.current_page);
+    },
+    confirmDeleteInvoice(inv) {
+      this.deletingInvoice = inv;
+      this.showDeleteModal = true;
+    },
+    closeDeleteModal() {
+      this.showDeleteModal = false;
+      this.deletingInvoice = null;
+    },
+    executeDeleteInvoice() {
+      if (!this.deletingInvoice) return;
+      this.deleting = true;
+      axios
+        .delete(`invoice/${this.deletingInvoice.id}`)
+        .then((res) => {
+          this.deleting = false;
+          this.$toast(res.data.message || 'Invoice deleted successfully', 'success');
+          this.closeDeleteModal();
+          this.fetchInvoices(this.pagination.current_page);
+        })
+        .catch((err) => {
+          this.deleting = false;
+          const msg =
+            err.response?.data?.exception ||
+            err.response?.data?.message ||
+            'Failed to delete invoice';
+          this.$toast(msg, 'error');
+        });
     },
     fetchInvoices(page = 1) {
       this.loading = true;
@@ -795,11 +933,6 @@ export default {
     this.fetchClients();
   }
 };
-
-function floatval(val) {
-  const f = parseFloat(val);
-  return isNaN(f) ? 0 : f;
-}
 </script>
 
 <style scoped>
@@ -917,5 +1050,57 @@ function floatval(val) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
+}
+
+/* ✏️ Edit Action Button */
+.btn-action-edit {
+  color: #d97706 !important;
+  background-color: transparent !important;
+  transition: all 0.15s ease-in-out;
+}
+.btn-action-edit i,
+.btn-action-edit svg {
+  color: #d97706 !important;
+  transition: color 0.15s ease-in-out;
+}
+.btn-action-edit:hover {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #ffffff !important;
+}
+.btn-action-edit:hover i,
+.btn-action-edit:hover svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* 🗑️ Delete Action Button */
+.btn-action-delete {
+  color: #dc3545 !important;
+  background-color: transparent !important;
+  transition: all 0.15s ease-in-out;
+}
+.btn-action-delete i,
+.btn-action-delete svg {
+  color: #dc3545 !important;
+  transition: color 0.15s ease-in-out;
+}
+.btn-action-delete:hover {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+.btn-action-delete:hover i,
+.btn-action-delete:hover svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Ensure all buttons in floating actions turn icon white on hover */
+.hover-floating-actions .btn:hover i,
+.hover-floating-actions .btn:hover svg,
+.hover-floating-actions .btn:hover span {
+  color: #ffffff !important;
 }
 </style>

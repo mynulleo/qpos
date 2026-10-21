@@ -25,7 +25,7 @@
                 <tr>
                   <th>{{ $t('Discount') }}</th>
                   <th>:</th>
-                  <td>{{ data.payment_method }}</td>
+                  <td>{{ data.discount || 0 }}</td>
                 </tr>
                 <tr>
                   <th>{{ $t('Amount') }}</th>
@@ -98,7 +98,7 @@
                   <td class="text-md-end">{{ Number(pddata.paid_amount).toFixed(2) }}</td>
                   <td class="text-md-end">{{ Number(pddata.due_amount).toFixed(2) }}</td>
                   <td class="text-md-end">{{ Number(pddata.adjust_amount).toFixed(2) }}</td>
-                  <td>{{ pddata.is_closed ? 'Yes' : 'No' }}</td>
+                  <td>{{ pddata.is_closed ? $t('Yes') : $t('No') }}</td>
                 </tr>
               </tbody>
             </table>
@@ -108,10 +108,8 @@
       <div class="col-md-4">
         <fieldset>
           <span class="legend">{{ $t('Ref Info') }}</span>
-          <h6 class="mt-2">Read this note first</h6>
-          <p class="mt-1"><i>Please verify the client details, invoice references, and payment allocation before final
-              submission.
-              Ensure all dues are correctly adjusted and marked as closed where applicable.</i></p>
+          <h6 class="mt-2">{{ $t('Read this note first') }}</h6>
+          <p class="mt-1"><i>{{ $t('Please verify the client details, invoice references, and payment allocation before final submission. Ensure all dues are correctly adjusted and marked as closed where applicable.') }}</i></p>
         </fieldset>
       </div>
       <div class="col-md-8">
@@ -125,30 +123,30 @@
                   <img :src="$root.site.logo_two" alt="Logo" class="logo-img" />
                 </div>
                 <div class="info-section text-end">
-                  <h3 class="mt-0" v-if="data.payment_type == 'Receive'">Money Receipt</h3>
-                  <h3 class="mt-0" v-else>Payslip</h3>
-                  <p class="mb-0"><strong>Mobile:</strong> {{ $root.site.mobile1 }}</p>
-                  <p class="mb-0"><strong>Email:</strong> {{ $root.site.contact_email }}</p>
-                  <p class="mb-0"><strong>Address:</strong> {{ $root.site.address }}</p>
+                  <h3 class="mt-0" v-if="data.payment_type == 'Receive'">{{ $t('Money Receipt') }}</h3>
+                  <h3 class="mt-0" v-else>{{ $t('Payslip') }}</h3>
+                  <p class="mb-0"><strong>{{ $t('Mobile:') }}</strong> {{ $root.site.mobile1 }}</p>
+                  <p class="mb-0"><strong>{{ $t('Email:') }}</strong> {{ $root.site.contact_email }}</p>
+                  <p class="mb-0"><strong>{{ $t('Address:') }}</strong> {{ $root.site.address }}</p>
                 </div>
               </div>
               <!-- Receipt Info -->
               <div class="d-flex justify-content-between mb-3">
-                <div> Receipt No: MR-2025001</div>
-                <div><strong>Date:</strong> {{ data.payment_date }}</div>
+                <div><strong>{{ $t('Receipt No:') }}</strong> #{{ data.payslipno || data.id }}</div>
+                <div><strong>{{ $t('Date:') }}</strong> {{ data.payment_date }}</div>
               </div>
               <!-- Payment Details -->
               <div v-if="data.payment_details && data.payment_details.length > 0">
                 <div class="receipt-body">
                   <div class="field-row">
-                    <div class="label">Residence Name:</div>
+                    <div class="label">{{ $t('Residence Name:') }}</div>
                     <div class="value-container">
                       <span class="value-text text-success">{{ data.payto?.name }}</span>
                       <div class="underline"></div>
                     </div>
                   </div>
                   <div class="field-row">
-                    <div class="label">Amount:</div>
+                    <div class="label">{{ $t('Amount:') }}</div>
                     <div class="value-container">
                       <span class="value-text text-success">
                         ৳ {{ Number(data.amount).toFixed(2) }}
@@ -157,24 +155,24 @@
                     </div>
                   </div>
                   <div class="field-row">
-                    <div class="label">In Word:</div>
+                    <div class="label">{{ $t('In Word:') }}</div>
                     <div class="value-container">
                       <span class="value-text text-success"> {{ currencyToWordsBD(data.amount) }}</span>
                       <div class="underline"></div>
                     </div>
                   </div>
                   <div class="field-row">
-                    <div class="label">Payment Method:</div>
+                    <div class="label">{{ $t('Payment Method:') }}</div>
                     <div class="value-container">
                       <span class="value-text">{{ data.payment_method }}</span>
                       <div class="underline"></div>
                     </div>
                   </div>
                   <div class="field-row">
-                    <div class="label">For:</div>
+                    <div class="label">{{ $t('For:') }}</div>
                     <div class="value-container">
-                      <span class="value-text" v-if="data.payment_type = 'Receive'">Monthly Bill</span>
-                      <span class="value-text" v-else> {{ data.payto?.info }}</span>
+                      <span class="value-text" v-if="data.payment_type === 'Receive'">{{ $t('Monthly Bill') }}</span>
+                      <span class="value-text" v-else> {{ data.payto?.info || '--' }}</span>
                       <div class="underline"></div>
                     </div>
                   </div>
@@ -183,8 +181,7 @@
               <div v-else>
                 <div style="min-height: 80px;">
                   <p class="text-muted fst-italic mt-3">
-                    <b>No payment information is available for this transaction. Please contact the relevant
-                      authority for further assistance.</b>
+                    <b>{{ $t('No payment information is available for this transaction. Please contact the relevant authority for further assistance.') }}</b>
                   </p>
                 </div>
               </div>
@@ -197,15 +194,15 @@
                     <img :src="$root.site.authorized_signature_two" style="max-width: 100%;" />
                     <div class="text-center">
                       <strong></strong><br>
-                      <strong>Account Officer</strong>
+                      <strong>{{ $t('Account Officer') }}</strong>
                     </div>
                   </template>
                 </div>
               </div>
               <!-- Received By and Signature -->
               <div class="d-flex justify-content-between mt-4">
-                <div><strong>Received By:</strong></div>
-                <div><strong>Authorized Signature:</strong></div>
+                <div><strong>{{ $t('Received By:') }}</strong></div>
+                <div><strong>{{ $t('Authorized Signature:') }}</strong></div>
               </div>
             </div>
           </div>

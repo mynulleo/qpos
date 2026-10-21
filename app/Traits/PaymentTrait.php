@@ -346,233 +346,212 @@ trait PaymentTrait
     {
         $paid_amt = PaymentDetail::where('reference_type', $ref_type)
             ->where('reference_id', $ref_id)
+            ->whereNull('deleted_at')
             ->sum('amount');
-        return $paid_amt;
+        return (float) $paid_amt;
     }
 
     /**
      * Update the reference value based on reference type.
      *
      * Routes the update operation to the appropriate handler method based on
-     * the reference_type field. Currently supports 'Invoice' type; other types
-     * are silently ignored.
+     * the reference_type field.
      *
      * @param array $ref An associative array with at least 'reference_type' key
      * @return bool True if update succeeded or was ignored, false if reference_type is missing
      */
     public function updateRefValue(array $ref, string $payment_type = ''): bool
     {
-        if (empty($ref['reference_type'])) {
+        if (empty($ref['reference_type']) || empty($ref['reference_id'])) {
             return false;
         }
 
-        if ($ref['reference_type'] === 'Invoice') {
-            return $this->updateInvoiceInfo($ref);
+        return $this->recalculateReference($ref['reference_type'], $ref['reference_id'], $ref['is_closed'] ?? false);
+    }
+
+    /**
+     * Recalculate and update the referenced record based on remaining active payments.
+     *
+     * @param string $reference_type
+     * @param int|string $reference_id
+     * @param bool $force_closed
+     * @return bool
+     */
+    public function recalculateReference($reference_type, $reference_id, bool $force_closed = false): bool
+    {
+        if (empty($reference_type) || empty($reference_id)) {
+            return false;
         }
 
-        if ($ref['reference_type'] === 'SalarySheetDetail') {
-            return $this->updateSalarySheet($ref);
+        $paidAmount = $this->getRefPaidAmount($reference_type, $reference_id);
+
+        switch ($reference_type) {
+            case 'Invoice':
+                $invoice = Invoice::find($reference_id);
+                if ($invoice) {
+                    $invAmount = (float) $invoice->amount;
+                    $isClosed = ($invAmount > 0 && $paidAmount >= ($invAmount - 0.01)) || $force_closed;
+                    $invoice->update([
+                        'paid_amount' => $paidAmount,
+                        'is_closed'   => $isClosed ? 1 : 0,
+                    ]);
+                }
+                break;
+
+            case 'GRN':
+                $grn = Grn::find($reference_id);
+                if ($grn) {
+                    $totalAmount = (float) $grn->total_amount;
+                    $isClosed = ($totalAmount > 0 && $paidAmount >= ($totalAmount - 0.01)) || $force_closed;
+                    $grn->update([
+                        'paid_amount' => $paidAmount,
+                        'is_closed'   => $isClosed ? 1 : 0,
+                    ]);
+                }
+                break;
+
+            case 'Purchase':
+                $purchase = Purchase::find($reference_id);
+                if ($purchase) {
+                    $totalAmount = (float) $purchase->total_amount;
+                    $isClosed = ($totalAmount > 0 && $paidAmount >= ($totalAmount - 0.01)) || $force_closed;
+                    $purchase->update([
+                        'is_closed' => $isClosed ? 1 : 0,
+                    ]);
+                }
+                break;
+
+            case 'SalarySheetDetail':
+                $ssd = SalarySheetDetail::find($reference_id);
+                if ($ssd) {
+                    $total = (float) $ssd->total;
+                    $isPaid = ($total > 0 && $paidAmount >= ($total - 0.01)) || $force_closed;
+                    $ssd->update([
+                        'is_paid' => $isPaid ? 1 : 0,
+                    ]);
+                    if ($ssd->installment > 0 && $ssd->installment_history) {
+                        $installmenthistories = json_decode($ssd->installment_history, 1);
+                        if (is_array($installmenthistories)) {
+                            foreach ($installmenthistories as $hdata) {
+                                if (!empty($hdata['id'])) {
+                                    $loanInstallment = LoanInstallment::find($hdata['id']);
+                                    if ($loanInstallment) {
+                                        $loanInstallment->update([
+                                            'is_closed' => $isPaid ? 1 : 0,
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case 'Commission':
+                $commission = Commission::find($reference_id);
+                if ($commission) {
+                    $commAmount = (float) $commission->amount;
+                    $isClosed = ($commAmount > 0 && $paidAmount >= ($commAmount - 0.01)) || $force_closed;
+                    $commission->update([
+                        'is_closed' => $isClosed ? 1 : 0,
+                    ]);
+                }
+                break;
+
+            case 'ExpenseDetail':
+                $expense = ExpenseDetail::find($reference_id);
+                if ($expense) {
+                    $expAmount = (float) $expense->amount;
+                    $isClosed = ($expAmount > 0 && $paidAmount >= ($expAmount - 0.01)) || $force_closed;
+                    $expense->update([
+                        'is_closed' => $isClosed ? 1 : 0,
+                    ]);
+                }
+                break;
+
+            case 'LoanInstallment':
+                $loanInst = LoanInstallment::find($reference_id);
+                if ($loanInst) {
+                    $instAmount = (float) $loanInst->amount;
+                    $isClosed = ($instAmount > 0 && $paidAmount >= ($instAmount - 0.01)) || $force_closed;
+                    $loanInst->update([
+                        'is_closed' => $isClosed ? 1 : 0,
+                    ]);
+                }
+                break;
+
+            case 'LoanInfo':
+                $loan = LoanInfo::find($reference_id);
+                if ($loan) {
+                    $disbursed = (float) PaymentDetail::where('reference_type', 'LoanInfo')
+                        ->where('reference_id', $reference_id)
+                        ->whereNull('deleted_at')
+                        ->whereHas('payment', function ($q) {
+                            $q->where('payment_type', 'Pay');
+                        })->sum('amount');
+
+                    $received = (float) PaymentDetail::where('reference_type', 'LoanInfo')
+                        ->where('reference_id', $reference_id)
+                        ->whereNull('deleted_at')
+                        ->whereHas('payment', function ($q) {
+                            $q->where('payment_type', 'Receive');
+                        })->sum('amount');
+
+                    $loanAmount = (float) $loan->amount;
+                    $due = max(0, $loanAmount - $received);
+
+                    $loan->update([
+                        'is_paid'    => ($disbursed > 0) ? 1 : 0,
+                        'due_amount' => $due,
+                        'is_closed'  => ($due <= 0.01 && $received > 0) ? 1 : 0,
+                    ]);
+                }
+                break;
+
+            default:
+                break;
         }
 
-        if ($ref['reference_type'] === 'Commission') {
-            return $this->updateCommission($ref);
-        }
-
-        if ($ref['reference_type'] === 'LoanInfo') {
-            return $this->updateLoanInfo($ref, $payment_type);
-        }
-
-        if ($ref['reference_type'] === 'ExpenseDetail') {
-            return $this->updateExpenseDetail($ref);
-        }
-
-        if ($ref['reference_type'] === 'GRN') {
-            return $this->updateGrnInfo($ref);
-        }
-
-        if ($ref['reference_type'] === 'Purchase') {
-            return $this->updatePurchaseInfo($ref);
-        }
-
-        if ($ref['reference_type'] == 'LoanInstallment' && $payment_type == 'Receive') {
-            return $this->updateLoanInstallment($ref);
-        }
-
-        return true; // other reference types ignored intentionally
+        return true;
     }
 
     public function updateGrnInfo(array $ref): bool
     {
-        $grn = Grn::find($ref['reference_id']);
-
-        if (!$grn) {
-            return false;
-        }
-
-        $paid_amount = $this->getRefPaidAmount('GRN', $grn->id);
-        $isClosed = ($paid_amount >= (float) $grn->total_amount) || (!empty($ref['is_closed']));
-
-        $grn->update([
-            'paid_amount' => $paid_amount,
-            'is_closed'   => $isClosed ? 1 : 0
-        ]);
-
-        return true;
+        return $this->recalculateReference('GRN', $ref['reference_id'], !empty($ref['is_closed']));
     }
 
     public function updatePurchaseInfo(array $ref): bool
     {
-        $purchase = Purchase::find($ref['reference_id']);
-
-        if (!$purchase) {
-            return false;
-        }
-
-        $paid_amount = $this->getRefPaidAmount('Purchase', $purchase->id);
-        $isClosed = ($paid_amount >= (float) $purchase->total_amount) || (!empty($ref['is_closed']));
-
-        $purchase->update([
-            'is_closed' => $isClosed ? 1 : 0
-        ]);
-
-        return true;
+        return $this->recalculateReference('Purchase', $ref['reference_id'], !empty($ref['is_closed']));
     }
 
     public function updateExpenseDetail(array $ref): bool
     {
-        $expense = ExpenseDetail::find($ref['reference_id']);
-
-        if (!$expense) {
-            return false;
-        }
-
-        $isClosed = ($ref['amount'] == $expense->amount) || (!empty($ref['is_closed']));
-
-        $expense->update([
-            'is_paid' => 1,
-            'is_closed' => $isClosed ? 1 : 0
-        ]);
-
-        return true;
+        return $this->recalculateReference('ExpenseDetail', $ref['reference_id'], !empty($ref['is_closed']));
     }
 
-
-    /**
-     * Update invoice payment status and closure state.
-     *
-     * Finds an invoice by ID and updates its closure status. The invoice is marked
-     * as closed if either the paid amount equals the total invoice amount or if
-     * the is_closed flag is explicitly set in the input array.
-     *
-     * @param array $inv An associative array containing:
-     *   - reference_id: The invoice ID to update
-     *   - amount: The payment amount (compared against invoice total)
-     *   - is_closed: (optional) Flag to force closure
-     * @return bool True if invoice was updated successfully, false if invoice not found
-     */
     public function updateInvoiceInfo(array $inv): bool
     {
-        $invoice = Invoice::find($inv['reference_id']);
-
-        if (!$invoice) {
-            return false;
-        }
-
-        $isClosed = ($inv['amount'] == $invoice->amount) || (!empty($inv['is_closed']));
-
-        $invoice->update([
-            'paid_amount' => $inv['amount'],
-            'is_closed' => $isClosed ? 1 : 0
-        ]);
-
-        return true;
+        return $this->recalculateReference('Invoice', $inv['reference_id'], !empty($inv['is_closed']));
     }
 
     public function updateSalarySheet($ref)
     {
-        $salarysheetdetails = SalarySheetDetail::find($ref['reference_id']);
-
-        if (!$salarysheetdetails) {
-            return false;
-        }
-
-        $isPaid = ($ref['amount'] == $salarysheetdetails->total) || (!empty($ref['is_closed']));
-
-        $salarysheetdetails->update([
-            'is_paid' => $isPaid ? 1 : 0
-        ]);
-
-        if ($salarysheetdetails->installment > 0 && $salarysheetdetails->installment_history) {
-
-            $installmenthistories = json_decode($salarysheetdetails->installment_history, 1);
-            // update installment data
-            foreach ($installmenthistories as $hdata) {
-                $LoanInstallment = LoanInstallment::find($hdata['id']);
-                $LoanInstallment->update([
-                    'is_closed' => 1
-                ]);
-            }
-        }
-
-        return true;
+        return $this->recalculateReference('SalarySheetDetail', $ref['reference_id'], !empty($ref['is_closed']));
     }
 
     public function updateLoanInstallment(array $refdata): bool
     {
-        $loaninstallmentid = $refdata['reference_id'];
-        $loanInstllment = LoanInstallment::find($loaninstallmentid);
-        if ($loanInstllment) {
-            $loanInstllment->update([
-                'is_closed' => 1
-            ]);
-        }
-        return true;
+        return $this->recalculateReference('LoanInstallment', $refdata['reference_id'], !empty($refdata['is_closed']));
     }
 
     public function updateCommission(array $refdata): bool
     {
-
-        $commission = Commission::find($refdata['reference_id']);
-
-        if (!$commission) {
-            return false;
-        }
-
-        $isClosed = ($refdata['amount'] == $commission->amount) || (!empty($refdata['is_closed']));
-
-        $commission->update([
-            'is_closed' => $isClosed ? 1 : 0
-        ]);
-
-        return true;
+        return $this->recalculateReference('Commission', $refdata['reference_id'], !empty($refdata['is_closed']));
     }
 
     public function updateLoanInfo(array $refdata, string $payment_type): bool
     {
-        $loaninfo = LoanInfo::find($refdata['reference_id']);
-        if (!$loaninfo) {
-            return false;
-        }
-
-        if ($payment_type == 'Receive') {
-            $paidNow = (float) $refdata['amount'];
-            // Due হিসাব করো
-            $dueAmount = max(0, (float) $loaninfo->due_amount - $paidNow);
-            // Closed হবে শুধু তখনই যখন due 0
-            $isClosed = ($dueAmount == 0);
-            $loaninfo->update([
-                'due_amount'  => $dueAmount,
-                'is_closed'   => $isClosed ? 1 : 0,
-            ]);
-        }
-
-        if ($payment_type == 'Pay') {
-            $loaninfo->update([
-                'is_paid'     => 1,
-            ]);
-        }
-
-
-        return true;
+        return $this->recalculateReference('LoanInfo', $refdata['reference_id'], !empty($refdata['is_closed']));
     }
 }

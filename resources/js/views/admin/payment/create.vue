@@ -125,7 +125,7 @@
                             <thead>
                                 <tr>
                                     <th class="text-center" style="width: 44px; min-width: 44px;">
-                                        <input type="checkbox" class="form-check-input" :checked="isAllSelected" @change="toggleSelectAll" title="Select / Deselect All" />
+                                        <input type="checkbox" class="form-check-input" :checked="isAllSelected" @change="toggleSelectAll" :title="$t('Select / Deselect All')" />
                                     </th>
                                     <th style="min-width: 160px;">{{ $t('Ref / Bill Info') }}</th>
                                     <th style="min-width: 140px;">{{ $t('Account Head') }}</th>
@@ -168,7 +168,7 @@
                                             />
                                         </td>
                                         <td class="text-center">
-                                            <input type="checkbox" class="form-check-input" v-model="inv.is_closed" @change="onClosedToggle(inv)" title="Mark as fully closed" />
+                                            <input type="checkbox" class="form-check-input" v-model="inv.is_closed" @change="onClosedToggle(inv)" :title="$t('Mark as fully closed')" />
                                         </td>
                                     </tr>
                                 </template>
@@ -230,7 +230,7 @@
 
                         <!-- Auto Adjust Button -->
                         <div :class="data.payment_type == 'Receive' ? 'col-md-2' : 'col-md-3'" class="pt-4">
-                            <button type="button" class="btn auto_adjust_btn w-100 d-flex align-items-center justify-content-center gap-2" @click="reverseAdjustment" title="Auto distribute entered amount across due invoices">
+                            <button type="button" class="btn auto_adjust_btn w-100 d-flex align-items-center justify-content-center gap-2" @click="reverseAdjustment" :title="$t('Auto distribute entered amount across due invoices')">
                                 <i class="fas fa-sliders-h"></i>
                                 <span>{{ $t("Auto") }}<br class="d-none d-sm-inline" /> {{ $t("Adjust") }}</span>
                             </button>
@@ -283,7 +283,7 @@
                     <div class="d-flex align-items-center mb-3">
                         <div class="card_capsule_badge">
                             <i class="far fa-building me-1"></i>
-                            {{ entity_type == 'client' ? 'Client Details' : (entity_type == 'supplier' ? 'Supplier Details' : (entity_type == 'employee' ? 'Employee Details' : (entity_type == 'agent' ? 'Agent Details' : 'Party Details'))) }}
+                            {{ entity_type == 'client' ? $t('Client Details') : (entity_type == 'supplier' ? $t('Supplier Details') : (entity_type == 'employee' ? $t('Employee Details') : (entity_type == 'agent' ? $t('Agent Details') : $t('Party Details')))) }}
                         </div>
                     </div>
 
@@ -348,7 +348,7 @@
                     <div class="in_words_section pt-2 border-top">
                         <div class="d-flex align-items-center gap-1 text-muted small fw-bold mb-1">
                             <span class="in_words_icon">AB</span>
-                            <span>IN WORDS:</span>
+                            <span>{{ $t("IN WORDS:") }}</span>
                         </div>
                         <div class="in_words_text fw-bold text-dark small">
                             {{ this.$filter.numberToEnglishBD(data.amount) }}.
@@ -949,6 +949,19 @@ export default {
         getPaymentData() {
             axios.get(`${this.model}/${this.$route.params.id}`)
                 .then((response) => {
+                    if (response.data.can_edit === false) {
+                        const reason = response.data.lock_reason 
+                            ? this.$t(response.data.lock_reason) 
+                            : this.$t("This payment is locked and cannot be edited. Please inform the system developer.");
+                        if (typeof this.$toast === 'function') {
+                            this.$toast(reason, 'warning', this.$t('Action Restricted'), 8000);
+                        } else {
+                            alert(reason);
+                        }
+                        this.$router.push({ name: 'payment.index' });
+                        return;
+                    }
+
                     this.data = response.data;
                     this.invoices = response.data.invoices || [];
                     this.data.payment_details = response.data.payment_details || [];

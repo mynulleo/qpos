@@ -215,6 +215,9 @@
             <span class="badge bg-dark text-white font-monospace payslip_badge">
               #{{ item.payslipno || item.id }}
             </span>
+            <span v-if="item.can_delete === false" class="badge bg-danger-soft text-danger fw-semibold" style="font-size: 10.5px; padding: 2px 5px;" :title="getLockTooltip(item)" v-x-tooltip>
+              <i class="fas fa-lock me-1"></i>{{ item.sales_return ? $t('Sales Return') : $t('System Locked') }}
+            </span>
           </div>
           <div class="small text-muted font-monospace mt-1" style="font-size: 11.5px;">
             <i class="far fa-calendar-alt me-1 text-primary"></i> {{ item.payment_date }}
@@ -516,6 +519,21 @@ export default {
       const month = months[date.getMonth()];
       const year = date.getFullYear();
       return `${day} ${month}, ${year}`;
+    },
+
+    getLockTooltip(item) {
+      if (!item) return "";
+      if (item.sales_return || (item.payment_details && item.payment_details.some(d => d.reference_type === 'SalesReturn'))) {
+        const ref = item.sales_return?.return_no ? ` (#${item.sales_return.return_no})` : '';
+        return this.$t('This payment is linked to Sales Return') + ref + '. ' + 
+               this.$t('For accounting and stock consistency, it cannot be edited or deleted directly. Please contact the developer if needed.');
+      }
+      if (item.warranty_claim || (item.payment_details && item.payment_details.some(d => d.reference_type === 'WarrantyClaim'))) {
+        const ref = item.warranty_claim?.claim_no ? ` (#${item.warranty_claim.claim_no})` : '';
+        return this.$t('This payment is linked to Warranty Claim') + ref + '. ' + 
+               this.$t('For accounting integrity, it cannot be edited or deleted directly. Please contact the developer if needed.');
+      }
+      return item.lock_reason ? this.$t(item.lock_reason) : this.$t('System Locked');
     },
 
     resetAllFilters() {

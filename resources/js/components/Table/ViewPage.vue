@@ -51,6 +51,7 @@
                             v-x-tooltip v-if="
                                 showEditRoute &&
                                 ($parent.data?.id || $route.params.id) &&
+                                ($parent.data?.can_edit !== false) &&
                                 $root.checkPermission($parent.model + '.edit')
                             " :to="{
                                 name: $parent.model + '.edit',
@@ -72,6 +73,7 @@
                             :data-bs-title="$t('Delete')" v-x-tooltip v-if="
                                 showDeleteButton &&
                                 ($parent.data?.id || $route.params.id) &&
+                                ($parent.data?.can_delete !== false) &&
                                 $root.checkPermission(
                                     $parent.model + '.destroy'
                                 )

@@ -617,6 +617,15 @@ export default {
             return value;
         },
         destroy(item, is_delete) {
+            if (item && (item.can_delete === false || item.can_delete === 0)) {
+                const reason = item.lock_reason || "This item is locked and cannot be deleted.";
+                if (typeof this.$toast === 'function') {
+                    this.$toast(reason, 'warning', this.$t('Action Restricted'), 8000);
+                } else if (typeof alert === 'function') {
+                    alert(reason);
+                }
+                return false;
+            }
             this.deleted_item = item;
             this.deleted_id = item.id;
             this.is_delete = is_delete;

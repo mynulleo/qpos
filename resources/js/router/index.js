@@ -531,7 +531,7 @@ const routes = [
             {
                 path: "/invoice/:id/edit",
                 name: "invoice.edit",
-                component: () => import("./../views/admin/invoice/create"),
+                component: () => import("./../views/admin/invoice/edit"),
             },
             {
                 path: "/invoice/bill/:id",
