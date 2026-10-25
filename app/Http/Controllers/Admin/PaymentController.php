@@ -18,6 +18,7 @@ use App\Traits\VoucherTrait;
 use Illuminate\Http\Request;
 use App\Http\Resources\Resource;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\Base\BaseController;
 use App\Models\FundAccountBalance;
 
@@ -31,7 +32,9 @@ class PaymentController extends BaseController
      */
     public function index(Request $request)
     {
-        $query = Payment::with([
+        $hasInvoicePaymentId = Schema::hasColumn('invoices', 'payment_id');
+
+        $withRelations = [
             'client:id,name,mobile,clientid',
             'supplier:id,org_name,mobile,supid',
             'employee:id,full_name,mobile',
@@ -39,16 +42,48 @@ class PaymentController extends BaseController
             'fund_account:id,account_name,account_code',
             'bank:id,bank_name',
             'payment_details:id,payment_id,reference_type,reference_id',
+            'payment_details.invoice:id,invoice_no',
+            'payment_details.purchase:id,invoiceno',
             'sales_return:id,payment_id,return_no',
             'warranty_claim:id,payment_id,claim_no'
-        ])->latest();
+        ];
+
+        if ($hasInvoicePaymentId) {
+            $withRelations[] = 'invoices:id,payment_id,invoice_no';
+        }
+
+        $query = Payment::with($withRelations)->latest();
 
         // 1. Text / Keyword Search (Global or Specific Field)
         if ($request->filled('value')) {
             $val = trim($request->value);
             if ($request->filled('field_name')) {
                 $field = $request->field_name;
-                if (in_array($field, ['payslipno', 'trxid', 'chequeno', 'branch', 'account_name', 'accountno', 'status', 'payment_type', 'payment_method', 'mbanking_type'])) {
+                if ($field === 'invoice_no' || $field === 'invoice' || $field === 'invoiceno') {
+                    $query->where(function ($q) use ($val, $hasInvoicePaymentId) {
+                        $q->whereHas('payment_details', function ($dq) use ($val) {
+                            $dq->where(function ($sub) use ($val) {
+                                $sub->where(function ($iSub) use ($val) {
+                                    $iSub->where('reference_type', 'Invoice')
+                                         ->whereHas('invoice', function ($iq) use ($val) {
+                                             $iq->where('invoice_no', 'like', "%{$val}%");
+                                         });
+                                })->orWhere(function ($pSub) use ($val) {
+                                    $pSub->where('reference_type', 'Purchase')
+                                         ->whereHas('purchase', function ($pq) use ($val) {
+                                             $pq->where('invoiceno', 'like', "%{$val}%");
+                                         });
+                                });
+                            });
+                        });
+                        if ($hasInvoicePaymentId) {
+                            $q->orWhereHas('invoices', function ($iq) use ($val) {
+                                $iq->where('invoice_no', 'like', "%{$val}%");
+                            });
+                        }
+                        $q->orWhere('payslipno', 'like', "%{$val}%");
+                    });
+                } elseif (in_array($field, ['payslipno', 'trxid', 'chequeno', 'branch', 'account_name', 'accountno', 'status', 'payment_type', 'payment_method', 'mbanking_type'])) {
                     $query->where($field, 'like', "%{$val}%");
                 } elseif ($field === 'client') {
                     $query->whereHas('client', function ($q) use ($val) {
@@ -69,7 +104,7 @@ class PaymentController extends BaseController
                 }
             } else {
                 // Global Multi-field Search
-                $query->where(function ($q) use ($val) {
+                $query->where(function ($q) use ($val, $hasInvoicePaymentId) {
                     $q->where('payslipno', 'like', "%{$val}%")
                         ->orWhere('trxid', 'like', "%{$val}%")
                         ->orWhere('chequeno', 'like', "%{$val}%")
@@ -77,7 +112,27 @@ class PaymentController extends BaseController
                         ->orWhere('account_name', 'like', "%{$val}%")
                         ->orWhere('accountno', 'like', "%{$val}%")
                         ->orWhere('amount', 'like', "%{$val}%")
-                        ->orWhereHas('client', function ($cq) use ($val) {
+                        ->orWhereHas('payment_details', function ($dq) use ($val) {
+                            $dq->where(function ($sub) use ($val) {
+                                $sub->where(function ($iSub) use ($val) {
+                                    $iSub->where('reference_type', 'Invoice')
+                                         ->whereHas('invoice', function ($iq) use ($val) {
+                                             $iq->where('invoice_no', 'like', "%{$val}%");
+                                         });
+                                })->orWhere(function ($pSub) use ($val) {
+                                    $pSub->where('reference_type', 'Purchase')
+                                         ->whereHas('purchase', function ($pq) use ($val) {
+                                             $pq->where('invoiceno', 'like', "%{$val}%");
+                                         });
+                                });
+                            });
+                        });
+                    if ($hasInvoicePaymentId) {
+                        $q->orWhereHas('invoices', function ($iq) use ($val) {
+                            $iq->where('invoice_no', 'like', "%{$val}%");
+                        });
+                    }
+                    $q->orWhereHas('client', function ($cq) use ($val) {
                             $cq->where('name', 'like', "%{$val}%")
                                 ->orWhere('clientid', 'like', "%{$val}%")
                                 ->orWhere('mobile', 'like', "%{$val}%");
@@ -97,6 +152,34 @@ class PaymentController extends BaseController
                         });
                 });
             }
+        }
+
+        // 1.1 Dedicated Invoice No Filter (from Advanced Search or query parameter)
+        if ($request->filled('invoice_no')) {
+            $invNo = trim($request->invoice_no);
+            $query->where(function ($q) use ($invNo, $hasInvoicePaymentId) {
+                $q->whereHas('payment_details', function ($dq) use ($invNo) {
+                    $dq->where(function ($sub) use ($invNo) {
+                        $sub->where(function ($iSub) use ($invNo) {
+                            $iSub->where('reference_type', 'Invoice')
+                                 ->whereHas('invoice', function ($iq) use ($invNo) {
+                                     $iq->where('invoice_no', 'like', "%{$invNo}%");
+                                 });
+                        })->orWhere(function ($pSub) use ($invNo) {
+                            $pSub->where('reference_type', 'Purchase')
+                                 ->whereHas('purchase', function ($pq) use ($invNo) {
+                                     $pq->where('invoiceno', 'like', "%{$invNo}%");
+                                 });
+                        });
+                    });
+                });
+                if ($hasInvoicePaymentId) {
+                    $q->orWhereHas('invoices', function ($iq) use ($invNo) {
+                        $iq->where('invoice_no', 'like', "%{$invNo}%");
+                    });
+                }
+                $q->orWhere('payslipno', 'like', "%{$invNo}%");
+            });
         }
 
         // 2. Transaction Type Filter (Receive / Pay)

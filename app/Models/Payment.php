@@ -91,7 +91,35 @@ class Payment extends BaseModel
         return $this->hasOne(WarrantyClaim::class, 'payment_id', 'id');
     }
 
-    protected $appends = ['can_edit', 'can_delete', 'lock_reason'];
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'payment_id', 'id');
+    }
+
+    protected $appends = ['can_edit', 'can_delete', 'lock_reason', 'invoice_numbers'];
+
+    public function getInvoiceNumbersAttribute()
+    {
+        $numbers = [];
+        if ($this->relationLoaded('payment_details')) {
+            foreach ($this->payment_details as $detail) {
+                if ($detail->reference_type === 'Invoice' && $detail->relationLoaded('invoice') && $detail->invoice) {
+                    $numbers[] = $detail->invoice->invoice_no;
+                } elseif ($detail->reference_type === 'Purchase' && $detail->relationLoaded('purchase') && $detail->purchase) {
+                    $numbers[] = $detail->purchase->invoiceno;
+                }
+            }
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('invoices', 'payment_id') && $this->relationLoaded('invoices') && $this->invoices) {
+            foreach ($this->invoices as $inv) {
+                if (!empty($inv->invoice_no)) {
+                    $numbers[] = $inv->invoice_no;
+                }
+            }
+        }
+        $numbers = array_values(array_unique(array_filter($numbers)));
+        return !empty($numbers) ? implode(', ', $numbers) : null;
+    }
 
     public function getCanEditAttribute()
     {

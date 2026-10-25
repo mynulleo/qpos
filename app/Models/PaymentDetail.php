@@ -33,5 +33,25 @@ class PaymentDetail extends BaseModel
         return $this->belongsTo(Invoice::class, 'reference_id', 'id');
     }
 
+    public function purchase()
+    {
+        return $this->belongsTo(Purchase::class, 'reference_id', 'id');
+    }
+
+    public function grn()
+    {
+        return $this->belongsTo(Grn::class, 'reference_id', 'id');
+    }
+
+    public function sales_return()
+    {
+        return $this->belongsTo(SalesReturn::class, 'reference_id', 'id');
+    }
+
+    public function warranty_claim()
+    {
+        return $this->belongsTo(WarrantyClaim::class, 'reference_id', 'id');
+    }
+
     // date format
 }
