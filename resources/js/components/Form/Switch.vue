@@ -18,7 +18,7 @@
                 </span>
             </label>
 
-            <div class="status_box">
+            <div class="status_box" :style="disabled ? 'pointer-events: none; opacity: 0.65;' : ''">
                 <div class="status_select">
                     <input :id="id ?? `input-${uuid}`" class="switch" type="checkbox" checked="true"
                         :name="name ?? `input-${uuid}`" v-model="status" @change="updateModel" :disabled="disabled" />

@@ -56,7 +56,7 @@ class SeriesController extends BaseController
      */
     public function create()
     {
-        return view('layouts.backend_app');
+        return view('admin.layouts.admin_app');
     }
 
     /**
@@ -81,37 +81,47 @@ class SeriesController extends BaseController
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Series  $series
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int|string  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, Series $series)
+    public function show(Request $request, $id)
     {
         if ($request->format() == 'html') {
-            return view('layouts.backend_app');
+            return view('admin.layouts.admin_app');
         }
-        return $series->load(['category:id,title', 'brand:id,title']);
+        $series = Series::with(['category:id,title', 'brand:id,title'])->find($id);
+        if (!$series) {
+            return response()->json(['message' => 'Series not found'], 404);
+        }
+        return $series;
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Series  $series
+     * @param  int|string  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Series $series)
+    public function edit($id)
     {
-        return view('layouts.backend_app');
+        return view('admin.layouts.admin_app');
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Series  $series
+     * @param  int|string  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Series $series)
+    public function update(Request $request, $id)
     {
+        $series = Series::find($id);
+        if (!$series) {
+            return response()->json(['message' => 'Series not found'], 404);
+        }
+
         if ($this->validateCheck($request, $series->id)) {
             try {
                 $data = $request->all();
@@ -127,11 +137,15 @@ class SeriesController extends BaseController
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Series  $series
+     * @param  int|string  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Series $series)
+    public function destroy($id)
     {
+        $series = Series::find($id);
+        if (!$series) {
+            return response()->json(['message' => 'Series not found'], 404);
+        }
         $res = $series->delete();
         return $this->responseReturn("delete", $res);
     }

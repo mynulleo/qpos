@@ -22,10 +22,11 @@
             </label>
             <div class="input-group position-relative">
                 <div :id="id ?? `input-${uuid}`" class="v-select-wrapper"
-                    :class="{ 'border-red': has_error, 'readonly-select': readonly }" ref="vselect_wrapper">
+                    :class="{ 'border-red': has_error, 'readonly-select': readonly, 'disabled-select': disabled }" ref="vselect_wrapper">
                     <v-select v-model="selected_value" :label="label" :reduce="reduce" :options="options"
                         :placeholder="placeholder ? $t(placeholder) : (title ? $t(title) : '')" :closeOnSelect="closeOnSelect" :field="field"
                         :appendToBody="appendToBody"
+                        :disabled="disabled || readonly"
                         @update:modelValue="onChange" />
                 </div>
             </div>

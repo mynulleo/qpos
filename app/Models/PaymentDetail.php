@@ -53,5 +53,20 @@ class PaymentDetail extends BaseModel
         return $this->belongsTo(WarrantyClaim::class, 'reference_id', 'id');
     }
 
+    public function expense()
+    {
+        return $this->belongsTo(Expense::class, 'reference_id', 'id');
+    }
+
+    public function loan_info()
+    {
+        return $this->belongsTo(LoanInfo::class, 'reference_id', 'id');
+    }
+
+    public function salary_sheet()
+    {
+        return $this->belongsTo(SalarySheet::class, 'reference_id', 'id');
+    }
+
     // date format
 }

@@ -50,7 +50,7 @@ class BrandController extends BaseController
      */
     public function create()
     {
-        return view('layouts.backend_app');
+        return view('admin.layouts.admin_app');
     }
 
     /**
@@ -75,13 +75,18 @@ class BrandController extends BaseController
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Brand  $brand
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int|string  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, Brand $brand)
+    public function show(Request $request, $id)
     {
         if ($request->format() == 'html') {
-            return view('layouts.backend_app');
+            return view('admin.layouts.admin_app');
+        }
+        $brand = Brand::with('category:id,title')->find($id);
+        if (!$brand) {
+            return response()->json(['message' => 'Brand not found'], 404);
         }
         return $brand;
     }
@@ -89,23 +94,28 @@ class BrandController extends BaseController
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Brand  $brand
+     * @param  int|string  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Brand $brand)
+    public function edit($id)
     {
-        return view('layouts.backend_app');
+        return view('admin.layouts.admin_app');
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Brand  $brand
+     * @param  int|string  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Brand $brand)
+    public function update(Request $request, $id)
     {
+        $brand = Brand::find($id);
+        if (!$brand) {
+            return response()->json(['message' => 'Brand not found'], 404);
+        }
+
         if ($this->validateCheck($request, $brand->id)) {
             try {
                 $data = $request->all();
@@ -121,11 +131,15 @@ class BrandController extends BaseController
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Brand  $brand
+     * @param  int|string  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Brand $brand)
+    public function destroy($id)
     {
+        $brand = Brand::find($id);
+        if (!$brand) {
+            return response()->json(['message' => 'Brand not found'], 404);
+        }
         $res = $brand->delete();
         return $this->responseReturn("delete", $res);
     }

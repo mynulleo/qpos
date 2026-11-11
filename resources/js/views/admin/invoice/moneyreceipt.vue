@@ -212,7 +212,42 @@ export default {
     color: #666;
 }
 
-@media (max-width: 768px) {
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 8mm 10mm;
+    }
+    html, body {
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .receipt-content {
+        max-width: 100% !important;
+        width: 100% !important;
+        border: 2px solid #112C47 !important;
+        box-shadow: none !important;
+        padding: 20px !important;
+        margin: 0 auto !important;
+    }
+    .receipt-header {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+    }
+    .field-row {
+        display: flex !important;
+        flex-direction: row !important;
+    }
+    .d-flex {
+        display: flex !important;
+        flex-direction: row !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
     .receipt-content {
         max-width: 100%;
         padding: 15px;
@@ -243,19 +278,6 @@ export default {
 
     .value-container {
         width: 100%;
-    }
-
-    .d-flex {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .d-flex div {
-        margin-bottom: 10px;
-    }
-
-    .signature-line {
-        margin-bottom: 15px;
     }
 }
 </style>

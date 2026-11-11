@@ -264,7 +264,19 @@
                 <tr v-for="(cItem, idx) in cart" :key="'cart_row_' + (cItem.item_id || 0) + '_' + (cItem.color_id || 0) + '_' + (cItem.size_id || 0)">
                   <td>
                     <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" :title="cItem.title">{{ cItem.title }}</div>
-                    <small class="text-muted font-monospace" style="font-size: 11px;">{{ cItem.barcode }}</small>
+                    <div class="d-flex align-items-center gap-1 mt-0.5">
+                      <button
+                        type="button"
+                        class="btn btn-xs rounded-pill d-inline-flex align-items-center gap-1 border-0 py-0 px-1.5 text-primary bg-primary bg-opacity-10 shadow-none"
+                        style="font-size: 10px; line-height: 1.4; font-weight: 600; cursor: pointer;"
+                        @click="openCartItemModal(cItem, idx)"
+                        :title="$t('Click to edit variants, serial, or price')"
+                      >
+                        <i class="fas fa-sliders-h"></i>
+                        <span>{{ $t('Options') }}</span>
+                      </button>
+                      <small class="text-muted font-monospace" style="font-size: 11px;" v-if="cItem.barcode">{{ cItem.barcode }}</small>
+                    </div>
                   </td>
                   <td>
                     <span class="badge bg-info text-dark me-1" v-if="cItem.color_title" style="font-size: 11px;">{{ cItem.color_title }}</span>
@@ -631,7 +643,10 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0">
           <div class="modal-header bg-dark text-white py-2">
-            <h5 class="modal-title fw-bold fs-6"><i class="fas fa-box-open me-2"></i>{{ $t('Select Color, Size & Serial') }}</h5>
+            <h5 class="modal-title fw-bold fs-6">
+              <i class="fas me-2" :class="editingCartIndex !== null ? 'fa-sliders-h text-warning' : 'fa-box-open'"></i>
+              {{ editingCartIndex !== null ? $t('Edit Item Options & Variants') : $t('Select Color, Size & Serial') }}
+            </h5>
             <button type="button" class="btn-close btn-close-white" @click="closeItemModal"></button>
           </div>
           <div class="modal-body p-3" v-if="activeItem">
@@ -879,12 +894,13 @@
           </div>
           <div class="modal-footer py-2 d-flex justify-content-between align-items-center">
             <div class="small text-muted">
-              <kbd>Enter</kbd> / <kbd>Ctrl+Enter</kbd> = {{ $t('Add to Cart') }} | <kbd>Esc</kbd> = {{ $t('Close') }}
+              <kbd>Enter</kbd> / <kbd>Ctrl+Enter</kbd> = {{ editingCartIndex !== null ? $t('Update Item') : $t('Add to Cart') }} | <kbd>Esc</kbd> = {{ $t('Close') }}
             </div>
             <div class="d-flex gap-2">
               <button type="button" class="btn btn-sm btn-secondary" @click="closeItemModal">{{ $t('Cancel') }} (Esc)</button>
-              <button ref="modalAddBtn" type="button" class="btn btn-sm btn-primary px-4 fw-bold shadow-sm" @click="addToCartFromModal">
-                <i class="fas fa-cart-plus me-1"></i> {{ $t('Add to Cart') }} (Enter)
+              <button ref="modalAddBtn" type="button" class="btn btn-sm px-4 fw-bold shadow-sm" :class="editingCartIndex !== null ? 'btn-success' : 'btn-primary'" @click="addToCartFromModal">
+                <i class="fas me-1" :class="editingCartIndex !== null ? 'fa-check-circle' : 'fa-cart-plus'"></i>
+                {{ editingCartIndex !== null ? $t('Update Item') : $t('Add to Cart') }} (Enter)
               </button>
             </div>
           </div>
@@ -1317,6 +1333,7 @@ export default {
       allSizes: [],
 
       showItemModal: false,
+      editingCartIndex: null,
       activeItem: null,
       modalAvailableSerials: [],
       serialTags: [],
@@ -1402,6 +1419,13 @@ export default {
     },
     showPosTermsConfig() {
       return !!(this.$root.site?.show_pos_terms == 1 || this.$root.site?.show_pos_terms === true || this.$root.site?.show_pos_terms === '1');
+    },
+    showPosItemPopup() {
+      const val = this.$root.site?.show_pos_item_popup;
+      if (val === undefined || val === null) {
+        return true;
+      }
+      return !!(val == 1 || val === true || val === '1');
     },
     selectedTermsList() {
       return (this.invoiceTerms || [])
@@ -2086,13 +2110,18 @@ export default {
         }
       }
 
+      if (!this.showPosItemPopup) {
+        this.addSimpleItemToCart(item, scannedSerial);
+        return;
+      }
+
       if (this.isSimpleProduct(item) && !scannedSerial) {
         this.addSimpleItemToCart(item);
       } else {
         this.openItemModal(item, scannedSerial);
       }
     },
-    addSimpleItemToCart(item) {
+    addSimpleItemToCart(item, scannedSerial = '') {
       this.searchTerm = '';
       this.searchResults = [];
       this.selectedSearchIndex = -1;
@@ -2105,7 +2134,7 @@ export default {
         return;
       }
 
-      // If single variant with positive stock exists, pick its color/size
+      // If variants with positive stock exist, pick the highest stock variant
       const stockSummaries = item.stock_summaries || item.stockSummaries || [];
       const positiveStockRows = stockSummaries.filter(s => floatval(s.current_stock) > 0);
       let colorId = null;
@@ -2113,15 +2142,16 @@ export default {
       let colorTitle = null;
       let sizeTitle = null;
 
-      if (positiveStockRows.length === 1) {
-        const singleVar = positiveStockRows[0];
-        if (singleVar.color_id) {
-          colorId = singleVar.color_id;
-          colorTitle = singleVar.color?.title || ((this.allColors || []).find(c => c && c.id == colorId)?.title) || null;
+      if (positiveStockRows.length > 0) {
+        const sortedRows = [...positiveStockRows].sort((a, b) => floatval(b.current_stock) - floatval(a.current_stock));
+        const bestVar = sortedRows[0];
+        if (bestVar.color_id) {
+          colorId = bestVar.color_id;
+          colorTitle = bestVar.color?.title || ((this.allColors || []).find(c => c && c.id == colorId)?.title) || null;
         }
-        if (singleVar.size_id) {
-          sizeId = singleVar.size_id;
-          sizeTitle = singleVar.size?.title || ((this.allSizes || []).find(s => s && s.id == sizeId)?.title) || null;
+        if (bestVar.size_id) {
+          sizeId = bestVar.size_id;
+          sizeTitle = bestVar.size?.title || ((this.allSizes || []).find(s => s && s.id == sizeId)?.title) || null;
         }
       }
 
@@ -2129,7 +2159,7 @@ export default {
       const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(item, basePrice, priceNature);
 
       if (finalRate <= 0) {
-        this.openItemModal(item);
+        this.openItemModal(item, scannedSerial);
         this.$toast(
           this.$locale === 'bn'
             ? `"${item.title}" এর মূল্য ০! অনুগ্রহ করে মূল্য নির্ধারণ করে কার্টে যোগ করুন।`
@@ -2143,7 +2173,7 @@ export default {
         c.item_id === item.id &&
         (c.color_id || null) == (colorId || null) &&
         (c.size_id || null) == (sizeId || null) &&
-        (!c.serial_no || c.serial_no === '')
+        (!scannedSerial ? (!c.serial_no || c.serial_no === '') : false)
       );
 
       if (existingCartIndex > -1) {
@@ -2169,7 +2199,7 @@ export default {
           color_title: colorTitle,
           size_id: sizeId,
           size_title: sizeTitle,
-          serial_no: '',
+          serial_no: scannedSerial || '',
           qty: 1,
           base_rate: basePrice,
           discount_amount: discountAmount,
@@ -2193,6 +2223,33 @@ export default {
       this.$nextTick(() => {
         this.$refs.itemSearchInput?.focus();
       });
+    },
+    async openCartItemModal(cItem, idx) {
+      if (!cItem) return;
+      let item = cItem.item_object;
+      if (!item) {
+        try {
+          const res = await axios.get(`item/${cItem.item_id}`);
+          if (res.data) {
+            item = res.data;
+            cItem.item_object = item;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (!item) {
+        item = {
+          id: cItem.item_id,
+          title: cItem.title,
+          barcode: cItem.barcode,
+          category_id: cItem.category_id,
+          warranty_type: cItem.default_warranty_type || cItem.warranty_type,
+          warranty_period: cItem.default_warranty_period || cItem.warranty_period,
+          warranty_duration: cItem.warranty_duration,
+        };
+      }
+      this.openItemModal(item, cItem.serial_no || '', cItem, idx);
     },
     selectDuplicateItem(item) {
       this.showDuplicateBarcodeModal = false;
@@ -2412,8 +2469,9 @@ export default {
         }
       }
     },
-    openItemModal(item, scannedSerial = '') {
+    openItemModal(item, scannedSerial = '', cartItem = null, cartIndex = null) {
       this.activeItem = item;
+      this.editingCartIndex = (cartIndex !== undefined && cartIndex !== null) ? cartIndex : null;
       this.searchResults = [];
       this.selectedSearchIndex = -1;
       this.searchTerm = '';
@@ -2421,79 +2479,105 @@ export default {
       this.modalSerialTyped = '';
       this.serialTags = [];
 
-      if (scannedSerial && scannedSerial.trim() !== '') {
-        const split = scannedSerial.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
-        this.serialTags = Array.from(new Set(split));
-      }
-
-      let defaultColorId = null;
-      let defaultSizeId = null;
-      let defaultStock = 0;
-
-      const stockSummaries = item.stock_summaries || item.stockSummaries || [];
-      const itemPrices = item.item_prices || item.itemPrices || [];
-
-      // ⭐️ 1. Find the variant with the HIGHEST stock from stock summaries
-      if (stockSummaries.length > 0) {
-        const sortedSummaries = [...stockSummaries].sort((a, b) => floatval(b.current_stock) - floatval(a.current_stock));
-        const highestStockVariant = sortedSummaries[0];
-        if (highestStockVariant) {
-          defaultColorId = (highestStockVariant.color_id !== undefined && highestStockVariant.color_id !== null) ? highestStockVariant.color_id : null;
-          defaultSizeId = (highestStockVariant.size_id !== undefined && highestStockVariant.size_id !== null) ? highestStockVariant.size_id : null;
-          defaultStock = floatval(highestStockVariant.current_stock);
+      if (cartItem) {
+        const rawSerial = cartItem.serial_no || '';
+        if (rawSerial.trim() !== '') {
+          this.serialTags = rawSerial.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
         }
-      } else if (itemPrices.length > 0) {
-        defaultColorId = itemPrices[0].color_id || null;
-        defaultSizeId = itemPrices[0].size_id || null;
-      }
+        this.modalSelection = {
+          color_id: cartItem.color_id !== undefined ? cartItem.color_id : null,
+          size_id: cartItem.size_id !== undefined ? cartItem.size_id : null,
+          serial_no: cartItem.serial_no || '',
+          qty: floatval(cartItem.qty) || 1,
+          base_rate: floatval(cartItem.base_rate) || 0,
+          discount_amount: floatval(cartItem.discount_amount) || 0,
+          discount_title: cartItem.discount_title || '',
+          discount_display: cartItem.discount_display || '',
+          rate: floatval(cartItem.rate) || 0,
+          available_stock: cartItem.available_stock || 0,
+          has_warranty: !!(cartItem.has_warranty || (cartItem.warranty_type && cartItem.warranty_type !== 'none')),
+          grn_warranty_type: cartItem.default_warranty_type || 'none',
+          grn_warranty_period: cartItem.default_warranty_period || '',
+          warranty_type: cartItem.warranty_type || 'none',
+          warranty_period: cartItem.warranty_period || '',
+          warranty_duration: cartItem.warranty_duration || null
+        };
+        this.onVariantChange(true);
+      } else {
+        if (scannedSerial && scannedSerial.trim() !== '') {
+          const split = scannedSerial.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+          this.serialTags = Array.from(new Set(split));
+        }
 
-      const { basePrice, priceNature } = this.resolveItemPrice(item, defaultColorId, defaultSizeId);
-      const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(item, basePrice, priceNature);
+        let defaultColorId = null;
+        let defaultSizeId = null;
+        let defaultStock = 0;
 
-      const initialQty = this.serialTags.length > 0 ? this.serialTags.length : 1;
-      const initialSerialNo = this.serialTags.join(', ');
+        const stockSummaries = item.stock_summaries || item.stockSummaries || [];
+        const itemPrices = item.item_prices || item.itemPrices || [];
 
-      // Determine default warranty from GRN (or item master fallback)
-      let defaultWarrantyType = item.warranty_type || 'none';
-      let defaultWarrantyPeriod = item.warranty_period || '';
-      let defaultWarrantyDuration = item.warranty_duration || null;
-      let hasWarranty = !!(item.has_warranty || (defaultWarrantyType && defaultWarrantyType !== 'none'));
+        // ⭐️ 1. Find the variant with the HIGHEST stock from stock summaries
+        if (stockSummaries.length > 0) {
+          const sortedSummaries = [...stockSummaries].sort((a, b) => floatval(b.current_stock) - floatval(a.current_stock));
+          const highestStockVariant = sortedSummaries[0];
+          if (highestStockVariant) {
+            defaultColorId = (highestStockVariant.color_id !== undefined && highestStockVariant.color_id !== null) ? highestStockVariant.color_id : null;
+            defaultSizeId = (highestStockVariant.size_id !== undefined && highestStockVariant.size_id !== null) ? highestStockVariant.size_id : null;
+            defaultStock = floatval(highestStockVariant.current_stock);
+          }
+        } else if (itemPrices.length > 0) {
+          defaultColorId = itemPrices[0].color_id || null;
+          defaultSizeId = itemPrices[0].size_id || null;
+        }
 
-      if (item.serial_warranty_map && this.serialTags.length > 0) {
-        for (const st of this.serialTags) {
-          if (item.serial_warranty_map[st]) {
-            const sw = item.serial_warranty_map[st];
-            if (sw.warranty_type && sw.warranty_type !== 'none') {
-              defaultWarrantyType = sw.warranty_type;
-              defaultWarrantyPeriod = sw.warranty_period || '';
-              defaultWarrantyDuration = sw.warranty_duration || null;
-              hasWarranty = true;
-              break;
+        const { basePrice, priceNature } = this.resolveItemPrice(item, defaultColorId, defaultSizeId);
+        const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(item, basePrice, priceNature);
+
+        const initialQty = this.serialTags.length > 0 ? this.serialTags.length : 1;
+        const initialSerialNo = this.serialTags.join(', ');
+
+        // Determine default warranty from GRN (or item master fallback)
+        let defaultWarrantyType = item.warranty_type || 'none';
+        let defaultWarrantyPeriod = item.warranty_period || '';
+        let defaultWarrantyDuration = item.warranty_duration || null;
+        let hasWarranty = !!(item.has_warranty || (defaultWarrantyType && defaultWarrantyType !== 'none'));
+
+        if (item.serial_warranty_map && this.serialTags.length > 0) {
+          for (const st of this.serialTags) {
+            if (item.serial_warranty_map[st]) {
+              const sw = item.serial_warranty_map[st];
+              if (sw.warranty_type && sw.warranty_type !== 'none') {
+                defaultWarrantyType = sw.warranty_type;
+                defaultWarrantyPeriod = sw.warranty_period || '';
+                defaultWarrantyDuration = sw.warranty_duration || null;
+                hasWarranty = true;
+                break;
+              }
             }
           }
         }
+
+        this.modalSelection = {
+          color_id: defaultColorId,
+          size_id: defaultSizeId,
+          serial_no: initialSerialNo,
+          qty: initialQty,
+          base_rate: basePrice,
+          discount_amount: discountAmount,
+          discount_title: discountTitle || '',
+          discount_display: discountDisplay || '',
+          rate: finalRate,
+          available_stock: defaultStock,
+          has_warranty: hasWarranty,
+          grn_warranty_type: defaultWarrantyType,
+          grn_warranty_period: defaultWarrantyPeriod,
+          warranty_type: defaultWarrantyType,
+          warranty_period: defaultWarrantyPeriod,
+          warranty_duration: defaultWarrantyDuration
+        };
+
+        this.onVariantChange();
       }
-
-      this.modalSelection = {
-        color_id: defaultColorId,
-        size_id: defaultSizeId,
-        serial_no: initialSerialNo,
-        qty: initialQty,
-        base_rate: basePrice,
-        discount_amount: discountAmount,
-        discount_title: discountTitle || '',
-        discount_display: discountDisplay || '',
-        rate: finalRate,
-        available_stock: defaultStock,
-        has_warranty: hasWarranty,
-        grn_warranty_type: defaultWarrantyType,
-        grn_warranty_period: defaultWarrantyPeriod,
-        warranty_type: defaultWarrantyType,
-        warranty_period: defaultWarrantyPeriod,
-        warranty_duration: defaultWarrantyDuration
-      };
-
-      this.onVariantChange();
       this.showItemModal = true;
 
       // Auto focus first interactive field in modal
@@ -2513,6 +2597,7 @@ export default {
     closeItemModal() {
       this.showItemModal = false;
       this.activeItem = null;
+      this.editingCartIndex = null;
       this.serialTags = [];
       this.modalSerialTyped = '';
       this.$nextTick(() => {
@@ -2534,20 +2619,22 @@ export default {
         this.addToCartFromModal();
       }
     },
-    onVariantChange() {
+    onVariantChange(keepCurrentRate = false) {
       if (!this.activeItem) return;
 
       const stockSummaries = this.activeItem.stock_summaries || this.activeItem.stockSummaries || [];
 
-      // Price and discount lookup
-      const { basePrice, priceNature } = this.resolveItemPrice(this.activeItem, this.modalSelection.color_id, this.modalSelection.size_id);
-      const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(this.activeItem, basePrice, priceNature);
+      if (!keepCurrentRate) {
+        // Price and discount lookup
+        const { basePrice, priceNature } = this.resolveItemPrice(this.activeItem, this.modalSelection.color_id, this.modalSelection.size_id);
+        const { discountAmount, finalRate, discountTitle, discountDisplay } = this.calculateItemDiscount(this.activeItem, basePrice, priceNature);
 
-      this.modalSelection.base_rate = basePrice;
-      this.modalSelection.discount_amount = discountAmount;
-      this.modalSelection.discount_title = discountTitle || '';
-      this.modalSelection.discount_display = discountDisplay || '';
-      this.modalSelection.rate = finalRate;
+        this.modalSelection.base_rate = basePrice;
+        this.modalSelection.discount_amount = discountAmount;
+        this.modalSelection.discount_title = discountTitle || '';
+        this.modalSelection.discount_display = discountDisplay || '';
+        this.modalSelection.rate = finalRate;
+      }
 
       // Stock lookup
       let stock = 0;
@@ -2574,6 +2661,8 @@ export default {
           });
           stock = broaderMatches.reduce((acc, curr) => acc + floatval(curr.current_stock), 0);
         }
+      } else {
+        stock = floatval(this.activeItem.current_stock || this.activeItem.opening_stock || 0);
       }
       this.modalSelection.available_stock = stock;
     },
@@ -2641,6 +2730,37 @@ export default {
 
       const colorObj = (this.allColors || []).find(c => c && c.id == this.modalSelection.color_id);
       const sizeObj = (this.allSizes || []).find(s => s && s.id == this.modalSelection.size_id);
+
+      // If updating an existing cart item:
+      if (this.editingCartIndex !== null && this.cart[this.editingCartIndex]) {
+        const cItem = this.cart[this.editingCartIndex];
+        const finalQty = this.serialTags.length > 0 ? this.serialTags.length : (this.modalSelection.qty || 1);
+
+        cItem.color_id = this.modalSelection.color_id;
+        cItem.color_title = colorObj ? colorObj.title : null;
+        cItem.size_id = this.modalSelection.size_id;
+        cItem.size_title = sizeObj ? sizeObj.title : null;
+        cItem.serial_no = this.modalSelection.serial_no || '';
+        cItem.qty = finalQty;
+        cItem.base_rate = this.modalSelection.base_rate || 0;
+        cItem.discount_amount = this.modalSelection.discount_amount || 0;
+        cItem.discount_title = this.modalSelection.discount_title || '';
+        cItem.discount_display = this.modalSelection.discount_display || '';
+        cItem.rate = this.modalSelection.rate || 0;
+        cItem.available_stock = this.modalSelection.available_stock;
+        cItem.has_warranty = !!(this.modalSelection.has_warranty || (this.modalSelection.warranty_type && this.modalSelection.warranty_type !== 'none'));
+        cItem.warranty_type = this.modalSelection.warranty_type || 'none';
+        cItem.warranty_period = this.modalSelection.warranty_period || '';
+        cItem.warranty_duration = this.modalSelection.warranty_duration || null;
+
+        this.syncCartDiscount();
+        this.closeItemModal();
+        this.$toast(
+          this.$locale === 'bn' ? `"${this.activeItem.title}" আপডেট করা হয়েছে` : `"${this.activeItem.title}" updated`,
+          'success'
+        );
+        return;
+      }
 
       // Check if identical item+color+size is already in cart, increment quantity or merge serials
       const existingCartIndex = this.cart.findIndex(c => 

@@ -185,17 +185,131 @@
               <label class="form-check-label fw-bold text-danger cursor-pointer ms-2" for="outOfWarrantyCheck">{{ $t('Proceed as Paid Repair / Out-of-Warranty Service Claim') }}</label>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="bg-white rounded p-3 border shadow-sm small text-dark mt-2" v-if="verificationResult.purchase_info">
-            <h6 class="fw-bold border-bottom pb-1 mb-2 text-info">
-              <i class="fas fa-boxes me-1"></i>
-              <span>{{ $t('Purchase Record Information') }}:</span>
-            </h6>
-            <div class="row g-2 font-monospace">
-              <div class="col-md-6"><strong>{{ $t('Product') }}:</strong> {{ verificationResult.purchase_info.item_title }}</div>
-              <div class="col-md-6"><strong>{{ $t('Supplier') }}:</strong> {{ verificationResult.purchase_info.supplier }}</div>
-              <div class="col-md-6"><strong>{{ $t('Purchase Date') }}:</strong> {{ verificationResult.purchase_info.purchase_date }}</div>
-              <div class="col-md-6"><strong>{{ $t('Status') }}:</strong> {{ $t('Available in Stock (Not yet sold to any customer)') }}</div>
+      <!-- 🏢 Step 2.5: Supplier Sourcing & Purchase Warranty Details Card -->
+      <div class="card border-0 shadow-sm mb-3 supplier-sourcing-card" v-if="verificationResult.supplier_info">
+        <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="fas fa-truck text-primary"></i>
+            <span>{{ $t('Supplier Sourcing & Purchase Warranty Details') }}</span>
+          </span>
+          <div class="d-flex align-items-center gap-2">
+            <!-- Supplier Warranty Status Badge -->
+            <span
+              class="badge px-3 py-1 font-monospace"
+              :class="verificationResult.supplier_info.supplier_warranty_status === 'active' ? 'bg-success' : (verificationResult.supplier_info.supplier_warranty_status === 'expired' ? 'bg-danger' : 'bg-secondary')"
+            >
+              <i class="fas fa-shield-alt me-1"></i>
+              <span v-if="verificationResult.supplier_info.supplier_warranty_status === 'active'">
+                {{ $t('Supplier Warranty Active') }}: {{ verificationResult.supplier_info.supplier_remaining_days }} {{ $t('Days Left') }}
+              </span>
+              <span v-else-if="verificationResult.supplier_info.supplier_warranty_status === 'expired'">
+                {{ $t('Supplier Warranty Expired') }}: {{ verificationResult.supplier_info.supplier_expired_days }} {{ $t('Days Ago') }}
+              </span>
+              <span v-else>
+                {{ $t('No Supplier Warranty') }}
+              </span>
+            </span>
+          </div>
+        </div>
+        <div class="card-body p-3 bg-light bg-opacity-50">
+          <div class="row g-3">
+            <!-- Col 1: Supplier Info -->
+            <div class="col-lg-4 col-md-12">
+              <div class="bg-white p-3 rounded border h-100 shadow-xs">
+                <div class="text-muted small fw-bold text-uppercase mb-2 pb-1 border-bottom d-flex justify-content-between" style="font-size: 11px;">
+                  <span><i class="fas fa-building text-primary me-1"></i>{{ $t('Supplier Information') }}</span>
+                  <span class="badge bg-light text-dark font-monospace border" v-if="verificationResult.supplier_info.supplier_code">{{ verificationResult.supplier_info.supplier_code }}</span>
+                </div>
+                <div class="fw-bold text-dark fs-6">{{ verificationResult.supplier_info.supplier_name }}</div>
+                <div class="small text-muted mb-1" v-if="verificationResult.supplier_info.supplier_contact_person">
+                  <strong>{{ $t('Contact Person:') }}</strong> {{ verificationResult.supplier_info.supplier_contact_person }}
+                </div>
+                <div class="small mt-1" v-if="verificationResult.supplier_info.supplier_mobile">
+                  <i class="fas fa-phone-alt text-success me-1"></i>
+                  <a :href="'tel:' + verificationResult.supplier_info.supplier_mobile" class="text-decoration-none fw-bold font-monospace theme-text">{{ verificationResult.supplier_info.supplier_mobile }}</a>
+                </div>
+                <div class="small text-muted text-truncate mt-0.5" v-if="verificationResult.supplier_info.supplier_email" :title="verificationResult.supplier_info.supplier_email">
+                  <i class="fas fa-envelope text-secondary me-1"></i>{{ verificationResult.supplier_info.supplier_email }}
+                </div>
+                <div class="small text-muted mt-1" v-if="verificationResult.supplier_info.supplier_address">
+                  <i class="fas fa-map-marker-alt text-secondary me-1"></i>{{ verificationResult.supplier_info.supplier_address }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 2: Purchase & Sourcing History -->
+            <div class="col-lg-4 col-md-12">
+              <div class="bg-white p-3 rounded border h-100 shadow-xs">
+                <div class="text-muted small fw-bold text-uppercase mb-2 pb-1 border-bottom" style="font-size: 11px;">
+                  <i class="fas fa-shopping-cart text-info me-1"></i>
+                  <span>{{ $t('Purchase / Sourcing History') }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1 small">
+                  <span class="text-muted">{{ $t('Purchase Date:') }}</span>
+                  <strong class="font-monospace text-dark">{{ verificationResult.supplier_info.purchase_date_formatted || verificationResult.supplier_info.purchase_date || $t('N/A') }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1 small">
+                  <span class="text-muted">{{ $t('PO / Bill No:') }}</span>
+                  <span class="font-monospace fw-bold text-dark">{{ verificationResult.supplier_info.purchase_no || $t('N/A') }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1 small" v-if="verificationResult.supplier_info.grn_no">
+                  <span class="text-muted">{{ $t('GRN No:') }}</span>
+                  <span class="font-monospace text-secondary">{{ verificationResult.supplier_info.grn_no }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1 small" v-if="verificationResult.supplier_info.challan_no">
+                  <span class="text-muted">{{ $t('Challan No:') }}</span>
+                  <span class="font-monospace text-secondary">{{ verificationResult.supplier_info.challan_no }}</span>
+                </div>
+                <div class="d-flex justify-content-between small pt-1 border-top" v-if="verificationResult.supplier_info.purchase_price > 0">
+                  <span class="text-muted">{{ $t('Purchase Cost:') }}</span>
+                  <span class="font-monospace fw-bold text-dark">Tk. {{ formatPrice(verificationResult.supplier_info.purchase_price) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 3: Supplier Warranty Policy & Feasibility -->
+            <div class="col-lg-4 col-md-12">
+              <div class="bg-white p-3 rounded border h-100 shadow-xs">
+                <div class="text-muted small fw-bold text-uppercase mb-2 pb-1 border-bottom" style="font-size: 11px;">
+                  <i class="fas fa-award text-warning me-1"></i>
+                  <span>{{ $t('Supplier Warranty Policy') }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1 small">
+                  <span class="text-muted">{{ $t('Warranty Period:') }}</span>
+                  <strong class="text-dark">{{ verificationResult.supplier_info.supplier_warranty_period || $t('No Warranty') }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1 small">
+                  <span class="text-muted">{{ $t('Expiry Date:') }}</span>
+                  <strong class="font-monospace" :class="verificationResult.supplier_info.supplier_warranty_status === 'active' ? 'text-success' : 'text-danger'">
+                    {{ verificationResult.supplier_info.supplier_warranty_expiry_date || $t('N/A') }}
+                  </strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1 small">
+                  <span class="text-muted">{{ $t('Remaining:') }}</span>
+                  <strong class="font-monospace" :class="verificationResult.supplier_info.supplier_warranty_status === 'active' ? 'text-success' : 'text-danger'">
+                    <span v-if="verificationResult.supplier_info.supplier_warranty_status === 'active'">
+                      {{ verificationResult.supplier_info.supplier_remaining_days }} {{ $t('Days Left') }}
+                    </span>
+                    <span v-else-if="verificationResult.supplier_info.supplier_warranty_status === 'expired'">
+                      {{ $t('Expired') }} ({{ verificationResult.supplier_info.supplier_expired_days }} {{ $t('Days ago') }})
+                    </span>
+                    <span v-else>{{ $t('N/A') }}</span>
+                  </strong>
+                </div>
+                <div class="mt-2 pt-1 border-top">
+                  <span v-if="verificationResult.supplier_info.can_claim_from_vendor" class="text-success small fw-bold d-flex align-items-center gap-1">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ $t('Eligible to claim warranty / replacement from supplier') }}</span>
+                  </span>
+                  <span v-else class="text-danger small fw-bold d-flex align-items-center gap-1">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>{{ $t('Supplier warranty expired. Internal/Paid repair required.') }}</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -292,6 +406,8 @@
                 </div>
               </div>
             </div>
+
+            <!-- 3. Redundant bottom supplier card removed; supplier sourcing is displayed in top verification banner -->
           </div>
 
           <!-- Right Column (7 Col): Claim & Problem Details -->
@@ -332,7 +448,20 @@
                   </div>
 
                   <div class="col-md-6">
-                    <label class="form-label small fw-bold text-dark">{{ $t('Initial Claim Status') }} *</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <label class="form-label small fw-bold text-dark mb-0">{{ $t('Initial Claim Status') }} *</label>
+                      <button
+                        type="button"
+                        class="btn btn-xs btn-outline-warning text-dark py-0 px-2 fw-bold"
+                        style="font-size: 11px;"
+                        v-if="form.supplier_warranty_status === 'active' && form.current_status !== 'sent_to_vendor'"
+                        @click="form.current_status = 'sent_to_vendor'"
+                        :title="$t('Supplier warranty is active. Dispatch claim to vendor.')"
+                      >
+                        <i class="fas fa-paper-plane me-1 text-warning"></i>
+                        <span>{{ $t('Send to Vendor') }}</span>
+                      </button>
+                    </div>
                     <select class="form-select form-select-sm" v-model="form.current_status" required>
                       <option value="received">{{ $t('Received') }}</option>
                       <option value="sent_to_vendor">{{ $t('Sent to Vendor / Service Center') }}</option>
@@ -441,6 +570,16 @@ export default {
         expense_id: null,
         payment_id: null,
         initial_remarks: '',
+        supplier_id: null,
+        supplier_name: '',
+        supplier_mobile: '',
+        purchase_id: null,
+        purchase_no: '',
+        purchase_date: '',
+        supplier_warranty_period: '',
+        supplier_warranty_expiry_date: '',
+        supplier_warranty_status: '',
+        supplier_remaining_days: 0,
       },
     };
   },
@@ -454,6 +593,10 @@ export default {
     },
   },
   methods: {
+    formatPrice(val) {
+      if (val === null || val === undefined || isNaN(val)) return '0.00';
+      return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
     checkSerialEligibility() {
       if (!this.searchSerial || this.searchSerial.trim() === '') {
         this.$toast(this.$t('Please enter or scan a serial number or invoice number'), 'warning');
@@ -530,6 +673,19 @@ export default {
       this.form.warranty_period = data.warranty_period || '';
       this.form.sale_date = data.sale_date || '';
       this.form.warranty_expiry_date = data.warranty_expiry_date || '';
+
+      // Populate Supplier Sourcing and Vendor Warranty
+      const sup = data.supplier_info || {};
+      this.form.supplier_id = sup.supplier_id || null;
+      this.form.supplier_name = sup.supplier_name || '';
+      this.form.supplier_mobile = sup.supplier_mobile || '';
+      this.form.purchase_id = sup.purchase_id || null;
+      this.form.purchase_no = sup.purchase_no || '';
+      this.form.purchase_date = sup.purchase_date || '';
+      this.form.supplier_warranty_period = sup.supplier_warranty_period || '';
+      this.form.supplier_warranty_expiry_date = sup.supplier_warranty_expiry_date || '';
+      this.form.supplier_warranty_status = sup.supplier_warranty_status || '';
+      this.form.supplier_remaining_days = sup.supplier_remaining_days || 0;
     },
     appendAccessory(text) {
       if (!this.form.accessories_received || this.form.accessories_received.trim() === '') {
@@ -600,6 +756,16 @@ export default {
             expense_id: d.expense_id,
             payment_id: d.payment_id,
             initial_remarks: '',
+            supplier_id: d.supplier_id || null,
+            supplier_name: d.supplier_name || (d.supplier ? (d.supplier.name || d.supplier.org_name) : ''),
+            supplier_mobile: d.supplier ? d.supplier.mobile : '',
+            purchase_id: d.purchase_id || null,
+            purchase_no: d.purchase_no || (d.purchase ? d.purchase.purchase_no : ''),
+            purchase_date: d.purchase_date || (d.purchase ? d.purchase.purchase_date : ''),
+            supplier_warranty_period: d.supplier_warranty_period || '',
+            supplier_warranty_expiry_date: d.supplier_warranty_expiry_date || '',
+            supplier_warranty_status: '',
+            supplier_remaining_days: 0,
           };
         })
         .catch(err => {

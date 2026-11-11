@@ -329,11 +329,25 @@ class PaymentController extends BaseController
         $payment = Payment::with([
             'payment_details',
             'payment_details.account',
+            'payment_details.invoice:id,invoice_no,invoice_date,amount',
+            'payment_details.purchase:id,invoiceno,purchase_date,total_amount',
+            'payment_details.grn:id,grn_no,grn_date,total_amount',
+            'payment_details.warranty_claim:id,claim_no,serial_no',
+            'payment_details.sales_return:id,return_no,total_refund_amount',
+            'payment_details.expense:id,expenseid,expense_date,total_amount',
+            'payment_details.loan_info:id,trnsid,trns_date,amount',
+            'payment_details.salary_sheet:id,title,month,year',
             'client:id,name,mobile,address',
             'supplier:id,org_name,mobile,address',
             'employee:id,full_name,mobile,address',
-            'agent:id,full_name,mobile,address'
+            'agent:id,full_name,mobile,address',
+            'fund_account:id,account_name,account_code',
+            'bank:id,bank_name'
         ])->find($id);
+
+        if (!$payment) {
+            return response()->json(['message' => 'Payment not found'], 404);
+        }
 
         // calculate totals
         $total_amount      = $payment->payment_details->sum('amount');
@@ -342,12 +356,20 @@ class PaymentController extends BaseController
 
         return [
             'id'                    => $payment->id,
+            'payslipno'             => $payment->payslipno,
             'payment_date'          => $payment->payment_date,
             'payment_type'          => $payment->payment_type,
             'client_id'             => $payment->client_id,
             'supplier_id'           => $payment->supplier_id,
             'employee_id'           => $payment->employee_id,
             'agent_id'              => $payment->agent_id,
+            'fund_account_id'       => $payment->fund_account_id,
+            'fund_account'          => $payment->fund_account,
+            'bank'                  => $payment->bank,
+            'client'                => $payment->client,
+            'supplier'              => $payment->supplier,
+            'employee'              => $payment->employee,
+            'agent'                 => $payment->agent,
             'payment_method'        => $payment->payment_method,
             'status'                => $payment->status,
             'discount'              => $payment->discount ?? 0,
@@ -363,6 +385,7 @@ class PaymentController extends BaseController
             'can_edit'              => $payment->can_edit,
             'can_delete'            => $payment->can_delete,
             'lock_reason'           => $payment->lock_reason,
+            'invoice_numbers'       => $payment->invoice_numbers,
 
             // payto section
             'payto' => [
@@ -374,11 +397,70 @@ class PaymentController extends BaseController
 
             // payment details list formatted like your Vue table
             'payment_details' => $payment->payment_details->map(function ($d) {
+                $refDocNo = null;
+                $refUrl = null;
+                $refDate = null;
+                $refTotal = null;
+
+                switch ($d->reference_type) {
+                    case 'Invoice':
+                        $refDocNo = optional($d->invoice)->invoice_no;
+                        $refUrl = $d->reference_id ? "/invoice/{$d->reference_id}" : null;
+                        $refDate = optional($d->invoice)->invoice_date;
+                        $refTotal = (float)optional($d->invoice)->amount;
+                        break;
+                    case 'Purchase':
+                        $refDocNo = optional($d->purchase)->invoiceno;
+                        $refUrl = $d->reference_id ? "/purchase/{$d->reference_id}" : null;
+                        $refDate = optional($d->purchase)->purchase_date;
+                        $refTotal = (float)optional($d->purchase)->total_amount;
+                        break;
+                    case 'GRN':
+                        $refDocNo = optional($d->grn)->grn_no;
+                        $refUrl = $d->reference_id ? "/grn/{$d->reference_id}" : null;
+                        $refDate = optional($d->grn)->grn_date;
+                        $refTotal = (float)optional($d->grn)->total_amount;
+                        break;
+                    case 'WarrantyClaim':
+                        $refDocNo = optional($d->warranty_claim)->claim_no;
+                        $refUrl = $d->reference_id ? "/warrantyClaim/{$d->reference_id}" : null;
+                        break;
+                    case 'SalesReturn':
+                        $refDocNo = optional($d->sales_return)->return_no;
+                        $refUrl = "/report/salesreturn";
+                        $refTotal = (float)optional($d->sales_return)->total_refund_amount;
+                        break;
+                    case 'Expense':
+                    case 'OfficeExpense':
+                        $refDocNo = optional($d->expense)->expenseid;
+                        $refUrl = $d->reference_id ? "/expense/{$d->reference_id}" : null;
+                        $refDate = optional($d->expense)->expense_date;
+                        $refTotal = (float)optional($d->expense)->total_amount;
+                        break;
+                    case 'Loan':
+                    case 'LoanInfo':
+                        $refDocNo = optional($d->loan_info)->trnsid;
+                        $refUrl = $d->reference_id ? "/loanInfo/{$d->reference_id}" : null;
+                        $refDate = optional($d->loan_info)->trns_date;
+                        $refTotal = (float)optional($d->loan_info)->amount;
+                        break;
+                    case 'Salary':
+                    case 'SalarySheet':
+                        $refDocNo = optional($d->salary_sheet)->title ?: (optional($d->salary_sheet)->month ? optional($d->salary_sheet)->month . ' ' . optional($d->salary_sheet)->year : null);
+                        $refUrl = $d->reference_id ? "/salarySheet/{$d->reference_id}" : null;
+                        break;
+                }
+
                 return [
+                    'id'             => $d->id,
                     'reference_type' => $d->reference_type,
                     'reference_id'   => $d->reference_id,
                     'account_id'     => $d->account_id,
                     'reference_info' => $d->reference_info,
+                    'ref_doc_no'     => $refDocNo,
+                    'ref_url'        => $refUrl,
+                    'ref_date'       => $refDate,
+                    'ref_total'      => $refTotal,
                     'amount'         => (float) $d->amount,
                     'paid_amount'    => (float) $d->paid_amount,
                     'due_amount'     => (float) $d->due_amount,
@@ -414,6 +496,233 @@ class PaymentController extends BaseController
     }
 
     /**
+     * Get details of a referenced document (Invoice, GRN, Purchase, WarrantyClaim, Expense, Loan, Salary)
+     *
+     * @param string $type
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getReferenceDetail($type, $id)
+    {
+        $result = [
+            'type'         => $type,
+            'id'           => $id,
+            'doc_no'       => null,
+            'date'         => null,
+            'party_name'   => null,
+            'party_mobile' => null,
+            'total_amount' => 0,
+            'paid_amount'  => 0,
+            'due_amount'   => 0,
+            'status'       => null,
+            'note'         => null,
+            'url'          => null,
+            'items'        => []
+        ];
+
+        switch ($type) {
+            case 'Invoice':
+                $inv = \App\Models\Invoice::with(['client', 'invoice_details.item.unit'])->find($id);
+                if ($inv) {
+                    $result['doc_no']       = $inv->invoice_no;
+                    $result['date']         = $inv->invoice_date;
+                    $result['party_name']   = optional($inv->client)->name;
+                    $result['party_mobile'] = optional($inv->client)->mobile;
+                    $result['total_amount'] = (float)$inv->amount;
+                    $result['paid_amount']  = (float)$inv->paid_amount;
+                    $result['due_amount']   = max(0, (float)$inv->amount - (float)$inv->paid_amount);
+                    $result['status']       = $result['due_amount'] <= 0 ? 'Fully Paid' : 'Payment Due';
+                    $result['note']         = optional($inv->client)->address ? "Client Address: " . $inv->client->address : null;
+                    $result['url']          = "/invoice/{$inv->id}";
+                    foreach ($inv->invoice_details as $d) {
+                        $result['items'][] = [
+                            'title'       => optional($d->item)->title ?: 'Product',
+                            'code'        => optional($d->item)->barcode ?: $d->serial_no,
+                            'qty'         => (float)$d->qty,
+                            'unit'        => optional(optional($d->item)->unit)->title ?: 'Pcs',
+                            'unit_price'  => (float)$d->amount,
+                            'total_price' => (float)$d->total_amount,
+                        ];
+                    }
+                }
+                break;
+
+            case 'GRN':
+                $grn = \App\Models\Grn::with(['supplier', 'warehouse', 'purchase', 'grn_details.item.unit'])->find($id);
+                if ($grn) {
+                    $result['doc_no']       = $grn->grn_no;
+                    $result['date']         = $grn->grn_date;
+                    $result['party_name']   = optional($grn->supplier)->org_name ?: optional($grn->supplier)->name;
+                    $result['party_mobile'] = optional($grn->supplier)->mobile;
+                    $result['total_amount'] = (float)$grn->total_amount;
+                    $result['paid_amount']  = (float)$grn->paid_amount;
+                    $result['due_amount']   = max(0, (float)$grn->total_amount - (float)$grn->paid_amount);
+                    $result['status']       = $grn->is_closed ? 'Closed / Settled' : 'Payment Due';
+                    $result['note']         = $grn->note ?: ($grn->purchase ? "Linked to PO #" . $grn->purchase->invoiceno : "Direct GRN");
+                    $result['url']          = "/grn/{$grn->id}";
+                    foreach ($grn->grn_details as $d) {
+                        $result['items'][] = [
+                            'title'       => optional($d->item)->title ?: 'Item',
+                            'code'        => optional($d->item)->barcode,
+                            'qty'         => (float)$d->qty,
+                            'unit'        => optional(optional($d->item)->unit)->title ?: 'Pcs',
+                            'unit_price'  => (float)$d->unit_price,
+                            'total_price' => (float)$d->total_amount,
+                        ];
+                    }
+                }
+                break;
+
+            case 'Purchase':
+                $p = \App\Models\Purchase::with(['supplier', 'purchase_details.item.unit'])->find($id);
+                if ($p) {
+                    $result['doc_no']       = $p->invoiceno;
+                    $result['date']         = $p->purchase_date;
+                    $result['party_name']   = optional($p->supplier)->org_name ?: optional($p->supplier)->name;
+                    $result['party_mobile'] = optional($p->supplier)->mobile;
+                    $result['total_amount'] = (float)$p->total_amount;
+                    $result['paid_amount']  = (float)($p->total_amount - $p->due_amount);
+                    $result['due_amount']   = (float)$p->due_amount;
+                    $result['status']       = $p->is_closed ? 'Settled' : 'Pending Receive';
+                    $result['note']         = $p->note;
+                    $result['url']          = "/purchase/{$p->id}";
+                    foreach ($p->purchase_details as $d) {
+                        $result['items'][] = [
+                            'title'       => optional($d->item)->title ?: 'Item',
+                            'code'        => optional($d->item)->barcode,
+                            'qty'         => (float)$d->qty,
+                            'unit'        => optional(optional($d->item)->unit)->title ?: 'Pcs',
+                            'unit_price'  => (float)$d->price,
+                            'total_price' => (float)$d->total_amount,
+                        ];
+                    }
+                }
+                break;
+
+            case 'WarrantyClaim':
+                $wc = \App\Models\WarrantyClaim::with(['client', 'supplier', 'item'])->find($id);
+                if ($wc) {
+                    $result['doc_no']       = $wc->claim_no;
+                    $result['date']         = $wc->created_at ? $wc->created_at->format('d M, Y') : null;
+                    $result['party_name']   = optional($wc->client)->name ?: optional($wc->supplier)->org_name;
+                    $result['party_mobile'] = optional($wc->client)->mobile ?: optional($wc->supplier)->mobile;
+                    $result['status']       = $wc->status;
+                    $result['note']         = "Serial: " . $wc->serial_no . ($wc->remarks ? " | " . $wc->remarks : "");
+                    $result['url']          = "/warrantyClaim/{$wc->id}";
+                    if ($wc->item) {
+                        $result['items'][] = [
+                            'title'       => $wc->item->title,
+                            'code'        => $wc->serial_no,
+                            'qty'         => 1,
+                            'unit'        => 'Pcs',
+                            'unit_price'  => 0,
+                            'total_price' => 0,
+                        ];
+                    }
+                }
+                break;
+
+            case 'Expense':
+            case 'OfficeExpense':
+                $exp = \App\Models\Expense::with(['employee', 'expense_details.account'])->find($id);
+                if ($exp) {
+                    $result['doc_no']       = $exp->expenseid;
+                    $result['date']         = $exp->expense_date;
+                    $result['party_name']   = optional($exp->employee)->full_name ?: 'Office Expense';
+                    $result['party_mobile'] = optional($exp->employee)->mobile;
+                    $result['total_amount'] = (float)$exp->total_amount;
+                    $result['paid_amount']  = (float)$exp->total_amount;
+                    $result['status']       = $exp->status ?: 'Approved';
+                    $result['note']         = $exp->note ?: $exp->reason;
+                    $result['url']          = "/expense/{$exp->id}";
+                    if ($exp->expense_details) {
+                        foreach ($exp->expense_details as $d) {
+                            $result['items'][] = [
+                                'title'       => optional($d->account)->account_name ?: 'Expense Head',
+                                'code'        => optional($d->account)->account_code,
+                                'qty'         => 1,
+                                'unit'        => 'Item',
+                                'unit_price'  => (float)$d->amount,
+                                'total_price' => (float)$d->amount,
+                            ];
+                        }
+                    }
+                }
+                break;
+
+            case 'Loan':
+            case 'LoanInfo':
+                $loan = \App\Models\LoanInfo::with(['employee'])->find($id);
+                if ($loan) {
+                    $result['doc_no']       = $loan->trnsid;
+                    $result['date']         = $loan->trns_date;
+                    $result['party_name']   = optional($loan->employee)->full_name;
+                    $result['party_mobile'] = optional($loan->employee)->mobile;
+                    $result['total_amount'] = (float)$loan->amount;
+                    $result['due_amount']   = (float)$loan->due_amount;
+                    $result['status']       = $loan->trns_type;
+                    $result['note']         = "Installment: " . $loan->total_installment . " | Reason: " . $loan->reason;
+                    $result['url']          = "/loanInfo/{$loan->id}";
+                }
+                break;
+
+            case 'Salary':
+            case 'SalarySheet':
+                $sal = \App\Models\SalarySheet::with(['salary_sheet_details.employee'])->find($id);
+                if ($sal) {
+                    $result['doc_no']       = $sal->title ?: ($sal->month . ' ' . $sal->year);
+                    $result['date']         = $sal->generated_date;
+                    $result['status']       = $sal->status;
+                    $result['note']         = "Month: " . $sal->month . " " . $sal->year;
+                    $result['url']          = "/salarySheet/{$sal->id}";
+                    $totalGross = 0;
+                    if ($sal->salary_sheet_details) {
+                        foreach ($sal->salary_sheet_details as $sd) {
+                            $totalGross += (float)$sd->gross_salary;
+                            $result['items'][] = [
+                                'title'       => optional($sd->employee)->full_name ?: 'Employee Salary',
+                                'code'        => optional($sd->employee)->employee_id,
+                                'qty'         => 1,
+                                'unit'        => 'Staff',
+                                'unit_price'  => (float)$sd->gross_salary,
+                                'total_price' => (float)$sd->gross_salary,
+                            ];
+                        }
+                    }
+                    $result['total_amount'] = $totalGross;
+                }
+                break;
+
+            case 'SalesReturn':
+                $sr = \App\Models\SalesReturn::with(['client', 'details.item'])->find($id);
+                if ($sr) {
+                    $result['doc_no']       = $sr->return_no;
+                    $result['date']         = $sr->return_date;
+                    $result['party_name']   = optional($sr->client)->name;
+                    $result['party_mobile'] = optional($sr->client)->mobile;
+                    $result['total_amount'] = (float)$sr->total_refund_amount;
+                    $result['note']         = $sr->return_reason;
+                    $result['url']          = "/report/salesreturn";
+                    if ($sr->details) {
+                        foreach ($sr->details as $d) {
+                            $result['items'][] = [
+                                'title'       => optional($d->item)->title ?: 'Item',
+                                'code'        => optional($d->item)->barcode,
+                                'qty'         => (float)$d->qty,
+                                'unit'        => 'Pcs',
+                                'unit_price'  => (float)$d->price,
+                                'total_price' => (float)$d->total_amount,
+                            ];
+                        }
+                    }
+                }
+                break;
+        }
+
+        return response()->json($result);
+    }
+
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Payment  $payment
@@ -445,99 +754,46 @@ class PaymentController extends BaseController
             ], 422);
         }
 
-        if ($this->validateCheck($request, $payment->id)) {
+        DB::beginTransaction();
 
-            DB::beginTransaction();
-
-            try {
-
-                $data = $request->all();
-                // convert date
-                $data['payment_date'] = vue_to_server_date($data['payment_date']);
-                $data['module'] = $data['ref_module'] ?? null;
-                $data['module_id'] = $data['ref_module_id'] ?? null;
-                $data['bank_id'] = $data['bank_id'] ?? null;
-
-                // store details separately
-                $payment_details = $data['payment_details'] ?? [];
-
-                // remove unwanted fields
-                unset(
-                    $data['payment_details'],
-                    $data['payto'],
-                    $data['invoices'],
-                    $data['totals'],
-                    $data['id'],             // IMPORTANT
-                    $data['payment_id']      // IMPORTANT
-                );
-
-                // Collect old references before deleting old details
-                $oldReferences = $payment->payment_details->map(function ($d) {
-                    return [
-                        'reference_type' => $d->reference_type,
-                        'reference_id'   => $d->reference_id,
-                    ];
-                })->toArray();
-
-                // update payment master
-                $payment->update($data);
-
-                // delete old details (soft delete)
-                $payment->payment_details()->delete();
-
-                // insert new details
-                foreach ($payment_details as $detail) {
-                    $payment->payment_details()->create([
-                        'payment_id'     => $payment->id,
-                        'reference_type' => $detail['reference_type'],
-                        'reference_id'   => $detail['reference_id'],
-                        'account_id'     => $detail['account_id'] ?? 0,
-                        'amount'         => $detail['amount'],
-                        'is_closed'      => !empty($detail['is_closed']) ? 1 : 0,
-                    ]);
-                }
-
-                // Merge old and new references to recalculate all affected items
-                $allReferences = collect($oldReferences)
-                    ->concat(collect($payment_details)->map(function ($d) {
-                        return [
-                            'reference_type' => $d['reference_type'] ?? null,
-                            'reference_id'   => $d['reference_id'] ?? null,
-                            'is_closed'      => !empty($d['is_closed']),
-                        ];
-                    }))
-                    ->filter(function ($item) {
-                        return !empty($item['reference_type']) && !empty($item['reference_id']);
-                    })
-                    ->unique(function ($item) {
-                        return $item['reference_type'] . '_' . $item['reference_id'];
-                    });
-
-                foreach ($allReferences as $ref) {
-                    $this->recalculateReference($ref['reference_type'], $ref['reference_id'], $ref['is_closed'] ?? false);
-                }
-
-                // Refresh relations for voucher recreation/update
-                $payment->load('payment_details');
-
-                // recreate / update voucher
-                if (!empty($payment->employee_id)) {
-                    $this->createEmployeeVoucher($payment, $payment->id);
-                } else {
-                    $this->createVoucherFromPayment($payment, $payment->id);
-                }
-
-                DB::commit();
-
-                return $this->responseReturn("update", $payment);
-            } catch (\Exception $ex) {
-
-                DB::rollBack();
-
-                return response()->json([
-                    'exception' => $ex->getMessage()
-                ], 422);
+        try {
+            // Only allowed fields can be updated during payment edit
+            if ($request->has('payment_method')) {
+                $payment->payment_method = $request->input('payment_method');
             }
+            if ($request->has('mbanking_type')) {
+                $payment->mbanking_type = $request->input('mbanking_type');
+            }
+            if ($request->has('trxid')) {
+                $payment->trxid = $request->input('trxid');
+            }
+            if ($request->has('chequeno')) {
+                $payment->chequeno = $request->input('chequeno');
+            }
+            if ($request->has('bank_id')) {
+                $payment->bank_id = $request->input('bank_id');
+            }
+            if ($request->has('branch')) {
+                $payment->branch = $request->input('branch');
+            }
+            if ($request->has('account_name')) {
+                $payment->account_name = $request->input('account_name');
+            }
+            if ($request->has('accountno')) {
+                $payment->accountno = $request->input('accountno');
+            }
+            if ($request->has('status')) {
+                $payment->status = $request->input('status');
+            }
+
+            $payment->save();
+
+            DB::commit();
+
+            return $this->responseReturn("update", $payment);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['exception' => $e->getMessage()], 422);
         }
     }
 

@@ -78,6 +78,11 @@ class SiteSettingController extends BaseController
                         $table->boolean('show_invoice_terms')->default(1)->nullable();
                     });
                 }
+                if (!Schema::hasColumn('site_settings', 'show_pos_item_popup')) {
+                    Schema::table('site_settings', function (Blueprint $table) {
+                        $table->boolean('show_pos_item_popup')->default(1)->nullable();
+                    });
+                }
                 if (!Schema::hasColumn('site_settings', 'memberships')) {
                     Schema::table('site_settings', function (Blueprint $table) {
                         $table->longText('memberships')->nullable();
@@ -123,6 +128,13 @@ class SiteSettingController extends BaseController
 
         $conf = SiteSetting::first();
         $data = $request->all();
+
+        foreach (['show_pos_item_popup', 'show_pos_terms', 'show_invoice_terms', 'coupon_enabled'] as $boolField) {
+            if (array_key_exists($boolField, $data)) {
+                $val = $data[$boolField];
+                $data[$boolField] = ($val === 'false' || $val === false || $val === '0' || $val === 0 || empty($val)) ? 0 : 1;
+            }
+        }
         $logo = $request->logo_base64;
         $logo_small = $request->logo_small_base64;
         $favicon = $request->file('favicon');
@@ -367,6 +379,7 @@ class SiteSettingController extends BaseController
             'invoice_prefix' => ['nullable', 'string', 'max:50'],
             'show_pos_terms' => ['nullable'],
             'show_invoice_terms' => ['nullable'],
+            'show_pos_item_popup' => ['nullable'],
             'memberships' => ['nullable'],
             'logo_base64' => ['nullable'],
             'logo_resize_value' => ['nullable', 'string'],

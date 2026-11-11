@@ -219,6 +219,12 @@
                 <small class="text-secondary d-block mt-0.5" v-if="claim.color || claim.size" style="font-size: 11px;">
                   {{ claim.color ? claim.color.title : '' }} {{ claim.size ? '(' + claim.size.title + ')' : '' }}
                 </small>
+                <div class="small text-muted mt-1 d-flex align-items-center gap-1" v-if="claim.supplier_name || (claim.supplier && (claim.supplier.org_name || claim.supplier.name))" style="font-size: 11px;">
+                  <i class="fas fa-truck text-secondary" style="font-size: 10px;"></i>
+                  <span class="text-truncate" style="max-width: 200px;" :title="$t('Supplier') + ': ' + (claim.supplier_name || (claim.supplier ? (claim.supplier.org_name || claim.supplier.name) : ''))">
+                    {{ claim.supplier_name || (claim.supplier ? (claim.supplier.org_name || claim.supplier.name) : '') }}
+                  </span>
+                </div>
               </td>
               <td>
                 <div class="fw-bold text-dark">{{ claim.customer_name || $t('Walk-in Customer') }}</div>
@@ -397,6 +403,7 @@ export default {
         'Claim Date': 'claim_date',
         'Serial No': 'serial_no',
         'Product': 'product_title',
+        'Supplier': 'supplier_name',
         'Customer Name': 'customer_name',
         'Customer Mobile': 'customer_mobile',
         'Coverage': 'warranty_type',
@@ -425,6 +432,7 @@ export default {
         claim_date: c.claim_date,
         serial_no: c.serial_no,
         product_title: c.item ? c.item.title : 'Item',
+        supplier_name: c.supplier_name || (c.supplier ? (c.supplier.org_name || c.supplier.name) : ''),
         customer_name: c.customer_name,
         customer_mobile: c.customer_mobile,
         warranty_type: c.warranty_type,
