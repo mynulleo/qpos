@@ -7,7 +7,7 @@
           label="full_name"
           :reduce="(obj) => obj.id"
           :options="employees"
-          placeholder="-- Select Employee --"
+          :placeholder="$t('-- Select Employee --')"
           :closeOnSelect="true"
           @input="search"
         ></v-select>
@@ -43,7 +43,7 @@
             <i class="fas fa-id-badge me-1"></i> {{ $t('Employee Ledger Statement') }}
           </span>
           <span v-if="datas.employee" class="text-muted small font-monospace">
-            Period: <strong>{{ dateRange }}</strong>
+            {{ $t('Period') }}: <strong>{{ dateRange }}</strong>
           </span>
         </div>
         <div v-if="datas.employee" class="print_action text-end">
@@ -87,7 +87,7 @@
                       <i class="fas fa-map-marker-alt me-1 text-warning"></i> {{ datas.employee.address }}
                     </span>
                     <span>
-                      <i class="far fa-calendar-alt me-1"></i> As of: {{ reportDate }}
+                      <i class="far fa-calendar-alt me-1"></i> {{ $t('As of') }}: {{ reportDate }}
                     </span>
                   </div>
                 </div>
@@ -259,7 +259,7 @@
             <div class="text-center pb-3 border-bottom mb-4">
               <h3 class="fw-bold mb-1 text-uppercase">{{ $root.site?.title || $root.global?.site_name || 'QPOS ERP' }}</h3>
               <p class="mb-1 text-muted small">{{ $root.site?.address || $root.global?.address }}</p>
-              <p class="mb-1 text-muted small">Email: {{ $root.site?.contact_email }} | Phone: {{ $root.site?.mobile1 }}</p>
+              <p class="mb-1 text-muted small">{{ $t('Email') }}: {{ $root.site?.contact_email }} | {{ $t('Phone') }}: {{ $root.site?.mobile1 }}</p>
               <div class="d-inline-block border border-dark px-3 py-1 mt-2 text-uppercase fw-bold font-monospace fs-6">
                 {{ $t('EMPLOYEE STATEMENT OF ACCOUNT') }}
               </div>
@@ -354,7 +354,7 @@ export default {
   data() {
     return {
       model: model,
-      page_title: "",
+      page_title: "Employee Ledger",
       reportDate: moment().format('D MMMM, YYYY'),
       search_data: {
         employee_id: this.$route.query.employee_id ? Number(this.$route.query.employee_id) : null,
@@ -389,11 +389,11 @@ export default {
       if (this.search_data.from_date && this.search_data.to_date) {
         return (
           moment(this.search_data.from_date).format("D MMM, YYYY") +
-          " to " +
+          " " + this.$t("to") + " " +
           moment(this.search_data.to_date).format("D MMM, YYYY")
         );
       }
-      return "All Available Dates";
+      return this.$t("All Available Dates");
     },
 
     totalDebit() {

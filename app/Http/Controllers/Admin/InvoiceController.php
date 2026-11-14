@@ -393,6 +393,7 @@ class InvoiceController extends BaseController
             'id' => $invoice->id,
             'invoice_no' => $invoice->invoice_no,
             'invoice_date' => $invoice->invoice_date,
+            'raw_invoice_date' => $invoice->getRawOriginal('invoice_date'),
             'created_at' => $invoice->created_at ? $invoice->created_at->format('d M, Y h:i A') : '',
             'original_amount' => floatval($invoice->original_amount),
             'discount' => floatval($invoice->discount),
@@ -404,6 +405,7 @@ class InvoiceController extends BaseController
             'payment_status' => $paymentStatus,
             'is_closed' => $invoice->is_closed,
             'status' => $invoice->status,
+            'client_id' => $invoice->client_id,
             'client' => $invoice->client,
             'creator' => $creator ? [
                 'id' => $creator->id,
@@ -414,6 +416,7 @@ class InvoiceController extends BaseController
             'client_history' => $clientHistory,
             'loyalty_points' => $loyaltyPoints,
             'details' => $details,
+            'invoice_details' => $details,
             'payment_details' => $invoice->payment_details,
             'returns' => $returns,
             'terms_conditions' => $invoice->terms_conditions ?? [],
@@ -423,39 +426,315 @@ class InvoiceController extends BaseController
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Invoice  $invoice
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
-        return redirect()->route('invoice.show', $id);
+        if ($request->format() == 'html' || !$request->wantsJson()) {
+            return view('admin.layouts.admin_app');
+        }
+        return $this->show($id);
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Invoice  $invoice
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
-        return response()->json([
-            'exception' => 'ইনভয়েস এডিট করা সম্ভব নয়। বিক্রয় ও স্টক অখণ্ডতা বজায় রাখতে ইনভয়েস অপরিবর্তনীয়।'
-        ], 422);
+        $invoice = Invoice::with(['details', 'payment_details'])->findOrFail($id);
+
+        $dueAmount = max(0, floatval($invoice->amount) - floatval($invoice->paid_amount));
+        $isPaid = ($dueAmount <= 0.01) || (floatval($invoice->paid_amount) >= floatval($invoice->amount));
+
+        if ($isPaid) {
+            return response()->json([
+                'exception' => 'পরিশোধিত (Paid) ইনভয়েস এডিট করা সম্ভব নয়।'
+            ], 422);
+        }
+
+        // Check for sales returns
+        $hasReturns = \App\Models\StockTransaction::where('reference_type', 'SalesReturn')
+            ->where('reference_id', (string)$invoice->id)
+            ->exists();
+        if ($hasReturns) {
+            return response()->json([
+                'exception' => 'এই ইনভয়েসের বিপরীতে রিটার্ন রেকর্ড থাকায় এটি এডিট করা সম্ভব নয়।'
+            ], 422);
+        }
+
+        $items = $request->input('items', []);
+        if (empty($items) || !is_array($items)) {
+            return response()->json([
+                'exception' => 'ইনভয়েসে কমপক্ষে একটি পণ্য থাকা আবশ্যক।'
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Remove previous Issue stock transactions for this invoice
+            \App\Models\StockTransaction::where('reference_type', 'Issue')
+                ->where('reference_id', (string)$invoice->id)
+                ->delete();
+
+            // 2. Remove previous invoice details
+            \App\Models\InvoiceDetails::where('invoice_id', $invoice->id)->delete();
+
+            // 3. Re-calculate totals and create new details and stock transactions
+            $originalAmount = 0;
+            foreach ($items as $item) {
+                $itemId = $item['item_id'] ?? null;
+                $qty = floatval($item['qty'] ?? 1);
+                $rate = floatval($item['amount'] ?? ($item['rate'] ?? 0));
+                $total = round($qty * $rate, 2);
+                $originalAmount += $total;
+
+                $colorId = !empty($item['color_id']) ? $item['color_id'] : null;
+                $sizeId = !empty($item['size_id']) ? $item['size_id'] : null;
+                $serialNo = !empty($item['serial_no']) ? $item['serial_no'] : null;
+                $warrantyType = !empty($item['warranty_type']) ? $item['warranty_type'] : 'none';
+                $warrantyPeriod = !empty($item['warranty_period']) ? trim($item['warranty_period']) : null;
+                $warrantyDuration = !empty($item['warranty_duration']) ? intval($item['warranty_duration']) : null;
+                $warrantyExpiresAt = null;
+                if ($warrantyType !== 'none' && !empty($warrantyPeriod)) {
+                    $warrantyExpiresAt = app(\App\Http\Controllers\Admin\PosController::class)->calculateExpiryDate(date('Y-m-d'), $warrantyPeriod);
+                }
+
+                $detailDescription = !empty($item['description'])
+                    ? $item['description']
+                    : (($item['title'] ?? 'POS Item Sale') . ($serialNo ? " (Serial: {$serialNo})" : ''));
+
+                $detailData = [
+                    'invoice_id' => (string)$invoice->id,
+                    'reference' => 'POS Sale',
+                    'workorder_id' => 0,
+                    'item_id' => $itemId,
+                    'color_id' => $colorId,
+                    'size_id' => $sizeId,
+                    'serial_no' => $serialNo,
+                    'account_id' => 0,
+                    'description' => $detailDescription,
+                    'qty' => $qty,
+                    'amount' => $rate,
+                    'total_amount' => $total,
+                    'status' => 'active',
+                ];
+
+                if (\Illuminate\Support\Facades\Schema::hasColumn('invoice_details', 'warranty_type')) {
+                    $detailData['warranty_type'] = $warrantyType;
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('invoice_details', 'warranty_duration')) {
+                    $detailData['warranty_duration'] = $warrantyDuration;
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('invoice_details', 'warranty_period')) {
+                    $detailData['warranty_period'] = $warrantyPeriod;
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('invoice_details', 'warranty_expires_at')) {
+                    $detailData['warranty_expires_at'] = $warrantyExpiresAt ? ($warrantyExpiresAt instanceof \Carbon\Carbon ? $warrantyExpiresAt->format('Y-m-d') : (string)$warrantyExpiresAt) : null;
+                }
+
+                \App\Models\InvoiceDetails::create($detailData);
+
+                // Create StockTransaction (Issue)
+                if ($itemId) {
+                    \App\Models\StockTransaction::create([
+                        'item_id' => $itemId,
+                        'color_id' => $colorId,
+                        'size_id' => $sizeId,
+                        'transaction_date' => vue_to_server_date($request->input('invoice_date', date('Y-m-d'))),
+                        'transaction_type' => 'Issue',
+                        'reference_type' => 'Issue',
+                        'reference_id' => (string)$invoice->id,
+                        'qty_in' => 0,
+                        'qty_out' => $qty,
+                        'status' => 'active',
+                    ]);
+                }
+            }
+
+            // 4. Update Invoice fields
+            $discount = floatval($request->input('discount', 0));
+            $vatPercent = floatval($request->input('vat_percent', 0));
+            $vat = floatval($request->input('vat', 0));
+            if ($vatPercent > 0 && $vat <= 0) {
+                $vat = round((max(0, $originalAmount - $discount) * $vatPercent) / 100, 2);
+            }
+            $netAmount = max(0, round($originalAmount - $discount + $vat, 2));
+
+            $invoiceDate = $request->input('invoice_date') ? vue_to_server_date($request->input('invoice_date')) : $invoice->getRawOriginal('invoice_date');
+
+            $invoice->client_id = $request->filled('client_id') ? $request->input('client_id') : null;
+            $invoice->invoice_date = $invoiceDate;
+            $invoice->original_amount = $originalAmount;
+            $invoice->discount = $discount;
+            if (\Illuminate\Support\Facades\Schema::hasColumn('invoices', 'vat_percent')) {
+                $invoice->vat_percent = $vatPercent;
+            }
+            $invoice->vat = $vat;
+            $invoice->amount = $netAmount;
+
+            if ($request->has('paid_amount')) {
+                $newPaid = min($netAmount, floatval($request->input('paid_amount')));
+                $invoice->paid_amount = $newPaid;
+            }
+            $invoice->is_closed = (floatval($invoice->paid_amount) >= $netAmount) ? 1 : 0;
+
+            if ($request->has('terms_conditions')) {
+                $invoice->terms_conditions = $request->input('terms_conditions');
+            }
+
+            $invoice->save();
+
+            // 5. Update payment details if paid_amount changed
+            if ($request->has('paid_amount')) {
+                $pDetails = \App\Models\PaymentDetail::where('reference_type', 'Invoice')->where('reference_id', $invoice->id)->get();
+                if ($pDetails->isNotEmpty()) {
+                    $firstPd = $pDetails->first();
+                    $firstPd->amount = $invoice->paid_amount;
+                    $firstPd->is_closed = $invoice->is_closed;
+                    $firstPd->save();
+
+                    $payment = \App\Models\Payment::find($firstPd->payment_id);
+                    if ($payment) {
+                        $payment->amount = \App\Models\PaymentDetail::where('payment_id', $payment->id)->sum('amount');
+                        $payment->client_id = $invoice->client_id;
+                        $payment->save();
+                    }
+                }
+            }
+
+            activity('Invoice')
+                ->performedOn($invoice)
+                ->causedBy(auth('admin')->user() ?? auth()->user())
+                ->log("Invoice #{$invoice->invoice_no} was updated");
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'ইনভয়েস সফলভাবে আপডেট করা হয়েছে।',
+                'invoice' => $invoice
+            ]);
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json(['exception' => $ex->getMessage()], 422);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Invoice  $invoice
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        return response()->json([
-            'exception' => 'ইনভয়েস ডিলিট করা সম্ভব নয়। এটি সংরক্ষিত বিক্রয় রেকর্ড।'
-        ], 422);
+        $invoice = Invoice::findOrFail($id);
+
+        $dueAmount = max(0, floatval($invoice->amount) - floatval($invoice->paid_amount));
+        $isPaid = ($dueAmount <= 0.01) || (floatval($invoice->paid_amount) >= floatval($invoice->amount));
+
+        if ($isPaid) {
+            return response()->json([
+                'exception' => 'পরিশোধিত (Paid) ইনভয়েস ডিলিট করা সম্ভব নয়।'
+            ], 422);
+        }
+
+        // Check for sales returns
+        $hasReturns = \App\Models\StockTransaction::where('reference_type', 'SalesReturn')
+            ->where('reference_id', (string)$invoice->id)
+            ->exists();
+        if ($hasReturns) {
+            return response()->json([
+                'exception' => 'এই ইনভয়েসের বিপরীতে রিটার্ন রেকর্ড থাকায় এটি ডিলিট করা সম্ভব নয়।'
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Restore stock by removing Issue stock transactions
+            \App\Models\StockTransaction::where('reference_type', 'Issue')
+                ->where('reference_id', (string)$invoice->id)
+                ->delete();
+
+            // 2. If this invoice was converted from a challan, reset challan state
+            if (!empty($invoice->challan_id)) {
+                $challan = \App\Models\Challan::find($invoice->challan_id);
+                if ($challan) {
+                    $challan->is_invoiced = 0;
+                    $challan->invoice_id = null;
+                    $challan->save();
+                }
+            }
+
+            // 3. Remove payment details and payments if any (e.g. partial payment)
+            $pDetails = \App\Models\PaymentDetail::where('reference_type', 'Invoice')
+                ->where('reference_id', $invoice->id)
+                ->get();
+            foreach ($pDetails as $pd) {
+                $payment = \App\Models\Payment::find($pd->payment_id);
+                $pd->delete();
+                if ($payment) {
+                    $otherDetailsCount = \App\Models\PaymentDetail::where('payment_id', $payment->id)->count();
+                    if ($otherDetailsCount === 0) {
+                        $payment->delete();
+                    } else {
+                        $payment->amount = \App\Models\PaymentDetail::where('payment_id', $payment->id)->sum('amount');
+                        $payment->save();
+                    }
+                }
+            }
+
+            // 4. Revert Loyalty Points if any
+            $pointTrxs = \App\Models\ClientPointTransaction::where('invoice_id', $invoice->id)->get();
+            foreach ($pointTrxs as $pt) {
+                $client = \App\Models\Client::find($pt->client_id);
+                if ($client) {
+                    if ($pt->type === 'Redeem') {
+                        $client->points_balance = floatval($client->points_balance ?? 0) + floatval($pt->points_out);
+                    } elseif ($pt->type === 'Earn') {
+                        $client->points_balance = max(0, floatval($client->points_balance ?? 0) - floatval($pt->points_in));
+                    }
+                    $client->save();
+                }
+                $pt->delete();
+            }
+
+            // 5. Remove vouchers
+            $invoice->removeVoucherBySourceInfo([
+                'source'    => 'Invoice',
+                'source_id' => $invoice->id,
+            ]);
+
+            // 6. Delete details & months
+            \App\Models\InvoiceDetails::where('invoice_id', $invoice->id)->delete();
+            if (\Illuminate\Support\Facades\Schema::hasTable('invoice_months')) {
+                \App\Models\InvoiceMonth::where('invoice_id', $invoice->id)->delete();
+            }
+
+            // 7. Delete the invoice
+            $invoice->delete();
+
+            activity('Invoice')
+                ->performedOn($invoice)
+                ->causedBy(auth('admin')->user() ?? auth()->user())
+                ->log("Invoice #{$invoice->invoice_no} was deleted");
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'ইনভয়েস সফলভাবে ডিলিট করা হয়েছে এবং আইটেম স্টক পূর্বাবস্থায় ফিরিয়ে দেওয়া হয়েছে।'
+            ]);
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json(['exception' => $ex->getMessage()], 422);
+        }
     }
 
     public function paynow($invoiceid)

@@ -578,15 +578,15 @@
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-dark text-white py-2">
-            <h5 class="modal-title fs-6 text-white"><i class="fas fa-barcode me-2 text-warning"></i>সিরিয়াল ও ওয়ারেন্টি লাইফসাইকেল অডিট সহায়িকা</h5>
+            <h5 class="modal-title fs-6 text-white"><i class="fas fa-barcode me-2 text-warning"></i>{{ $t('Serial & Warranty Lifecycle Audit Help Guide') }}</h5>
             <button type="button" class="btn-close btn-close-white" @click="showHelpModal = false"></button>
           </div>
           <div class="modal-body p-3">
             <div v-if="helpContent" v-html="helpContent"></div>
-            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> সহায়িকা লোড হচ্ছে...</div>
+            <div v-else class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i> {{ $t('Loading guide...') }}</div>
           </div>
           <div class="modal-footer py-1">
-            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">বন্ধ করুন</button>
+            <button type="button" class="btn btn-sm btn-secondary" @click="showHelpModal = false">{{ $t('Close') }}</button>
           </div>
         </div>
       </div>
@@ -598,6 +598,7 @@
 export default {
   name: 'SerialWarrantyReport',
   data() {
+    this.page_title = "Item Serials";
     return {
       showHelpModal: false,
       helpContent: '',

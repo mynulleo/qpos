@@ -15,6 +15,28 @@
 
         <!-- Right Side: Print Invoice, Full Bill Preview, Mushak 6.3 Buttons -->
         <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
+          <!-- ✏️ Edit Invoice (When NOT Paid) -->
+          <button
+            v-if="canEditOrDelete(data)"
+            type="button"
+            class="btn btn-warning btn-sm d-flex align-items-center gap-1 font-monospace shadow-sm"
+            @click="openEditModal"
+            title="Edit Invoice (ইনভয়েস এডিট করুন)"
+          >
+            <i class="fas fa-edit"></i> Edit Invoice
+          </button>
+
+          <!-- 🗑️ Delete Invoice (When NOT Paid) -->
+          <button
+            v-if="canEditOrDelete(data)"
+            type="button"
+            class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 font-monospace shadow-sm"
+            @click="confirmDeleteInvoice"
+            title="Delete Invoice (ইনভয়েস ডিলিট করুন)"
+          >
+            <i class="fas fa-trash-alt"></i> Delete
+          </button>
+
           <!-- Print Dynamic Receipt / Invoice Button (with dropdown for direct layout printing) -->
           <div class="btn-group btn-group-sm">
             <button type="button" class="btn btn-primary d-flex align-items-center gap-1 font-monospace shadow-sm" @click="printReceipt()">
@@ -570,6 +592,65 @@
         />
       </div>
     </div>
+
+    <!-- ✏️ Invoice Edit Modal Component -->
+    <InvoiceEditModal
+      :show="showEditModal"
+      :invoice-id="data?.id"
+      @close="closeEditModal"
+      @updated="onInvoiceUpdated"
+    />
+
+    <!-- 🗑️ Delete Confirmation Modal -->
+    <div
+      v-if="showDeleteModal"
+      class="modal fade show d-block"
+      tabindex="-1"
+      style="background-color: rgba(0, 0, 0, 0.6); z-index: 1060;"
+    >
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-header bg-danger text-white py-2.5 px-3">
+            <h6 class="modal-title fw-bold d-flex align-items-center gap-2 mb-0">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>{{ $t('Confirm Delete Invoice') }}</span>
+              <span class="badge bg-white text-danger font-monospace">#{{ data.invoice_no }}</span>
+            </h6>
+            <button type="button" class="btn-close btn-close-white" @click="closeDeleteModal" :disabled="deleting"></button>
+          </div>
+          <div class="modal-body p-3 bg-white">
+            <div class="text-center py-2">
+              <div class="text-danger mb-2">
+                <i class="fas fa-trash-alt fa-3x"></i>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">
+                {{ $t('Are you sure you want to delete this invoice?') }}
+              </h6>
+              <p class="text-muted small mb-3">
+                {{ $t('Invoice No:') }} <strong class="font-monospace text-primary">#{{ data.invoice_no }}</strong> | 
+                {{ $t('Customer:') }} <strong>{{ data.client ? data.client.name : 'Walk-in Customer' }}</strong> | 
+                {{ $t('Amount:') }} <strong class="font-monospace text-dark">Tk. {{ formatPrice(data.amount) }}</strong>
+              </p>
+
+              <div class="alert alert-warning py-2 px-3 text-start small mb-0 rounded-3 border-warning">
+                <i class="fas fa-info-circle text-warning me-1"></i>
+                <span><strong>মনোযোগ দিন:</strong> এই ইনভয়েসটি ডিলিট করলে এর আইটেমসমূহ পুনরায় স্টকে যুক্ত হবে এবং এর রিসিভেবল ভাউচার হিসাব থেকে অপসারিত হবে।</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
+            <button type="button" class="btn btn-sm btn-outline-secondary px-3" @click="closeDeleteModal" :disabled="deleting">
+              {{ $t('Cancel') }}
+            </button>
+            <button type="button" class="btn btn-sm btn-danger px-4 fw-bold shadow-sm d-flex align-items-center gap-1.5" @click="executeDeleteInvoice" :disabled="deleting">
+              <span v-if="deleting" class="spinner-border spinner-border-sm" role="status"></span>
+              <i v-else class="fas fa-trash-alt"></i>
+              <span>{{ deleting ? $t('Deleting...') : $t('Yes, Delete Invoice') }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -578,17 +659,27 @@ import axios from 'axios';
 import InvoiceLayout1 from './components/InvoiceLayout1.vue';
 import InvoiceLayout2 from './components/InvoiceLayout2.vue';
 import InvoiceLayout3 from './components/InvoiceLayout3.vue';
+import InvoiceEditModal from './components/InvoiceEditModal.vue';
+
+function floatval(val) {
+  const f = parseFloat(val);
+  return isNaN(f) ? 0 : f;
+}
 
 export default {
   components: {
     InvoiceLayout1,
     InvoiceLayout2,
     InvoiceLayout3,
+    InvoiceEditModal,
   },
   data() {
     return {
       data: {},
       loading: true,
+      showEditModal: false,
+      showDeleteModal: false,
+      deleting: false,
       selectedLayout: this.$root.site?.invoice_layout || localStorage.getItem('qpos_invoice_layout') || 'layout1',
       showHeaderInfo: localStorage.getItem('qpos_invoice_show_header') !== 'false',
     };
@@ -784,6 +875,43 @@ export default {
       if (inv.payment_status === 'Paid') return 'bg-success';
       if (inv.payment_status === 'Partial') return 'bg-warning text-dark';
       return 'bg-danger';
+    },
+    canEditOrDelete(inv) {
+      if (!inv || !inv.id) return false;
+      const due = floatval(inv.amount) - floatval(inv.paid_amount);
+      if (due <= 0.01) return false;
+      return true;
+    },
+    openEditModal() {
+      this.showEditModal = true;
+    },
+    closeEditModal() {
+      this.showEditModal = false;
+    },
+    onInvoiceUpdated() {
+      this.loadInvoice();
+    },
+    confirmDeleteInvoice() {
+      this.showDeleteModal = true;
+    },
+    closeDeleteModal() {
+      this.showDeleteModal = false;
+    },
+    executeDeleteInvoice() {
+      if (!this.data || !this.data.id) return;
+      this.deleting = true;
+      axios
+        .delete(`invoice/${this.data.id}`)
+        .then((res) => {
+          this.deleting = false;
+          this.$toast(res.data.message || 'Invoice deleted successfully', 'success');
+          this.closeDeleteModal();
+          this.$router.push({ name: 'invoice.index' });
+        })
+        .catch((err) => {
+          this.deleting = false;
+          this.$toast(err.response?.data?.message || 'Failed to delete invoice', 'danger');
+        });
     },
     loadInvoice() {
       const id = this.$route.params.id;

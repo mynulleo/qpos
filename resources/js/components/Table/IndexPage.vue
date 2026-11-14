@@ -232,11 +232,21 @@ export default {
 
     computed: {
         activeFilterCount() {
+            if (typeof this.customFilterCount === 'function') {
+                return this.customFilterCount();
+            }
+            if (this.$parent && typeof this.$parent.activeFilterCount === 'number') {
+                return this.$parent.activeFilterCount;
+            }
+            if (this.$parent && typeof this.$parent.activeFilterCount === 'function') {
+                return this.$parent.activeFilterCount();
+            }
             let count = 0;
             if (!this.search_data) return 0;
             for (const key in this.search_data) {
                 if (['pagination', 'page', 'field_name', 'value'].includes(key)) continue;
-                if (this.search_data[key] !== '' && this.search_data[key] !== null && this.search_data[key] !== undefined) {
+                const val = this.search_data[key];
+                if (val !== '' && val !== null && val !== undefined && val !== 0 && val !== false && val !== '0') {
                     count++;
                 }
             }
@@ -245,6 +255,11 @@ export default {
     },
 
     inject: {
+        customFilterCount: {
+            from: "customFilterCount",
+            default: null,
+        },
+
         table: {
             from: "table",
             default: () => ({}),

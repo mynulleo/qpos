@@ -67,9 +67,10 @@
                     </router-link>
                     <span
                         v-else
+                        @click.stop="handleDisabledClick(item, 'edit')"
                         class="btn btn-xs btn-outline-secondary border-0 text-muted opacity-50 cursor-not-allowed"
                         data-bs-toggle="tooltip" data-bs-placement="top"
-                        :data-bs-title="$t(editDisabledReason(item))"
+                        :data-bs-title="editDisabledReason(item)"
                         v-x-tooltip
                     >
                         <i class="fas fa-pencil-alt"></i>
@@ -94,9 +95,10 @@
                     </a>
                     <span
                         v-else
+                        @click.stop="handleDisabledClick(item, 'delete')"
                         class="btn btn-xs btn-outline-secondary border-0 text-muted opacity-50 cursor-not-allowed"
                         data-bs-toggle="tooltip" data-bs-placement="top"
-                        :data-bs-title="$t(deleteDisabledReason(item))"
+                        :data-bs-title="deleteDisabledReason(item)"
                         v-x-tooltip
                     >
                         <i class="fas fa-trash-alt"></i>
@@ -136,14 +138,36 @@ export default {
             return true;
         },
 
+        getLockReasonText(item) {
+            if (!item) return "";
+            if (item.sales_return || (item.payment_details && item.payment_details.some(d => d.reference_type === 'SalesReturn'))) {
+                const refNo = item.sales_return?.return_no ? ` (#${item.sales_return.return_no})` : '';
+                return this.$t("This payment is linked to Sales Return") + refNo + ". " + 
+                       this.$t("For accounting and stock consistency, it cannot be edited or deleted directly. Please contact the developer if needed.");
+            }
+            if (item.warranty_claim || (item.payment_details && item.payment_details.some(d => d.reference_type === 'WarrantyClaim'))) {
+                const claimNo = item.warranty_claim?.claim_no ? ` (#${item.warranty_claim.claim_no})` : '';
+                return this.$t("This payment is linked to Warranty Claim") + claimNo + ". " + 
+                       this.$t("For accounting integrity, it cannot be edited or deleted directly. Please contact the developer if needed.");
+            }
+            if (item.lock_reason) {
+                return this.$t(item.lock_reason);
+            }
+            return "";
+        },
+
         editDisabledReason(item) {
             if (typeof this.tableRoutes.editDisabledReason === "function") {
                 return this.tableRoutes.editDisabledReason(item);
             }
-            if (item && (item.grns_count > 0 || (item.receive_status && item.receive_status !== 'Pending'))) {
-                return "GRN received for this Purchase Order. Edit is locked.";
+            const lockReason = this.getLockReasonText(item);
+            if (lockReason) {
+                return lockReason;
             }
-            return "Edit not allowed";
+            if (item && (item.grns_count > 0 || (item.receive_status && item.receive_status !== 'Pending'))) {
+                return this.$t("GRN received for this Purchase Order. Edit is locked.");
+            }
+            return this.$t("Edit not allowed");
         },
 
         canDeleteItem(item) {
@@ -167,10 +191,23 @@ export default {
             if (typeof this.tableRoutes.deleteDisabledReason === "function") {
                 return this.tableRoutes.deleteDisabledReason(item);
             }
-            if (item && (item.grns_count > 0 || (item.receive_status && item.receive_status !== 'Pending'))) {
-                return "GRN received for this Purchase Order. Delete is locked.";
+            const lockReason = this.getLockReasonText(item);
+            if (lockReason) {
+                return lockReason;
             }
-            return "Delete not allowed";
+            if (item && (item.grns_count > 0 || (item.receive_status && item.receive_status !== 'Pending'))) {
+                return this.$t("GRN received for this Purchase Order. Delete is locked.");
+            }
+            return this.$t("Delete not allowed");
+        },
+
+        handleDisabledClick(item, action) {
+            const reason = action === 'delete' ? this.deleteDisabledReason(item) : this.editDisabledReason(item);
+            if (typeof this.$toast === 'function') {
+                this.$toast(reason, 'warning', this.$t('Action Restricted'), 8000);
+            } else if (typeof alert === 'function') {
+                alert(reason);
+            }
         },
 
         generateRoute(route) {

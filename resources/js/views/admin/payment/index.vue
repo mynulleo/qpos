@@ -107,11 +107,14 @@
           </div>
         </div>
 
-        <!-- Row 1: Transaction Type & Entity Selectors -->
+        <!-- Row 1: Transaction Type, Invoice No & Entity Selectors -->
         <v-select-container title="Transaction Type" field="search_data.payment_type" col="3">
           <v-select v-model="search_data.payment_type" :options="['Receive', 'Pay']"
             placeholder="-- All Types --" :closeOnSelect="true"></v-select>
         </v-select-container>
+
+        <Input v-model="search_data.invoice_no" field="search_data.invoice_no" :title="$t('Invoice No')"
+          placeholder="e.g. POS-2026... / Bill No" col="3" :req="false" />
 
         <v-select-container title="Select Client" field="search_data.client_id" col="3">
           <v-select v-model="search_data.client_id" label="name" :reduce="(obj) => obj.id" :options="clients"
@@ -123,12 +126,12 @@
             :options="$root.global.suppliers" placeholder="-- Select Supplier --" :closeOnSelect="true"></v-select>
         </v-select-container>
 
+        <!-- Row 2: Employee, Agent, Payment Method, Mbanking -->
         <v-select-container title="Select Employee" field="search_data.employee_id" col="3">
           <v-select v-model="search_data.employee_id" label="full_name" :reduce="(obj) => obj.id"
             :options="$root.global.employees" placeholder="-- Select Employee --" :closeOnSelect="true"></v-select>
         </v-select-container>
 
-        <!-- Row 2: Agent, Payment Method, Mbanking, Fund Account -->
         <v-select-container title="Select Agent" field="search_data.agent_id" col="3">
           <v-select v-model="search_data.agent_id" label="full_name" :reduce="(obj) => obj.id"
             :options="agents" placeholder="-- Select Agent --" :closeOnSelect="true"></v-select>
@@ -144,12 +147,12 @@
             :options="$root.global.mbankings" placeholder="-- All Mbankings --" :closeOnSelect="true"></v-select>
         </v-select-container>
 
+        <!-- Row 3: Fund Account, Date Range, Status -->
         <v-select-container title="Fund Account" field="search_data.fund_account_id" col="3">
           <v-select v-model="search_data.fund_account_id" label="name" :reduce="(obj) => obj.id"
             :options="fundaccounts" placeholder="-- All Fund Accounts --" :closeOnSelect="true"></v-select>
         </v-select-container>
 
-        <!-- Row 3: Date Range & Amount Range -->
         <date-picker id='searchfrominvoicedate' v-model='search_data.from_payment_date' field='search_data.from_payment_date'
           title='From Payment Date' placeholder='From Date' col='3' :req='false'></date-picker>
 
@@ -157,21 +160,25 @@
           title='To Payment Date' placeholder='To Date' col='3' :req='false'
           :disablePastDates="search_data.from_payment_date"></date-picker>
 
-        <Input v-model="search_data.min_amount" field="search_data.min_amount" title="Min Amount"
-          placeholder="e.g. 100" col="2" :req="false" type="number" />
-
-        <Input v-model="search_data.max_amount" field="search_data.max_amount" title="Max Amount"
-          placeholder="e.g. 50000" col="2" :req="false" type="number" />
-
-        <v-select-container title="Status" field="search_data.status" col="2">
+        <v-select-container title="Status" field="search_data.status" col="3">
           <v-select v-model="search_data.status" :options="['active', 'deactive']"
             placeholder="-- All Status --" :closeOnSelect="true"></v-select>
         </v-select-container>
+
+        <!-- Row 4: Amount Range -->
+        <Input v-model="search_data.min_amount" field="search_data.min_amount" title="Min Amount"
+          placeholder="e.g. 100" col="3" :req="false" type="number" />
+
+        <Input v-model="search_data.max_amount" field="search_data.max_amount" title="Max Amount"
+          placeholder="e.g. 50000" col="3" :req="false" type="number" />
 
         <!-- Active Filter Badges Bar -->
         <div class="col-12 mt-2" v-if="hasActiveFilters">
           <div class="d-flex flex-wrap align-items-center gap-1">
             <span class="small text-muted me-1">{{ $t("Applied:") }}</span>
+            <span class="badge bg-primary-soft text-primary filter_chip" v-if="search_data.invoice_no">
+              {{ $t("Invoice:") }} {{ search_data.invoice_no }} <i class="fas fa-times ms-1" @click="search_data.invoice_no = ''; search();"></i>
+            </span>
             <span class="badge bg-primary-soft text-primary filter_chip" v-if="search_data.payment_type">
               Type: {{ search_data.payment_type }} <i class="fas fa-times ms-1" @click="search_data.payment_type = ''"></i>
             </span>
@@ -215,6 +222,31 @@
             <span class="badge bg-dark text-white font-monospace payslip_badge">
               #{{ item.payslipno || item.id }}
             </span>
+            <span v-if="item.can_delete === false" class="badge bg-danger-soft text-danger fw-semibold" style="font-size: 10.5px; padding: 2px 5px;" :title="getLockTooltip(item)" v-x-tooltip>
+              <i class="fas fa-lock me-1"></i>{{ item.sales_return ? $t('Sales Return') : $t('System Locked') }}
+            </span>
+          </div>
+          <!-- Linked Invoices / Bills -->
+          <div v-if="getLinkedReferences(item).length > 0" class="d-flex flex-wrap gap-1 mt-1">
+            <template v-for="(ref, rIdx) in getLinkedReferences(item)" :key="rIdx">
+              <router-link
+                v-if="ref.url"
+                :to="ref.url"
+                target="_blank"
+                class="badge bg-primary-soft text-primary font-monospace text-decoration-none"
+                style="font-size: 11px;"
+                :title="$t('View ' + ref.type)"
+              >
+                <i :class="ref.icon" class="me-1"></i>{{ ref.label }}
+              </router-link>
+              <span
+                v-else
+                class="badge bg-secondary-soft text-secondary font-monospace"
+                style="font-size: 11px;"
+              >
+                <i :class="ref.icon" class="me-1"></i>{{ ref.label }}
+              </span>
+            </template>
           </div>
           <div class="small text-muted font-monospace mt-1" style="font-size: 11.5px;">
             <i class="far fa-calendar-alt me-1 text-primary"></i> {{ item.payment_date }}
@@ -348,6 +380,7 @@ const tableColumns = [
 
 const json_fields = {
   "Payslip No": "payslipno",
+  "Invoice No": "invoice_numbers",
   "Payment Type": "payment_type",
   "Client": "client.name",
   "Supplier": "supplier.org_name",
@@ -372,6 +405,7 @@ export default {
       date_preset: "",
       fields_name: {
         default: "All Fields (Keyword)",
+        invoice_no: "Invoice No",
         payslipno: "Payslip No",
         client: "Client Name / ID",
         supplier: "Supplier Name / ID",
@@ -387,6 +421,7 @@ export default {
         page: this.$route.query.page ?? 1,
         field_name: this.$route.query.field_name ?? "",
         value: this.$route.query.value ?? "",
+        invoice_no: this.$route.query.invoice_no ?? "",
         payment_type: this.$route.query.payment_type ?? "",
         client_id: this.$route.query.client_id ?? "",
         supplier_id: this.$route.query.supplier_id ?? "",
@@ -431,6 +466,7 @@ export default {
   computed: {
     hasActiveFilters() {
       return !!(
+        this.search_data.invoice_no ||
         this.search_data.payment_type ||
         this.search_data.client_id ||
         this.search_data.supplier_id ||
@@ -518,7 +554,71 @@ export default {
       return `${day} ${month}, ${year}`;
     },
 
+    getLockTooltip(item) {
+      if (!item) return "";
+      if (item.sales_return || (item.payment_details && item.payment_details.some(d => d.reference_type === 'SalesReturn'))) {
+        const ref = item.sales_return?.return_no ? ` (#${item.sales_return.return_no})` : '';
+        return this.$t('This payment is linked to Sales Return') + ref + '. ' + 
+               this.$t('For accounting and stock consistency, it cannot be edited or deleted directly. Please contact the developer if needed.');
+      }
+      if (item.warranty_claim || (item.payment_details && item.payment_details.some(d => d.reference_type === 'WarrantyClaim'))) {
+        const ref = item.warranty_claim?.claim_no ? ` (#${item.warranty_claim.claim_no})` : '';
+        return this.$t('This payment is linked to Warranty Claim') + ref + '. ' + 
+               this.$t('For accounting integrity, it cannot be edited or deleted directly. Please contact the developer if needed.');
+      }
+      return item.lock_reason ? this.$t(item.lock_reason) : this.$t('System Locked');
+    },
+
+    getLinkedReferences(item) {
+      if (!item) return [];
+      const refs = [];
+      const seen = new Set();
+
+      if (item.payment_details && Array.isArray(item.payment_details)) {
+        item.payment_details.forEach((d) => {
+          if (d.reference_type === 'Invoice' && d.invoice && d.invoice.invoice_no) {
+            if (!seen.has(d.invoice.invoice_no)) {
+              seen.add(d.invoice.invoice_no);
+              refs.push({
+                type: 'Invoice',
+                label: d.invoice.invoice_no,
+                url: `/invoice/bill/${d.invoice.id}`,
+                icon: 'fas fa-file-invoice'
+              });
+            }
+          } else if (d.reference_type === 'Purchase' && d.purchase && d.purchase.invoiceno) {
+            if (!seen.has(d.purchase.invoiceno)) {
+              seen.add(d.purchase.invoiceno);
+              refs.push({
+                type: 'Purchase',
+                label: d.purchase.invoiceno,
+                url: `/purchase/${d.purchase.id}`,
+                icon: 'fas fa-shopping-bag'
+              });
+            }
+          }
+        });
+      }
+
+      if (item.invoices && Array.isArray(item.invoices)) {
+        item.invoices.forEach((inv) => {
+          if (inv.invoice_no && !seen.has(inv.invoice_no)) {
+            seen.add(inv.invoice_no);
+            refs.push({
+              type: 'Invoice',
+              label: inv.invoice_no,
+              url: `/invoice/bill/${inv.id}`,
+              icon: 'fas fa-file-invoice'
+            });
+          }
+        });
+      }
+
+      return refs;
+    },
+
     resetAllFilters() {
+      this.search_data.invoice_no = "";
       this.search_data.payment_type = "";
       this.search_data.client_id = "";
       this.search_data.supplier_id = "";

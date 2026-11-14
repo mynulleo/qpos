@@ -317,8 +317,9 @@ export default {
         }
 
         if (res) {
-          if (this.data.id) {
-            this.update(this.model, this.data, this.data.id);
+          const id = this.data.id || this.$route.params.id;
+          if (id) {
+            this.update(this.model, this.data, id);
           } else {
             this.store(this.model, this.data);
           }

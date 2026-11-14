@@ -688,10 +688,17 @@ class PosController extends BaseController
             $originalAmount = 0;
 
             foreach ($cart as $item) {
+                $rate = floatval($item['rate'] ?? 0);
+                if ($rate <= 0) {
+                    $itemTitle = !empty($item['title']) ? $item['title'] : 'আইটেম';
+                    return response()->json([
+                        'exception' => "\"{$itemTitle}\" এর মূল্য ০ হতে পারবে না! বিক্রয় সম্পন্ন করতে অনুগ্রহ করে পণ্যের মূল্য নির্ধারণ করুন।"
+                    ], 422);
+                }
                 $itemBaseRate = !empty($item['base_rate']) && floatval($item['base_rate']) > 0
                     ? floatval($item['base_rate'])
-                    : floatval($item['rate']);
-                $originalAmount += $itemBaseRate * floatval($item['qty']);
+                    : $rate;
+                $originalAmount += $itemBaseRate * floatval($item['qty'] ?? 1);
             }
 
             $discount = floatval($request->input('discount', 0));

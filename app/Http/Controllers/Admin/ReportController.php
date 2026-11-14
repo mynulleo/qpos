@@ -169,16 +169,21 @@ class ReportController extends BaseController
                 DB::raw("COALESCE(NULLIF(ip.selling_price, 0), NULLIF(pd.selling_price, 0), 0) as selling_price"),
             ]);
 
-        // Stock Status Filter
-        $stockStatus = $searchdata['stock_status'] ?? 'low_stock';
-        if ($stockStatus === 'low_stock') {
-            $query->where('iss.current_stock', '>', 0)->where('iss.current_stock', '<=', $lowThreshold);
-        } elseif ($stockStatus === 'out_of_stock') {
-            $query->where('iss.current_stock', '<=', 0);
-        } elseif ($stockStatus === 'negative_stock') {
-            $query->where('iss.current_stock', '<', 0);
-        } elseif ($stockStatus === 'in_stock') {
-            $query->where('iss.current_stock', '>', 0);
+        // Stock Status & Zero Stock Filter
+        $stockStatus = $searchdata['stock_status'] ?? 'all';
+        $isZeroOnly = isset($searchdata['is_zero']) && ($searchdata['is_zero'] === '1' || $searchdata['is_zero'] === 1 || $searchdata['is_zero'] === true);
+        if ($isZeroOnly) {
+            $query->where('iss.current_stock', 0);
+        } else {
+            if ($stockStatus === 'low_stock') {
+                $query->where('iss.current_stock', '>', 0)->where('iss.current_stock', '<=', $lowThreshold);
+            } elseif ($stockStatus === 'out_of_stock') {
+                $query->where('iss.current_stock', '<=', 0);
+            } elseif ($stockStatus === 'negative_stock') {
+                $query->where('iss.current_stock', '<', 0);
+            } elseif ($stockStatus === 'in_stock') {
+                $query->where('iss.current_stock', '>', 0);
+            }
         }
 
         if (!empty($searchdata['category_id'])) {
@@ -206,24 +211,57 @@ class ReportController extends BaseController
         if (!empty($searchdata['size_id'])) {
             $query->where('iss.size_id', $searchdata['size_id']);
         }
-        if (isset($searchdata['is_zero']) && ($searchdata['is_zero'] === '1' || $searchdata['is_zero'] === 1 || $searchdata['is_zero'] === true)) {
-            $query->where('iss.current_stock', 0);
+
+        // Keyword & Quick Search Filter (supports both keyword and top search bar value with tokenized matching)
+        $fieldName = $searchdata['field_name'] ?? '';
+        $kw = trim(!empty($searchdata['keyword']) ? $searchdata['keyword'] : (!empty($searchdata['value']) ? $searchdata['value'] : ''));
+        if ($kw !== '') {
+            $tokens = preg_split('/[\s\-_,]+/', $kw, -1, PREG_SPLIT_NO_EMPTY);
+            if ($fieldName === 'barcode') {
+                $query->where('i.barcode', 'like', "%{$kw}%");
+            } elseif ($fieldName === 'model_no') {
+                $query->where('i.model_no', 'like', "%{$kw}%");
+            } elseif ($fieldName === 'title' || $fieldName === 'item_title' || $fieldName === 'item_name') {
+                $query->where(function ($q) use ($kw, $tokens) {
+                    $q->where('i.title', 'like', "%{$kw}%");
+                    if (!empty($tokens)) {
+                        $q->orWhere(function ($subQ) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $subQ->where('i.title', 'like', "%{$token}%");
+                            }
+                        });
+                    }
+                });
+            } else {
+                $query->where(function ($q) use ($kw, $tokens) {
+                    $q->where('i.title', 'like', "%{$kw}%")
+                      ->orWhere('i.barcode', 'like', "%{$kw}%")
+                      ->orWhere('i.model_no', 'like', "%{$kw}%")
+                      ->orWhere('b.title', 'like', "%{$kw}%")
+                      ->orWhere('s.title', 'like', "%{$kw}%");
+
+                    if (!empty($tokens)) {
+                        $q->orWhere(function ($subQ) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $subQ->where(function ($tokQ) use ($token) {
+                                    $tokQ->where('i.title', 'like', "%{$token}%")
+                                         ->orWhere('i.barcode', 'like', "%{$token}%")
+                                         ->orWhere('i.model_no', 'like', "%{$token}%")
+                                         ->orWhere('b.title', 'like', "%{$token}%")
+                                         ->orWhere('s.title', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
         }
-        if (!empty($searchdata['keyword'])) {
-            $kw = trim($searchdata['keyword']);
-            $query->where(function ($q) use ($kw) {
-                $q->where('i.title', 'like', "%{$kw}%")
-                  ->orWhere('i.barcode', 'like', "%{$kw}%")
-                  ->orWhere('i.model_no', 'like', "%{$kw}%")
-                  ->orWhere('b.title', 'like', "%{$kw}%")
-                  ->orWhere('s.title', 'like', "%{$kw}%");
-            });
-        }
+
         if (isset($searchdata['from_qty']) && is_numeric($searchdata['from_qty'])) {
-            $query->where('iss.current_stock', '>=', (int) $searchdata['from_qty']);
+            $query->where('iss.current_stock', '>=', (float) $searchdata['from_qty']);
         }
         if (isset($searchdata['to_qty']) && is_numeric($searchdata['to_qty'])) {
-            $query->where('iss.current_stock', '<=', (int) $searchdata['to_qty']);
+            $query->where('iss.current_stock', '<=', (float) $searchdata['to_qty']);
         }
 
         // Sorting

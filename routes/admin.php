@@ -77,6 +77,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('backend-parent-menus', [App\Http\Controllers\Admin\System\MenuController::class, 'getParentMenu'])->name('backendParentMenu');
     Route::get('getcategories/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getcategories'])->name('getcategories');
     Route::get('getbrands/{category_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getbrands'])->name('getbrands');
+    Route::get('getbrandsbycategory/{category_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getbrands'])->name('getbrandsbycategory');
     Route::get('getseries/{brand_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getseries'])->name('getseries');
     Route::get('getunits/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getunits'])->name('getunits');
     Route::get('getlabelpresets', [App\Http\Controllers\Admin\System\LibController::class, 'getLabelPresets'])->name('getlabelpresets');
@@ -99,6 +100,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('getemppayabledatas/{empid?}', [App\Http\Controllers\Admin\PaymentController::class, 'getEmpPayableDatas'])->name('Payment.getEmpPayableDatas');
     Route::get('getagentpayabledatas/{agentid?}', [App\Http\Controllers\Admin\PaymentController::class, 'agentPayableDatas'])->name('Payment.agentPayableDatas');
     Route::get('getofficeexpenses', [App\Http\Controllers\Admin\PaymentController::class, 'getOfficeExpenses'])->name('Payment.getOfficeExpenses');
+    Route::get('getreferencedetail/{type}/{id}', [App\Http\Controllers\Admin\PaymentController::class, 'getReferenceDetail'])->name('Payment.getReferenceDetail');
     Route::get('getloanhistories/{empid?}', [App\Http\Controllers\Admin\LoanInfoController::class, 'getLoanHistories'])->name('Payment.getLoanHistories');
     Route::get('getsalaryparameters', [App\Http\Controllers\Admin\SalaryParameterController::class, 'getSalaryParameters'])->name('Payment.getSalaryParameters');
     Route::get('clientsforcommissions/{serviceid?}', [App\Http\Controllers\Admin\CommissionController::class, 'getClientsForCommission'])->name('Commission.clientsforcommissions');

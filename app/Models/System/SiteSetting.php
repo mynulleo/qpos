@@ -15,12 +15,28 @@ class SiteSetting extends BaseModel
     protected $guarded = ['id'];
 
     protected $casts = [
-        'show_pos_terms' => 'boolean',
-        'show_invoice_terms' => 'boolean',
+        'show_pos_terms' => 'integer',
+        'show_invoice_terms' => 'integer',
+        'show_pos_item_popup' => 'integer',
         'memberships' => 'array',
         'coupon_enabled' => 'integer',
         'default_vat' => 'float',
     ];
+
+    public function setShowPosItemPopupAttribute($value)
+    {
+        $this->attributes['show_pos_item_popup'] = ($value === 'false' || $value === false || $value === '0' || $value === 0 || empty($value)) ? 0 : 1;
+    }
+
+    public function setShowPosTermsAttribute($value)
+    {
+        $this->attributes['show_pos_terms'] = ($value === 'false' || $value === false || $value === '0' || $value === 0 || empty($value)) ? 0 : 1;
+    }
+
+    public function setShowInvoiceTermsAttribute($value)
+    {
+        $this->attributes['show_invoice_terms'] = ($value === 'false' || $value === false || $value === '0' || $value === 0 || empty($value)) ? 0 : 1;
+    }
 
     protected $logName = 'Site Settings';
     protected $appends = ['original_logo', 'logo_one', 'logo_two', 'logo_three', 'original_logo_small', 'logo_small_one', 'logo_small_two', 'logo_small_three'];

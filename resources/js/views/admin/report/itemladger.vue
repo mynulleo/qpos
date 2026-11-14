@@ -174,7 +174,7 @@
                                 <div class="fs-4 fw-bold text-danger my-1">
                                     -{{ metrics ? formatQty(metrics.total_sold) : 0 }}
                                 </div>
-                                <small class="text-muted">Wastage: {{ metrics ? formatQty(metrics.total_wastage) : 0 }}</small>
+                                <small class="text-muted">{{ $t('Wastage') }}: {{ metrics ? formatQty(metrics.total_wastage) : 0 }}</small>
                             </div>
                         </div>
 
@@ -183,10 +183,10 @@
                             <div class="card border-0 shadow-sm rounded-3 p-3 text-center h-100 bg-white border-top-info">
                                 <small class="text-muted fw-semibold text-uppercase tracking-wider">{{ $t('Stock Valuation') }}</small>
                                 <div class="fs-5 fw-bold text-dark my-1">
-                                    ৳ {{ metrics ? formatNumber(metrics.stock_purchase_value) : '0.00' }}
+                                    {{ $t('Tk.') }} {{ metrics ? formatNumber(metrics.stock_purchase_value) : '0.00' }}
                                 </div>
                                 <small class="text-success fw-semibold" title="Potential Gross Profit">
-                                    Profit: ৳ {{ metrics ? formatNumber(metrics.potential_profit) : '0.00' }}
+                                    {{ $t('Profit') }}: {{ $t('Tk.') }} {{ metrics ? formatNumber(metrics.potential_profit) : '0.00' }}
                                 </small>
                             </div>
                         </div>
@@ -200,7 +200,7 @@
                     <div class="card border-0 shadow-sm p-2 text-center bg-white rounded-3">
                         <small class="text-muted d-block fw-semibold">{{ $t('Period Opening Stock') }}</small>
                         <span class="fs-5 fw-bold text-secondary">{{ summaryData.opening }}</span>
-                        <small class="text-muted" style="font-size: 10px;">Before {{ search_data.start_date }}</small>
+                        <small class="text-muted" style="font-size: 10px;">{{ $t('Before') }} {{ search_data.start_date }}</small>
                     </div>
                 </div>
                 <div class="col-md-3 col-6">

@@ -80,7 +80,7 @@
           label="name"
           :reduce="obj => obj.id"
           :options="clients"
-          placeholder="-- All Customers --"
+          :placeholder="$t('-- All Customers --')"
           :closeOnSelect="true"
         >
           <template #option="option">
@@ -98,7 +98,7 @@
           <label class="form-label fw-bold small text-muted">
             <i class="fas fa-tag me-1 text-info"></i>{{ $t('Return Reason') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.return_reason">
-            <option value="all">-- All Reasons (সকল কারণ) --</option>
+            <option value="all">-- {{ $t('All Reasons') }} --</option>
             <option value="Client request">{{ $t('Client request') }}</option>
             <option value="Wastage">{{ $t('Wastage') }}</option>
             <option value="Date Expaired">{{ $t('Date Expaired') }}</option>
@@ -112,12 +112,12 @@
           <label class="form-label fw-bold small text-muted">
             <i class="fas fa-wallet me-1 text-success"></i>{{ $t('Refund Method') }}</label>
           <select class="form-select form-select-sm" v-model="search_data.payment_method">
-            <option value="all">-- All Methods (সকল মাধ্যম) --</option>
+            <option value="all">-- {{ $t('All Methods') }} --</option>
             <option value="Cash">{{ $t('Cash') }}</option>
             <option value="bKash">{{ $t('bKash') }}</option>
             <option value="Nagad">{{ $t('Nagad') }}</option>
             <option value="Rocket">{{ $t('Rocket') }}</option>
-            <option value="Bank">Bank Transfer</option>
+            <option value="Bank">{{ $t('Bank Transfer') }}</option>
           </select>
         </div>
       </div>
@@ -129,7 +129,7 @@
           label="title"
           :reduce="obj => obj.id"
           :options="categories"
-          placeholder="-- All Categories --"
+          :placeholder="$t('-- All Categories --')"
           :closeOnSelect="true"
         />
       </v-select-container>
@@ -141,13 +141,13 @@
           label="title"
           :reduce="obj => obj.id"
           :options="items"
-          placeholder="-- All Items --"
+          :placeholder="$t('-- All Items --')"
           :closeOnSelect="true"
         >
           <template #option="option">
             <div>
               <span>{{ option.title }}</span>
-              <small class="text-muted d-block" v-if="option.barcode">Barcode: {{ option.barcode }}</small>
+              <small class="text-muted d-block" v-if="option.barcode">{{ $t('Barcode') }}: {{ option.barcode }}</small>
             </div>
           </template>
         </v-select>
@@ -177,7 +177,7 @@
                 :class="{ 'active': activeTab === 'returns' }"
                 @click="activeTab = 'returns'"
               >
-                <i class="fas fa-file-invoice-dollar me-1"></i> Return Slips View (রিটার্ন চালান সমূহ) ({{ returns.length }})
+                <i class="fas fa-file-invoice-dollar me-1"></i> {{ $t('Return Slips View') }} ({{ $bnNum(returns.length) }})
               </button>
             </li>
             <li class="nav-item">
@@ -186,7 +186,7 @@
                 :class="{ 'active': activeTab === 'items' }"
                 @click="activeTab = 'items'"
               >
-                <i class="fas fa-boxes me-1"></i> Item Breakdown (পণ্য ভিত্তিক ফেরত) ({{ item_breakdown.length }})
+                <i class="fas fa-boxes me-1"></i> {{ $t('Item Breakdown') }} ({{ $bnNum(item_breakdown.length) }})
               </button>
             </li>
             <li class="nav-item">
@@ -195,7 +195,7 @@
                 :class="{ 'active': activeTab === 'customers' }"
                 @click="activeTab = 'customers'"
               >
-                <i class="fas fa-users me-1"></i> Customer Breakdown (গ্রাহক ভিত্তিক) ({{ customer_breakdown.length }})
+                <i class="fas fa-users me-1"></i> {{ $t('Customer Breakdown') }} ({{ $bnNum(customer_breakdown.length) }})
               </button>
             </li>
             <li class="nav-item">
@@ -204,7 +204,7 @@
                 :class="{ 'active': activeTab === 'daily' }"
                 @click="activeTab = 'daily'"
               >
-                <i class="fas fa-calendar-day me-1"></i> Daily Trend (দৈনিক সামারি) ({{ daily_breakdown.length }})
+                <i class="fas fa-calendar-day me-1"></i> {{ $t('Daily Trend') }} ({{ $bnNum(daily_breakdown.length) }})
               </button>
             </li>
           </ul>
@@ -220,9 +220,9 @@
               class="btn btn-sm btn-success cursor-pointer d-flex align-items-center gap-1 shadow-sm"
               :data="exportData"
               :name="exportFileName"
-              title="Export to Excel"
+              :title="$t('Export to Excel')"
             >
-              <i class="fas fa-file-excel"></i> Excel Export
+              <i class="fas fa-file-excel"></i> {{ $t('Export Excel') }}
             </download-excel>
 
             <!-- Print Button -->
@@ -230,9 +230,9 @@
               type="button"
               class="btn btn-sm btn-dark d-flex align-items-center gap-1 shadow-sm"
               @click="triggerPrint"
-              title="Print Report"
+              :title="$t('Print Report')"
             >
-              <i class="fas fa-print"></i> Print
+              <i class="fas fa-print"></i> {{ $t('Print') }}
             </button>
           </div>
         </div>
@@ -251,7 +251,7 @@
                 </div>
               </div>
               <h4 class="mb-0 fw-bold font-monospace text-primary">{{ summary.total_returns || 0 }}</h4>
-              <small class="text-muted" style="font-size: 11px;">ফেরত লেনদেন সংখ্যা</small>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Total Return Invoices Count') }}</small>
             </div>
           </div>
 
@@ -264,8 +264,8 @@
                   <i class="fas fa-money-bill-wave"></i>
                 </div>
               </div>
-              <h4 class="mb-0 fw-bold font-monospace text-danger">Tk. {{ formatMoney(summary.total_refund) }}</h4>
-              <small class="text-muted" style="font-size: 11px;">গ্রাহকদের মোট ফেরত প্রদান</small>
+              <h4 class="mb-0 fw-bold font-monospace text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_refund) }}</h4>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Total Refund Paid to Customers') }}</small>
             </div>
           </div>
 
@@ -278,8 +278,8 @@
                   <i class="fas fa-cubes"></i>
                 </div>
               </div>
-              <h4 class="mb-0 fw-bold font-monospace text-dark">{{ summary.total_qty || 0 }} pcs</h4>
-              <small class="text-muted" style="font-size: 11px;">মোট ফেরত পণ্যের পরিমাণ</small>
+              <h4 class="mb-0 fw-bold font-monospace text-dark">{{ summary.total_qty || 0 }} {{ $t('pcs') }}</h4>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Total Returned Products Qty') }}</small>
             </div>
           </div>
 
@@ -288,10 +288,10 @@
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100 border-start border-3 border-success">
               <div class="d-flex align-items-center justify-content-between mb-1">
                 <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i>{{ $t('Restocked') }}</span>
-                <span class="badge bg-success font-monospace">{{ summary.restocked_qty || 0 }} pcs</span>
+                <span class="badge bg-success font-monospace">{{ summary.restocked_qty || 0 }} {{ $t('pcs') }}</span>
               </div>
-              <h5 class="mb-0 fw-bold font-monospace text-success">Tk. {{ formatMoney(summary.restocked_amount) }}</h5>
-              <small class="text-muted" style="font-size: 11px;">ভালো পণ্য পুনরায় স্টকে যুক্ত</small>
+              <h5 class="mb-0 fw-bold font-monospace text-success">{{ $t('Tk.') }} {{ formatMoney(summary.restocked_amount) }}</h5>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Restocked into Inventory') }}</small>
             </div>
           </div>
 
@@ -300,10 +300,10 @@
             <div class="card border-0 shadow-sm kpi-metric-card bg-white p-3 h-100 border-start border-3 border-warning">
               <div class="d-flex align-items-center justify-content-between mb-1">
                 <span class="text-warning-emphasis small fw-bold"><i class="fas fa-trash-alt me-1"></i>{{ $t('Wastage/Expired') }}</span>
-                <span class="badge bg-danger font-monospace">{{ summary.wastage_qty || 0 }} pcs</span>
+                <span class="badge bg-danger font-monospace">{{ summary.wastage_qty || 0 }} {{ $t('pcs') }}</span>
               </div>
-              <h5 class="mb-0 fw-bold font-monospace text-danger">Tk. {{ formatMoney(summary.wastage_amount) }}</h5>
-              <small class="text-muted" style="font-size: 11px;">নষ্ট/মেয়াদোত্তীর্ণ - ওয়েস্টেজ এন্ট্রি</small>
+              <h5 class="mb-0 fw-bold font-monospace text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.wastage_amount) }}</h5>
+              <small class="text-muted" style="font-size: 11px;">{{ $t('Damaged/Expired - Wastage Entry') }}</small>
             </div>
           </div>
         </div>
@@ -314,19 +314,19 @@
         <div class="card border-0 shadow-sm bg-light p-2">
           <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div class="d-flex align-items-center gap-2">
-              <span class="small fw-bold text-dark"><i class="fas fa-chart-pie me-1 text-primary"></i> Reasons Breakdown (কারণের বিবরণী):</span>
+              <span class="small fw-bold text-dark"><i class="fas fa-chart-pie me-1 text-primary"></i> {{ $t('Reasons Breakdown') }}:</span>
               <span class="badge bg-success px-2 py-1 shadow-sm">
-                <i class="fas fa-user-check me-1"></i> Client Request: {{ summary.reasons ? summary.reasons['Client request'].count : 0 }} slips (Tk. {{ formatMoney(summary.reasons ? summary.reasons['Client request'].amount : 0) }})
+                <i class="fas fa-user-check me-1"></i> {{ $t('Client request') }}: {{ $bnNum(summary.reasons ? summary.reasons['Client request'].count : 0) }} {{ $t('slips') }} ({{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.reasons ? summary.reasons['Client request'].amount : 0)) }})
               </span>
               <span class="badge bg-danger px-2 py-1 shadow-sm">
-                <i class="fas fa-trash-alt me-1"></i> Wastage: {{ summary.reasons ? summary.reasons['Wastage'].count : 0 }} slips (Tk. {{ formatMoney(summary.reasons ? summary.reasons['Wastage'].amount : 0) }})
+                <i class="fas fa-trash-alt me-1"></i> {{ $t('Wastage') }}: {{ $bnNum(summary.reasons ? summary.reasons['Wastage'].count : 0) }} {{ $t('slips') }} ({{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.reasons ? summary.reasons['Wastage'].amount : 0)) }})
               </span>
               <span class="badge bg-warning text-dark px-2 py-1 shadow-sm">
-                <i class="fas fa-calendar-times me-1"></i> Date Expaired: {{ summary.reasons ? summary.reasons['Date Expaired'].count : 0 }} slips (Tk. {{ formatMoney(summary.reasons ? summary.reasons['Date Expaired'].amount : 0) }})
+                <i class="fas fa-calendar-times me-1"></i> {{ $t('Date Expaired') }}: {{ $bnNum(summary.reasons ? summary.reasons['Date Expaired'].count : 0) }} {{ $t('slips') }} ({{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.reasons ? summary.reasons['Date Expaired'].amount : 0)) }})
               </span>
             </div>
             <div class="small text-muted font-monospace">
-              <span>Date: {{ dateRangeDisplay }}</span>
+              <span>{{ $t('Date') }}: {{ dateRangeDisplay }}</span>
             </div>
           </div>
         </div>
@@ -370,7 +370,7 @@
                       <div v-if="ret.invoice">
                         <span class="badge bg-light text-dark border font-monospace">{{ ret.invoice.invoice_no }}</span>
                         <small class="text-muted d-block font-monospace" style="font-size: 11px;">
-                          Inv Date: {{ ret.invoice.invoice_date }}
+                          {{ $t('Inv Date') }}: {{ ret.invoice.invoice_date }}
                         </small>
                       </div>
                       <span v-else class="text-muted small">N/A</span>
@@ -385,26 +385,26 @@
                         </small>
                       </div>
                       <div v-else>
-                        <span class="text-muted fst-italic">Walk-in Customer</span>
+                        <span class="text-muted fst-italic">{{ $t($t('Walk-in Customer')) }}</span>
                       </div>
                     </td>
 
                     <!-- Return Reason Badge -->
                     <td class="text-center">
                       <span v-if="ret.return_reason === 'Client request'" class="badge bg-success px-2 py-1 shadow-sm d-inline-flex align-items-center gap-1">
-                        <i class="fas fa-user-check"></i> Client request
+                        <i class="fas fa-user-check"></i> {{ $t('Client request') }}
                       </span>
                       <span v-else-if="ret.return_reason === 'Wastage'" class="badge bg-danger px-2 py-1 shadow-sm d-inline-flex align-items-center gap-1">
-                        <i class="fas fa-trash-alt"></i> Wastage
+                        <i class="fas fa-trash-alt"></i> {{ $t('Wastage') }}
                       </span>
                       <span v-else-if="ret.return_reason === 'Date Expaired'" class="badge bg-warning text-dark px-2 py-1 shadow-sm d-inline-flex align-items-center gap-1">
-                        <i class="fas fa-calendar-times"></i> Date Expaired
+                        <i class="fas fa-calendar-times"></i> {{ $t('Date Expaired') }}
                       </span>
                       <span v-else class="badge bg-secondary px-2 py-1">
                         {{ ret.return_reason || 'N/A' }}
                       </span>
                       <small class="d-block text-muted mt-1" style="font-size: 10px;">
-                        {{ ret.return_reason === 'Client request' ? 'স্টকে জমা' : 'ওয়েস্টেজ এন্ট্রি' }}
+                        {{ ret.return_reason === 'Client request' ? $t('Restocked') : $t('Wastage Entry') }}
                       </small>
                     </td>
 
@@ -425,21 +425,21 @@
                           </div>
                         </div>
                       </div>
-                      <span v-else class="text-muted small">Total Qty: {{ ret.total_qty }} pcs</span>
+                      <span v-else class="text-muted small">{{ $t('Total Qty') }}: {{ ret.total_qty }} {{ $t('pcs') }}</span>
                     </td>
 
                     <!-- Refund Amount -->
                     <td class="text-end font-monospace">
-                      <span class="fw-bold text-danger fs-6">Tk. {{ formatMoney(ret.total_refund_amount) }}</span>
+                      <span class="fw-bold text-danger fs-6">{{ $t('Tk.') }} {{ formatMoney(ret.total_refund_amount) }}</span>
                     </td>
 
                     <!-- Refund Method -->
                     <td>
                       <span class="badge bg-light text-dark border font-monospace px-2 py-1">
-                        <i class="fas fa-money-check-alt me-1 text-primary"></i>{{ ret.payment_method || 'Cash' }}
+                        <i class="fas fa-money-check-alt me-1 text-primary"></i>{{ $t(ret.payment_method || 'Cash') }}
                       </span>
                       <small class="d-block text-muted font-monospace mt-1" v-if="ret.trxid" style="font-size: 11px;">
-                        Trx: {{ ret.trxid }}
+                        {{ $t('Trx') }}: {{ ret.trxid }}
                       </small>
                     </td>
 
@@ -469,17 +469,17 @@
                   <tr>
                     <td colspan="10" class="text-center py-5 text-muted">
                       <i class="fas fa-undo-alt fa-3x text-muted mb-2 d-block opacity-50"></i>
-                      <h6>কোনো রিটার্ন রেকর্ড পাওয়া যায়নি (No return records found)</h6>
-                      <small>তারিখ পরিবর্তন করে অথবা ফিল্টার রিস্টার্ট করে পুনরায় চেষ্টা করুন।</small>
+                      <h6>{{ $t('No return records found') }}</h6>
+                      <small>{{ $t('Try changing the date range or resetting filters.') }}</small>
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="returns.length > 0">
                 <tr>
-                  <td colspan="5" class="text-end">Grand Total (সর্বমোট):</td>
+                  <td colspan="5" class="text-end">{{ $t('Grand Total') }}:</td>
                   <td class="text-center text-info">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end text-danger fs-6">Tk. {{ formatMoney(summary.total_refund) }}</td>
+                  <td class="text-end text-danger fs-6">{{ $t('Tk.') }} {{ formatMoney(summary.total_refund) }}</td>
                   <td colspan="3"></td>
                 </tr>
               </tfoot>
@@ -497,7 +497,7 @@
                   <th width="24%">{{ $t('Item Title') }}</th>
                   <th width="12%">{{ $t('Barcode') }}</th>
                   <th width="12%">{{ $t('Category') }}</th>
-                  <th width="10%">Variant (Color/Size)</th>
+                  <th width="10%">{{ $t('Variant (Color/Size)') }}</th>
                   <th width="8%" class="text-center">{{ $t('Total Return') }}</th>
                   <th width="8%" class="text-center">{{ $t('Restocked') }}</th>
                   <th width="8%" class="text-center">{{ $t('Wastage') }}</th>
@@ -537,19 +537,19 @@
                 <template v-else>
                   <tr>
                     <td colspan="11" class="text-center py-4 text-muted">
-                      No item return records found for the selected period.
+                      {{ $t('No item return records found for the selected period.') }}
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="item_breakdown.length > 0">
                 <tr>
-                  <td colspan="5" class="text-end">Total:</td>
+                  <td colspan="5" class="text-end">{{ $t('Total') }}:</td>
                   <td class="text-center text-info">{{ summary.total_qty }} pcs</td>
                   <td class="text-center text-success">{{ summary.restocked_qty }} pcs</td>
                   <td class="text-center text-danger">{{ summary.wastage_qty }} pcs</td>
                   <td></td>
-                  <td class="text-end text-danger">Tk. {{ formatMoney(summary.total_refund) }}</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_refund) }}</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -591,17 +591,17 @@
                 <template v-else>
                   <tr>
                     <td colspan="7" class="text-center py-4 text-muted">
-                      No customer return records found.
+                      {{ $t('No customer return records found.') }}
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="customer_breakdown.length > 0">
                 <tr>
-                  <td colspan="4" class="text-end">Grand Total:</td>
+                  <td colspan="4" class="text-end">{{ $t('Grand Total') }}:</td>
                   <td class="text-center">{{ summary.total_returns }}</td>
                   <td class="text-center">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end text-danger">Tk. {{ formatMoney(summary.total_refund) }}</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_refund) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -640,17 +640,17 @@
                 <template v-else>
                   <tr>
                     <td colspan="5" class="text-center py-4 text-muted">
-                      No daily records found.
+                      {{ $t('No daily records found.') }}
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="daily_breakdown.length > 0">
                 <tr>
-                  <td colspan="2" class="text-end">Total:</td>
+                  <td colspan="2" class="text-end">{{ $t('Total') }}:</td>
                   <td class="text-center">{{ summary.total_returns }}</td>
                   <td class="text-center">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end text-danger">Tk. {{ formatMoney(summary.total_refund) }}</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ formatMoney(summary.total_refund) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -660,12 +660,12 @@
         <!-- 📌 Footer Note for Print -->
         <div class="mt-4 small text-muted d-flex justify-content-between align-items-center">
           <div>
-            <p class="mb-0">Report Generated By: <strong>{{ $root.admin ? $root.admin.name : 'System Admin' }}</strong></p>
-            <small>This report is automatically generated by QPOS ERP and is authentic without signature.</small>
+            <p class="mb-0">{{ $t('Report Generated By') }}: <strong>{{ $root.admin ? $root.admin.name : $t('System Admin') }}</strong></p>
+            <small>{{ $t('This report is automatically generated by QPOS ERP and is authentic without signature.') }}</small>
           </div>
           <div class="text-end">
             <div class="border-top pt-1 mt-4 px-4 d-inline-block text-center">
-              <strong>Authorized Signature</strong>
+              <strong>{{ $t('Authorized Signature') }}</strong>
             </div>
           </div>
         </div>
@@ -696,21 +696,21 @@
               <!-- Slip Header Info -->
               <div class="row g-3 mb-3 p-3 bg-light rounded border">
                 <div class="col-md-6">
-                  <div class="small text-muted">Customer Details (গ্রাহক):</div>
+                  <div class="small text-muted">{{ $t('Customer Details') }}:</div>
                   <h6 class="fw-bold text-dark mb-0">
-                    {{ selectedReturn.client ? selectedReturn.client.name : 'Walk-in Customer' }}
+                    {{ selectedReturn.client ? selectedReturn.client.name : $t('Walk-in Customer') }}
                   </h6>
                   <small class="text-muted" v-if="selectedReturn.client && selectedReturn.client.mobile">
                     <i class="fas fa-phone-alt me-1"></i>{{ selectedReturn.client.mobile }}
                   </small>
                 </div>
                 <div class="col-md-6 text-md-end">
-                  <div class="small text-muted">Original Invoice (মূল ইনভয়েস):</div>
+                  <div class="small text-muted">{{ $t('Original Invoice') }}:</div>
                   <strong class="font-monospace text-primary">
                     {{ selectedReturn.invoice ? selectedReturn.invoice.invoice_no : 'N/A' }}
                   </strong>
                   <small class="d-block text-muted">
-                    Return Date: {{ selectedReturn.return_date }}
+                    {{ $t('Return Date') }}: {{ $bnNum(selectedReturn.return_date) }}
                   </small>
                 </div>
               </div>
@@ -723,22 +723,22 @@
               }">
                 <div class="d-flex align-items-center justify-content-between mb-1">
                   <div class="fw-bold small">
-                    <i class="fas fa-tag me-1"></i> Return Reason: 
+                    <i class="fas fa-tag me-1"></i> {{ $t('Return Reason') }}: 
                     <span class="badge" :class="{
                       'bg-success': selectedReturn.return_reason === 'Client request',
                       'bg-danger': selectedReturn.return_reason === 'Wastage',
                       'bg-warning text-dark': selectedReturn.return_reason === 'Date Expaired'
                     }">
-                      {{ selectedReturn.return_reason }}
+                      {{ $t(selectedReturn.return_reason) }}
                     </span>
                   </div>
                   <span class="small font-monospace text-muted">
-                    Payment Method: <strong>{{ selectedReturn.payment_method }}</strong>
+                    {{ $t('Payment Method') }}: <strong>{{ $t(selectedReturn.payment_method) }}</strong>
                     <span v-if="selectedReturn.trxid">({{ selectedReturn.trxid }})</span>
                   </span>
                 </div>
                 <div class="mt-2" v-if="selectedReturn.note">
-                  <div class="small fw-bold text-muted mb-1"><i class="fas fa-comment-alt me-1"></i> Return Note / Remarks:</div>
+                  <div class="small fw-bold text-muted mb-1"><i class="fas fa-comment-alt me-1"></i> {{ $t('Return Note / Remarks') }}:</div>
                   <div class="p-2 bg-white rounded border fst-italic text-dark small">
                     "{{ selectedReturn.note }}"
                   </div>
@@ -773,16 +773,16 @@
                       </td>
                       <td class="font-monospace small">{{ d.serial_no || '-' }}</td>
                       <td class="text-center font-monospace fw-bold">{{ d.qty }} {{ d.unit ? d.unit.title : 'pcs' }}</td>
-                      <td class="text-end font-monospace">Tk. {{ formatMoney(d.rate) }}</td>
-                      <td class="text-end font-monospace fw-bold text-danger">Tk. {{ formatMoney(d.refund_amount) }}</td>
+                      <td class="text-end font-monospace">{{ $t('Tk.') }} {{ formatMoney(d.rate) }}</td>
+                      <td class="text-end font-monospace fw-bold text-danger">{{ $t('Tk.') }} {{ formatMoney(d.refund_amount) }}</td>
                     </tr>
                   </tbody>
                   <tfoot class="table-light font-monospace fw-bold">
                     <tr>
-                      <td colspan="4" class="text-end">Total Refunded:</td>
-                      <td class="text-center">{{ selectedReturn.total_qty }} pcs</td>
+                      <td colspan="4" class="text-end">{{ $t('Total Refunded') }}:</td>
+                      <td class="text-center">{{ selectedReturn.total_qty }} {{ $t('pcs') }}</td>
                       <td></td>
-                      <td class="text-end text-danger fs-6">Tk. {{ formatMoney(selectedReturn.total_refund_amount) }}</td>
+                      <td class="text-end text-danger fs-6">{{ $t('Tk.') }} {{ formatMoney(selectedReturn.total_refund_amount) }}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -791,14 +791,12 @@
 
             <div class="modal-footer bg-light py-2 px-3 justify-content-between">
               <small class="text-muted">
-                Processed By: <strong>{{ selectedReturn.creator ? selectedReturn.creator.name : 'Admin' }}</strong>
+                {{ $t('Processed By') }}: <strong>{{ selectedReturn.creator ? selectedReturn.creator.name : $t('Admin') }}</strong>
               </small>
               <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
-                  Close
-                </button>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">{{ $t('Close') }}</button>
                 <button type="button" class="btn btn-sm btn-dark d-flex align-items-center gap-1" @click="printModalSlip">
-                  <i class="fas fa-print"></i> Print Slip
+                  <i class="fas fa-print"></i> {{ $t('Print Slip') }}
                 </button>
               </div>
             </div>
@@ -829,9 +827,9 @@ export default {
       activeTab: "returns",
       activePreset: "thisMonth", // 🌟 Default to current month as requested
       fields_name: {
-        default: "All Fields (সকল ফিল্ড)",
-        return_no: "Return Slip No (ফেরত চালান নং)",
-        note: "Note / Remarks (মন্তব্য)",
+        default: "All Fields",
+        return_no: "Return Slip No",
+        note: "Note / Remarks",
       },
       search_data: {
         pagination: 10,
@@ -904,7 +902,7 @@ export default {
       } else if (this.search_data.to_date) {
         return "Until " + moment(this.search_data.to_date).format("D MMM, YYYY");
       }
-      return "All Time";
+      return this.$t("All Time");
     },
 
     exportFileName() {

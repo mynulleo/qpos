@@ -185,6 +185,94 @@
             </div>
           </div>
 
+          <!-- 2.5 Supplier Sourcing & Vendor Warranty Details Card -->
+          <div class="card border-0 shadow-sm form-section-card" v-if="claim.supplier_name || claim.supplier || claim.purchase_no || claim.purchase">
+            <div class="card-header bg-dark text-white py-2 px-3 d-flex justify-content-between align-items-center">
+              <span class="fw-bold small">
+                <i class="fas fa-truck me-2 text-warning"></i>
+                <span>{{ $t('Supplier & Sourcing Details') }}</span>
+              </span>
+              <span 
+                class="badge font-monospace"
+                :class="getSupplierWarrantyStatus() === 'active' ? 'bg-success' : (getSupplierWarrantyStatus() === 'expired' ? 'bg-danger' : 'bg-secondary')"
+                v-if="claim.supplier_warranty_expiry_date"
+              >
+                <span v-if="getSupplierWarrantyStatus() === 'active'">
+                  {{ $t('Warranty Active') }}: {{ getSupplierRemainingDays() }} {{ $t('d left') }}
+                </span>
+                <span v-else>
+                  {{ $t('Expired') }} ({{ Math.abs(getSupplierRemainingDays()) }} {{ $t('d ago') }})
+                </span>
+              </span>
+            </div>
+            <div class="card-body p-3">
+              <table class="table table-sm table-borderless info-table mb-0">
+                <tbody>
+                  <tr>
+                    <th width="38%">{{ $t('Supplier:') }}</th>
+                    <td class="fw-bold text-dark">
+                      {{ claim.supplier_name || (claim.supplier ? (claim.supplier.org_name || claim.supplier.name) : $t('Unknown')) }}
+                      <span class="badge bg-light text-secondary border font-monospace ms-1" v-if="claim.supplier && claim.supplier.code">{{ claim.supplier.code }}</span>
+                    </td>
+                  </tr>
+                  <tr v-if="claim.supplier && (claim.supplier.mobile || claim.supplier.phone)">
+                    <th>{{ $t('Contact / Phone:') }}</th>
+                    <td>
+                      <a :href="'tel:' + (claim.supplier.mobile || claim.supplier.phone)" class="text-decoration-none fw-bold font-monospace theme-text">
+                        <i class="fas fa-phone-alt text-success me-1"></i>{{ claim.supplier.mobile || claim.supplier.phone }}
+                      </a>
+                    </td>
+                  </tr>
+                  <tr v-if="claim.supplier && claim.supplier.address">
+                    <th>{{ $t('Address:') }}</th>
+                    <td class="text-secondary small">{{ claim.supplier.address }}</td>
+                  </tr>
+                  <tr>
+                    <th>{{ $t('Purchase Date:') }}</th>
+                    <td class="font-monospace text-dark fw-bold">
+                      {{ claim.purchase_date || (claim.purchase ? (claim.purchase.purchase_date || claim.purchase.date) : $t('N/A')) }}
+                    </td>
+                  </tr>
+                  <tr v-if="claim.purchase_no || (claim.purchase && (claim.purchase.purchase_no || claim.purchase.purchaseno))">
+                    <th>{{ $t('PO / Bill No:') }}</th>
+                    <td class="font-monospace text-dark">
+                      {{ claim.purchase_no || (claim.purchase ? (claim.purchase.purchase_no || claim.purchase.purchaseno) : '') }}
+                    </td>
+                  </tr>
+                  <tr v-if="claim.supplier_warranty_period">
+                    <th>{{ $t('Supplier Warranty:') }}</th>
+                    <td class="fw-bold text-dark">{{ claim.supplier_warranty_period }}</td>
+                  </tr>
+                  <tr v-if="claim.supplier_warranty_expiry_date">
+                    <th>{{ $t('Warranty Expiry:') }}</th>
+                    <td class="font-monospace fw-bold" :class="getSupplierWarrantyStatus() === 'active' ? 'text-success' : 'text-danger'">
+                      {{ claim.supplier_warranty_expiry_date }}
+                      <span class="small" v-if="getSupplierWarrantyStatus() === 'active'">({{ getSupplierRemainingDays() }} {{ $t('days left') }})</span>
+                      <span class="small" v-else>({{ Math.abs(getSupplierRemainingDays()) }} {{ $t('days ago') }})</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Quick Action to Dispatch to Supplier -->
+              <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center" v-if="claim.current_status !== 'sent_to_vendor' && claim.current_status !== 'delivered'">
+                <small class="text-muted" style="font-size: 11px;">
+                  <i class="fas fa-info-circle text-primary me-1"></i>
+                  <span>{{ $t('Send this unit to vendor service center') }}</span>
+                </small>
+                <button 
+                  type="button" 
+                  class="btn btn-xs btn-outline-warning text-dark fw-bold px-2 py-0" 
+                  style="font-size: 11px;"
+                  @click="logForm.status = 'sent_to_vendor'"
+                >
+                  <i class="fas fa-paper-plane me-1 text-warning"></i>
+                  <span>{{ $t('Set Sent To Vendor') }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- 3. Issue Description & Accessories Card -->
           <div class="card border-0 shadow-sm form-section-card">
             <div class="card-header theme-bg text-white py-2 px-3">
@@ -845,6 +933,20 @@ export default {
     },
     formatPrice(val) {
       return (parseFloat(val) || 0).toFixed(2);
+    },
+    getSupplierRemainingDays() {
+      if (!this.claim || !this.claim.supplier_warranty_expiry_date) return null;
+      const expiry = new Date(this.claim.supplier_warranty_expiry_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      expiry.setHours(0, 0, 0, 0);
+      const diffTime = expiry - today;
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    },
+    getSupplierWarrantyStatus() {
+      const days = this.getSupplierRemainingDays();
+      if (days === null) return 'none';
+      return days >= 0 ? 'active' : 'expired';
     },
     formatDateTime(dt) {
       if (!dt) return '';

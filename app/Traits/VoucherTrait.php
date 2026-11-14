@@ -22,15 +22,20 @@ trait VoucherTrait
         DB::transaction(function () use ($payment_id) {
 
             // 1️⃣ Get vouchers created from this payment
-            $vouchers = Voucher::where('payment_id', $payment_id)->get();
+            $vouchers = Voucher::where('payment_id', $payment_id)
+                ->orWhere(function ($q) use ($payment_id) {
+                    $q->where('source', 'Payment')
+                        ->where('source_id', $payment_id);
+                })
+                ->get();
 
             foreach ($vouchers as $voucher) {
 
-                // 2️⃣ Delete voucher details first
+                // 2️⃣ Delete voucher details first (soft delete)
                 VoucherDetail::where('voucher_id', $voucher->id)->delete();
 
-                // 3️⃣ Then delete main voucher
-                return $voucher->delete();
+                // 3️⃣ Then delete main voucher (soft delete)
+                $voucher->delete();
             }
         });
     }
@@ -80,17 +85,54 @@ trait VoucherTrait
                 $ref_id = $payment->agent_id;
             }
 
-            $voucher = Voucher::create([
-                'voucherno'            => Voucher::generateVoucherNo(),
-                'voucher_date'         => vue_to_server_date($payment->payment_date),
-                'voucher_type'         => $payment->payment_type,
-                'narration'            => 'Payment processed via Payment Module',
-                'financial_year_id'    => $this->getFinancialYearId(),
-                'payment_id'           => $payment_id,
-                'source'               => $ref_type ?: $payment->reference_type,
-                'source_id'            => $ref_id ?: $payment->reference_id,
-                'status'               => 'active'
-            ]);
+            // Find existing voucher if one exists for this payment
+            $voucher = Voucher::where('payment_id', $payment_id)
+                ->orWhere(function ($q) use ($payment_id) {
+                    $q->where('source', 'Payment')
+                        ->where('source_id', $payment_id);
+                })
+                ->first();
+
+            if ($voucher) {
+                $voucher->update([
+                    'voucher_date'         => vue_to_server_date($payment->payment_date),
+                    'voucher_type'         => $payment->payment_type,
+                    'financial_year_id'    => $this->getFinancialYearId(),
+                    'payment_id'           => $payment_id,
+                    'source'               => $ref_type ?: $payment->reference_type,
+                    'source_id'            => $ref_id ?: $payment->reference_id,
+                    'status'               => 'active'
+                ]);
+
+                // Delete old voucher details
+                VoucherDetail::where('voucher_id', $voucher->id)->delete();
+
+                // Clean up any other duplicate vouchers for this payment
+                $extraVouchers = Voucher::where(function ($q) use ($payment_id) {
+                    $q->where('payment_id', $payment_id)
+                        ->orWhere(function ($sq) use ($payment_id) {
+                            $sq->where('source', 'Payment')
+                                ->where('source_id', $payment_id);
+                        });
+                })->where('id', '!=', $voucher->id)->get();
+
+                foreach ($extraVouchers as $extra) {
+                    VoucherDetail::where('voucher_id', $extra->id)->delete();
+                    $extra->delete();
+                }
+            } else {
+                $voucher = Voucher::create([
+                    'voucherno'            => Voucher::generateVoucherNo(),
+                    'voucher_date'         => vue_to_server_date($payment->payment_date),
+                    'voucher_type'         => $payment->payment_type,
+                    'narration'            => 'Payment processed via Payment Module',
+                    'financial_year_id'    => $this->getFinancialYearId(),
+                    'payment_id'           => $payment_id,
+                    'source'               => $ref_type ?: $payment->reference_type,
+                    'source_id'            => $ref_id ?: $payment->reference_id,
+                    'status'               => 'active'
+                ]);
+            }
 
             $cash_bank_account = !empty($payment->fund_account_id)
                 ? $payment->fund_account_id
@@ -209,20 +251,60 @@ trait VoucherTrait
 
         DB::transaction(
             function () use ($payment, $payment_id) {
-                $voucher = Voucher::create([
-                    'voucherno'            => Voucher::generateVoucherNo(),
-                    'voucher_date'         => vue_to_server_date($payment->payment_date),
-                    'voucher_type'         => $payment->payment_type,
-                    'narration'            => 'Payment processed via Payment Module',
-                    'financial_year_id'    => $this->getFinancialYearId(),
-                    'payment_id'           => $payment_id,
-                    'source'               => 'Payment',
-                    'source_id'            => $payment_id,
-                    'status'               => 'active'
-                ]);
+                // Find existing voucher if one exists for this payment
+                $voucher = Voucher::where('payment_id', $payment_id)
+                    ->orWhere(function ($q) use ($payment_id) {
+                        $q->where('source', 'Payment')
+                            ->where('source_id', $payment_id);
+                    })
+                    ->first();
+
+                if ($voucher) {
+                    $voucher->update([
+                        'voucher_date'         => vue_to_server_date($payment->payment_date),
+                        'voucher_type'         => $payment->payment_type,
+                        'financial_year_id'    => $this->getFinancialYearId(),
+                        'payment_id'           => $payment_id,
+                        'source'               => 'Payment',
+                        'source_id'            => $payment_id,
+                        'status'               => 'active'
+                    ]);
+
+                    // Delete old voucher details
+                    VoucherDetail::where('voucher_id', $voucher->id)->delete();
+
+                    // Clean up any extra duplicate vouchers
+                    $extraVouchers = Voucher::where(function ($q) use ($payment_id) {
+                        $q->where('payment_id', $payment_id)
+                            ->orWhere(function ($sq) use ($payment_id) {
+                                $sq->where('source', 'Payment')
+                                    ->where('source_id', $payment_id);
+                            });
+                    })->where('id', '!=', $voucher->id)->get();
+
+                    foreach ($extraVouchers as $extra) {
+                        VoucherDetail::where('voucher_id', $extra->id)->delete();
+                        $extra->delete();
+                    }
+                } else {
+                    $voucher = Voucher::create([
+                        'voucherno'            => Voucher::generateVoucherNo(),
+                        'voucher_date'         => vue_to_server_date($payment->payment_date),
+                        'voucher_type'         => $payment->payment_type,
+                        'narration'            => 'Payment processed via Payment Module',
+                        'financial_year_id'    => $this->getFinancialYearId(),
+                        'payment_id'           => $payment_id,
+                        'source'               => 'Payment',
+                        'source_id'            => $payment_id,
+                        'status'               => 'active'
+                    ]);
+                }
 
                 //voucher detail total cash credit
-                $cash_bank_account = $this->getSystemAccount($payment->payment_method);
+                $cash_bank_account = !empty($payment->fund_account_id)
+                    ? $payment->fund_account_id
+                    : $this->getSystemAccount($payment->payment_method);
+
                 // 1️⃣ Credit Cash/Bank
                 VoucherDetail::create([
                     'voucher_id'      => $voucher->id,
@@ -900,19 +982,21 @@ trait VoucherTrait
     // Cash/Bank system account
     private function getSystemAccount($type)
     {
-        if ($type == 'Cheque') {
-            return Account::where('account_name', 'Bank')->firstOrFail()->id;
-        }
-
-        if ($type == 'BankTransfer') {
-            return Account::where('account_name', 'Bank')->firstOrFail()->id;
+        if ($type == 'Cheque' || $type == 'BankTransfer' || $type == 'Bank') {
+            $bank = Account::where('account_name', 'Bank')->first();
+            if ($bank) return $bank->id;
         }
 
         if ($type == 'MobileBanking') {
-            return Account::where('account_name', 'bKash/Nagad/Rocket')->firstOrFail()->id;
+            $mb = Account::where('account_name', 'bKash/Nagad/Rocket')->first();
+            if ($mb) return $mb->id;
         }
 
-        return Account::where('account_name', $type)->firstOrFail()->id;
+        $acc = Account::where('account_name', $type)->first()
+            ?? Account::where('system_key_name', 'Cash')->first()
+            ?? Account::first();
+
+        return $acc ? $acc->id : 1;
     }
 
     // Expense account mapping

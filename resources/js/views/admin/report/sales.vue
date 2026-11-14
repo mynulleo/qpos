@@ -17,14 +17,14 @@
 
       <!-- Date Range -->
       <date-picker id="searchfromdate" v-model="search_data.from_date" field="search_data.from_date"
-        title="From Date" placeholder="From Date" col="3" :req="false"></date-picker>
+        :title="$t('From Date')" :placeholder="$t('From Date')" col="3" :req="false"></date-picker>
       <date-picker id="searchtodate" v-model="search_data.to_date" field="search_data.to_date"
-        title="To Date" placeholder="To Date" col="3" :req="false"></date-picker>
+        :title="$t('To Date')" :placeholder="$t('To Date')" col="3" :req="false"></date-picker>
 
       <!-- Customer / Client -->
-      <v-select-container title="Customer" field="search_data.client_id" col="3">
+      <v-select-container :title="$t('Customer')" field="search_data.client_id" col="3">
         <v-select v-model="search_data.client_id" label="name" :reduce="obj => obj.id" :options="clients"
-          placeholder="-- All Customers --" :closeOnSelect="true">
+          :placeholder="$t('-- All Customers --')" :closeOnSelect="true">
           <template #option="option">
             <div>
               <strong>{{ option.name }}</strong>
@@ -35,27 +35,27 @@
       </v-select-container>
 
       <!-- Category Filter -->
-      <v-select-container title="Category" field="search_data.category_id" col="3">
+      <v-select-container :title="$t('Category')" field="search_data.category_id" col="3">
         <v-select v-model="search_data.category_id" label="title" :reduce="obj => obj.id" :options="categories"
-          placeholder="-- All Categories --" :closeOnSelect="true" />
+          :placeholder="$t('-- All Categories --')" :closeOnSelect="true" />
       </v-select-container>
 
       <!-- Item Filter -->
-      <v-select-container title="Item" field="search_data.item_id" col="3">
+      <v-select-container :title="$t('Item')" field="search_data.item_id" col="3">
         <v-select v-model="search_data.item_id" label="title" :reduce="obj => obj.id" :options="items"
-          placeholder="-- All Items --" :closeOnSelect="true">
+          :placeholder="$t('-- All Items --')" :closeOnSelect="true">
           <template #option="option">
             <div>
               <span>{{ option.title }}</span>
-              <small class="text-muted d-block" v-if="option.barcode">Barcode: {{ option.barcode }}</small>
+              <small class="text-muted d-block" v-if="option.barcode">{{ $t('Barcode') }}: {{ option.barcode }}</small>
             </div>
           </template>
         </v-select>
       </v-select-container>
 
       <!-- Invoice No Search -->
-      <Input v-model="search_data.invoice_no" field="search_data.invoice_no" title="Invoice No"
-        placeholder="e.g. POS-2026..." col="3" :req="false" />
+      <Input v-model="search_data.invoice_no" field="search_data.invoice_no" :title="$t('Invoice No')"
+        :placeholder="$t('e.g. POS-2026...')" col="3" :req="false" />
 
       <!-- Payment Status Filter -->
       <div class="col-md-3">
@@ -91,22 +91,22 @@
           <ul class="nav nav-pills custom-report-tabs">
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'invoices' }" @click="activeTab = 'invoices'">
-                <i class="fas fa-file-invoice me-1"></i> {{ $t("Invoices View") }} ({{ invoices.length }})
+                <i class="fas fa-file-invoice me-1"></i> {{ $t("Invoices View") }} ({{ $bnNum(invoices.length) }})
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'items' }" @click="activeTab = 'items'">
-                <i class="fas fa-boxes me-1"></i> {{ $t("Item Breakdown") }} ({{ item_breakdown.length }})
+                <i class="fas fa-boxes me-1"></i> {{ $t("Item Breakdown") }} ({{ $bnNum(item_breakdown.length) }})
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'customers' }" @click="activeTab = 'customers'">
-                <i class="fas fa-users me-1"></i> {{ $t("Customer Breakdown") }} ({{ customer_breakdown.length }})
+                <i class="fas fa-users me-1"></i> {{ $t("Customer Breakdown") }} ({{ $bnNum(customer_breakdown.length) }})
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link" :class="{ 'active': activeTab === 'daily' }" @click="activeTab = 'daily'">
-                <i class="fas fa-chart-line me-1"></i> {{ $t("Daily Trend") }} ({{ daily_breakdown.length }})
+                <i class="fas fa-chart-line me-1"></i> {{ $t("Daily Trend") }} ({{ $bnNum(daily_breakdown.length) }})
               </button>
             </li>
           </ul>
@@ -121,7 +121,7 @@
               <i class="fas fa-file-excel"></i> {{ $t("Export Excel") }}
             </download-excel>
             <button class="p_btn btn btn-sm btn-dark d-inline-flex align-items-center gap-1"
-              data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print Report"
+              :data-bs-title="$t('Print Report')"
               v-x-tooltip @click="print('printArea', model)">
               <i class="fas fa-print"></i> {{ $t("Print Report") }}
             </button>
@@ -137,7 +137,7 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t("Total Invoices") }}</div>
-                  <div class="fs-4 fw-bold mt-1">{{ summary.total_invoices || 0 }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ $bnNum(summary.total_invoices || 0) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-receipt"></i></div>
               </div>
@@ -150,7 +150,7 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Qty Sold') }}</div>
-                  <div class="fs-4 fw-bold mt-1">{{ Number(summary.total_qty || 0).toLocaleString() }} <span class="fs-6">Pcs</span></div>
+                  <div class="fs-4 fw-bold mt-1">{{ $bnNum(Number(summary.total_qty || 0).toLocaleString()) }} <span class="fs-6">{{ $t('Pcs') }}</span></div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-box-open"></i></div>
               </div>
@@ -163,11 +163,11 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Net Sales') }}</div>
-                  <div class="fs-4 fw-bold mt-1">Tk. {{ formatMoney(summary.net_sales) }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.net_sales)) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-dollar-sign"></i></div>
               </div>
-              <small class="text-white-50 mt-2 d-block">Discount: Tk. {{ formatMoney(summary.total_discount) }} | VAT: Tk. {{ formatMoney(summary.total_vat) }}</small>
+              <small class="text-white-50 mt-2 d-block">{{ $t('Discount') }}: {{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_discount)) }} | {{ $t('VAT') }}: {{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_vat)) }}</small>
             </div>
           </div>
 
@@ -176,7 +176,7 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Collected') }}</div>
-                  <div class="fs-4 fw-bold mt-1 text-white">Tk. {{ formatMoney(summary.total_paid) }}</div>
+                  <div class="fs-4 fw-bold mt-1 text-white">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_paid)) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-hand-holding-usd"></i></div>
               </div>
@@ -189,7 +189,7 @@
               <div class="d-flex justify-content-between align-items-start">
                 <div>
                   <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Outstanding Due') }}</div>
-                  <div class="fs-4 fw-bold mt-1 text-white">Tk. {{ formatMoney(summary.total_due) }}</div>
+                  <div class="fs-4 fw-bold mt-1 text-white">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_due)) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-exclamation-circle"></i></div>
               </div>
@@ -206,15 +206,15 @@
           <h3 class="fw-bold">{{ $root.site.title || 'QPOS' }}</h3>
           <p class="mb-1 text-muted">{{ $root.site.address || 'Dhaka, Bangladesh' }}</p>
           <p class="text-muted small">
-            Email: {{ $root.site.contact_email || 'N/A' }} | Phone: {{ $root.site.mobile1 || 'N/A' }}
+            {{ $t('Email') }}: {{ $root.site.contact_email || $t('N/A') }} | {{ $t('Phone') }}: {{ $root.site.mobile1 || $t('N/A') }}
           </p>
           <div class="border-top border-bottom py-2 my-2 bg-light">
             <h5 class="fw-bold mb-0 text-dark">
               <i class="fas fa-chart-bar me-1"></i>
-              Sales Report (বিক্রয় প্রতিবেদন) - {{ getTabTitle(activeTab) }}
+              {{ $t('Sales Report') }} - {{ getTabTitle(activeTab) }}
             </h5>
             <small class="text-muted">
-              Period: <strong>{{ dateRangeDisplay }}</strong> | Generated on: <strong>{{ reportDate }}</strong>
+              {{ $t('Period') }}: <strong>{{ dateRangeDisplay }}</strong> | {{ $t('Generated on') }}: <strong>{{ reportDateDisplay }}</strong>
             </small>
           </div>
         </div>
@@ -243,24 +243,24 @@
                 <template v-if="invoices.length > 0">
                   <template v-for="(inv, index) in invoices" :key="inv.id">
                     <tr :class="{ 'table-active': expandedInvoices.includes(inv.id) }">
-                      <td class="text-center">{{ index + 1 }}</td>
-                      <td class="text-center font-monospace">{{ inv.invoice_date }}</td>
+                      <td class="text-center">{{ $bnNum(index + 1) }}</td>
+                      <td class="text-center font-monospace">{{ $bnNum(inv.invoice_date) }}</td>
                       <td class="font-monospace fw-bold text-primary">
                         {{ inv.invoice_no }}
                       </td>
                       <td>
-                        <div class="fw-bold text-dark">{{ inv.client ? inv.client.name : 'Walk-in Customer' }}</div>
-                        <small class="text-muted" v-if="inv.client && inv.client.mobile">{{ inv.client.mobile }}</small>
+                        <div class="fw-bold text-dark">{{ inv.client ? inv.client.name : $t('Walk-in Customer') }}</div>
+                        <small class="text-muted" v-if="inv.client && inv.client.mobile">{{ $bnNum(inv.client.mobile) }}</small>
                       </td>
                       <td class="text-center">
-                        <span class="badge bg-secondary font-monospace">{{ inv.invoice_details ? inv.invoice_details.length : 0 }} items</span>
+                        <span class="badge bg-secondary font-monospace">{{ $bnNum(inv.invoice_details ? inv.invoice_details.length : 0) }} {{ $t('items') }}</span>
                       </td>
-                      <td class="text-end font-monospace">{{ formatMoney(inv.original_amount) }}</td>
-                      <td class="text-end font-monospace text-danger">{{ formatMoney(inv.discount) }}</td>
-                      <td class="text-end font-monospace fw-bold text-dark">{{ formatMoney(inv.amount) }}</td>
-                      <td class="text-end font-monospace text-success">{{ formatMoney(inv.paid_amount) }}</td>
+                      <td class="text-end font-monospace">{{ $bnNum(formatMoney(inv.original_amount)) }}</td>
+                      <td class="text-end font-monospace text-danger">{{ $bnNum(formatMoney(inv.discount)) }}</td>
+                      <td class="text-end font-monospace fw-bold text-dark">{{ $bnNum(formatMoney(inv.amount)) }}</td>
+                      <td class="text-end font-monospace text-success">{{ $bnNum(formatMoney(inv.paid_amount)) }}</td>
                       <td class="text-end font-monospace fw-bold" :class="inv.computed_due > 0 ? 'text-danger' : 'text-muted'">
-                        {{ formatMoney(inv.computed_due) }}
+                        {{ $bnNum(formatMoney(inv.computed_due)) }}
                       </td>
                       <td class="text-center">
                         <span class="badge" :class="{
@@ -268,13 +268,13 @@
                           'bg-warning text-dark': inv.computed_status === 'Partial',
                           'bg-danger': inv.computed_status === 'Due'
                         }">
-                          {{ inv.computed_status }}
+                          {{ $t(inv.computed_status) }}
                         </span>
                       </td>
                       <td class="text-center d-print-none">
                         <button type="button" class="btn btn-xs btn-outline-info"
                           @click="toggleInvoiceExpand(inv.id)"
-                          :title="expandedInvoices.includes(inv.id) ? 'Collapse Items' : 'View Items'">
+                          :title="expandedInvoices.includes(inv.id) ? $t('Collapse Items') : $t('View Items')">
                           <i class="fas" :class="expandedInvoices.includes(inv.id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                         </button>
                       </td>
@@ -284,7 +284,7 @@
                       <td colspan="12" class="p-3">
                         <div class="border rounded p-2 bg-white shadow-sm">
                           <small class="fw-bold text-muted text-uppercase mb-2 d-block">
-                            <i class="fas fa-list me-1"></i> Invoice Items Breakdown (ইনভয়েস আইটেম বিস্তারিত):
+                            <i class="fas fa-list me-1"></i> {{ $t('Invoice Items Breakdown') }}:
                           </small>
                           <table class="table table-sm table-bordered mb-0">
                             <thead class="table-secondary">
@@ -302,15 +302,15 @@
                             </thead>
                             <tbody>
                               <tr v-for="(item, itemIdx) in inv.invoice_details" :key="itemIdx" class="small">
-                                <td>{{ item.item ? item.item.title : (item.description || 'N/A') }}</td>
-                                <td class="text-center font-monospace">{{ item.item ? item.item.barcode : 'N/A' }}</td>
-                                <td class="text-center">{{ item.item && item.item.category ? item.item.category.title : 'N/A' }}</td>
+                                <td>{{ item.item ? item.item.title : (item.description || $t('N/A')) }}</td>
+                                <td class="text-center font-monospace">{{ item.item ? item.item.barcode : $t('N/A') }}</td>
+                                <td class="text-center">{{ item.item && item.item.category ? item.item.category.title : $t('N/A') }}</td>
                                 <td class="text-center">{{ item.color ? item.color.title : '-' }}</td>
                                 <td class="text-center">{{ item.size ? item.size.title : '-' }}</td>
                                 <td class="text-center font-monospace">{{ item.serial_no || '-' }}</td>
-                                <td class="text-center fw-bold">{{ item.qty }} {{ item.item && item.item.unit ? item.item.unit.title : '' }}</td>
-                                <td class="text-end font-monospace">{{ formatMoney(item.amount) }}</td>
-                                <td class="text-end font-monospace fw-bold">{{ formatMoney(item.total_amount) }}</td>
+                                <td class="text-center fw-bold">{{ $bnNum(item.qty) }} {{ item.item && item.item.unit ? item.item.unit.title : '' }}</td>
+                                <td class="text-end font-monospace">{{ $bnNum(formatMoney(item.amount)) }}</td>
+                                <td class="text-end font-monospace fw-bold">{{ $bnNum(formatMoney(item.total_amount)) }}</td>
                               </tr>
                             </tbody>
                           </table>
@@ -322,7 +322,7 @@
                 <template v-else>
                   <tr>
                     <td colspan="12" class="text-center py-4 text-muted">
-                      <i class="fas fa-search me-1"></i> No sales invoices found matching the selected search criteria.
+                      <i class="fas fa-search me-1"></i> {{ $t('No sales invoices found matching the selected search criteria.') }}
                     </td>
                   </tr>
                 </template>
@@ -330,13 +330,13 @@
               <!-- Invoices Table Footer Totals -->
               <tfoot class="table-dark font-monospace fw-bold" v-if="invoices.length > 0">
                 <tr>
-                  <td colspan="4" class="text-end">Total Summary (মোট সর্বমোট):</td>
-                  <td class="text-center">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end">{{ formatMoney(summary.gross_amount) }}</td>
-                  <td class="text-end text-warning">{{ formatMoney(summary.total_discount) }}</td>
-                  <td class="text-end text-info">{{ formatMoney(summary.net_sales) }}</td>
-                  <td class="text-end text-success">{{ formatMoney(summary.total_paid) }}</td>
-                  <td class="text-end text-danger">{{ formatMoney(summary.total_due) }}</td>
+                  <td colspan="4" class="text-end">{{ $t('Total Summary') }}:</td>
+                  <td class="text-center">{{ $bnNum(summary.total_qty) }} {{ $t('pcs') }}</td>
+                  <td class="text-end">{{ $bnNum(formatMoney(summary.gross_amount)) }}</td>
+                  <td class="text-end text-warning">{{ $bnNum(formatMoney(summary.total_discount)) }}</td>
+                  <td class="text-end text-info">{{ $bnNum(formatMoney(summary.net_sales)) }}</td>
+                  <td class="text-end text-success">{{ $bnNum(formatMoney(summary.total_paid)) }}</td>
+                  <td class="text-end text-danger">{{ $bnNum(formatMoney(summary.total_due)) }}</td>
                   <td colspan="2"></td>
                 </tr>
               </tfoot>
@@ -364,31 +364,31 @@
               <tbody>
                 <template v-if="item_breakdown.length > 0">
                   <tr v-for="(item, index) in item_breakdown" :key="index">
-                    <td class="text-center">{{ index + 1 }}</td>
+                    <td class="text-center">{{ $bnNum(index + 1) }}</td>
                     <td class="fw-bold text-dark">{{ item.item_title }}</td>
                     <td class="text-center font-monospace">{{ item.barcode }}</td>
                     <td class="text-center">{{ item.category }}</td>
                     <td class="text-center">{{ item.color || '-' }}</td>
                     <td class="text-center">{{ item.size || '-' }}</td>
-                    <td class="text-center fw-bold font-monospace">{{ item.total_qty }} {{ item.unit }}</td>
-                    <td class="text-end font-monospace">Tk. {{ formatMoney(item.avg_rate) }}</td>
-                    <td class="text-end font-monospace fw-bold text-primary">Tk. {{ formatMoney(item.total_amount) }}</td>
+                    <td class="text-center fw-bold font-monospace">{{ $bnNum(item.total_qty) }} {{ item.unit }}</td>
+                    <td class="text-end font-monospace">{{ $t('Tk.') }} {{ $bnNum(formatMoney(item.avg_rate)) }}</td>
+                    <td class="text-end font-monospace fw-bold text-primary">{{ $t('Tk.') }} {{ $bnNum(formatMoney(item.total_amount)) }}</td>
                   </tr>
                 </template>
                 <template v-else>
                   <tr>
                     <td colspan="9" class="text-center py-4 text-muted">
-                      No item sales records found for the selected period.
+                      {{ $t('No item sales records found for the selected period.') }}
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="item_breakdown.length > 0">
                 <tr>
-                  <td colspan="6" class="text-end">Total Items Sold:</td>
-                  <td class="text-center">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end">Total Amount:</td>
-                  <td class="text-end text-info">Tk. {{ formatMoney(summary.net_sales) }}</td>
+                  <td colspan="6" class="text-end">{{ $t('Total Items Sold') }}:</td>
+                  <td class="text-center">{{ $bnNum(summary.total_qty) }} {{ $t('pcs') }}</td>
+                  <td class="text-end">{{ $t('Total Amount') }}:</td>
+                  <td class="text-end text-info">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.net_sales)) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -414,33 +414,33 @@
               <tbody>
                 <template v-if="customer_breakdown.length > 0">
                   <tr v-for="(cust, index) in customer_breakdown" :key="index">
-                    <td class="text-center">{{ index + 1 }}</td>
+                    <td class="text-center">{{ $bnNum(index + 1) }}</td>
                     <td class="text-center font-monospace">{{ cust.clientid }}</td>
                     <td class="fw-bold text-dark">{{ cust.name }}</td>
-                    <td class="text-center font-monospace">{{ cust.mobile }}</td>
-                    <td class="text-center"><span class="badge bg-secondary font-monospace">{{ cust.invoices_count }}</span></td>
-                    <td class="text-end font-monospace fw-bold">Tk. {{ formatMoney(cust.total_purchased) }}</td>
-                    <td class="text-end font-monospace text-success">Tk. {{ formatMoney(cust.total_paid) }}</td>
+                    <td class="text-center font-monospace">{{ $bnNum(cust.mobile) }}</td>
+                    <td class="text-center"><span class="badge bg-secondary font-monospace">{{ $bnNum(cust.invoices_count) }}</span></td>
+                    <td class="text-end font-monospace fw-bold">{{ $t('Tk.') }} {{ $bnNum(formatMoney(cust.total_purchased)) }}</td>
+                    <td class="text-end font-monospace text-success">{{ $t('Tk.') }} {{ $bnNum(formatMoney(cust.total_paid)) }}</td>
                     <td class="text-end font-monospace fw-bold" :class="cust.total_due > 0 ? 'text-danger' : 'text-muted'">
-                      Tk. {{ formatMoney(cust.total_due) }}
+                      {{ $t('Tk.') }} {{ $bnNum(formatMoney(cust.total_due)) }}
                     </td>
                   </tr>
                 </template>
                 <template v-else>
                   <tr>
                     <td colspan="8" class="text-center py-4 text-muted">
-                      No customer sales records found.
+                      {{ $t('No customer sales records found.') }}
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="customer_breakdown.length > 0">
                 <tr>
-                  <td colspan="4" class="text-end">Grand Total:</td>
-                  <td class="text-center">{{ summary.total_invoices }}</td>
-                  <td class="text-end text-info">Tk. {{ formatMoney(summary.net_sales) }}</td>
-                  <td class="text-end text-success">Tk. {{ formatMoney(summary.total_paid) }}</td>
-                  <td class="text-end text-danger">Tk. {{ formatMoney(summary.total_due) }}</td>
+                  <td colspan="4" class="text-end">{{ $t('Grand Total') }}:</td>
+                  <td class="text-center">{{ $bnNum(summary.total_invoices) }}</td>
+                  <td class="text-end text-info">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.net_sales)) }}</td>
+                  <td class="text-end text-success">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_paid)) }}</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_due)) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -467,37 +467,37 @@
               <tbody>
                 <template v-if="daily_breakdown.length > 0">
                   <tr v-for="(day, index) in daily_breakdown" :key="index">
-                    <td class="text-center">{{ index + 1 }}</td>
-                    <td class="text-center font-monospace fw-bold text-dark">{{ day.formatted_date }}</td>
-                    <td class="text-center"><span class="badge bg-secondary font-monospace">{{ day.invoices_count }}</span></td>
-                    <td class="text-center font-monospace fw-bold">{{ day.total_qty }} pcs</td>
-                    <td class="text-end font-monospace">Tk. {{ formatMoney(day.gross_amount) }}</td>
-                    <td class="text-end font-monospace text-danger">Tk. {{ formatMoney(day.discount) }}</td>
-                    <td class="text-end font-monospace fw-bold text-primary">Tk. {{ formatMoney(day.net_sales) }}</td>
-                    <td class="text-end font-monospace text-success">Tk. {{ formatMoney(day.paid_amount) }}</td>
+                    <td class="text-center">{{ $bnNum(index + 1) }}</td>
+                    <td class="text-center font-monospace fw-bold text-dark">{{ $bnNum(day.formatted_date) }}</td>
+                    <td class="text-center"><span class="badge bg-secondary font-monospace">{{ $bnNum(day.invoices_count) }}</span></td>
+                    <td class="text-center font-monospace fw-bold">{{ $bnNum(day.total_qty) }} {{ $t('pcs') }}</td>
+                    <td class="text-end font-monospace">{{ $t('Tk.') }} {{ $bnNum(formatMoney(day.gross_amount)) }}</td>
+                    <td class="text-end font-monospace text-danger">{{ $t('Tk.') }} {{ $bnNum(formatMoney(day.discount)) }}</td>
+                    <td class="text-end font-monospace fw-bold text-primary">{{ $t('Tk.') }} {{ $bnNum(formatMoney(day.net_sales)) }}</td>
+                    <td class="text-end font-monospace text-success">{{ $t('Tk.') }} {{ $bnNum(formatMoney(day.paid_amount)) }}</td>
                     <td class="text-end font-monospace fw-bold" :class="day.due_amount > 0 ? 'text-danger' : 'text-muted'">
-                      Tk. {{ formatMoney(day.due_amount) }}
+                      {{ $t('Tk.') }} {{ $bnNum(formatMoney(day.due_amount)) }}
                     </td>
                   </tr>
                 </template>
                 <template v-else>
                   <tr>
                     <td colspan="9" class="text-center py-4 text-muted">
-                      No daily sales records found for this period.
+                      {{ $t('No daily sales records found for this period.') }}
                     </td>
                   </tr>
                 </template>
               </tbody>
               <tfoot class="table-dark font-monospace fw-bold" v-if="daily_breakdown.length > 0">
                 <tr>
-                  <td colspan="2" class="text-end">Total Summary:</td>
-                  <td class="text-center">{{ summary.total_invoices }}</td>
-                  <td class="text-center">{{ summary.total_qty }} pcs</td>
-                  <td class="text-end">Tk. {{ formatMoney(summary.gross_amount) }}</td>
-                  <td class="text-end text-warning">Tk. {{ formatMoney(summary.total_discount) }}</td>
-                  <td class="text-end text-info">Tk. {{ formatMoney(summary.net_sales) }}</td>
-                  <td class="text-end text-success">Tk. {{ formatMoney(summary.total_paid) }}</td>
-                  <td class="text-end text-danger">Tk. {{ formatMoney(summary.total_due) }}</td>
+                  <td colspan="2" class="text-end">{{ $t('Total Summary') }}:</td>
+                  <td class="text-center">{{ $bnNum(summary.total_invoices) }}</td>
+                  <td class="text-center">{{ $bnNum(summary.total_qty) }} {{ $t('pcs') }}</td>
+                  <td class="text-end">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.gross_amount)) }}</td>
+                  <td class="text-end text-warning">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_discount)) }}</td>
+                  <td class="text-end text-info">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.net_sales)) }}</td>
+                  <td class="text-end text-success">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_paid)) }}</td>
+                  <td class="text-end text-danger">{{ $t('Tk.') }} {{ $bnNum(formatMoney(summary.total_due)) }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -507,12 +507,12 @@
         <!-- 📌 Footer Note for Print -->
         <div class="mt-4 small text-muted d-flex justify-content-between align-items-center">
           <div>
-            <p class="mb-0">Report Generated By: <strong>{{ $root.admin ? $root.admin.name : 'System Admin' }}</strong></p>
-            <small>This report is automatically generated by QPOS ERP and is authentic without signature.</small>
+            <p class="mb-0">{{ $t('Report Generated By') }}: <strong>{{ $root.admin ? $root.admin.name : $t('System Admin') }}</strong></p>
+            <small>{{ $t('This report is automatically generated by QPOS ERP and is authentic without signature.') }}</small>
           </div>
           <div class="text-end">
             <div class="border-top pt-1 mt-4 px-4 d-inline-block text-center">
-              <strong>Authorized Signature</strong>
+              <strong>{{ $t('Authorized Signature') }}</strong>
             </div>
           </div>
         </div>
@@ -592,13 +592,21 @@ export default {
   computed: {
     dateRangeDisplay() {
       if (this.search_data.from_date && this.search_data.to_date) {
+        const from = moment(this.search_data.from_date).format("D MMM, YYYY");
+        const to = moment(this.search_data.to_date).format("D MMM, YYYY");
         return (
-          moment(this.search_data.from_date).format("D MMM, YYYY") +
-          " to " +
-          moment(this.search_data.to_date).format("D MMM, YYYY")
+          this.$bnNum(from) +
+          " " +
+          this.$t("to") +
+          " " +
+          this.$bnNum(to)
         );
       }
-      return "All Time";
+      return this.$t("All Time");
+    },
+
+    reportDateDisplay() {
+      return this.$bnNum(this.reportDate);
     },
 
     exportFileName() {
@@ -608,55 +616,55 @@ export default {
     exportData() {
       if (this.activeTab === "invoices") {
         return this.invoices.map((inv, idx) => ({
-          "SL": idx + 1,
-          "Invoice Date": inv.invoice_date,
-          "Invoice No": inv.invoice_no,
-          "Customer Name": inv.client ? inv.client.name : "Walk-in Customer",
-          "Customer Mobile": inv.client ? inv.client.mobile : "N/A",
-          "Subtotal Amount": inv.original_amount,
-          "Discount": inv.discount,
-          "VAT": inv.vat,
-          "Net Amount": inv.amount,
-          "Paid Amount": inv.paid_amount,
-          "Due Amount": inv.computed_due,
-          "Status": inv.computed_status,
+          [this.$t("SL")]: idx + 1,
+          [this.$t("Invoice Date")]: inv.invoice_date,
+          [this.$t("Invoice No")]: inv.invoice_no,
+          [this.$t("Customer Name")]: inv.client ? inv.client.name : this.$t("Walk-in Customer"),
+          [this.$t("Customer Mobile")]: inv.client ? inv.client.mobile : this.$t("N/A"),
+          [this.$t("Subtotal")]: inv.original_amount,
+          [this.$t("Discount")]: inv.discount,
+          [this.$t("VAT")]: inv.vat,
+          [this.$t("Net Total")]: inv.amount,
+          [this.$t("Paid Amount")]: inv.paid_amount,
+          [this.$t("Due Amount")]: inv.computed_due,
+          [this.$t("Status")]: this.$t(inv.computed_status),
         }));
       } else if (this.activeTab === "items") {
         return this.item_breakdown.map((item, idx) => ({
-          "SL": idx + 1,
-          "Item Name": item.item_title,
-          "Barcode": item.barcode,
-          "Category": item.category,
-          "Color": item.color || "-",
-          "Size": item.size || "-",
-          "Sold Quantity": item.total_qty,
-          "Unit": item.unit,
-          "Avg Selling Rate": item.avg_rate,
-          "Total Sales Amount": item.total_amount,
+          [this.$t("SL")]: idx + 1,
+          [this.$t("Item Title")]: item.item_title,
+          [this.$t("Barcode")]: item.barcode,
+          [this.$t("Category")]: item.category,
+          [this.$t("Color")]: item.color || "-",
+          [this.$t("Size")]: item.size || "-",
+          [this.$t("Sold Qty")]: item.total_qty,
+          [this.$t("Unit")]: item.unit,
+          [this.$t("Avg Selling Rate")]: item.avg_rate,
+          [this.$t("Total Sales Amount")]: item.total_amount,
         }));
       } else if (this.activeTab === "customers") {
         return this.customer_breakdown.map((c, idx) => ({
-          "SL": idx + 1,
-          "Customer ID": c.clientid,
-          "Customer Name": c.name,
-          "Mobile": c.mobile,
-          "Invoices Count": c.invoices_count,
-          "Total Purchased": c.total_purchased,
-          "Total Paid": c.total_paid,
-          "Total Due": c.total_due,
+          [this.$t("SL")]: idx + 1,
+          [this.$t("Customer ID")]: c.clientid,
+          [this.$t("Customer Name")]: c.name,
+          [this.$t("Mobile")]: c.mobile,
+          [this.$t("Invoices Count")]: c.invoices_count,
+          [this.$t("Total Purchased")]: c.total_purchased,
+          [this.$t("Total Paid")]: c.total_paid,
+          [this.$t("Total Due")]: c.total_due,
         }));
       } else if (this.activeTab === "daily") {
         return this.daily_breakdown.map((d, idx) => ({
-          "SL": idx + 1,
-          "Date": d.formatted_date,
-          "Invoices Count": d.invoices_count,
-          "Total Qty Sold": d.total_qty,
-          "Gross Amount": d.gross_amount,
-          "Discount": d.discount,
-          "VAT": d.vat,
-          "Net Sales": d.net_sales,
-          "Paid Amount": d.paid_amount,
-          "Due Amount": d.due_amount,
+          [this.$t("SL")]: idx + 1,
+          [this.$t("Date")]: d.formatted_date,
+          [this.$t("Invoices Count")]: d.invoices_count,
+          [this.$t("Total Qty Sold")]: d.total_qty,
+          [this.$t("Gross Amount")]: d.gross_amount,
+          [this.$t("Discount")]: d.discount,
+          [this.$t("VAT")]: d.vat,
+          [this.$t("Net Sales")]: d.net_sales,
+          [this.$t("Paid Amount")]: d.paid_amount,
+          [this.$t("Due Amount")]: d.due_amount,
         }));
       }
       return [];
@@ -733,7 +741,7 @@ export default {
         })
         .catch((err) => {
           console.error("Sales report load error:", err);
-          this.$toast("Failed to load sales report data", "error");
+          this.$toast(this.$t("Failed to load sales report data"), "error");
         })
         .finally(() => {
           this.$root.spinner = false;
@@ -752,13 +760,13 @@ export default {
     getTabTitle(tab) {
       switch (tab) {
         case "invoices":
-          return "Invoice-wise Breakdown (ইনভয়েস ভিত্তিক)";
+          return this.$t("Invoice-wise Breakdown");
         case "items":
-          return "Item-wise Breakdown (পণ্য ভিত্তিক)";
+          return this.$t("Item-wise Breakdown");
         case "customers":
-          return "Customer-wise Breakdown (গ্রাহক ভিত্তিক)";
+          return this.$t("Customer-wise Breakdown");
         case "daily":
-          return "Daily Sales Trend (দৈনিক বিক্রয়)";
+          return this.$t("Daily Sales Trend");
         default:
           return "";
       }
@@ -788,7 +796,7 @@ export default {
   },
 
   created() {
-    this.page_title = "Sales Report";
+    this.page_title = this.$t("Sales Report");
     this.fetchFilterOptions();
     this.getSalesReport();
   },

@@ -50,7 +50,7 @@
 
                 <!-- Remove date value button -->
                 <button
-                    v-if="modelValue"
+                    v-if="modelValue && !disabled && !readonly"
                     @click="$emit('update:modelValue', '')"
                     style="right: 10px"
                     type="button"

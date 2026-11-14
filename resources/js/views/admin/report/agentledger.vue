@@ -7,7 +7,7 @@
           label="full_name"
           :reduce="(obj) => obj.id"
           :options="agents"
-          placeholder="-- Select Agent --"
+          :placeholder="$t('-- Select Agent --')"
           :closeOnSelect="true"
           @input="search"
         ></v-select>
@@ -43,7 +43,7 @@
             <i class="fas fa-book-open me-1"></i> {{ $t('Agent Ledger Statement') }}
           </span>
           <span v-if="datas.agent" class="text-muted small font-monospace">
-            Period: <strong>{{ dateRange }}</strong>
+            {{ $t('Period') }}: <strong>{{ dateRange }}</strong>
           </span>
         </div>
         <div v-if="datas.agent" class="print_action text-end">
@@ -90,7 +90,7 @@
                       <i class="fas fa-map-marker-alt me-1 text-light"></i> {{ datas.agent.address }}
                     </span>
                     <span>
-                      <i class="far fa-calendar-alt me-1"></i> As of: {{ reportDate }}
+                      <i class="far fa-calendar-alt me-1"></i> {{ $t('As of') }}: {{ reportDate }}
                     </span>
                   </div>
                 </div>
@@ -349,7 +349,7 @@ export default {
   data() {
     return {
       model: model,
-      page_title: "",
+      page_title: "Agent Ledger",
       reportDate: moment().format("D MMMM, YYYY"),
       json_fields: json_fields,
       search_data: {
@@ -386,7 +386,7 @@ export default {
       if (this.search_data.from_date && this.search_data.to_date) {
         return (
           moment(this.search_data.from_date).format("D MMM, YYYY") +
-          " to " +
+          " " + this.$t("to") + " " +
           moment(this.search_data.to_date).format("D MMM, YYYY")
         );
       }

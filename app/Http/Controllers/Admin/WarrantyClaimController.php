@@ -35,6 +35,7 @@ class WarrantyClaimController extends BaseController
             'color:id,title',
             'size:id,title',
             'client:id,name,mobile',
+            'supplier:id,org_name,name,mobile',
             'invoice:id,invoice_no,invoice_date',
             'invoiceDetail:id,invoice_id,warranty_type,warranty_period,warranty_expires_at,serial_no',
             'creator:id,full_name,email',
@@ -47,6 +48,12 @@ class WarrantyClaimController extends BaseController
                   ->orWhere('serial_no', 'like', "%{$keyword}%")
                   ->orWhere('customer_mobile', 'like', "%{$keyword}%")
                   ->orWhere('customer_name', 'like', "%{$keyword}%")
+                  ->orWhere('supplier_name', 'like', "%{$keyword}%")
+                  ->orWhereHas('supplier', function ($sq) use ($keyword) {
+                      $sq->where('org_name', 'like', "%{$keyword}%")
+                         ->orWhere('name', 'like', "%{$keyword}%")
+                         ->orWhere('mobile', 'like', "%{$keyword}%");
+                  })
                   ->orWhereHas('item', function ($iq) use ($keyword) {
                       $iq->where('title', 'like', "%{$keyword}%")
                          ->orWhere('barcode', 'like', "%{$keyword}%");
@@ -152,6 +159,7 @@ class WarrantyClaimController extends BaseController
 
         // 1.1 If not found directly by serial, check if user provided an Invoice No / ID
         if (!$invoiceDetail) {
+            $cleanInvNo = ltrim($serialNo, '#');
             $invoiceDetail = InvoiceDetails::with([
                 'invoice.client',
                 'item.category:id,title',
@@ -193,52 +201,48 @@ class WarrantyClaimController extends BaseController
             }
         }
 
-        // 2. If not sold, check if it exists in Purchase (unsold inventory)
+        // 2. If not sold, check if it exists in Purchase / GRN (unsold inventory)
         if (!$invoiceDetail) {
-            $purchaseDetail = PurchaseDetail::with([
-                'purchase.supplier',
-                'item.category:id,title',
-                'color:id,title',
-                'size:id,title',
-            ])
-            ->where('serial_no', 'like', "%{$serialNo}%")
-            ->latest('id')
-            ->first();
+            $sourcing = $this->findSourcingRecord($serialNo);
 
-            if ($purchaseDetail) {
-                $pItem = $purchaseDetail->item;
-                $pWarrantyType = !empty($purchaseDetail->warranty_type) && $purchaseDetail->warranty_type !== 'none'
-                    ? $purchaseDetail->warranty_type
-                    : ($pItem && !empty($pItem->warranty_type) ? $pItem->warranty_type : 'warranty');
-                $pWarrantyPeriod = !empty($purchaseDetail->warranty_period)
-                    ? $purchaseDetail->warranty_period
-                    : ($pItem && !empty($pItem->warranty_period) ? $pItem->warranty_period : '');
-
+            if ($sourcing && $sourcing['found']) {
                 return response()->json([
                     'found' => true,
                     'sold' => false,
                     'eligible' => false,
                     'status_type' => 'unsold',
-                    'message' => 'এই সিরিয়াল নম্বরটি ক্রয় করা হয়েছে তবে এখনও বিক্রয় (Sold) করা হয়নি!',
+                    'message' => 'এই সিরিয়াল নম্বরটি ক্রয় করা হয়েছে তবে এখনও কোনো কাস্টমারের কাছে বিক্রয় (Sold) করা হয়নি!',
                     'serial_no' => $serialNo,
                     'invoice_id' => null,
                     'invoice_no' => 'N/A',
-                    'item_id' => $pItem ? $pItem->id : null,
-                    'item_title' => $pItem ? $pItem->title : 'Item',
-                    'item_barcode' => $pItem ? $pItem->barcode : '',
-                    'color_id' => $purchaseDetail->color_id,
-                    'color_title' => $purchaseDetail->color ? $purchaseDetail->color->title : null,
-                    'size_id' => $purchaseDetail->size_id,
-                    'size_title' => $purchaseDetail->size ? $purchaseDetail->size->title : null,
-                    'warranty_type' => $pWarrantyType,
-                    'warranty_period' => $pWarrantyPeriod,
+                    'item_id' => $sourcing['item_id'],
+                    'item_title' => $sourcing['item_title'],
+                    'item_barcode' => $sourcing['item_barcode'],
+                    'color_id' => $sourcing['color_id'],
+                    'color_title' => $sourcing['color_title'],
+                    'size_id' => $sourcing['size_id'],
+                    'size_title' => $sourcing['size_title'],
+                    'warranty_type' => $sourcing['supplier_warranty_type'] ?: 'warranty',
+                    'warranty_period' => $sourcing['supplier_warranty_period'] ?: '',
+                    'supplier_info' => $sourcing,
+                    'supplier_id' => $sourcing['supplier_id'],
+                    'supplier_name' => $sourcing['supplier_name'],
+                    'purchase_id' => $sourcing['purchase_id'],
+                    'purchase_no' => $sourcing['purchase_no'],
+                    'purchase_date' => $sourcing['purchase_date'],
+                    'supplier_warranty_period' => $sourcing['supplier_warranty_period'],
+                    'supplier_warranty_expiry_date' => $sourcing['supplier_warranty_expiry_date'],
+                    'supplier_remaining_days' => $sourcing['supplier_remaining_days'],
+                    'supplier_expired_days' => $sourcing['supplier_expired_days'],
+                    'supplier_warranty_status' => $sourcing['supplier_warranty_status'],
                     'purchase_info' => [
-                        'purchase_no' => $purchaseDetail->purchase ? $purchaseDetail->purchase->id : 'N/A',
-                        'purchase_date' => $purchaseDetail->purchase ? $purchaseDetail->purchase->purchase_date : 'N/A',
-                        'supplier' => $purchaseDetail->purchase && $purchaseDetail->purchase->supplier ? $purchaseDetail->purchase->supplier->org_name : 'N/A',
-                        'item_title' => $purchaseDetail->item ? $purchaseDetail->item->title : 'Item',
-                        'color' => $purchaseDetail->color ? $purchaseDetail->color->title : null,
-                        'size' => $purchaseDetail->size ? $purchaseDetail->size->title : null,
+                        'purchase_no' => $sourcing['purchase_no'],
+                        'purchase_date' => $sourcing['purchase_date_formatted'],
+                        'supplier' => $sourcing['supplier_name'],
+                        'supplier_mobile' => $sourcing['supplier_mobile'],
+                        'item_title' => $sourcing['item_title'],
+                        'color' => $sourcing['color_title'],
+                        'size' => $sourcing['size_title'],
                     ]
                 ]);
             }
@@ -252,7 +256,7 @@ class WarrantyClaimController extends BaseController
             ]);
         }
 
-        // 3. Serial is sold. Now analyze warranty policy & calculate expiration
+        // 3. Serial is sold. Now analyze customer warranty policy & calculate expiration
         $item = $invoiceDetail->item;
         $invoice = $invoiceDetail->invoice;
         $client = $invoice ? $invoice->client : null;
@@ -306,7 +310,7 @@ class WarrantyClaimController extends BaseController
         if ($warrantyType === 'none' || empty($warrantyPeriod)) {
             $statusType = 'no_warranty';
             $isEligible = false;
-            $message = 'এই পণ্যটিতে কোনো ওয়ারেন্টি বা গ্যারান্টি সুবিধা নেই।';
+            $message = 'এই পণ্যটিতে কোনো কাস্টমার ওয়ারেন্টি বা গ্যারান্টি সুবিধা নেই।';
         } else {
             $today = Carbon::today();
 
@@ -363,6 +367,9 @@ class WarrantyClaimController extends BaseController
                 });
         }
 
+        // ⭐️ Priority 4: Look up Supplier Sourcing & Purchase Warranty Details for this sold item
+        $sourcing = $this->findSourcingRecord($matchedSerial, $invoiceDetail->item_id, $invoiceDetail->color_id, $invoiceDetail->size_id);
+
         return response()->json([
             'found' => true,
             'sold' => true,
@@ -392,7 +399,251 @@ class WarrantyClaimController extends BaseController
             'expired_days' => $expiredDays,
             'existing_claims' => $existingClaims,
             'invoice_items' => $invoiceItems,
+            'supplier_info' => $sourcing,
+            'supplier_id' => $sourcing ? $sourcing['supplier_id'] : null,
+            'supplier_name' => $sourcing ? $sourcing['supplier_name'] : null,
+            'purchase_id' => $sourcing ? $sourcing['purchase_id'] : null,
+            'purchase_no' => $sourcing ? $sourcing['purchase_no'] : null,
+            'purchase_date' => $sourcing ? $sourcing['purchase_date'] : null,
+            'supplier_warranty_period' => $sourcing ? $sourcing['supplier_warranty_period'] : null,
+            'supplier_warranty_expiry_date' => $sourcing ? $sourcing['supplier_warranty_expiry_date'] : null,
+            'supplier_remaining_days' => $sourcing ? $sourcing['supplier_remaining_days'] : 0,
+            'supplier_expired_days' => $sourcing ? $sourcing['supplier_expired_days'] : 0,
+            'supplier_warranty_status' => $sourcing ? $sourcing['supplier_warranty_status'] : 'no_warranty',
         ]);
+    }
+
+    /**
+     * Find purchase sourcing and supplier warranty record for a serial or item.
+     */
+    private function findSourcingRecord($serialNo, $itemId = null, $colorId = null, $sizeId = null)
+    {
+        $cleanSerial = trim((string)$serialNo);
+        $pdRecord = null;
+        $grnRecord = null;
+
+        // 1. Check PurchaseDetail by serial
+        if (!empty($cleanSerial)) {
+            $pdCandidates = PurchaseDetail::with(['purchase.supplier', 'item', 'color:id,title', 'size:id,title'])
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->where(function ($q) use ($cleanSerial) {
+                    $q->where('serial_no', $cleanSerial)
+                      ->orWhere('serial_no', 'like', "%{$cleanSerial}%");
+                })
+                ->latest('id')
+                ->get();
+
+            foreach ($pdCandidates as $cand) {
+                $serials = preg_split('/[\r\n,]+/', $cand->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($serials as $s) {
+                    if (trim($s) === $cleanSerial) {
+                        $pdRecord = $cand;
+                        break 2;
+                    }
+                }
+            }
+
+            if (!$pdRecord && $pdCandidates->isNotEmpty()) {
+                $pdRecord = $pdCandidates->first();
+            }
+        }
+
+        // 2. Check GrnDetail by serial
+        if (!empty($cleanSerial) && \Illuminate\Support\Facades\Schema::hasTable('grn_details')) {
+            $grnCandidates = \App\Models\GrnDetail::with(['grn.supplier', 'purchase_detail.purchase.supplier', 'item', 'color:id,title', 'size:id,title'])
+                ->whereNotNull('serial_no')
+                ->where('serial_no', '!=', '')
+                ->where(function ($q) use ($cleanSerial) {
+                    $q->where('serial_no', $cleanSerial)
+                      ->orWhere('serial_no', 'like', "%{$cleanSerial}%");
+                })
+                ->latest('id')
+                ->get();
+
+            foreach ($grnCandidates as $gcand) {
+                $serials = preg_split('/[\r\n,]+/', $gcand->serial_no, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($serials as $s) {
+                    if (trim($s) === $cleanSerial) {
+                        $grnRecord = $gcand;
+                        break 2;
+                    }
+                }
+            }
+
+            if (!$grnRecord && $grnCandidates->isNotEmpty()) {
+                $grnRecord = $grnCandidates->first();
+            }
+        }
+
+        // 3. Fallback: Search by item_id (and color_id, size_id) if not found by serial
+        if (!$pdRecord && !$grnRecord && $itemId) {
+            $pQuery = PurchaseDetail::with(['purchase.supplier', 'item', 'color:id,title', 'size:id,title'])
+                ->where('item_id', $itemId);
+            if ($colorId) $pQuery->where('color_id', $colorId);
+            if ($sizeId) $pQuery->where('size_id', $sizeId);
+            $pdRecord = $pQuery->latest('id')->first();
+
+            if (!$pdRecord && \Illuminate\Support\Facades\Schema::hasTable('grn_details')) {
+                $gQuery = \App\Models\GrnDetail::with(['grn.supplier', 'purchase_detail.purchase.supplier', 'item', 'color:id,title', 'size:id,title'])
+                    ->where('item_id', $itemId);
+                if ($colorId) $gQuery->where('color_id', $colorId);
+                if ($sizeId) $gQuery->where('size_id', $sizeId);
+                $grnRecord = $gQuery->latest('id')->first();
+            }
+        }
+
+        if (!$pdRecord && !$grnRecord) {
+            return null;
+        }
+
+        // Extract Supplier model
+        $supplier = null;
+        if ($pdRecord && $pdRecord->purchase && $pdRecord->purchase->supplier) {
+            $supplier = $pdRecord->purchase->supplier;
+        } elseif ($grnRecord && $grnRecord->grn && $grnRecord->grn->supplier) {
+            $supplier = $grnRecord->grn->supplier;
+        } elseif ($grnRecord && $grnRecord->purchase_detail && $grnRecord->purchase_detail->purchase && $grnRecord->purchase_detail->purchase->supplier) {
+            $supplier = $grnRecord->purchase_detail->purchase->supplier;
+        }
+
+        // Extract Purchase & GRN models and Dates
+        $purchase = $pdRecord ? $pdRecord->purchase : ($grnRecord && $grnRecord->purchase_detail ? $grnRecord->purchase_detail->purchase : null);
+        $grn = $grnRecord ? $grnRecord->grn : null;
+
+        $purchaseDateRaw = null;
+        if ($purchase) {
+            $purchaseDateRaw = $purchase->getRawOriginal('purchase_date') ?: $purchase->purchase_date;
+        } elseif ($grn) {
+            $purchaseDateRaw = $grn->getRawOriginal('grn_date') ?: $grn->grn_date;
+        }
+
+        $purchaseDate = null;
+        $purchaseDateFormatted = 'N/A';
+        if ($purchaseDateRaw) {
+            try {
+                $pCarbon = Carbon::parse($purchaseDateRaw);
+                $purchaseDate = $pCarbon->format('Y-m-d');
+                $purchaseDateFormatted = $pCarbon->format('d M, Y');
+            } catch (\Exception $e) {
+                $purchaseDate = null;
+            }
+        }
+
+        // Determine Item reference
+        $item = ($pdRecord && $pdRecord->item) ? $pdRecord->item : (($grnRecord && $grnRecord->item) ? $grnRecord->item : null);
+
+        // Supplier Warranty Terms:
+        // Priority: GrnDetail warranty columns, then PurchaseDetail warranty columns, then Item default warranty
+        $supplierWarrantyType = 'none';
+        if ($grnRecord && !empty($grnRecord->warranty_type) && $grnRecord->warranty_type !== 'none') {
+            $supplierWarrantyType = $grnRecord->warranty_type;
+        } elseif ($pdRecord && !empty($pdRecord->warranty_type) && $pdRecord->warranty_type !== 'none') {
+            $supplierWarrantyType = $pdRecord->warranty_type;
+        } elseif ($item && !empty($item->warranty_type) && $item->warranty_type !== 'none') {
+            $supplierWarrantyType = $item->warranty_type;
+        }
+
+        $supplierWarrantyPeriod = '';
+        if ($grnRecord && !empty($grnRecord->warranty_period)) {
+            $supplierWarrantyPeriod = trim($grnRecord->warranty_period);
+        } elseif ($grnRecord && !empty($grnRecord->warranty_duration)) {
+            $supplierWarrantyPeriod = trim($grnRecord->warranty_duration) . ' Months';
+        } elseif ($pdRecord && !empty($pdRecord->warranty_duration)) {
+            $supplierWarrantyPeriod = trim($pdRecord->warranty_duration) . ' Months';
+        } elseif ($item && !empty($item->warranty_period)) {
+            $supplierWarrantyPeriod = trim($item->warranty_period);
+        }
+
+        if ($supplierWarrantyType === 'none' && !empty($supplierWarrantyPeriod)) {
+            $supplierWarrantyType = (stripos($supplierWarrantyPeriod, 'guarantee') !== false) ? 'guarantee' : 'warranty';
+        }
+
+        // Calculate Supplier Warranty Expiry Date
+        $supplierExpiryDate = null;
+        if ($grnRecord && !empty($grnRecord->warranty_expires_at)) {
+            try {
+                $supplierExpiryDate = Carbon::parse($grnRecord->warranty_expires_at);
+            } catch (\Exception $e) {
+                $supplierExpiryDate = null;
+            }
+        } elseif ($pdRecord && !empty($pdRecord->warranty_expires_at)) {
+            try {
+                $supplierExpiryDate = Carbon::parse($pdRecord->warranty_expires_at);
+            } catch (\Exception $e) {
+                $supplierExpiryDate = null;
+            }
+        }
+
+        if (!$supplierExpiryDate && !empty($supplierWarrantyPeriod) && $purchaseDate) {
+            $supplierExpiryDate = $this->calculateExpiryDate($purchaseDate, $supplierWarrantyPeriod);
+        }
+
+        // Expiry status and remaining / expired days calculation
+        $today = Carbon::today();
+        $supplierRemainingDays = 0;
+        $supplierExpiredDays = 0;
+        $supplierWarrantyStatus = 'no_warranty';
+        $supplierWarrantyStatusText = 'ওয়ারেন্টি পলিসি নেই';
+
+        if (empty($supplierWarrantyPeriod) || $supplierWarrantyType === 'none') {
+            $supplierWarrantyStatus = 'no_warranty';
+            $supplierWarrantyStatusText = 'ওয়ারেন্টি পলিসি নেই';
+        } elseif ($supplierExpiryDate) {
+            if ($today->lte($supplierExpiryDate)) {
+                $supplierRemainingDays = $today->diffInDays($supplierExpiryDate, false);
+                $supplierWarrantyStatus = 'active';
+                $covLabel = ($supplierWarrantyType === 'guarantee') ? 'গ্যারান্টি' : 'ওয়ারেন্টি';
+                $supplierWarrantyStatusText = "সাপ্লায়ার {$covLabel} সক্রিয় ({$supplierRemainingDays} দিন বাকি)";
+            } else {
+                $supplierExpiredDays = $supplierExpiryDate->diffInDays($today, false);
+                $supplierWarrantyStatus = 'expired';
+                $covLabel = ($supplierWarrantyType === 'guarantee') ? 'গ্যারান্টি' : 'ওয়ারেন্টি';
+                $supplierWarrantyStatusText = "সাপ্লায়ার {$covLabel}র মেয়াদ উত্তীর্ণ ({$supplierExpiredDays} দিন আগে)";
+            }
+        } else {
+            $supplierWarrantyStatus = 'active';
+            $supplierWarrantyStatusText = 'সাপ্লায়ার ওয়ারেন্টি সক্রিয়';
+        }
+
+        $purchaseNo = $purchase ? ($purchase->invoiceno ?? ('PUR-' . $purchase->id)) : ($grn ? ($grn->grn_no ?? ('GRN-' . $grn->id)) : 'N/A');
+        $grnNo = $grn ? $grn->grn_no : null;
+        $challanNo = ($grn && $grn->challan_no) ? $grn->challan_no : null;
+        $purchasePrice = $pdRecord ? $pdRecord->price : ($grnRecord ? $grnRecord->unit_price : 0);
+
+        return [
+            'found' => true,
+            'item_id' => $item ? $item->id : null,
+            'item_title' => $item ? $item->title : 'Item',
+            'item_barcode' => $item ? $item->barcode : '',
+            'color_id' => $pdRecord ? $pdRecord->color_id : ($grnRecord ? $grnRecord->color_id : null),
+            'color_title' => ($pdRecord && $pdRecord->color) ? $pdRecord->color->title : (($grnRecord && $grnRecord->color) ? $grnRecord->color->title : null),
+            'size_id' => $pdRecord ? $pdRecord->size_id : ($grnRecord ? $grnRecord->size_id : null),
+            'size_title' => ($pdRecord && $pdRecord->size) ? $pdRecord->size->title : (($grnRecord && $grnRecord->size) ? $grnRecord->size->title : null),
+            'supplier_id' => $supplier ? $supplier->id : null,
+            'supplier_name' => $supplier ? ($supplier->org_name ?: $supplier->name) : 'N/A',
+            'supplier_code' => $supplier ? $supplier->supid : null,
+            'supplier_contact_person' => $supplier ? $supplier->name : null,
+            'supplier_mobile' => $supplier ? $supplier->mobile : null,
+            'supplier_email' => $supplier ? $supplier->email : null,
+            'supplier_address' => $supplier ? $supplier->address : null,
+            'purchase_id' => $purchase ? $purchase->id : null,
+            'purchase_no' => $purchaseNo,
+            'purchase_date' => $purchaseDate,
+            'purchase_date_formatted' => $purchaseDateFormatted,
+            'grn_id' => $grn ? $grn->id : null,
+            'grn_no' => $grnNo,
+            'challan_no' => $challanNo,
+            'purchase_price' => $purchasePrice,
+            'supplier_warranty_type' => $supplierWarrantyType,
+            'supplier_warranty_period' => $supplierWarrantyPeriod,
+            'supplier_warranty_expiry_date' => $supplierExpiryDate ? $supplierExpiryDate->format('Y-m-d') : null,
+            'supplier_remaining_days' => $supplierRemainingDays,
+            'supplier_expired_days' => $supplierExpiredDays,
+            'supplier_warranty_status' => $supplierWarrantyStatus,
+            'supplier_warranty_status_text' => $supplierWarrantyStatusText,
+            'can_claim_from_vendor' => ($supplierWarrantyStatus === 'active'),
+        ];
     }
 
     /**
@@ -483,7 +734,7 @@ class WarrantyClaimController extends BaseController
             }
 
             // Sanitize all date fields to Y-m-d or null
-            $dateFields = ['sale_date', 'claim_date', 'warranty_expiry_date', 'expected_delivery_date'];
+            $dateFields = ['sale_date', 'claim_date', 'warranty_expiry_date', 'expected_delivery_date', 'purchase_date', 'supplier_warranty_expiry_date'];
             foreach ($dateFields as $field) {
                 if (!empty($data[$field])) {
                     try {
@@ -493,6 +744,20 @@ class WarrantyClaimController extends BaseController
                     }
                 } else {
                     $data[$field] = null;
+                }
+            }
+
+            // Auto-backfill supplier sourcing if not provided
+            if (empty($data['supplier_id']) && (!empty($data['serial_no']) || !empty($data['item_id']))) {
+                $src = $this->findSourcingRecord($data['serial_no'] ?? '', $data['item_id'] ?? null, $data['color_id'] ?? null, $data['size_id'] ?? null);
+                if ($src && $src['found']) {
+                    if (empty($data['supplier_id'])) $data['supplier_id'] = $src['supplier_id'];
+                    if (empty($data['supplier_name'])) $data['supplier_name'] = $src['supplier_name'];
+                    if (empty($data['purchase_id'])) $data['purchase_id'] = $src['purchase_id'];
+                    if (empty($data['purchase_no'])) $data['purchase_no'] = $src['purchase_no'];
+                    if (empty($data['purchase_date'])) $data['purchase_date'] = $src['purchase_date'];
+                    if (empty($data['supplier_warranty_period'])) $data['supplier_warranty_period'] = $src['supplier_warranty_period'];
+                    if (empty($data['supplier_warranty_expiry_date'])) $data['supplier_warranty_expiry_date'] = $src['supplier_warranty_expiry_date'];
                 }
             }
 
@@ -536,6 +801,8 @@ class WarrantyClaimController extends BaseController
             'color',
             'size',
             'client',
+            'supplier',
+            'purchase.supplier',
             'invoice.client',
             'invoiceDetail',
             'expense.expense_details.account',
@@ -564,7 +831,7 @@ class WarrantyClaimController extends BaseController
             }
 
             // Sanitize all date fields to Y-m-d or null
-            $dateFields = ['sale_date', 'claim_date', 'warranty_expiry_date', 'expected_delivery_date'];
+            $dateFields = ['sale_date', 'claim_date', 'warranty_expiry_date', 'expected_delivery_date', 'purchase_date', 'supplier_warranty_expiry_date'];
             foreach ($dateFields as $field) {
                 if (!empty($data[$field])) {
                     try {

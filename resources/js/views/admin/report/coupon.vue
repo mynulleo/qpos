@@ -23,7 +23,7 @@
           label="name"
           :reduce="(obj) => obj.id"
           :options="clients"
-          placeholder="-- All Clients --"
+          :placeholder="$t('-- All Clients --')"
           :closeOnSelect="true">
           <template v-slot:option="option">
             <div class="d-flex justify-content-between align-items-center">
@@ -73,12 +73,12 @@
               class="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
               :data="exportData"
               :name="exportFileName">
-              <i class="fas fa-file-excel"></i> Export Excel
+              <i class="fas fa-file-excel"></i> {{ $t('Export Excel') }}
             </download-excel>
             <button class="p_btn btn btn-sm btn-dark d-inline-flex align-items-center gap-1"
               data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print Report"
               v-x-tooltip @click="print('printArea', model)">
-              <i class="fas fa-print"></i> Print Report
+              <i class="fas fa-print"></i> {{ $t('Print Report') }}
             </button>
           </div>
         </div>
@@ -92,12 +92,12 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-success text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Total Points Earned</div>
-                  <div class="fs-4 fw-bold mt-1">{{ formatNumber(summaryData.total_earned_all_time) }} Pts</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Total Points Earned') }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ formatNumber(summaryData.total_earned_all_time) }} {{ $t('Pts') }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-coins"></i></div>
               </div>
-              <small class="text-white-50 mt-2 d-block">Period Earned: {{ formatNumber(summaryData.period_earned) }} Pts</small>
+              <small class="text-white-50 mt-2 d-block">{{ $t('Period Earned') }}: {{ formatNumber(summaryData.period_earned) }} {{ $t('Pts') }}</small>
             </div>
           </div>
 
@@ -106,12 +106,12 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-warning text-dark h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-muted small fw-bold text-uppercase">Total Points Redeemed</div>
-                  <div class="fs-4 fw-bold mt-1 text-dark">{{ formatNumber(summaryData.total_redeemed_all_time) }} Pts</div>
+                  <div class="text-muted small fw-bold text-uppercase">{{ $t('Total Points Redeemed') }}</div>
+                  <div class="fs-4 fw-bold mt-1 text-dark">{{ formatNumber(summaryData.total_redeemed_all_time) }} {{ $t('Pts') }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-hand-holding-usd text-dark"></i></div>
               </div>
-              <small class="text-muted mt-2 d-block">Period Redeemed: {{ formatNumber(summaryData.period_redeemed) }} Pts</small>
+              <small class="text-muted mt-2 d-block">{{ $t('Period Redeemed') }}: {{ formatNumber(summaryData.period_redeemed) }} {{ $t('Pts') }}</small>
             </div>
           </div>
 
@@ -120,12 +120,12 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-primary text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Active Points Balance</div>
-                  <div class="fs-4 fw-bold mt-1">{{ formatNumber(summaryData.total_active_points) }} Pts</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Active Points Balance') }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ formatNumber(summaryData.total_active_points) }} {{ $t('Pts') }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-wallet"></i></div>
               </div>
-              <small class="text-white-50 mt-2 d-block">Customer Outstanding Balance</small>
+              <small class="text-white-50 mt-2 d-block">{{ $t('Customer Outstanding Balance') }}</small>
             </div>
           </div>
 
@@ -134,12 +134,12 @@
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-gradient-info text-white h-100">
               <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <div class="text-white-50 small fw-bold text-uppercase">Points Liability Value</div>
-                  <div class="fs-4 fw-bold mt-1">Tk. {{ formatMoney(summaryData.total_liability_tk) }}</div>
+                  <div class="text-white-50 small fw-bold text-uppercase">{{ $t('Points Liability Value') }}</div>
+                  <div class="fs-4 fw-bold mt-1">{{ $t('Tk.') }} {{ $bnNum ? $bnNum(formatMoney(summaryData.total_liability_tk)) : formatMoney(summaryData.total_liability_tk) }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-tag"></i></div>
               </div>
-              <small class="text-white-50 mt-2 d-block">Equivalent Cash Value</small>
+              <small class="text-white-50 mt-2 d-block">{{ $t('Equivalent Cash Value') }}</small>
             </div>
           </div>
         </div>
@@ -151,23 +151,23 @@
         <div class="text-center mb-3 report-title d-none d-print-block">
           <h3 class="fw-bold mb-0">{{ $root.site ? $root.site.title : 'QPOS Store' }}</h3>
           <p class="mb-1 small">{{ $root.site ? $root.site.address : '' }}</p>
-          <p class="small text-muted">Phone: {{ $root.site ? $root.site.mobile1 : '' }} | Email: {{ $root.site ? $root.site.contact_email : '' }}</p>
-          <h5 class="fw-bold mt-2 text-decoration-underline">Coupon & Customer Loyalty Points Statement</h5>
+          <p class="small text-muted">{{ $t('Phone') }}: {{ $root.site ? $root.site.mobile1 : '' }} | {{ $t('Email') }}: {{ $root.site ? $root.site.contact_email : '' }}</p>
+          <h5 class="fw-bold mt-2 text-decoration-underline">{{ $t('Coupon & Customer Loyalty Points Statement') }}</h5>
         </div>
 
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
           <div>
             <h6 class="fw-bold mb-1 text-dark">
-              Transaction Details
-              <span class="badge bg-secondary font-monospace ms-2">{{ datas.records ? datas.records.length : 0 }} Records</span>
+              {{ $t('Transaction Details') }}
+              <span class="badge bg-secondary font-monospace ms-2">{{ datas.records ? datas.records.length : 0 }} {{ $t('Records') }}</span>
             </h6>
             <div class="small text-muted" v-if="datas.client">
-              Client: <strong>{{ datas.client.name }}</strong> ({{ datas.client.mobile }}) | Available Balance: <strong>{{ formatNumber(datas.client.points_balance) }} Pts</strong>
+              {{ $t('Client') }}: <strong>{{ datas.client.name }}</strong> ({{ datas.client.mobile }}) | {{ $t('Available Balance') }}: <strong>{{ formatNumber(datas.client.points_balance) }} Pts</strong>
             </div>
           </div>
           <div class="text-end small text-muted">
-            <div>Period: <strong>{{ dateRangeLabel }}</strong></div>
-            <div>Generated: <strong>{{ currentDate }}</strong></div>
+            <div>{{ $t('Period') }}: <strong>{{ dateRangeLabel }}</strong></div>
+            <div>{{ $t('Generated') }}: <strong>{{ currentDate }}</strong></div>
           </div>
         </div>
 
@@ -182,7 +182,7 @@
                 <th width="12%" class="text-center">{{ $t('Type') }}</th>
                 <th width="10%" class="text-end">{{ $t('Points In') }}</th>
                 <th width="10%" class="text-end">{{ $t('Points Out') }}</th>
-                <th width="11%" class="text-end">Equivalent (Tk.)</th>
+                <th width="11%" class="text-end">{{ $t('Equivalent') }} ({{ $t('Tk.') }})</th>
                 <th width="12%">{{ $t('Invoice / Ref') }}</th>
                 <th width="10%" class="text-end">{{ $t('Balance After') }}</th>
               </tr>
@@ -209,7 +209,7 @@
                   {{ Number(record.points_out) > 0 ? '-' + formatNumber(record.points_out) : '-' }}
                 </td>
                 <td class="text-end font-monospace fw-bold text-dark">
-                  Tk. {{ formatMoney(record.amount_equivalent || 0) }}
+                  {{ $t('Tk.') }} {{ formatMoney(record.amount_equivalent || 0) }}
                 </td>
                 <td>
                   <div class="font-monospace small fw-bold text-primary" v-if="record.invoice">
@@ -218,23 +218,23 @@
                   <small class="text-muted d-block" style="font-size: 11px;">{{ record.description || '-' }}</small>
                 </td>
                 <td class="text-end font-monospace fw-bold text-dark">
-                  {{ formatNumber(record.balance) }} Pts
+                  {{ formatNumber(record.balance) }} {{ $t('Pts') }}
                 </td>
               </tr>
               <tr v-if="!datas.records || datas.records.length === 0">
                 <td colspan="9" class="text-center py-5 text-muted">
                   <i class="fas fa-receipt fa-3x mb-3 text-secondary opacity-25 d-block"></i>
-                  <h6 class="fw-bold text-secondary">No Coupon or Point Transactions Found</h6>
-                  <p class="small text-muted mb-0">Try changing the date range or client filter above.</p>
+                  <h6 class="fw-bold text-secondary">{{ $t('No Coupon or Point Transactions Found') }}</h6>
+                  <p class="small text-muted mb-0">{{ $t('Try changing the date range or client filter above.') }}</p>
                 </td>
               </tr>
             </tbody>
             <tfoot class="table-light fw-bold" v-if="datas.records && datas.records.length > 0">
               <tr>
-                <td colspan="4" class="text-end text-uppercase">Period Total:</td>
-                <td class="text-end text-success font-monospace">+{{ formatNumber(summaryData.period_earned) }} Pts</td>
-                <td class="text-end text-danger font-monospace">-{{ formatNumber(summaryData.period_redeemed) }} Pts</td>
-                <td class="text-end font-monospace">Tk. {{ formatMoney(summaryData.period_equivalent_tk) }}</td>
+                <td colspan="4" class="text-end text-uppercase">{{ $t('Period Total:') }}</td>
+                <td class="text-end text-success font-monospace">+{{ formatNumber(summaryData.period_earned) }} {{ $t('Pts') }}</td>
+                <td class="text-end text-danger font-monospace">-{{ formatNumber(summaryData.period_redeemed) }} {{ $t('Pts') }}</td>
+                <td class="text-end font-monospace">{{ $t('Tk.') }} {{ formatMoney(summaryData.period_equivalent_tk) }}</td>
                 <td colspan="2"></td>
               </tr>
             </tfoot>
@@ -245,12 +245,12 @@
         <div class="mt-4 pt-3 border-top small text-muted d-none d-print-block">
           <div class="d-flex justify-content-between align-items-end">
             <div>
-              <p class="mb-0">Generated by: <strong>{{ $root.auth ? $root.auth.name : 'Admin' }}</strong></p>
-              <p class="mb-0">This is a system generated report and does not require physical signature.</p>
+              <p class="mb-0">{{ $t('Generated by') }}: <strong>{{ $root.auth ? $root.auth.name : $t('Admin') }}</strong></p>
+              <p class="mb-0">{{ $t('This is a system generated report and does not require physical signature.') }}</p>
             </div>
             <div class="text-center" style="min-width: 150px;">
               <div style="border-bottom: 1px solid #000; width: 120px; margin: 0 auto 5px auto;"></div>
-              <div>Authorized Signature</div>
+              <div>{{ $t('Authorized Signature') }}</div>
             </div>
           </div>
         </div>
@@ -331,7 +331,7 @@ export default {
       } else if (this.search_data.to_date) {
         return `Up to ${this.search_data.to_date}`;
       }
-      return "All Time";
+      return this.$t("All Time");
     },
 
     exportFileName() {
@@ -373,10 +373,10 @@ export default {
 
     formatTypeName(type) {
       switch (type) {
-        case "Earn": return "Points Earned";
-        case "Redeem": return "Points Redeemed";
-        case "Convert_To_Cash": return "Cash Converted";
-        case "Adjustment": return "Point Adjustment";
+        case "Earn": return this.$t("Points Earned");
+        case "Redeem": return this.$t("Points Redeemed");
+        case "Convert_To_Cash": return this.$t("Cash Converted");
+        case "Adjustment": return this.$t("Point Adjustment");
         default: return type;
       }
     },

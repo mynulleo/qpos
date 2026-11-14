@@ -6,6 +6,17 @@
         <div class="col-lg-8 col-12">
             <div class="d-flex flex-column gap-3">
 
+                <!-- Edit Mode Notice Banner -->
+                <div class="alert alert-info py-2 px-3 d-flex align-items-center justify-content-between mb-0 border-0 shadow-sm" style="background: #e0f2fe; color: #0369a1; border-radius: 8px;" v-if="isEdit">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-info-circle fs-5"></i>
+                        <span class="small fw-semibold">
+                            {{ $t("Payment Edit Mode: Financial records (Transaction Type, Party, Amounts, Fund Account) are locked. You can update payment method, cheque, mobile banking, and bank account details.") }}
+                        </span>
+                    </div>
+                    <span class="badge bg-primary text-uppercase">{{ $t("Payment #") }}{{ data.payslipno || data.id }}</span>
+                </div>
+
                 <!-- CARD 1: Transaction Setup & Entity Selection -->
                 <div class="card payment_section_card shadow-sm border-0">
                     <div class="d-flex align-items-center mb-1">
@@ -16,11 +27,11 @@
                     <div class="row g-3 align-items-center mt-1">
                         <!-- 1. Payment Date -->
                         <date-picker id='date4' v-model='data.payment_date' field='data.payment_date' title='Payment Date'
-                            placeholder='Payment Date' col='3' :req='false'></date-picker>
+                            placeholder='Payment Date' col='3' :req='false' :disabled="isEdit"></date-picker>
 
                         <!-- 2. Transaction Type Switch -->
                         <Switch v-model='data.payment_type' field='data.payment_type' title='Transaction Type' on-label='Receive'
-                            off-label='Pay' onValue="Receive" offValue="Pay" col="3" :req='true'>
+                            off-label='Pay' onValue="Receive" offValue="Pay" col="3" :req='true' :disabled="isEdit">
                         </Switch>
 
                         <!-- 3. Collection From / Payment To -->
@@ -29,7 +40,7 @@
                                 <label class="form-label d-flex justify-content-between align-items-center">
                                     <span>{{ data.payment_type == 'Receive' ? $t('Collection From:') : $t('Payment To:') }}</span>
                                 </label>
-                                <select class="form-select custom_select_input" v-model="entity_type" @change="onEntityTypeChange">
+                                <select class="form-select custom_select_input" v-model="entity_type" @change="onEntityTypeChange" :disabled="isEdit">
                                     <template v-if="data.payment_type == 'Receive'">
                                         <option value="client">{{ $t("Client") }}</option>
                                         <option value="supplier">{{ $t("Supplier / Scrap Buyer (Auction)") }}</option>
@@ -51,20 +62,20 @@
                             <!-- Client -->
                             <Select v-if="entity_type == 'client'" title='Select Client' v-model='data.client_id' field='data.client_id'
                                 label='name' :reduce='(obj) => obj.id' :options='clients' @change="onClientChange"
-                                placeholder='-- Search / Select Client --' :readonly="$route.params.id ? true : false" :closeOnSelect='true' col="3"
-                                :required='true' />
+                                placeholder='-- Search / Select Client --' :disabled="isEdit" :closeOnSelect='true' col="3"
+                                :required='!isEdit' />
 
                             <!-- Supplier / Scrap Buyer -->
                             <Select v-else-if="entity_type == 'supplier'" title='Select Supplier' v-model='data.supplier_id' field='data.supplier_id' label='org_name'
                                 :reduce='(obj) => obj.id' @change="onSupplierChange"
-                                :options='$root.global.suppliers' placeholder='-- Search / Select Supplier --' :readonly="$route.params.id ? true : false"
-                                :closeOnSelect='true' col="3" :required='true' />
+                                :options='$root.global.suppliers' placeholder='-- Search / Select Supplier --' :disabled="isEdit"
+                                :closeOnSelect='true' col="3" :required='!isEdit' />
 
                             <!-- All Open Auctions -->
                             <div v-else-if="entity_type == 'auction'" class="col-md-3">
                                 <div class="form-group mb-0">
                                     <label class="form-label">{{ $t("Open Auctions") }}</label>
-                                    <button type="button" class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1" @click="loadOpenAuctions" style="height: 38px;">
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1" @click="loadOpenAuctions" style="height: 38px;" :disabled="isEdit">
                                         <i class="fas fa-sync-alt"></i> {{ $t("Load All Open") }}
                                     </button>
                                 </div>
@@ -72,27 +83,27 @@
 
                             <!-- Employee -->
                             <Select v-else-if="entity_type == 'employee'" title='Select Employee' v-model='data.employee_id' field='data.employee_id' label='full_name'
-                                :readonly="$route.params.id ? true : false" :reduce='(obj) => obj.id' :options='$root.global.employees'
-                                placeholder='-- Search / Select Employee --' :closeOnSelect='true' @change="onEmployeeChange" col="3" :required='true' />
+                                :disabled="isEdit" :reduce='(obj) => obj.id' :options='$root.global.employees'
+                                placeholder='-- Search / Select Employee --' :closeOnSelect='true' @change="onEmployeeChange" col="3" :required='!isEdit' />
                         </template>
 
                         <template v-else>
                             <!-- Supplier -->
                             <Select v-if="entity_type == 'supplier'" title='Select Supplier' v-model='data.supplier_id' field='data.supplier_id' label='org_name'
                                 :reduce='(obj) => obj.id' @change="onSupplierChange"
-                                :options='$root.global.suppliers' placeholder='-- Search / Select Supplier --' :readonly="$route.params.id ? true : false"
-                                :closeOnSelect='true' col="3" :required='true' />
+                                :options='$root.global.suppliers' placeholder='-- Search / Select Supplier --' :disabled="isEdit"
+                                :closeOnSelect='true' col="3" :required='!isEdit' />
 
                             <!-- Employee -->
                             <Select v-else-if="entity_type == 'employee'" title='Select Employee' v-model='data.employee_id' field='data.employee_id' label='full_name'
-                                :readonly="$route.params.id ? true : false" :reduce='(obj) => obj.id' :options='$root.global.employees'
-                                placeholder='-- Search / Select Employee --' :closeOnSelect='true' @change="onEmployeeChange" col="3" :required='true' />
+                                :disabled="isEdit" :reduce='(obj) => obj.id' :options='$root.global.employees'
+                                placeholder='-- Search / Select Employee --' :closeOnSelect='true' @change="onEmployeeChange" col="3" :required='!isEdit' />
 
                             <!-- Agent -->
                             <Select v-else-if="entity_type == 'agent'" title='Select Agent' v-model='data.agent_id' field='data.agent_id' label='full_name'
                                 :reduce='(obj) => obj.id' @change="onAgentChange"
-                                :options='agents' placeholder='-- Search / Select Agent --' :readonly="$route.params.id ? true : false"
-                                :closeOnSelect='true' col="3" :required='true' />
+                                :options='agents' placeholder='-- Search / Select Agent --' :disabled="isEdit"
+                                :closeOnSelect='true' col="3" :required='!isEdit' />
 
                             <!-- Office Expense -->
                             <div v-else-if="entity_type == 'office_expense'" class="col-md-3">
@@ -115,7 +126,7 @@
                             {{ data.payment_type == 'Receive' ? $t('Due Invoices & Receivable Bills') : $t('Payable Invoices & Bills') }} ({{ invoices.length }})
                         </div>
                         <div class="form-check m-0 d-flex align-items-center gap-1 small fw-semibold text-secondary" v-if="invoices && invoices.length > 0">
-                            <input type="checkbox" class="form-check-input mt-0" id="select_all_btn" :checked="isAllSelected" @change="toggleSelectAll" />
+                            <input type="checkbox" class="form-check-input mt-0" id="select_all_btn" :checked="isAllSelected" @change="toggleSelectAll" :disabled="isEdit" />
                             <label class="form-check-label cursor-pointer" for="select_all_btn" style="user-select: none;">{{ $t("Select All") }}</label>
                         </div>
                     </div>
@@ -125,7 +136,7 @@
                             <thead>
                                 <tr>
                                     <th class="text-center" style="width: 44px; min-width: 44px;">
-                                        <input type="checkbox" class="form-check-input" :checked="isAllSelected" @change="toggleSelectAll" title="Select / Deselect All" />
+                                        <input type="checkbox" class="form-check-input" :checked="isAllSelected" @change="toggleSelectAll" :title="$t('Select / Deselect All')" :disabled="isEdit" />
                                     </th>
                                     <th style="min-width: 160px;">{{ $t('Ref / Bill Info') }}</th>
                                     <th style="min-width: 140px;">{{ $t('Account Head') }}</th>
@@ -140,7 +151,7 @@
                                 <template v-if="invoices && invoices.length > 0">
                                     <tr v-for="(inv, i) in invoices" :key="i" :class="{'table-row-selected': inv.checked}">
                                         <td class="text-center">
-                                            <input type="checkbox" class="form-check-input" v-model="inv.checked" @change="toggleInvoice(inv)" />
+                                            <input type="checkbox" class="form-check-input" v-model="inv.checked" @change="toggleInvoice(inv)" :disabled="isEdit" />
                                         </td>
                                         <td>
                                             <span class="badge bg-light text-dark border me-1">{{ inv.reference_type }}</span>
@@ -163,12 +174,12 @@
                                                 :max="inv.due_amount"
                                                 class="form-control form-control-sm text-end fw-bold custom_adjust_input"
                                                 v-model.number="inv.adjust_amount"
-                                                :disabled="!inv.checked"
+                                                :disabled="isEdit || !inv.checked"
                                                 @input="calculateTotals(inv)"
                                             />
                                         </td>
                                         <td class="text-center">
-                                            <input type="checkbox" class="form-check-input" v-model="inv.is_closed" @change="onClosedToggle(inv)" title="Mark as fully closed" />
+                                            <input type="checkbox" class="form-check-input" v-model="inv.is_closed" @change="onClosedToggle(inv)" :title="$t('Mark as fully closed')" :disabled="isEdit" />
                                         </td>
                                     </tr>
                                 </template>
@@ -209,7 +220,7 @@
                             <Select :title="data.payment_type == 'Receive' ? $t('Deposit / Credit Fund Account') : $t('Debit / Paid From Fund Account')"
                                 v-model='data.fund_account_id' field='data.fund_account_id' label='name'
                                 :reduce='(obj) => obj.id' :options='fundaccounts' placeholder='-- Select Fund Account --' :closeOnSelect='true'
-                                col="12" :required='true' />
+                                col="12" :required='!isEdit' :disabled="isEdit" />
                             <div class="current_fund_balance small text-muted mt-1 font-monospace">
                                 {{ $t('Current Fund Balance:') }} <strong class="text-dark">৳ {{ this.$filter.money(fund) }}</strong>
                             </div>
@@ -218,19 +229,19 @@
                         <!-- Discount -->
                         <div class="col-md-2" v-if="data.payment_type == 'Receive'">
                             <Input v-model='data.discount' field='data.discount' title='Discount (-)'
-                                @input="calculateTotals()" col="12" :req='false' />
+                                @input="calculateTotals()" col="12" :req='false' :disabled="isEdit" />
                         </div>
 
                         <!-- Received / Paid Amount -->
                         <div :class="data.payment_type == 'Receive' ? 'col-md-3' : 'col-md-4'">
                             <Input v-model='data.amount' field='data.amount'
                                 :title="data.payment_type == 'Receive' ? $t('Received Amount (৳)') : $t('Paid Amount (৳)')"
-                                col="12" :req='true' />
+                                col="12" :req='true' :disabled="isEdit" />
                         </div>
 
                         <!-- Auto Adjust Button -->
                         <div :class="data.payment_type == 'Receive' ? 'col-md-2' : 'col-md-3'" class="pt-4">
-                            <button type="button" class="btn auto_adjust_btn w-100 d-flex align-items-center justify-content-center gap-2" @click="reverseAdjustment" title="Auto distribute entered amount across due invoices">
+                            <button type="button" class="btn auto_adjust_btn w-100 d-flex align-items-center justify-content-center gap-2" @click="reverseAdjustment" :title="$t('Auto distribute entered amount across due invoices')" :disabled="isEdit">
                                 <i class="fas fa-sliders-h"></i>
                                 <span>{{ $t("Auto") }}<br class="d-none d-sm-inline" /> {{ $t("Adjust") }}</span>
                             </button>
@@ -283,7 +294,7 @@
                     <div class="d-flex align-items-center mb-3">
                         <div class="card_capsule_badge">
                             <i class="far fa-building me-1"></i>
-                            {{ entity_type == 'client' ? 'Client Details' : (entity_type == 'supplier' ? 'Supplier Details' : (entity_type == 'employee' ? 'Employee Details' : (entity_type == 'agent' ? 'Agent Details' : 'Party Details'))) }}
+                            {{ entity_type == 'client' ? $t('Client Details') : (entity_type == 'supplier' ? $t('Supplier Details') : (entity_type == 'employee' ? $t('Employee Details') : (entity_type == 'agent' ? $t('Agent Details') : $t('Party Details')))) }}
                         </div>
                     </div>
 
@@ -348,7 +359,7 @@
                     <div class="in_words_section pt-2 border-top">
                         <div class="d-flex align-items-center gap-1 text-muted small fw-bold mb-1">
                             <span class="in_words_icon">AB</span>
-                            <span>IN WORDS:</span>
+                            <span>{{ $t("IN WORDS:") }}</span>
                         </div>
                         <div class="in_words_text fw-bold text-dark small">
                             {{ this.$filter.numberToEnglishBD(data.amount) }}.
@@ -426,6 +437,7 @@ export default {
             this.getFundBalance();
         },
         'data.payment_type': function (newVal, oldVal) {
+            if (this.isEdit) return;
             if (newVal !== oldVal) {
                 if (newVal === 'Receive') {
                     this.entity_type = 'client';
@@ -433,10 +445,16 @@ export default {
                     this.entity_type = 'supplier';
                 }
                 this.resetSelectionData();
+                if (this.validation) {
+                    this.validation.reset();
+                }
             }
         }
     },
     computed: {
+        isEdit() {
+            return Boolean(this.$route.params.id || this.data?.id);
+        },
         allAccounts() {
             return this.$root?.global?.allaccounts || [];
         },
@@ -446,7 +464,11 @@ export default {
     },
     methods: {
         onEntityTypeChange() {
+            if (this.isEdit) return;
             this.resetSelectionData();
+            if (this.validation) {
+                this.validation.reset();
+            }
             if (this.entity_type === 'office_expense') {
                 this.data.office_expense = true;
                 this.get_ofice_expenses();
@@ -456,6 +478,7 @@ export default {
         },
 
         resetSelectionData() {
+            if (this.isEdit) return;
             this.data.client_id = null;
             this.data.supplier_id = null;
             this.data.employee_id = null;
@@ -477,6 +500,9 @@ export default {
             this.data.amount = 0;
             this.data.payment_details = [];
             this.calculateTotals();
+            if (this.validation) {
+                this.validation.reset();
+            }
         },
 
         loadOpenAuctions() {
@@ -485,25 +511,37 @@ export default {
         },
 
         onClientChange(client_id) {
-            this.data.agent_id = '';
-            this.data.supplier_id = '';
-            this.data.employee_id = '';
+            if (this.isEdit) return;
+            this.data.agent_id = null;
+            this.data.supplier_id = null;
+            this.data.employee_id = null;
+            if (this.validation) {
+                this.validation.reset();
+            }
             this.get_client_info(client_id);
             this.get_client_due_invoices(client_id);
         },
 
         onSupplierChange(supplier_id) {
-            this.data.agent_id = '';
-            this.data.client_id = '';
-            this.data.employee_id = '';
+            if (this.isEdit) return;
+            this.data.agent_id = null;
+            this.data.client_id = null;
+            this.data.employee_id = null;
+            if (this.validation) {
+                this.validation.reset();
+            }
             this.get_supplier_info(supplier_id);
             this.get_purchase_invoices(supplier_id);
         },
 
         onEmployeeChange(empid) {
-            this.data.agent_id = '';
-            this.data.client_id = '';
-            this.data.supplier_id = '';
+            if (this.isEdit) return;
+            this.data.agent_id = null;
+            this.data.client_id = null;
+            this.data.supplier_id = null;
+            if (this.validation) {
+                this.validation.reset();
+            }
             this.get_emp_info(empid);
             if (this.data.payment_type == 'Receive') {
                 this.get_employee_loan_installment(empid);
@@ -514,9 +552,13 @@ export default {
         },
 
         onAgentChange(agent_id) {
-            this.data.client_id = '';
-            this.data.supplier_id = '';
-            this.data.employee_id = '';
+            if (this.isEdit) return;
+            this.data.client_id = null;
+            this.data.supplier_id = null;
+            this.data.employee_id = null;
+            if (this.validation) {
+                this.validation.reset();
+            }
             this.get_agent_info(agent_id);
             this.get_agent_payable_commissions(agent_id);
         },
@@ -907,11 +949,9 @@ export default {
                 }
 
                 if (res) {
-                    var form = document.getElementById('form');
-                    var formData = new FormData(form);
-
-                    if (this.data.id) {
-                        this.update(this.model, this.data, this.data.id);
+                    const id = this.data.id || this.$route.params.id;
+                    if (id) {
+                        this.update(this.model, this.data, id);
                     } else {
                         this.store(this.model, this.data);
                     }
@@ -949,6 +989,19 @@ export default {
         getPaymentData() {
             axios.get(`${this.model}/${this.$route.params.id}`)
                 .then((response) => {
+                    if (response.data.can_edit === false) {
+                        const reason = response.data.lock_reason 
+                            ? this.$t(response.data.lock_reason) 
+                            : this.$t("This payment is locked and cannot be edited. Please inform the system developer.");
+                        if (typeof this.$toast === 'function') {
+                            this.$toast(reason, 'warning', this.$t('Action Restricted'), 8000);
+                        } else {
+                            alert(reason);
+                        }
+                        this.$router.push({ name: 'payment.index' });
+                        return;
+                    }
+
                     this.data = response.data;
                     this.invoices = response.data.invoices || [];
                     this.data.payment_details = response.data.payment_details || [];
@@ -966,6 +1019,11 @@ export default {
                         this.entity_type = 'agent';
                     } else if (this.data.office_expense) {
                         this.entity_type = 'office_expense';
+                    }
+
+                    this.getFundBalance();
+                    if (this.validation) {
+                        this.validation.reset();
                     }
                 })
                 .catch((error) => {
@@ -1026,8 +1084,12 @@ export default {
     validators: {
         'data.amount': function (value = null) {
             var vm = this;
+            const validator = Validator.value(value);
+            if (vm.isEdit) {
+                return validator.required('Amount is required');
+            }
 
-            return Validator.value(value)
+            return validator
                 .required('Amount is required')
                 .custom(function () {
                     const amount = parseFloat(value);
@@ -1038,46 +1100,62 @@ export default {
                         return 'Amount must be greater than 0';
                     }
 
-                    if (!vm.data?.id && totalDue > 0 && amount > totalDue) {
+                    if (totalDue > 0 && amount > totalDue) {
                         return 'Amount cannot be greater than total selected amount';
                     }
 
-                    if (!vm.data?.id && vm.data?.payment_type === 'Pay' && amount > fund) {
+                    if (vm.data?.payment_type === 'Pay' && amount > fund) {
                         return 'Transaction failed due to insufficient fund balance.';
                     }
                 });
         },
 
-        'data.payment_type': function (value = null) { return Validator.value(value).required('Payment Type is required'); },
-        'data.payment_method': function (value = null) { return Validator.value(value).required('Payment Method is required'); },
-        'data.fund_account_id': function (value = null) { return Validator.value(value).required('Fund Account is required'); },
+        'data.payment_type': function (value = null) {
+            return Validator.value(value).required('Payment Type is required');
+        },
+
+        'data.payment_method': function (value = null) {
+            return Validator.value(value).required('Payment Method is required');
+        },
+
+        'data.fund_account_id': function (value = null) {
+            return Validator.value(value).required('Fund Account is required');
+        },
 
         'data.client_id': function (value = null) {
             var vm = this;
-            if (vm.data?.payment_type === 'Receive' && vm.entity_type === 'client') {
-                return Validator.value(value).required('Client is required');
+            const validator = Validator.value(value);
+            if (!vm.isEdit && vm.data?.payment_type === 'Receive' && vm.entity_type === 'client') {
+                return validator.required('Client is required');
             }
+            return validator;
         },
 
         'data.supplier_id': function (value = null) {
             var vm = this;
-            if ((vm.data?.payment_type === 'Pay' || vm.data?.payment_type === 'Receive') && vm.entity_type === 'supplier') {
-                return Validator.value(value).required('Supplier is required');
+            const validator = Validator.value(value);
+            if (!vm.isEdit && vm.entity_type === 'supplier') {
+                return validator.required('Supplier is required');
             }
+            return validator;
         },
 
         'data.employee_id': function (value = null) {
             var vm = this;
-            if (vm.entity_type === 'employee') {
-                return Validator.value(value).required('Employee is required');
+            const validator = Validator.value(value);
+            if (!vm.isEdit && vm.entity_type === 'employee') {
+                return validator.required('Employee is required');
             }
+            return validator;
         },
 
         'data.agent_id': function (value = null) {
             var vm = this;
-            if (vm.entity_type === 'agent') {
-                return Validator.value(value).required('Agent is required');
+            const validator = Validator.value(value);
+            if (!vm.isEdit && vm.entity_type === 'agent') {
+                return validator.required('Agent is required');
             }
+            return validator;
         },
     },
 }
