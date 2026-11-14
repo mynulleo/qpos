@@ -33,6 +33,64 @@
       </div>
     </div>
 
+    <!-- 🗂️ Multi-Terminal Tab Bar -->
+    <div class="d-flex align-items-center gap-1 mb-2 px-1 flex-wrap" style="min-height: 38px;">
+      <div
+        v-for="(terminal, tIdx) in terminals"
+        :key="'tab_' + tIdx"
+        class="d-flex align-items-center gap-1 px-2 py-1 rounded border cursor-pointer pos-tab transition-all"
+        :class="tIdx === activeTerminalIndex
+          ? 'bg-dark text-white border-dark shadow-sm'
+          : 'bg-white text-dark border-secondary'"
+        @click="switchToTerminal(tIdx)"
+        style="font-size: 12px; max-width: 200px; min-width: 80px;"
+        :title="terminal.client && terminal.client.id ? terminal.client.name : $t('Walk-in')"
+      >
+        <i class="fas fa-shopping-cart" :class="tIdx === activeTerminalIndex ? 'text-warning' : 'text-muted'" style="font-size: 10px;"></i>
+        <span class="fw-bold text-truncate" style="max-width: 120px;">
+          {{ terminal.label || ($t('Order') + ' ' + (tIdx + 1)) }}
+        </span>
+        <span v-if="terminal.cart && terminal.cart.length > 0" class="badge rounded-pill ms-1" :class="tIdx === activeTerminalIndex ? 'bg-warning text-dark' : 'bg-secondary'">
+          {{ terminal.cart.length }}
+        </span>
+        <button
+          v-if="terminals.length > 1"
+          type="button"
+          class="btn btn-xs p-0 ms-1 border-0"
+          :class="tIdx === activeTerminalIndex ? 'text-white-50' : 'text-muted'"
+          @click.stop="closeTerminal(tIdx)"
+          style="font-size: 11px; line-height: 1; background: transparent;"
+          :title="$t('Close this terminal')"
+        >&times;</button>
+      </div>
+      <!-- New Tab Button -->
+      <button
+        v-if="terminals.length < MAX_TERMINALS"
+        type="button"
+        class="btn btn-sm btn-outline-primary rounded px-2 py-1 d-flex align-items-center gap-1"
+        style="font-size: 11px; height: 32px;"
+        @click="addNewTerminal"
+        :title="$t('New Terminal') + ' (F6)'"
+      >
+        <i class="fas fa-plus"></i>
+        <span class="d-none d-md-inline">{{ $t('New Sale') }}</span>
+        <kbd style="font-size: 9px; background:#ccc; border-radius:3px; padding:1px 3px;">F6</kbd>
+      </button>
+      <!-- Held Orders button -->
+      <button
+        v-if="terminals.length > 1"
+        type="button"
+        class="btn btn-sm btn-outline-warning rounded px-2 py-1 d-flex align-items-center gap-1 ms-auto"
+        style="font-size: 11px; height: 32px;"
+        @click="showHeldOrdersModal = true"
+        :title="$t('View Held Orders')"
+      >
+        <i class="fas fa-history"></i>
+        <span>{{ $t('Held Orders') }}</span>
+        <span v-if="heldTerminalsCount > 0" class="badge bg-danger rounded-pill ms-1">{{ heldTerminalsCount }}</span>
+      </button>
+    </div>
+
     <!-- 👤 Sleek Horizontal Client Info Bar (Compact & Flat) -->
     <div class="card border-0 shadow-sm mb-2">
       <div class="card-body p-2 px-3">
@@ -1298,6 +1356,76 @@
         </div>
       </div>
     </div>
+
+    <!-- 📂 Held Orders Modal -->
+    <div
+      v-if="showHeldOrdersModal"
+      class="modal fade show d-block"
+      tabindex="-1"
+      style="background: rgba(0,0,0,0.6); z-index: 10060;"
+      @keydown.esc="showHeldOrdersModal = false"
+    >
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
+        <div class="modal-content shadow-lg border-0">
+          <div class="modal-header bg-dark text-white py-2">
+            <h5 class="modal-title fw-bold fs-6">
+              <i class="fas fa-history me-2 text-warning"></i>{{ $t('Held Orders') }}
+              <span class="badge bg-warning text-dark ms-2">{{ terminals.length }}</span>
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="showHeldOrdersModal = false"></button>
+          </div>
+          <div class="modal-body p-0">
+            <div v-if="terminals.length === 0" class="text-center text-muted py-4">
+              {{ $t('No held orders.') }}
+            </div>
+            <div v-for="(terminal, tIdx) in terminals" :key="'held_' + tIdx"
+              class="d-flex align-items-center justify-content-between p-3 border-bottom"
+              :class="tIdx === activeTerminalIndex ? 'bg-primary bg-opacity-10' : ''"
+            >
+              <div>
+                <div class="fw-bold text-dark">
+                  {{ terminal.label || ($t('Order') + ' ' + (tIdx + 1)) }}
+                  <span v-if="tIdx === activeTerminalIndex" class="badge bg-primary ms-1" style="font-size: 10px;">{{ $t('Active') }}</span>
+                </div>
+                <small class="text-muted">
+                  {{ terminal.client && terminal.client.id ? terminal.client.name + ' · ' : $t('Walk-in') + ' · ' }}
+                  {{ terminal.cart ? terminal.cart.length : 0 }} {{ $t('items') }}
+                  <span v-if="terminal.cart && terminal.cart.length > 0"> · ৳{{ (terminal.cartSubtotal || 0).toFixed(2) }}</span>
+                </small>
+                <small class="text-muted d-block" v-if="terminal.held_at" style="font-size: 10px;">
+                  <i class="fas fa-clock me-1"></i>{{ terminal.held_at }}
+                </small>
+              </div>
+              <div class="d-flex gap-2">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-success"
+                  @click="switchToTerminal(tIdx); showHeldOrdersModal = false;"
+                  :disabled="tIdx === activeTerminalIndex"
+                >
+                  <i class="fas fa-play me-1"></i>{{ tIdx === activeTerminalIndex ? $t('Current') : $t('Resume') }}
+                </button>
+                <button
+                  v-if="terminals.length > 1"
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  @click="closeTerminal(tIdx)"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-secondary" @click="showHeldOrdersModal = false">{{ $t('Close') }}</button>
+            <button type="button" class="btn btn-sm btn-primary" @click="addNewTerminal(); showHeldOrdersModal = false;" :disabled="terminals.length >= MAX_TERMINALS">
+              <i class="fas fa-plus me-1"></i>{{ $t('New Sale') }} (F6)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -1393,6 +1521,12 @@ export default {
 
       isSubmitting: false,
       completedInvoice: null,
+
+      // 🗂️ Multi-Terminal State
+      terminals: [],
+      activeTerminalIndex: 0,
+      showHeldOrdersModal: false,
+      MAX_TERMINALS: 8,
     };
   },
   computed: {
@@ -1543,6 +1677,9 @@ export default {
     effectivePriceNature() {
       return this.getEffectivePriceNature();
     },
+    heldTerminalsCount() {
+      return this.terminals.filter((t, i) => i !== this.activeTerminalIndex && t.cart && t.cart.length > 0).length;
+    },
   },
   watch: {
     cartSubtotal() {
@@ -1561,6 +1698,15 @@ export default {
       handler(site) {
         if (site && site.default_vat !== undefined && site.default_vat !== null) {
           this.initVatFromSettings();
+        }
+      }
+    },
+    cart: {
+      deep: true,
+      handler() {
+        if (this.terminals && this.terminals.length > 0 && this.terminals[this.activeTerminalIndex]) {
+          this.terminals[this.activeTerminalIndex] = this._buildTerminalSnapshot();
+          this._saveTerminalsToStorage();
         }
       }
     }
@@ -2915,6 +3061,20 @@ export default {
             this.$nextTick(() => {
               this.printPOSInvoice();
               this.resetPOS();
+              // Auto-close terminal tab after checkout if more than 1 terminal open
+              if (this.terminals && this.terminals.length > 1) {
+                const idx = this.activeTerminalIndex;
+                this.$nextTick(() => {
+                  this.terminals.splice(idx, 1);
+                  if (this.activeTerminalIndex >= this.terminals.length) {
+                    this.activeTerminalIndex = this.terminals.length - 1;
+                  }
+                  this._applyTerminalSnapshot(this.terminals[this.activeTerminalIndex]);
+                  this._saveTerminalsToStorage();
+                });
+              } else {
+                this._saveTerminalsToStorage();
+              }
             });
           }
         })
@@ -2960,6 +3120,17 @@ export default {
           selected: item.is_default == 1 || item.is_default === true,
           is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
         }));
+      }
+
+      // Update the terminal snapshot to reflect cleared state
+      if (this.terminals && this.terminals.length > 0 && this.terminals[this.activeTerminalIndex]) {
+        this.$nextTick(() => {
+          const snap = this._buildTerminalSnapshot();
+          snap.label = (this.$t ? this.$t('Order') : 'Order') + ' ' + (this.activeTerminalIndex + 1);
+          snap.held_at = null;
+          this.terminals[this.activeTerminalIndex] = snap;
+          this._saveTerminalsToStorage();
+        });
       }
     },
     handleKeydown(e) {
@@ -3046,9 +3217,18 @@ export default {
       } else if (e.key === 'F7' || e.key === 'F9' || (e.altKey && (e.key === 'f' || e.key === 'F')) || (e.altKey && (e.key === 'p' || e.key === 'P'))) {
         e.preventDefault();
         this.setFullPay();
+      } else if (e.key === 'F6') {
+        e.preventDefault();
+        this.addNewTerminal();
       } else if (e.key === 'F8' || (e.ctrlKey && e.key === 'p')) {
         e.preventDefault();
         this.submitCheckout();
+      } else if (e.altKey && e.key >= '1' && e.key <= '9') {
+        e.preventDefault();
+        const tabIdx = parseInt(e.key) - 1;
+        if (tabIdx < this.terminals.length) {
+          this.switchToTerminal(tabIdx);
+        }
       } else if (e.key === 'Escape') {
         this.clearSearch();
       }
@@ -3137,9 +3317,163 @@ export default {
       this.modalSelection.warranty_period = this.modalSelection.grn_warranty_period || '';
       this.modalSelection.warranty_duration = null;
     },
+
+    // ===== 🗂️ Multi-Terminal Methods =====
+    _buildTerminalSnapshot() {
+      return {
+        label: this.client && this.client.id ? this.client.name : (this.$t ? this.$t('Walk-in') : 'Walk-in'),
+        held_at: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        client: JSON.parse(JSON.stringify(this.client)),
+        cart: JSON.parse(JSON.stringify(this.cart)),
+        discount: this.discount,
+        points_to_redeem: this.points_to_redeem,
+        is_vat_applicable: this.is_vat_applicable,
+        vat_percent: this.vat_percent,
+        vat: this.vat,
+        payment_method: this.payment_method,
+        mbanking_type: this.mbanking_type,
+        trxid: this.trxid,
+        paid_amount: this.paid_amount,
+        customerSearchTerm: this.customerSearchTerm,
+        invoiceTerms: JSON.parse(JSON.stringify(this.invoiceTerms || [])),
+        cartSubtotal: this.cartSubtotal,
+      };
+    },
+    _applyTerminalSnapshot(snap) {
+      if (!snap) return;
+      this.client = snap.client || { id: null, name: '', mobile: '', customer_type: 'retail', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 };
+      this.cart = snap.cart || [];
+      this.discount = snap.discount || 0;
+      this.points_to_redeem = snap.points_to_redeem || 0;
+      this.is_vat_applicable = snap.is_vat_applicable !== undefined ? snap.is_vat_applicable : false;
+      this.vat_percent = snap.vat_percent || 0;
+      this.vat = snap.vat || 0;
+      this.payment_method = snap.payment_method || 'Cash';
+      this.mbanking_type = snap.mbanking_type || '';
+      this.trxid = snap.trxid || '';
+      this.paid_amount = snap.paid_amount || 0;
+      this.customerSearchTerm = '';
+      this.customerSearchResults = [];
+      this.invoiceTerms = snap.invoiceTerms || this.invoiceTerms;
+      this.searchTerm = '';
+      this.searchResults = [];
+    },
+    _saveTerminalsToStorage() {
+      try {
+        const key = 'qpos_terminals_' + (window.location.hostname || 'local');
+        localStorage.setItem(key, JSON.stringify(this.terminals));
+        localStorage.setItem(key + '_activeIdx', String(this.activeTerminalIndex));
+      } catch (e) { /* ignore quota errors */ }
+    },
+    _loadTerminalsFromStorage() {
+      try {
+        const key = 'qpos_terminals_' + (window.location.hostname || 'local');
+        const saved = localStorage.getItem(key);
+        const savedIdx = localStorage.getItem(key + '_activeIdx');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            this.terminals = parsed;
+            const idx = parseInt(savedIdx || '0', 10);
+            this.activeTerminalIndex = idx < parsed.length ? idx : 0;
+            this._applyTerminalSnapshot(this.terminals[this.activeTerminalIndex]);
+            return true;
+          }
+        }
+      } catch (e) { /* ignore */ }
+      return false;
+    },
+    addNewTerminal() {
+      if (this.terminals.length >= this.MAX_TERMINALS) {
+        this.$toast(`সর্বোচ্চ ${this.MAX_TERMINALS}টি টার্মিনাল খোলা যাবে!`, 'warning');
+        return;
+      }
+      if (this.cart.length === 0 && !this.client.id && this.terminals.length === 1) {
+        this.$toast('বর্তমান টার্মিনালটি ইতিমধ্যে খালি আছে।', 'info');
+        return;
+      }
+      // Save current state to current terminal slot
+      this.terminals[this.activeTerminalIndex] = this._buildTerminalSnapshot();
+      // Create new empty terminal
+      const newSnap = {
+        label: this.$t ? this.$t('New Order') : 'New Order',
+        held_at: null,
+        client: { id: null, name: '', mobile: '', customer_type: 'retail', address: '', current_due: 0, coupon_enabled: false, points_balance: 0, points_value_in_tk: 0, point_redeem_rate: 10, point_earn_rate: 1, min_points_to_redeem: 10 },
+        cart: [],
+        discount: 0,
+        points_to_redeem: 0,
+        is_vat_applicable: !!(this.$root?.site?.default_vat > 0),
+        vat_percent: parseFloat(this.$root?.site?.default_vat || 0),
+        vat: 0,
+        payment_method: 'Cash',
+        mbanking_type: '',
+        trxid: '',
+        paid_amount: 0,
+        customerSearchTerm: '',
+        invoiceTerms: JSON.parse(JSON.stringify(this.rawDefaultTerms || [])).map(item => ({
+          id: item.id,
+          condition: item.condition_text || item.condition || '',
+          selected: item.is_default == 1 || item.is_default === true,
+          is_default: item.is_default == 1 || item.is_default === true ? 1 : 0,
+        })),
+        cartSubtotal: 0,
+      };
+      this.terminals.push(newSnap);
+      this.activeTerminalIndex = this.terminals.length - 1;
+      this._applyTerminalSnapshot(newSnap);
+      this.initVatFromSettings();
+      this._saveTerminalsToStorage();
+      this.$nextTick(() => { this.$refs.itemSearchInput?.focus(); });
+      this.$toast(`টার্মিনাল ${this.terminals.length} ওপেন হয়েছে।`, 'success');
+    },
+    switchToTerminal(idx) {
+      if (idx === this.activeTerminalIndex) return;
+      if (idx < 0 || idx >= this.terminals.length) return;
+      // Save current state
+      this.terminals[this.activeTerminalIndex] = this._buildTerminalSnapshot();
+      this.activeTerminalIndex = idx;
+      this._applyTerminalSnapshot(this.terminals[idx]);
+      this._saveTerminalsToStorage();
+      this.$nextTick(() => { this.$refs.itemSearchInput?.focus(); });
+    },
+    closeTerminal(idx) {
+      if (this.terminals.length <= 1) {
+        this.resetPOS();
+        return;
+      }
+      const terminal = this.terminals[idx];
+      const hasCart = terminal && terminal.cart && terminal.cart.length > 0;
+      if (hasCart) {
+        if (!confirm(this.$t ? this.$t('কার্টে পণ্য আছে। এই টার্মিনালটি বন্ধ করলে কার্টের ডাটা মুছে যাবে। নিশ্চিত?') : 'Cart has items. Close anyway?')) {
+          return;
+        }
+      }
+      this.terminals.splice(idx, 1);
+      let newIdx = this.activeTerminalIndex;
+      if (newIdx >= this.terminals.length) {
+        newIdx = this.terminals.length - 1;
+      } else if (idx < newIdx) {
+        newIdx--;
+      }
+      this.activeTerminalIndex = newIdx;
+      this._applyTerminalSnapshot(this.terminals[this.activeTerminalIndex]);
+      this._saveTerminalsToStorage();
+    },
   },
   mounted() {
     window.addEventListener('keydown', this.handleKeydown);
+
+    // 🗂️ Initialize multi-terminal: try restore from localStorage first
+    const restored = this._loadTerminalsFromStorage();
+    if (!restored) {
+      // Start fresh with one terminal
+      const initialSnap = this._buildTerminalSnapshot();
+      initialSnap.label = (this.$t ? this.$t('Order') : 'Order') + ' 1';
+      initialSnap.held_at = null;
+      this.terminals = [initialSnap];
+      this.activeTerminalIndex = 0;
+    }
+
     this.initVatFromSettings();
     this.loadInvoiceTerms();
     this.loadActiveDiscounts();
@@ -3300,6 +3634,16 @@ function floatval(val) {
   background-color: #e2e8f0 !important;
   color: #1e293b !important;
   border: 1px solid #cbd5e1 !important;
+}
+
+.pos-tab {
+  cursor: pointer;
+  user-select: none;
+}
+
+.pos-tab:hover {
+  background-color: #e9ecef !important;
+  color: #000 !important;
 }
 
 .transition-all {

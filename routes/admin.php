@@ -77,6 +77,7 @@ Route::middleware(['auth:admin', 'tenantDB', 'checkExpiry'])->group(function () 
     Route::get('backend-parent-menus', [App\Http\Controllers\Admin\System\MenuController::class, 'getParentMenu'])->name('backendParentMenu');
     Route::get('getcategories/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getcategories'])->name('getcategories');
     Route::get('getbrands/{category_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getbrands'])->name('getbrands');
+    Route::get('getbrandsbycategory/{category_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getbrands'])->name('getbrandsbycategory');
     Route::get('getseries/{brand_id?}', [App\Http\Controllers\Admin\System\LibController::class, 'getseries'])->name('getseries');
     Route::get('getunits/{modulename?}', [App\Http\Controllers\Admin\System\LibController::class, 'getunits'])->name('getunits');
     Route::get('getlabelpresets', [App\Http\Controllers\Admin\System\LibController::class, 'getLabelPresets'])->name('getlabelpresets');

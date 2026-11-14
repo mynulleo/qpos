@@ -531,24 +531,32 @@ export default {
             model: model,
             page_title: "Available Stock & Valuation Report",
             reportDate: moment().format('D MMMM, YYYY h:mm A'),
-            activeTab: "low_stock", // Default to 'low_stock' on page load
+            activeTab: this.$route.query.stock_status || "all",
             currentPage: 1, // Current pagination page
             perPage: 50, // Rows per page
+            fields_name: {
+                default: "All Fields",
+                title: "Item Name",
+                barcode: "Barcode",
+                model_no: "Model No",
+            },
             search_data: {
-                warehouse_id: null,
-                category_id: null,
-                brand_id: null,
-                series_id: null,
-                item_id: null,
-                color_id: null,
-                size_id: null,
-                stock_status: "low_stock",
-                sort_by: "stock_asc",
-                low_threshold: 5,
-                keyword: "",
-                is_zero: 0,
-                from_qty: null,
-                to_qty: null
+                field_name: this.$route.query.field_name ?? "",
+                value: this.$route.query.value ?? "",
+                warehouse_id: this.$route.query.warehouse_id ? Number(this.$route.query.warehouse_id) : null,
+                category_id: this.$route.query.category_id ? Number(this.$route.query.category_id) : null,
+                brand_id: this.$route.query.brand_id ? Number(this.$route.query.brand_id) : null,
+                series_id: this.$route.query.series_id ? Number(this.$route.query.series_id) : null,
+                item_id: this.$route.query.item_id ? Number(this.$route.query.item_id) : null,
+                color_id: this.$route.query.color_id ? Number(this.$route.query.color_id) : null,
+                size_id: this.$route.query.size_id ? Number(this.$route.query.size_id) : null,
+                stock_status: this.$route.query.stock_status || "all",
+                sort_by: this.$route.query.sort_by || "stock_desc",
+                low_threshold: this.$route.query.low_threshold !== undefined ? Number(this.$route.query.low_threshold) : 5,
+                keyword: this.$route.query.keyword || this.$route.query.value || "",
+                is_zero: this.$route.query.is_zero !== undefined ? Number(this.$route.query.is_zero) : 0,
+                from_qty: this.$route.query.from_qty !== undefined && this.$route.query.from_qty !== '' ? Number(this.$route.query.from_qty) : null,
+                to_qty: this.$route.query.to_qty !== undefined && this.$route.query.to_qty !== '' ? Number(this.$route.query.to_qty) : null
             },
             tabCounts: {
                 low_stock: 0,
@@ -626,6 +634,16 @@ export default {
                 }
             },
             deep: true
+        },
+        'search_data.value'(val) {
+            if (val !== this.search_data.keyword) {
+                this.search_data.keyword = val || "";
+            }
+        },
+        'search_data.keyword'(val) {
+            if (val !== this.search_data.value) {
+                this.search_data.value = val || "";
+            }
         }
     },
 
@@ -638,6 +656,8 @@ export default {
             json_fields: this.json_fields,
             search: this.search,
             resetSearchData: this.resetSearchData,
+            fields_name: this.fields_name,
+            customFilterCount: () => this.activeFilterCount,
         };
     },
 
@@ -655,6 +675,25 @@ export default {
             return this.isElectronicsShop || (this.seriesList && this.seriesList.length > 0);
         },
 
+        activeFilterCount() {
+            let count = 0;
+            if (this.search_data.warehouse_id) count++;
+            if (this.search_data.category_id) count++;
+            if (this.search_data.brand_id) count++;
+            if (this.search_data.series_id) count++;
+            if (this.search_data.item_id) count++;
+            if (this.search_data.color_id) count++;
+            if (this.search_data.size_id) count++;
+            if (this.search_data.keyword || this.search_data.value) count++;
+            if (this.search_data.from_qty !== null && this.search_data.from_qty !== '') count++;
+            if (this.search_data.to_qty !== null && this.search_data.to_qty !== '') count++;
+            if (Number(this.search_data.is_zero) === 1) count++;
+            if (this.search_data.low_threshold !== null && this.search_data.low_threshold !== '' && Number(this.search_data.low_threshold) !== 5) count++;
+            if (this.search_data.sort_by && this.search_data.sort_by !== 'stock_desc') count++;
+            if (this.search_data.stock_status && this.search_data.stock_status !== 'all') count++;
+            return count;
+        },
+
         activeFilterTitle() {
             const titles = {
                 'low_stock': this.$t('Low Stock Alert'),
@@ -665,19 +704,7 @@ export default {
         },
 
         isFiltered() {
-            return !!(
-                this.search_data.warehouse_id ||
-                this.search_data.category_id ||
-                this.search_data.brand_id ||
-                this.search_data.series_id ||
-                this.search_data.item_id ||
-                this.search_data.color_id ||
-                this.search_data.size_id ||
-                this.search_data.keyword ||
-                this.search_data.from_qty ||
-                this.search_data.to_qty ||
-                this.search_data.is_zero
-            );
+            return this.activeFilterCount > 0 || !!(this.search_data.value || this.search_data.keyword);
         },
 
         totalPages() {
@@ -811,6 +838,7 @@ export default {
         },
 
         switchTab(tab) {
+            this.$root.tableSpinner = true;
             this.activeTab = tab;
             this.search_data.stock_status = tab;
             this.currentPage = 1;
@@ -823,20 +851,26 @@ export default {
         },
 
         onStockStatusFilterChange() {
-            this.activeTab = this.search_data.stock_status;
-            this.currentPage = 1;
-        },
-
-        search() {
+            this.$root.tableSpinner = true;
             this.activeTab = this.search_data.stock_status;
             this.currentPage = 1;
             this.getAvailableStock();
         },
 
-        resetSearchData() {
-            this.activeTab = "low_stock";
+        search() {
+            this.$root.tableSpinner = true;
+            this.activeTab = this.search_data.stock_status || "all";
             this.currentPage = 1;
-            this.search_data = {
+            this.getAvailableStock();
+        },
+
+        resetSearchData() {
+            this.$root.tableSpinner = true;
+            this.activeTab = "all";
+            this.currentPage = 1;
+            Object.assign(this.search_data, {
+                field_name: "",
+                value: "",
                 warehouse_id: null,
                 category_id: null,
                 brand_id: null,
@@ -844,14 +878,14 @@ export default {
                 item_id: null,
                 color_id: null,
                 size_id: null,
-                stock_status: "low_stock",
-                sort_by: "stock_asc",
+                stock_status: "all",
+                sort_by: "stock_desc",
                 low_threshold: 5,
                 keyword: "",
                 is_zero: 0,
                 from_qty: null,
                 to_qty: null
-            };
+            });
             this.getBrands();
             this.getSeries();
             this.fetchDropdownItems();
@@ -873,16 +907,34 @@ export default {
             const url = catId ? `getbrands/${catId}` : 'getbrands';
             axios.get(url)
                 .then((response) => {
-                    this.brands = response.data || [];
+                    const list = response.data || [];
+                    if (list.length > 0) {
+                        this.brands = list;
+                    } else {
+                        // Fallback to all brands if selected category has no specific brand mapping
+                        axios.get('getbrands').then(res => {
+                            this.brands = res.data || [];
+                        }).catch(() => {
+                            this.brands = [];
+                        });
+                    }
                 })
                 .catch(() => {
-                    this.brands = [];
+                    axios.get('getbrands').then(res => {
+                        this.brands = res.data || [];
+                    }).catch(() => {
+                        this.brands = [];
+                    });
                 });
         },
 
         getSeries(brandId = null) {
             const bId = brandId || this.search_data.brand_id;
-            const url = bId ? `getseries/${bId}` : 'getseries';
+            const catId = this.search_data.category_id;
+            let url = bId ? `getseries/${bId}` : 'getseries';
+            if (catId) {
+                url += (url.includes('?') ? '&' : '?') + `category_id=${catId}`;
+            }
             axios.get(url)
                 .then((response) => {
                     this.seriesList = response.data || [];
@@ -939,6 +991,7 @@ export default {
 
         getAvailableStock() {
             this.$root.spinner = true;
+            this.$root.tableSpinner = true;
             this.reportDate = moment().format('D MMMM, YYYY h:mm A');
 
             axios
@@ -962,6 +1015,7 @@ export default {
                 })
                 .finally(() => {
                     this.$root.spinner = false;
+                    this.$root.tableSpinner = false;
                 });
         },
 
@@ -979,6 +1033,7 @@ export default {
     },
 
     created() {
+        this.$root.tableSpinner = false;
         this.getWarehouses();
         this.getCategories();
         this.getBrands(this.search_data.category_id);

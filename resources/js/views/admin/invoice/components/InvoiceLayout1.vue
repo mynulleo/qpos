@@ -92,7 +92,7 @@
         <!-- 📦 3. Items Table -->
         <div class="table-responsive mb-2">
             <table class="table table-bordered border-dark align-middle mb-0" style="font-size: 11px; width: 100%;">
-                <thead style="background-color: transparent !important; color: #000000 !important; border-bottom: 2.5px solid #112C47 !important;">
+                <thead style="background-color: transparent !important; color: #000000 !important; border-bottom: 1px solid #000000 !important;">
                     <tr style="background-color: transparent !important;">
                         <th width="4%" class="text-center text-black fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 8px 4px; font-size: 14px; font-weight: 900; letter-spacing: 0.3px;">{{ $t('#') }}</th>
                         <th width="48%" class="text-black fw-bold" style="background-color: transparent !important; color: #000000 !important; padding: 8px 6px; font-size: 14px; font-weight: 900; letter-spacing: 0.3px;">{{ $t('Item Description & Specifications') }}</th>
@@ -165,7 +165,7 @@
                             <td class="text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 52%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">{{ $t('VAT / Tax:') }}</td>
                             <td class="text-end font-monospace text-black fw-bold text-nowrap" style="padding: 4px 6px; width: 48%; white-space: nowrap !important; color: #000000 !important; background: #ffffff !important; background-color: #ffffff !important;">৳ {{ formatPrice(data.vat) }}</td>
                         </tr>
-                        <tr style="background: #ffffff !important; background-color: #ffffff !important; border-top: 2px solid #000000 !important; border-bottom: 2px solid #000000 !important;">
+                        <tr style="background: #ffffff !important; background-color: #ffffff !important; border-top: 1px solid #000000 !important; border-bottom: 1px solid #000000 !important;">
                             <td class="fw-bold text-black text-nowrap" style="background: #ffffff !important; background-color: #ffffff !important; color: #000000 !important; padding: 6px 6px; width: 52%; font-size: 13.5px; font-weight: 900; white-space: nowrap !important;">{{ $t('Net Total Payable:') }}</td>
                             <td class="text-end font-monospace fw-bold text-black text-nowrap" style="background: #ffffff !important; background-color: #ffffff !important; color: #000000 !important; padding: 6px 6px; width: 48%; font-size: 14px; font-weight: 900; white-space: nowrap !important;">৳ {{ formatPrice(data.amount) }}</td>
                         </tr>
@@ -552,6 +552,16 @@ export default {
     background-color: #ffffff !important;
     background: #ffffff !important;
     color: #000000 !important;
+}
+
+.invoice-box table.table-bordered {
+    border: 1px solid #000000 !important;
+    border-collapse: collapse !important;
+}
+
+.invoice-box table.table-bordered th,
+.invoice-box table.table-bordered td {
+    border: 1px solid #000000 !important;
 }
 
 .invoice-box {
